@@ -7,11 +7,10 @@
 (defn make-column
   "Make a new database column."
   [name type & {:as attributes}]
-  (map->Column
-   (assoc attributes
-     :name (keyword name)
-     :type (keyword type)
-     :not-null (or (:not-null attributes) (:primary-key attributes)))))
+  (assoc (map->Column (or attributes {}))
+    :name (keyword name)
+    :type (keyword type)
+    :not-null (or (:not-null attributes) (:primary-key attributes))))
 
 (defn column-name
   "Returns the name of the column as string."

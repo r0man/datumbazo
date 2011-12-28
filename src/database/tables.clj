@@ -9,9 +9,8 @@
 (defn make-table
   "Make a new database table."
   [& {:as attributes}]
-  (map->Table
-   (assoc attributes
-     :name (keyword (:name attributes)))))
+  (assoc (map->Table (or attributes {}))
+    :name (keyword (:name attributes))))
 
 (defn table-name
   "Returns the name of the table as string."
