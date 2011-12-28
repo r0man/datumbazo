@@ -2,6 +2,7 @@
   :description "Clojure Database Kung-Foo"
   :dependencies [[c3p0/c3p0 "0.9.1.2"]
                  [inflections "0.6.5-SNAPSHOT"]
+                 [lein-env "0.0.1-SNAPSHOT"]
                  [org.clojure/clojure "1.3.0"]
                  [org.clojure/java.jdbc "0.0.7"]
                  [org.clojure/tools.logging "0.2.3"]
