@@ -1,24 +1,33 @@
 (ns database.tables
-  (:refer-clojure :exclude (replace))
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [clojure.string :only (blank?)]
+  (:use [database.columns :only (make-column)]
+        [database.registry :only (register-table)]
         [inflections.core :only (dasherize)]))
 
-(defrecord Table [name type type-length default is-pk references not-null unique])
+(defrecord Table [name columns])
 
 (defn table-name
   "Returns the name of the table as string."
-  [table] (:name table))
+  [table] (jdbc/as-identifier (:name table)))
 
 (defn table-keyword
   "Returns the name of the table as keyword."
-  [table] (keyword (dasherize (table-name table))))
+  [table] (keyword (dasherize (:name table))))
 
 (defn table-symbol
   "Returns the name of the table as symbol."
-  [table] (symbol (dasherize (table-name table))))
+  [table] (symbol (name (dasherize (:name table)))))
 
 (defn make-table
   "Make a new database table."
   [& {:as attributes}]
-  (map->Table attributes))
+  (map->Table
+   (assoc attributes
+     :name (keyword (:name attributes)))))
+
+(defmacro deftable
+  "Define and register a database table and it's columns."
+  [name & [columns]]
+  (let [columns# (map #(apply make-column %1) columns)
+        table# (make-table :name name :columns columns#)]
+    (register-table table#)))
