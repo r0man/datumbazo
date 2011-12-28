@@ -7,15 +7,15 @@
 
 (defn db-spec
   "Returns the database spec of the environment."
-  [environment & [db-name]]
-  (if db-name
-    (db-name (:databases environment))
+  [environment & [db]]
+  (if db
+    (db (:databases environment))
     (or (:database environment)
         (:default (:databases environment)))))
 
 (defn current-spec
   "Returns the database spec for the current environment."
-  [& [db-name]] (db-spec (current-environment) db-name))
+  [& [db]] (db-spec (current-environment) db))
 
 (defn make-pool
   "Make a connection pool."
