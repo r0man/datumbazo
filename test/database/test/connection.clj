@@ -5,13 +5,6 @@
         database.connection
         database.test))
 
-(def test-spec
-  {:classname "org.postgresql.Driver"
-   :subprotocol "postgresql"
-   :subname "//localhost/database_test"
-   :user "database"
-   :password "database"})
-
 (deftest test-current-db-spec
   (load-environments)
   (let [spec (current-db-spec)]
@@ -29,9 +22,10 @@
       (is (= "database" (:user spec))))))
 
 (deftest test-db-spec
-  (is (= test-spec (db-spec {:database test-spec})))
-  (is (= test-spec (db-spec {:databases {:default test-spec}})))
-  (is (= test-spec (db-spec {:databases {:analytic test-spec}} :analytic))))
+  (let [spec (current-db-spec)]
+    (is (= spec (db-spec {:database spec})))
+    (is (= spec (db-spec {:databases {:default spec}})))
+    (is (= spec (db-spec {:databases {:analytic spec}} :analytic)))))
 
 (deftest test-make-pool
   (let [pool (make-pool (current-db-spec))]
