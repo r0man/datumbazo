@@ -2,7 +2,9 @@
   (:require [leiningen.env.core :as env])
   (:use clojure.test))
 
-(defmacro database-test [name & body]
+(defmacro database-test
+  "Define a database test."
+  [name & body]
   `(deftest ~name
      (env/with-environment :test
        ~@body)))
