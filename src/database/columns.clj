@@ -1,24 +1,26 @@
 (ns database.columns
-  (:refer-clojure :exclude (replace))
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [clojure.string :only (blank?)]
-        [inflections.core :only (dasherize)]))
+  (:use [inflections.core :only (dasherize)]))
 
-(defrecord Column [name type type-length default is-pk references not-null unique])
+(defrecord Column [name type type-length default not-null primary-key references unique])
 
 (defn column-name
   "Returns the name of the column as string."
-  [column] (:name column))
+  [column] (jdbc/as-identifier (:name column)))
 
 (defn column-keyword
   "Returns the name of the column as keyword."
-  [column] (keyword (dasherize (column-name column))))
+  [column] (keyword (dasherize (:name column))))
 
 (defn column-symbol
   "Returns the name of the column as symbol."
-  [column] (symbol (dasherize (column-name column))))
+  [column] (symbol (name (dasherize (:name column)))))
 
 (defn make-column
   "Make a new database column."
-  [& {:as attributes}]
-  (map->Column attributes))
+  [name type & {:as attributes}]
+  (map->Column
+   (assoc attributes
+     :name (keyword name)
+     :type (keyword type)
+     :not-null (or (:not-null attributes) (:primary-key attributes)))))
