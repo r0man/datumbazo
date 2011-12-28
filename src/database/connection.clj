@@ -13,7 +13,7 @@
     (or (:database environment)
         (:default (:databases environment)))))
 
-(defn current-db-spec
+(defn current-spec
   "Returns the database spec for the current environment."
   [& [db-name]] (db-spec (current-environment) db-name))
 
