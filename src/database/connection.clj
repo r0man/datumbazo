@@ -3,8 +3,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.jdbc.internal :as internal])
   (:use [inflections.core :only (dasherize)]
-        [leiningen.env.core :only (current-environment)]
-        leiningen.env.core))
+        [leiningen.env.core :only (current-environment)]))
 
 (defn db-spec
   "Returns the database spec of the environment."
