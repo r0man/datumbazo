@@ -6,6 +6,13 @@
 
 (defrecord Table [name columns])
 
+(defn make-table
+  "Make a new database table."
+  [& {:as attributes}]
+  (map->Table
+   (assoc attributes
+     :name (keyword (:name attributes)))))
+
 (defn table-name
   "Returns the name of the table as string."
   [table] (jdbc/as-identifier (:name table)))
@@ -17,13 +24,6 @@
 (defn table-symbol
   "Returns the name of the table as symbol."
   [table] (symbol (name (dasherize (:name table)))))
-
-(defn make-table
-  "Make a new database table."
-  [& {:as attributes}]
-  (map->Table
-   (assoc attributes
-     :name (keyword (:name attributes)))))
 
 (defmacro deftable
   "Define and register a database table and it's columns."
