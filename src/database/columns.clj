@@ -4,7 +4,9 @@
   (:use [clojure.string :only (split replace)]
         [inflections.core :only (dasherize)]))
 
-(defrecord Column [name type length default not-null primary-key references unique])
+(defrecord Column [name type type-fn length default not-null primary-key references unique])
+
+(defmulti add-column (fn [table column] (:type column)))
 
 (defn column-identifier
   "Returns the column identifier. Given a string, return it as-is.
@@ -30,10 +32,12 @@
 (defn make-column
   "Make a new database column."
   [name type & {:as attributes}]
-  (assoc (map->Column (or attributes {}))
-    :name (keyword name)
-    :type (keyword type)
-    :not-null (or (:not-null attributes) (:primary-key attributes))))
+  (let [[type type-fn] (if (sequential? type) type [type])]
+    (assoc (map->Column (or attributes {}))
+     :name (keyword name)
+     :type (keyword type)
+     :type-fn type-fn
+     :not-null (or (:not-null attributes) (:primary-key attributes)))))
 
 (defn- references-clause [column]
   (if-let [reference (:references column)]

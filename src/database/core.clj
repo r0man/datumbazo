@@ -1,6 +1,6 @@
 (ns database.core
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [database.columns :only (column-identifier column-spec make-column)]
+  (:use [database.columns :only (add-column column-identifier column-spec make-column)]
         [database.tables :only (make-table table-identifier register-table)]))
 
 (defn create-table
@@ -23,22 +23,6 @@
           (jdbc/as-identifier (table-identifier table))
           (if cascade " CASCADE")
           (if restrict " RESTRICT")))))
-
-(defmulti add-column (fn [table column] (:type column)))
-
-(defn add-geometry-column [table column code geometry dimension]
-  (jdbc/with-query-results _
-    ["SELECT AddGeometryColumn(?::text, ?::text, ?::integer, ?::text, ?::integer)"
-     (table-identifier table)
-     (column-identifier column)
-     code geometry dimension])
-  column)
-
-(defmethod add-column :point-2d [table column]
-  (add-geometry-column table column 4326 "POINT" 2))
-
-(defmethod add-column :multipolygon-2d [table column]
-  (add-geometry-column table column 4326 "MULTIPOLYGON" 2))
 
 (defmacro deftable
   "Define and register a database table and it's columns."
