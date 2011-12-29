@@ -57,6 +57,9 @@
 (deftest test-column-keyword
   (are [expected column]
     (is (= expected (column-keyword column)))
+    :created-at :created-at
+    :created-at 'created-at
+    :created-at "created-at"
     :created-at created-at-column
     :id id-column))
 
@@ -69,6 +72,9 @@
 (deftest test-column-symbol
   (are [expected column]
     (is (= expected (column-symbol column)))
+    'created-at :created-at
+    'created-at 'created-at
+    'created-at "created-at"
     'created-at created-at-column
     'id id-column))
 
