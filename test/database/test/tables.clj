@@ -4,8 +4,6 @@
         database.tables
         database.test.examples))
 
-(def photo-thumbnails-table (find-table :photo-thumbnails))
-
 (deftest test-find-table
   (let [table (make-table :name :photo-thumbnails)]
     (register-table table)
