@@ -3,7 +3,9 @@
   (:use [database.columns :only (add-column column-identifier)]
         [database.tables :only (table-identifier)]))
 
-(defn add-geometry-column [table column code geometry dimension]
+(defn add-geometry-column
+  "Add a PostGIS geometry column to table with the AddGeometryColumn SQL fn."
+  [table column code geometry dimension]
   (jdbc/with-query-results _
     ["SELECT AddGeometryColumn(?::text, ?::text, ?::integer, ?::text, ?::integer)"
      (table-identifier table)
