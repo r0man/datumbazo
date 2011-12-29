@@ -1,7 +1,7 @@
 (ns database.core
   (:require [clojure.java.jdbc :as jdbc])
   (:use [database.columns :only (column-spec)]
-        [database.tables :only (table-name)]))
+        [database.tables :only (table-identifier)]))
 
 (defn create-table
   "Create the database table."
@@ -9,7 +9,7 @@
   (jdbc/transaction
    (->> (remove #(not (nil? (:add-fn %))) (:columns table))
         (map column-spec)
-        (apply jdbc/create-table (table-name table)))
+        (apply jdbc/create-table (table-identifier table)))
    (doseq [column (filter #(:add-fn %) (:columns table))]
      ((:add-fn column) table column))
    table))
@@ -20,6 +20,6 @@
   (if-let [table table]
     (jdbc/do-commands
      (str "DROP TABLE " (if if-exists "IF EXISTS ")
-          (jdbc/as-identifier (table-name table))
+          (jdbc/as-identifier (table-identifier table))
           (if cascade " CASCADE")
           (if restrict " RESTRICT")))))

@@ -25,9 +25,9 @@
     (is (nil? (:default column)))
     (is (:not-null column))))
 
-(deftest test-column-name
+(deftest test-column-identifier
   (are [expected column]
-    (is (= (jdbc/as-identifier expected) (column-name column)))
+    (is (= (jdbc/as-identifier expected) (column-identifier column)))
     :created-at created-at-column
     :id id-column))
 

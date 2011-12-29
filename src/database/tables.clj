@@ -12,16 +12,19 @@
   (assoc (map->Table (or attributes {}))
     :name (keyword (:name attributes))))
 
-(defn table-name
-  "Returns the name of the table as string."
-  [table] (jdbc/as-identifier (:name table)))
+(defn table-identifier
+  "Returns the table identifier. Given a string, return it as-is.
+  Given a keyword, return it as a string using the current naming
+  strategy." [table] (jdbc/as-identifier (:name table)))
 
 (defn table-keyword
-  "Returns the name of the table as keyword."
+  "Returns the name of the table as a keyword with all underscores in
+  the name replaced by dashes."
   [table] (keyword (dasherize (:name table))))
 
 (defn table-symbol
-  "Returns the name of the table as symbol."
+  "Returns the name of the table as a symbol with all underscores in
+  the name replaced by dashes."
   [table] (symbol (name (dasherize (:name table)))))
 
 (defmacro deftable

@@ -13,9 +13,9 @@
     (is (= :photo-thumbnails (:name table)))
     (is (= columns (:columns table)))))
 
-(deftest test-table-name
+(deftest test-table-identifier
   (are [expected-keyword table]
-    (is (= (jdbc/as-identifier expected-keyword) (table-name table)))
+    (is (= (jdbc/as-identifier expected-keyword) (table-identifier table)))
     :photo-thumbnails photo-thumbnails-table))
 
 (deftest test-table-keyword
