@@ -1,7 +1,7 @@
 (ns database.columns
   (:refer-clojure :exclude (replace))
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [clojure.string :only (split replace)]
+  (:use [clojure.string :only (join split replace)]
         [inflections.core :only (dasherize)]))
 
 (defrecord Column [name type native? length default not-null primary-key references unique])
@@ -60,3 +60,26 @@
         (if (:unique column) "unique")
         (if (or (:primary-key column) (:not-null column)) "not null")]
        (remove nil?)))
+
+(defn- default-clause
+  "Returns the default clause for column."
+  [column] (if (:default column) (str " DEFAULT " (:default column))))
+
+(defn- not-null-clause
+  "Returns the not null clause for column."
+  [column] (if (:not-null column) "NOT NULL"))
+
+(defn- unique-clause
+  "Returns the unique clause for column."
+  [column] (if (:unique column) "UNIQUE"))
+
+(defn add-column-statement
+  "Returns the add column SQL statement."
+  [table column]
+  (->> [(str "ALTER TABLE " (jdbc/as-identifier (:name table)))
+        (str "ADD COLUMN " (column-identifier column))
+        (column-type-name column)
+        (default-clause column)
+        (not-null-clause column)
+        (unique-clause column)]
+       (join " ")))

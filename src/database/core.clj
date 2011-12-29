@@ -8,12 +8,7 @@
   (fn [table column] (:type column)))
 
 (defmethod add-column :default [table column]
-  (jdbc/do-commands
-   (str "ALTER TABLE " (jdbc/as-identifier (:name table))
-        " ADD COLUMN " (column-identifier column)
-        " " (column-type-name column)
-        (if (:not-null column) " NOT NULL")
-        (if (:unique column) " UNIQUE")))
+  (jdbc/do-commands (add-column-statement table column))
   column)
 
 (defn create-table
