@@ -9,6 +9,8 @@
 
 (deftest test-current-spec
   (load-environments)
+  (is (nil? (current-spec :not-exisiting)))
+  (is (= (current-spec) (current-spec :default)))
   (let [spec (current-spec)]
     (is (= "org.postgresql.Driver" (:classname spec)))
     (is (= "database" (:password spec)))
@@ -38,6 +40,7 @@
     (is (= spec (db-spec {:databases {:analytic spec}} :analytic)))))
 
 (deftest test-make-connection-pool
+  (is (nil? (make-connection-pool nil)))
   (let [pool (make-connection-pool (current-spec))]
     (is (instance? ComboPooledDataSource pool))
     (is (= "jdbc:postgresql://localhost:5432/database_development" (.getJdbcUrl pool)))

@@ -8,23 +8,23 @@
 (def ^:dynamic *pools* (atom {}))
 
 (defn db-spec
-  "Returns the database spec of the environment."
+  "Returns the database spec by name of the environment."
   [environment & [db]]
-  (if db
-    (db (:databases environment))
-    (or (:database environment)
-        (:default (:databases environment)))))
+  (get (:databases environment) (or db :default)
+       (if (or (= db :default) (nil? db))
+         (:database environment))))
 
 (defn make-connection-pool
-  "Make a connection pool."
+  "Make a connection pool from the database spec."
   [db-spec]
-  (doto (ComboPooledDataSource.)
-    (.setDriverClass (:classname db-spec))
-    (.setJdbcUrl (str "jdbc:" (:subprotocol db-spec) ":" (:subname db-spec)))
-    (.setUser (:user db-spec))
-    (.setPassword (:password db-spec))
-    (.setMaxIdleTimeExcessConnections (* 30 60))
-    (.setMaxIdleTime (* 3 60 60))))
+  (if db-spec
+    (doto (ComboPooledDataSource.)
+      (.setDriverClass (:classname db-spec))
+      (.setJdbcUrl (str "jdbc:" (:subprotocol db-spec) ":" (:subname db-spec)))
+      (.setUser (:user db-spec))
+      (.setPassword (:password db-spec))
+      (.setMaxIdleTimeExcessConnections (* 30 60))
+      (.setMaxIdleTime (* 3 60 60)))))
 
 (defn current-spec
   "Returns the database spec of the current environment."
@@ -36,10 +36,9 @@
   (let [db (or db :default)]
     (get-in
      @*pools* [*current* db]
-     (if-let [spec (current-spec)]
-       (let [pool (make-connection-pool spec)]
-         (swap! *pools* assoc-in [*current* db] pool)
-         pool)))))
+     (when-let [pool (make-connection-pool (current-spec db))]
+       (swap! *pools* assoc-in [*current* db] pool)
+       pool))))
 
 (defmacro with-connection
   "Evaluates body in the context of a new connection to a database
