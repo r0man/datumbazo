@@ -9,7 +9,8 @@
     (register-table table)
     (is (= table (find-table :photo-thumbnails)))
     (is (= table (find-table 'photo-thumbnails)))
-    (is (= table (find-table "photo-thumbnails")))))
+    (is (= table (find-table "photo-thumbnails")))
+    (is (= table (find-table (find-table :photo-thumbnails))))))
 
 (deftest test-make-table
   (let [columns (:columns photo-thumbnails-table)
@@ -31,19 +32,25 @@
 (deftest test-table-identifier
   (are [expected-keyword table]
     (is (= (jdbc/as-identifier expected-keyword) (table-identifier table)))
-    :photo-thumbnails photo-thumbnails-table
     :photo-thumbnails :photo-thumbnails
     :photo-thumbnails 'photo-thumbnails
-    "photo-thumbnails" "photo-thumbnails"))
+    "photo-thumbnails" "photo-thumbnails"
+    :photo-thumbnails photo-thumbnails-table))
 
 (deftest test-table-keyword
   (are [expected table]
     (is (= expected (table-keyword table)))
+    :photo-thumbnails :photo-thumbnails
+    :photo-thumbnails 'photo-thumbnails
+    :photo-thumbnails "photo-thumbnails"
     :photo-thumbnails photo-thumbnails-table))
 
 (deftest test-table-symbol
   (are [expected table]
     (is (= expected (table-symbol table)))
+    'photo-thumbnails :photo-thumbnails
+    'photo-thumbnails 'photo-thumbnails
+    'photo-thumbnails "photo-thumbnails"
     'photo-thumbnails photo-thumbnails-table))
 
 (deftest test-register-table

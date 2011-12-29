@@ -29,7 +29,7 @@
 (defn table-symbol
   "Returns the name of the table as a symbol with all underscores in
   the name replaced by dashes."
-  [table] (symbol (name (dasherize (:name table)))))
+  [table] (symbol (name (dasherize (table-name table)))))
 
 (defn table-keyword
   "Returns the name of the table as a keyword with all underscores in
@@ -38,7 +38,7 @@
 
 (defn find-table
   "Find the database table in *tables* by it's name."
-  [name] (get @*tables* (table-keyword {:name name})))
+  [name] (get @*tables* (table-keyword name)))
 
 (defn register-table
   "Register the database table in *tables*."
