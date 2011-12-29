@@ -1,6 +1,6 @@
 (ns database.core
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [database.columns :only (column-spec make-column)]
+  (:use [database.columns :only (column-identifier column-spec make-column)]
         [database.tables :only (make-table table-identifier register-table)]))
 
 (defn create-table
@@ -29,8 +29,8 @@
 (defn add-geometry-column [table column code geometry dimension]
   (jdbc/with-query-results _
     ["SELECT AddGeometryColumn(?::text, ?::text, ?::integer, ?::text, ?::integer)"
-     (jdbc/as-identifier (:name table))
-     (jdbc/as-identifier (:name column))
+     (table-identifier table)
+     (column-identifier column)
      code geometry dimension])
   column)
 
