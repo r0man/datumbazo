@@ -1,7 +1,6 @@
 (ns database.tables
   (:require [clojure.java.jdbc :as jdbc])
   (:use [database.columns :only (make-column)]
-        [database.registry :only (register-table)]
         [inflections.core :only (dasherize)]))
 
 (defrecord Table [name columns])
@@ -26,10 +25,3 @@
   "Returns the name of the table as a symbol with all underscores in
   the name replaced by dashes."
   [table] (symbol (name (dasherize (:name table)))))
-
-(defmacro deftable
-  "Define and register a database table and it's columns."
-  [name & [columns]]
-  (->> (map #(apply make-column %1) columns)
-       (make-table :name name :columns)
-       (register-table)))

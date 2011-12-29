@@ -51,21 +51,3 @@
         (if (:unique column) "unique")
         (if (or (:primary-key column) (:not-null column)) "not null")]
        (remove nil?)))
-
-;; DDL
-
-(defn add-geometry-column [table column code geometry dimension]
-  (jdbc/with-query-results _
-    ["SELECT AddGeometryColumn(?::text, ?::text, ?::integer, ?::text, ?::integer)"
-     (jdbc/as-identifier (:name table))
-     (jdbc/as-identifier (:name column))
-     code geometry dimension])
-  column)
-
-(defmulti add-column (fn [table column] (:type column)))
-
-(defmethod add-column :point-2d [table column]
-  (add-geometry-column table column 4326 "POINT" 2))
-
-(defmethod add-column :multipolygon-2d [table column]
-  (add-geometry-column table column 4326 "MULTIPOLYGON" 2))
