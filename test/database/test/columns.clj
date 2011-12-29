@@ -43,6 +43,9 @@
   (are [expected column]
     (is (= (jdbc/as-identifier expected) (column-identifier column)))
     :created-at created-at-column
+    :created-at :created-at
+    :created-at 'created-at
+    "created-at" "created-at"
     :id id-column))
 
 (deftest test-column-keyword
