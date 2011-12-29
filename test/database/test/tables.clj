@@ -17,6 +17,11 @@
     (is (= :photo-thumbnails (:name table)))
     (is (= columns (:columns table)))))
 
+(deftest test-table?
+  (is (not (table? nil)))
+  (is (not (table? "")))
+  (is (table? (make-table :name :continents))))
+
 (deftest test-table-identifier
   (are [expected-keyword table]
     (is (= (jdbc/as-identifier expected-keyword) (table-identifier table)))

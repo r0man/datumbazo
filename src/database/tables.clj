@@ -13,6 +13,10 @@
   (assoc (map->Table (or attributes {}))
     :name (keyword (:name attributes))))
 
+(defn table?
+  "Returns true if arg is a table, otherwise false."
+  [arg] (instance? Table arg))
+
 (defn table-identifier
   "Returns the table identifier. Given a string, return it as-is.
   Given a keyword, return it as a string using the current naming
