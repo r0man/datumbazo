@@ -1,7 +1,8 @@
 (ns database.postgis
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [database.columns :only (add-column column-identifier)]
-        [database.tables :only (table-identifier)]))
+  (:use database.columns
+        database.core
+        database.tables))
 
 (defn add-geometry-column
   "Add a PostGIS geometry column to table with the AddGeometryColumn SQL fn."

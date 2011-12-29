@@ -1,6 +1,7 @@
 (ns database.test.columns
   (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
+        database.core
         database.columns
         database.connection))
 

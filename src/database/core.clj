@@ -1,7 +1,9 @@
 (ns database.core
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [database.columns :only (add-column column-identifier column-spec make-column)]
-        [database.tables :only (make-table table-identifier register-table)]))
+  (:use database.columns
+        database.tables))
+
+(defmulti add-column (fn [table column] (:type column)))
 
 (defn create-table
   "Create the database table."

@@ -6,8 +6,6 @@
 
 (defrecord Column [name type type-fn length default not-null primary-key references unique])
 
-(defmulti add-column (fn [table column] (:type column)))
-
 (defn column-identifier
   "Returns the column identifier. Given a string, return it as-is.
   Given a keyword, return it as a string using the current naming
