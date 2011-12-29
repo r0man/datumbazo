@@ -2,10 +2,16 @@
   (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
         database.tables
-        database.registry
         database.test.examples))
 
 (def photo-thumbnails-table (find-table :photo-thumbnails))
+
+(deftest test-find-table
+  (let [table (make-table :name :photo-thumbnails)]
+    (register-table table)
+    (is (= table (find-table :photo-thumbnails)))
+    (is (= table (find-table 'photo-thumbnails)))
+    (is (= table (find-table "photo-thumbnails")))))
 
 (deftest test-make-table
   (let [columns (:columns photo-thumbnails-table)
@@ -27,3 +33,8 @@
   (are [expected table]
     (is (= expected (table-symbol table)))
     'photo-thumbnails photo-thumbnails-table))
+
+(deftest test-register-table
+  (let [table (make-table :name :photo-thumbnails)]
+    (register-table table)
+    (is (= table (:photo-thumbnails @*tables*)))))

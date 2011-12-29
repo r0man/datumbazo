@@ -3,6 +3,8 @@
   (:use [database.columns :only (make-column)]
         [inflections.core :only (dasherize)]))
 
+(defonce ^:dynamic *tables* (atom {}))
+
 (defrecord Table [name columns])
 
 (defn make-table
@@ -25,3 +27,11 @@
   "Returns the name of the table as a symbol with all underscores in
   the name replaced by dashes."
   [table] (symbol (name (dasherize (:name table)))))
+
+(defn find-table
+  "Find the database table in *tables* by it's name."
+  [name] (get @*tables* (table-keyword {:name name})))
+
+(defn register-table
+  "Register the database table in *tables*."
+  [table] (swap! *tables* assoc (table-keyword table) table))

@@ -3,7 +3,7 @@
             [clojure.java.jdbc.internal :as internal])
   (:use clojure.test
         database.core
-        database.registry
+        database.tables
         database.test
         database.test.examples))
 
