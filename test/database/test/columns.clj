@@ -48,6 +48,12 @@
     "created-at" "created-at"
     :id id-column))
 
+(deftest test-column-name
+  (are [expected column]
+    (is (= expected (column-name column)))
+    :created-at :created-at
+    :created-at created-at-column))
+
 (deftest test-column-keyword
   (are [expected column]
     (is (= expected (column-keyword column)))

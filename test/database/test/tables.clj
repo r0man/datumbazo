@@ -25,10 +25,8 @@
 (deftest test-table-name
   (are [expected table]
     (is (= expected (table-name table)))
-    :continents :continents
-    'continents 'continents
-    "continents" "continents"
-    :continents continents-table))
+    :photo-thumbnails :photo-thumbnails
+    :photo-thumbnails (find-table :photo-thumbnails)))
 
 (deftest test-table-identifier
   (are [expected-keyword table]

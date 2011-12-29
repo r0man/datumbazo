@@ -10,6 +10,10 @@
   "Returns true if arg is a column, otherwise false."
   [arg] (instance? Column arg))
 
+(defn column-name
+  "Returns the name of the column."
+  [column] (if (column? column) (:name column) column))
+
 (defn column-identifier
   "Returns the column identifier. Given a string, return it as-is.
   Given a keyword, return it as a string using the current naming
