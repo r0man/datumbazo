@@ -22,6 +22,14 @@
      (add-column table column))
    table))
 
+(defn delete-rows
+  "Delete rows from the database table. If the optional where clause
+  is given, only those rows matching the clause will be deleted."
+  [table & [where]]
+  (if where
+    (jdbc/delete-rows (table-identifier table) where)
+    (jdbc/do-commands (str "DELETE FROM " (table-identifier table)))))
+
 (defn drop-table
   "Drop the database table."
   [table & {:keys [if-exists cascade restrict]}]

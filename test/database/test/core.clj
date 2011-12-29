@@ -24,6 +24,11 @@
     (is (instance? database.tables.Table (create-table table)))
     (is (thrown? Exception (create-table table)))))
 
+(database-test test-delete-rows
+  (let [table (create-table test-table)]
+    (delete-rows table)
+    (delete-rows table ["1 = 1"])))
+
 (database-test test-drop-table
   (let [table (find-table :photo-thumbnails)]
     (is (create-table table))
