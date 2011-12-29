@@ -11,15 +11,15 @@
   Given a keyword, return it as a string using the current naming
   strategy." [column] (jdbc/as-identifier (:name column)))
 
-(defn column-keyword
-  "Returns the name of the column as a keyword with all underscores in
-  the name replaced by dashes."
-  [column] (keyword (dasherize (:name column))))
-
 (defn column-symbol
   "Returns the name of the column as a symbol with all underscores in
   the name replaced by dashes."
   [column] (symbol (name (dasherize (:name column)))))
+
+(defn column-keyword
+  "Returns the name of the column as a keyword with all underscores in
+  the name replaced by dashes."
+  [column] (keyword (column-symbol column)))
 
 (defn column-type-name
   "Returns the type of the column as string."
