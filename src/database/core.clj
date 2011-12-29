@@ -3,11 +3,13 @@
   (:use database.columns
         database.tables))
 
-(defmulti add-column (fn [table column] (:type column)))
+(defmulti add-column
+  "Add column to the database table."
+  (fn [table column] (:type column)))
 
 (defmethod add-column :default [table column]
   (jdbc/do-commands
-   (str "ALTER TABLE " (table-identifier table)
+   (str "ALTER TABLE " (jdbc/as-identifier (:name table))
         " ADD COLUMN " (column-identifier column)
         " " (column-type-name column)
         (if (:not-null column) " NOT NULL")
@@ -18,11 +20,11 @@
   "Create the database table."
   [table]
   (jdbc/transaction
-   (->> (remove #(not (nil? (:add-fn %))) (:columns table))
+   (->> (filter :native? (:columns table))
         (map column-spec)
         (apply jdbc/create-table (table-identifier table)))
-   (doseq [column (filter #(:add-fn %) (:columns table))]
-     ((:add-fn column) table column))
+   (doseq [column (remove :native? (:columns table))]
+     (add-column table column))
    table))
 
 (defn drop-table

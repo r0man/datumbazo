@@ -18,19 +18,19 @@
   (let [column created-at-column]
     (is (= :created-at (:name column)))
     (is (= :timestamp-with-time-zone (:type column)))
-    (is (nil? (:type-fn column)))
+    (is (:native? column))
     (is (= "now()" (:default column)))
     (is (:not-null column)))
   (let [column id-column]
     (is (= :id (:name column)))
     (is (= :serial (:type column)))
-    (is (nil? (:type-fn column)))
+    (is (:native? column))
     (is (nil? (:default column)))
     (is (:not-null column)))
-  (let [column (make-column :location [:point-2d #'add-column])]
+  (let [column (make-column :location [:point-2d])]
     (is (= :location (:name column)))
     (is (= :point-2d (:type column)))
-    (is (= #'add-column (:type-fn column)))
+    (is (not (:native? column)))
     (is (nil? (:default column)))
     (is (not (:not-null column)))))
 

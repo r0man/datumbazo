@@ -5,6 +5,7 @@
         database.core
         database.columns
         database.tables
+        database.postgis
         database.test
         database.test.examples))
 
@@ -13,8 +14,13 @@
         column (make-column :x :integer)]
     (is (= column (add-column table column)))))
 
-(database-test test-create-table
+(database-test test-create-table-with-photo-thumbnails
   (let [table (find-table :photo-thumbnails)]
+    (is (instance? database.tables.Table (create-table table)))
+    (is (thrown? Exception (create-table table)))))
+
+(database-test test-create-with-continents
+  (let [table (find-table :continents)]
     (is (instance? database.tables.Table (create-table table)))
     (is (thrown? Exception (create-table table)))))
 
