@@ -1,6 +1,6 @@
 (ns database.registry)
 
-(def ^:dynamic *tables* (atom {}))
+(defonce ^:dynamic *tables* (atom {}))
 
 (defn find-table
   "Find the database table in the registry by name."
