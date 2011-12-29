@@ -38,3 +38,11 @@
     (is (= expected (column-symbol column)))
     'created-at created-at-column
     'id id-column))
+
+(deftest test-column-spec
+  (is (= ["created-at" "timestamp-with-time-zone" "not null"]
+         (column-spec created-at-column)))
+  (is (= ["id" "serial" "primary key" "not null"]
+         (column-spec id-column)))
+  (is (= ["iso-639-1" "varchar(2)" "unique" "not null"]
+         (column-spec (make-column :iso-639-1 "varchar(2)" :unique true :not-null true)))))
