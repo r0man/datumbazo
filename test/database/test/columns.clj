@@ -34,6 +34,11 @@
     (is (nil? (:default column)))
     (is (not (:not-null column)))))
 
+(deftest test-column?
+  (is (not (column? nil)))
+  (is (not (column? "")))
+  (is (column? created-at-column)))
+
 (deftest test-column-identifier
   (are [expected column]
     (is (= (jdbc/as-identifier expected) (column-identifier column)))
