@@ -5,6 +5,15 @@
 
 (defmulti add-column (fn [table column] (:type column)))
 
+(defmethod add-column :default [table column]
+  (jdbc/do-commands
+   (str "ALTER TABLE " (table-identifier table)
+        " ADD COLUMN " (column-identifier column)
+        " " (column-type-name column)
+        (if (:not-null column) " NOT NULL")
+        (if (:unique column) " UNIQUE")))
+  column)
+
 (defn create-table
   "Create the database table."
   [table]
@@ -22,7 +31,7 @@
   (if-let [table table]
     (jdbc/do-commands
      (str "DROP TABLE " (if if-exists "IF EXISTS ")
-          (jdbc/as-identifier (table-identifier table))
+          (table-identifier table)
           (if cascade " CASCADE")
           (if restrict " RESTRICT")))))
 

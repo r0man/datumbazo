@@ -3,9 +3,15 @@
             [clojure.java.jdbc.internal :as internal])
   (:use clojure.test
         database.core
+        database.columns
         database.tables
         database.test
         database.test.examples))
+
+(database-test test-add-column
+  (let [table (create-table test-table)
+        column (make-column :x :integer)]
+    (is (= column (add-column table column)))))
 
 (database-test test-create-table
   (let [table (find-table :photo-thumbnails)]
@@ -18,5 +24,3 @@
     (is (drop-table table))
     (is (drop-table table :if-exists true))
     (is (thrown? Exception (drop-table table)))))
-
-(load-environments)
