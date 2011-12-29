@@ -25,7 +25,10 @@
 (deftest test-table-identifier
   (are [expected-keyword table]
     (is (= (jdbc/as-identifier expected-keyword) (table-identifier table)))
-    :photo-thumbnails photo-thumbnails-table))
+    :photo-thumbnails photo-thumbnails-table
+    :photo-thumbnails :photo-thumbnails
+    :photo-thumbnails 'photo-thumbnails
+    "photo-thumbnails" "photo-thumbnails"))
 
 (deftest test-table-keyword
   (are [expected table]

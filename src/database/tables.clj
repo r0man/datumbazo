@@ -20,7 +20,7 @@
 (defn table-identifier
   "Returns the table identifier. Given a string, return it as-is.
   Given a keyword, return it as a string using the current naming
-  strategy." [table] (jdbc/as-identifier (:name table)))
+  strategy." [table] (jdbc/as-identifier (if (table? table) (:name table) table)))
 
 (defn table-symbol
   "Returns the name of the table as a symbol with all underscores in
