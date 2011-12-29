@@ -30,6 +30,7 @@
    [:created-at :timestamp-with-time-zone :not-null true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null true :default "now()"]])
 
+(def continents-table (find-table :continents))
 (def test-table (find-table :test))
 (def photo-thumbnails-table (find-table :photo-thumbnails))
 

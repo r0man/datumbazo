@@ -17,10 +17,14 @@
   "Returns true if arg is a table, otherwise false."
   [arg] (instance? Table arg))
 
+(defn table-name
+  "Returns the name of the table."
+  [table] (if (table? table) (:name table) table))
+
 (defn table-identifier
   "Returns the table identifier. Given a string, return it as-is.
   Given a keyword, return it as a string using the current naming
-  strategy." [table] (jdbc/as-identifier (if (table? table) (:name table) table)))
+  strategy." [table] (jdbc/as-identifier (table-name table)))
 
 (defn table-symbol
   "Returns the name of the table as a symbol with all underscores in

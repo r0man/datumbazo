@@ -22,6 +22,14 @@
   (is (not (table? "")))
   (is (table? (make-table :name :continents))))
 
+(deftest test-table-name
+  (are [expected table]
+    (is (= expected (table-name table)))
+    :continents :continents
+    'continents 'continents
+    "continents" "continents"
+    :continents continents-table))
+
 (deftest test-table-identifier
   (are [expected-keyword table]
     (is (= (jdbc/as-identifier expected-keyword) (table-identifier table)))
