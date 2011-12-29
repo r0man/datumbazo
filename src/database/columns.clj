@@ -1,6 +1,7 @@
 (ns database.columns
+  (:refer-clojure :exclude (replace))
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [clojure.string :only (split)]
+  (:use [clojure.string :only (split replace)]
         [inflections.core :only (dasherize)]))
 
 (defrecord Column [name type length default not-null primary-key references unique])
@@ -25,6 +26,12 @@
   "Returns the name of the column as symbol."
   [column] (symbol (name (dasherize (:name column)))))
 
+(defn column-type-name
+  "Returns the type of the column as string."
+  [column]
+  (let [type (:type column)]
+    (if (string? type) type (replace (name type) #"-+" " "))))
+
 (defn- references-clause [column]
   (if-let [reference (:references column)]
     (->> (split (replace (str reference) #":" "") #"/")
@@ -35,7 +42,7 @@
   "Returns the column specification for the clojure.java.jdbc create-table fn."
   [column]
   (->> [(column-name column)
-        (str (name (:type column)) (if-let [length (:length column)] (str "(" length ")")))
+        (str (column-type-name column) (if-let [length (:length column)] (str "(" length ")")))
         (references-clause column)
         (if (:primary-key column) "primary key")
         (if (:unique column) "unique")

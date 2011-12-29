@@ -2,15 +2,8 @@
   (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
         database.tables
-        database.registry))
-
-(deftable photo-thumbnails
-  [[:id :serial :primary-key true]
-   [:title :text]
-   [:description :text]
-   [:taken-at :timestamp-with-time-zone]
-   [:created-at :timestamp-with-time-zone :not-null true :default "now()"]
-   [:updated-at :timestamp-with-time-zone :not-null true :default "now()"]])
+        database.registry
+        database.test.examples))
 
 (def photo-thumbnails-table (find-table :photo-thumbnails))
 

@@ -1,13 +1,16 @@
 (ns database.test
-  (:require [leiningen.env.core :as env])
-  (:use clojure.test))
+  (:require [clojure.java.jdbc :as jdbc]
+            [leiningen.env.core :as env])
+  (:use clojure.test
+        database.connection))
 
 (defmacro database-test
   "Define a database test."
   [name & body]
   `(deftest ~name
      (env/with-environment :test
-       ~@body)))
+       (with-connection :default
+         (jdbc/transaction (try ~@body (finally (jdbc/set-rollback-only))))))))
 
 (defn load-environments
   "Load the environments."
