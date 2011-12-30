@@ -82,6 +82,10 @@
         (column-identifier column)) value]
       (doall (map (partial deserialize-row table) rows)))))
 
+(defn table
+  "Lookup table in *tables* by name."
+  [table] (find-table table))
+
 (defn- define-crud
   "Returns a defrecord forms for the crud fns."
   [table]

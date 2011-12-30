@@ -70,6 +70,11 @@
     (is (= [language] (select-by-column languages :name (:name language))))
     (is (= [language] (select-by-column languages :created-at (:created-at language))))))
 
+(deftest test-table
+  (is (table? (table :languages)))
+  (is (= :languages (:name (table :languages))))
+  (is (= (table :languages) (table (table :languages)))))
+
 (deftest test-where-clause
   (let [clause (where-clause languages {:id 1})]
     (is (= "id = ?" (first clause)))
