@@ -4,7 +4,7 @@
   (:use [clojure.string :only (join split replace)]
         [inflections.core :only (dasherize)]))
 
-(defrecord Column [name type length default native? not-null primary-key references unique])
+(defrecord Column [name type length default native? not-null? primary-key references unique])
 
 (defn column?
   "Returns true if arg is a column, otherwise false."
@@ -44,7 +44,7 @@
     :name (keyword name)
     :type (keyword (if (sequential? type) (first type) type))
     :native? (if (sequential? type) false true)
-    :not-null (or (:not-null attributes) (:primary-key attributes))))
+    :not-null? (or (:not-null? attributes) (:primary-key attributes))))
 
 (defn- references-clause [column]
   (if-let [reference (:references column)]
@@ -60,7 +60,7 @@
         (references-clause column)
         (if (:primary-key column) "primary key")
         (if (:unique column) "unique")
-        (if (or (:primary-key column) (:not-null column)) "not null")]
+        (if (or (:primary-key column) (:not-null? column)) "not null")]
        (remove nil?)))
 
 (defn- default-clause
@@ -69,7 +69,7 @@
 
 (defn- not-null-clause
   "Returns the not null clause for column."
-  [column] (if (:not-null column) "NOT NULL"))
+  [column] (if (:not-null? column) "NOT NULL"))
 
 (defn- unique-clause
   "Returns the unique clause for column."
