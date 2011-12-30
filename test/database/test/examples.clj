@@ -1,5 +1,6 @@
 (ns database.test.examples
   (:use [clojure.string :only (lower-case)]
+        clojure.test
         database.core
         database.tables
         database.test))
@@ -38,5 +39,11 @@
 (def continents-table (find-table :continents))
 (def test-table (find-table :test))
 (def photo-thumbnails-table (find-table :photo-thumbnails))
+
+(deftest test-serialize-language
+  (let [language (serialize-language {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
+    (is (= "German" (:name language)))
+    (is (= "de" (:iso-639-1 language)))
+    (is (= "deu" (:iso-639-2 language)))))
 
 (load-environments)

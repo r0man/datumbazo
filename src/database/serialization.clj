@@ -11,7 +11,9 @@
 
 (defn- transform-column [row column transform-fn]
   (let [attribute (column-keyword column) value (get row attribute)]
-    (assoc row attribute ((or transform-fn identity) (get row attribute)))))
+    (if (and value transform-fn)
+      (assoc row attribute (transform-fn value))
+      row)))
 
 (defn deserialize-column
   "Deserialize the column of the database row."
@@ -39,8 +41,8 @@
        (extend ~record# IDeserialize {:deserialize deserialize-row})
        (defn ~(symbol (str "deserialize-" entity#))
          ~(str "Deserialize the " entity# " database row.")
-         [~entity#] (deserialize (find-table ~(table-keyword table)) (~constructor# ~entity#)))
+         [~entity#] (deserialize (~constructor# ~entity#) (find-table ~(table-keyword table))))
        (extend ~record# ISerialize {:serialize serialize-row})
        (defn ~(symbol (str "serialize-" entity#))
          ~(str "Serialize the " entity# " database row.")
-         [~entity#] (serialize (find-table ~(table-keyword table)) (~constructor# ~entity#))))))
+         [~entity#] (serialize (~constructor# ~entity#) (find-table ~(table-keyword table)))))))

@@ -51,7 +51,8 @@
 (defmacro deftable
   "Define and register a database table and it's columns."
   [name & [columns]]
-  (let [table# (register-table (make-table name columns))]
+  (let [name# name columns# columns table# (make-table (keyword name#) columns#)]
     `(do
+       (register-table (make-table ~(keyword name#) ~columns#))
        ~(define-row table#)
        ~(define-deserialization table#))))
