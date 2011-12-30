@@ -9,7 +9,7 @@
         database.test.examples))
 
 (deftable continents
-  [[:id :serial :primary-key true]
+  [[:id :serial :primary-key? true]
    [:name :text :not-null? true :unique? true]
    [:iso-3166-1-alpha-2 :varchar :length 2 :unique? true :serialize #'lower-case]
    [:location [:point-2d]]

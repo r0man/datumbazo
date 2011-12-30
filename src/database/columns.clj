@@ -4,7 +4,7 @@
   (:use [clojure.string :only (join split replace)]
         [inflections.core :only (dasherize)]))
 
-(defrecord Column [name type length default native? not-null? primary-key references unique?])
+(defrecord Column [name type length default native? not-null? primary-key? references unique?])
 
 (defn column?
   "Returns true if arg is a column, otherwise false."
@@ -44,7 +44,7 @@
     :name (keyword name)
     :type (keyword (if (sequential? type) (first type) type))
     :native? (if (sequential? type) false true)
-    :not-null? (or (:not-null? attributes) (:primary-key attributes))))
+    :not-null? (or (:not-null? attributes) (:primary-key? attributes))))
 
 (defn select-columns
   "Select columns of table by keywords."
@@ -56,7 +56,7 @@
   "Returns the key columns for record."
   [table record]
   (let [columns (select-columns table (keys record))]
-    (concat (filter :primary-key columns) (filter :unique? columns))))
+    (concat (filter :primary-key? columns) (filter :unique? columns))))
 
 ;; SQL CLAUSE FNS
 
@@ -66,11 +66,11 @@
 
 (defn not-null-clause
   "Returns the not null clause for column."
-  [column] (if (or (:primary-key column) (:not-null? column)) "not null"))
+  [column] (if (or (:primary-key? column) (:not-null? column)) "not null"))
 
 (defn primary-key-clause
   "Returns the primary key for column."
-  [column] (if (:primary-key column) "primary key"))
+  [column] (if (:primary-key? column) "primary key"))
 
 (defn references-clause
   "Returns the unique clause for column."

@@ -7,7 +7,7 @@
         database.test))
 
 (deftable languages
-  [[:id :serial :primary-key true]
+  [[:id :serial :primary-key? true]
    [:name :text :unique? true :not-null? true]
    [:family :text :not-null? true]
    [:iso-639-1 :varchar :length 2 :unique? true :not-null? true :serialize #'lower-case]
@@ -19,7 +19,7 @@
 (def german {:name "German" :family "Indo-European" :iso-639-1 "DE" :iso-639-2 "DEU"})
 
 (deftable photo-thumbnails
-  [[:id :serial :primary-key true]
+  [[:id :serial :primary-key? true]
    [:title :text]
    [:description :text]
    [:taken-at :timestamp-with-time-zone]

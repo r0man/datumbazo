@@ -10,7 +10,7 @@
   (make-column :created-at :timestamp-with-time-zone :default "now()" :not-null? true))
 
 (def id-column
-  (make-column :id :serial :primary-key true))
+  (make-column :id :serial :primary-key? true))
 
 (def iso-639-1-column
   (make-column :iso-639-1 :varchar :length 2 :unique? true :not-null? true))
