@@ -54,7 +54,7 @@
 (defn drop-table
   "Drop the database table."
   [table & {:keys [if-exists cascade restrict]}]
-  (if-let [table table]
+  (let [table (find-table table)]
     (jdbc/do-commands
      (str "DROP TABLE " (if if-exists "IF EXISTS ")
           (table-identifier table)
@@ -65,9 +65,10 @@
   "Insert a record into the database table."
   [table record]
   (if (not (empty? record))
-    (->> (serialize-row table record)
-         (jdbc/insert-record (table-identifier table))
-         (deserialize-row table))))
+    (let [table (find-table table)]
+      (->> (serialize-row table record)
+           (jdbc/insert-record (table-identifier table))
+           (deserialize-row table)))))
 
 (defn select-by-column
   "Find a record in the database table by id."
