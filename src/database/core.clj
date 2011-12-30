@@ -28,10 +28,10 @@
 (defn where-clause
   "Returns the SQL where clause for record."
   [table record]
-  (let [table (find-table table)
-        columns (key-columns table record)]
-    (cons (join " OR " (map #(str (column-identifier %1) " = ?") columns))
-          (map #(get (serialize-column %1 record) (column-keyword %1)) columns))))
+  (with-ensure-table table
+    (let [columns (key-columns table record)]
+      (cons (join " OR " (map #(str (column-identifier %1) " = ?") columns))
+            (map #(get (serialize-column %1 record) (column-keyword %1)) columns)))))
 
 (defn delete-all
   "Delete all rows from table."
@@ -45,18 +45,18 @@
   "Delete the record from the database table."
   [table record]
   (if (not (empty? record))
-    (let [table (find-table table)
-          where-clause (where-clause table record)]
-      (assert (not (empty? where-clause)) "Can't build where clause to delete record.")
-      (jdbc/transaction
-       (let [[rows] (delete-where table where-clause)]
-         (assert (= 1 rows))
-         record)))))
+    (with-ensure-table table
+      (let [where-clause (where-clause table record)]
+        (assert (not (empty? where-clause)) "Can't build where clause to delete record.")
+        (jdbc/transaction
+         (let [[rows] (delete-where table where-clause)]
+           (assert (= 1 rows))
+           record))))))
 
 (defn drop-table
   "Drop the database table."
   [table & {:keys [if-exists cascade restrict]}]
-  (let [table (find-table table)]
+  (with-ensure-table table
     (jdbc/do-commands
      (str "DROP TABLE " (if if-exists "IF EXISTS ")
           (table-identifier table)
@@ -67,7 +67,7 @@
   "Insert a record into the database table."
   [table record]
   (if (not (empty? record))
-    (let [table (find-table table)]
+    (with-ensure-table table
       (->> (serialize-row table record)
            (jdbc/insert-record (table-identifier table))
            (deserialize-row table)))))
@@ -75,7 +75,7 @@
 (defn select-by-column
   "Find a record in the database table by id."
   [table column value]
-  (let [table (find-table table)]
+  (with-ensure-table table
     (jdbc/with-query-results rows
       [(format
         "SELECT * FROM %s WHERE %s = ?"

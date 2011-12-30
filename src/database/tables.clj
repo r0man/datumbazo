@@ -46,3 +46,10 @@
   [table]
   (swap! *tables* assoc (table-keyword table) table)
   table)
+
+(defmacro with-ensure-table
+  "Evaluate body with a resolved table."
+  [table & body]
+  (let [table# table]
+    `(if-let [~table# (find-table ~table#)]
+       (do ~@body) (throw (Exception. "Table not found.")))))
