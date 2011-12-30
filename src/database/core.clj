@@ -40,7 +40,8 @@
     (delete-rows
      table
      [(str (column-identifier column) " = ?")
-      (get record (column-keyword column))])))
+      (get record (column-keyword column))])
+    (throw (Exception. "No primary key defined."))))
 
 (defn drop-table
   "Drop the database table."
