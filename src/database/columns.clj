@@ -46,11 +46,31 @@
     :native? (if (sequential? type) false true)
     :not-null? (or (:not-null? attributes) (:primary-key attributes))))
 
-(defn- references-clause [column]
+;; SQL CLAUSE FNS
+
+(defn default-clause
+  "Returns the default clause for column."
+  [column] (if (:default column) (str "default " (:default column))))
+
+(defn not-null-clause
+  "Returns the not null clause for column."
+  [column] (if (or (:primary-key column) (:not-null? column)) "not null"))
+
+(defn primary-key-clause
+  "Returns the primary key for column."
+  [column] (if (:primary-key column) "primary key"))
+
+(defn references-clause
+  "Returns the unique clause for column."
+  [column]
   (if-let [reference (:references column)]
     (->> (split (replace (str reference) #":" "") #"/")
          (map column-identifier)
          (apply format "references %s(%s)" ))))
+
+(defn unique-clause
+  "Returns the unique clause for column."
+  [column] (if (:unique? column) "unique"))
 
 (defn column-spec
   "Returns the column specification for the clojure.java.jdbc create-table fn."
@@ -58,22 +78,11 @@
   (->> [(column-identifier column)
         (column-type-name column)
         (references-clause column)
-        (if (:primary-key column) "primary key")
-        (if (:unique? column) "unique")
-        (if (or (:primary-key column) (:not-null? column)) "not null")]
+        (primary-key-clause column)
+        (default-clause column)
+        (not-null-clause column)
+        (unique-clause column)]
        (remove nil?)))
-
-(defn- default-clause
-  "Returns the default clause for column."
-  [column] (if (:default column) (str " DEFAULT " (:default column))))
-
-(defn- not-null-clause
-  "Returns the not null clause for column."
-  [column] (if (:not-null? column) "NOT NULL"))
-
-(defn- unique-clause
-  "Returns the unique clause for column."
-  [column] (if (:unique? column) "UNIQUE"))
 
 (defn add-column-statement
   "Returns the add column SQL statement."

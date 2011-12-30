@@ -90,9 +90,9 @@
     'id id-column))
 
 (deftest test-column-spec
-  (is (= ["created_at" "timestamp with time zone" "not null"]
+  (is (= ["created_at" "timestamp with time zone" "default now()" "not null"]
          (column-spec created-at-column)))
   (is (= ["id" "serial" "primary key" "not null"]
          (column-spec id-column)))
-  (is (= ["iso_639_1" "varchar(2)" "unique" "not null"]
+  (is (= ["iso_639_1" "varchar(2)" "not null" "unique"]
          (column-spec iso-639-1-column))))
