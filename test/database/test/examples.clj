@@ -18,8 +18,8 @@
 
 (deftable continents
   [[:id :serial :primary-key true]
-   [:name :text :not-null? true :unique true]
-   [:iso-3166-1-alpha-2 :varchar :length 2 :unique true]
+   [:name :text :not-null? true :unique? true]
+   [:iso-3166-1-alpha-2 :varchar :length 2 :unique? true]
    [:location [:point-2d]]
    [:geometry [:multipolygon-2d]]
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
@@ -27,10 +27,10 @@
 
 (deftable languages
   [[:id :serial :primary-key true]
-   [:name :text :unique true :not-null? true]
+   [:name :text :unique? true :not-null? true]
    [:family :text :not-null? true]
-   [:iso-639-1 :varchar :length 2 :unique true :not-null? true]
-   [:iso-639-2 :varchar :length 3 :unique true :not-null? true]
+   [:iso-639-1 :varchar :length 2 :unique? true :not-null? true]
+   [:iso-639-2 :varchar :length 3 :unique? true :not-null? true]
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]])
 

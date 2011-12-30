@@ -12,7 +12,7 @@
   (make-column :id :serial :primary-key true))
 
 (def iso-639-1-column
-  (make-column :iso-639-1 :varchar :length 2 :unique true :not-null? true))
+  (make-column :iso-639-1 :varchar :length 2 :unique? true :not-null? true))
 
 (deftest test-make-column
   (let [column created-at-column]

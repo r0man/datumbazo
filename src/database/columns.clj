@@ -4,7 +4,7 @@
   (:use [clojure.string :only (join split replace)]
         [inflections.core :only (dasherize)]))
 
-(defrecord Column [name type length default native? not-null? primary-key references unique])
+(defrecord Column [name type length default native? not-null? primary-key references unique?])
 
 (defn column?
   "Returns true if arg is a column, otherwise false."
@@ -59,7 +59,7 @@
         (column-type-name column)
         (references-clause column)
         (if (:primary-key column) "primary key")
-        (if (:unique column) "unique")
+        (if (:unique? column) "unique")
         (if (or (:primary-key column) (:not-null? column)) "not null")]
        (remove nil?)))
 
@@ -73,7 +73,7 @@
 
 (defn- unique-clause
   "Returns the unique clause for column."
-  [column] (if (:unique column) "UNIQUE"))
+  [column] (if (:unique? column) "UNIQUE"))
 
 (defn add-column-statement
   "Returns the add column SQL statement."
