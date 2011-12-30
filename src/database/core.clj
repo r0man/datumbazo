@@ -32,13 +32,13 @@
     (cons (join " OR " (map #(str (column-identifier %1) " = ?") columns))
           (map #(get (serialize-column %1 record) (column-keyword %1)) columns))))
 
-(defn delete-rows
-  "Delete rows from the database table. If the optional where clause
-  is given, only those rows matching the clause will be deleted."
-  [table & [where]]
-  (if where
-    (jdbc/delete-rows (table-identifier table) where)
-    (jdbc/do-commands (str "DELETE FROM " (table-identifier table)))))
+(defn delete-all
+  "Delete all rows from the database table."
+  [table] (jdbc/do-commands (str "DELETE FROM " (table-identifier table))))
+
+(defn delete-where
+  "Delete rows from the database table mathching the where clause."
+  [table where-clause] (jdbc/delete-rows (table-identifier table) where-clause))
 
 (defn delete-record
   "Delete the record from the database table."
@@ -47,7 +47,7 @@
     (let [where-clause (where-clause table record)]
       (assert (not (empty? where-clause)) "Can't build where clause to delete record.")
       (jdbc/transaction
-       (let [[rows] (delete-rows table where-clause)]
+       (let [[rows] (delete-where table where-clause)]
          (assert (= 1 rows))
          record)))))
 

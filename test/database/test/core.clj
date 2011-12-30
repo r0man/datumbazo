@@ -31,12 +31,16 @@
     (is (= record (delete-record languages record)))
     (insert-record languages german)))
 
-(database-test test-delete-rows
+(database-test test-delete-all
   (create-table languages)
   (let [language (insert-record languages german)]
-    (delete-rows languages)
-    (insert-record languages german)
-    (delete-rows languages ["name = ?" (:name language)])
+    (delete-all languages)
+    (insert-record languages german)))
+
+(database-test test-delete-where
+  (create-table languages)
+  (let [language (insert-record languages german)]
+    (delete-where languages ["name = ?" (:name language)])
     (insert-record languages german)))
 
 (database-test test-drop-table
