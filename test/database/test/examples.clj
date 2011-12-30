@@ -42,7 +42,7 @@
 
 (deftest test-deserialize-language
   (let [language (deserialize-language {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
-    (is (instance? Language language))
+    (is (map? language))
     (is (= "German" (:name language)))
     (is (= "DE" (:iso-639-1 language)))
     (is (= "DEU" (:iso-639-2 language)))))
@@ -50,7 +50,6 @@
 (deftest test-serialize-language
   (let [language (serialize-language {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
     (is (map? language))
-    (is (not (instance? Language language)))
     (is (= "German" (:name language)))
     (is (= "de" (:iso-639-1 language)))
     (is (= "deu" (:iso-639-2 language)))))
