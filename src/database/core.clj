@@ -69,6 +69,16 @@
          (jdbc/insert-record (table-identifier table))
          (deserialize-row table))))
 
+(defn select-by-column
+  "Find a record in the database table by id."
+  [table column value]
+  (jdbc/with-query-results results
+    [(format
+      "SELECT * FROM %s WHERE %s = ?"
+      (table-identifier table)
+      (column-identifier column)) value]
+    (doall (map (partial deserialize-row table) results))))
+
 (defn- define-crud
   "Returns a defrecord forms for the crud fns."
   [table]

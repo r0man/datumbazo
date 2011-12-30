@@ -58,6 +58,14 @@
     (is (instance? Timestamp (:created-at record)))
     (is (instance? Timestamp (:updated-at record)))))
 
+(database-test test-select-by-column
+  (create-table languages)
+  (let [language (insert-record languages german)]
+    (is (empty? (select-by-column languages :name nil)))
+    (is (empty? (select-by-column languages :name "NOT-EXISTING")))
+    (is (= [language] (select-by-column languages :name (:name language))))
+    (is (= [language] (select-by-column languages :created-at (:created-at language))))))
+
 (deftest test-where-clause
   (let [clause (where-clause languages {:id 1})]
     (is (= "id = ?" (first clause)))
