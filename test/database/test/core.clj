@@ -31,17 +31,17 @@
 
 (database-test test-delete-record
   (create-table languages)
-  (let [record (insert-record! languages german)]
+  (let [record (insert-record languages german)]
     (delete-record languages record)
-    (insert-record! languages german)))
+    (insert-record languages german)))
 
 (database-test test-delete-rows
   (create-table languages)
-  (let [language (insert-record! languages german)]
+  (let [language (insert-record languages german)]
     (delete-rows languages)
-    (insert-record! languages german)
+    (insert-record languages german)
     (delete-rows languages ["name = ?" (:name language)])
-    (insert-record! languages german)))
+    (insert-record languages german)))
 
 (database-test test-drop-table
   (create-table languages)
@@ -49,9 +49,9 @@
   (is (drop-table languages :if-exists true))
   (is (thrown? Exception (drop-table languages))))
 
-(database-test test-insert-record!
+(database-test test-insert-record
   (create-table languages)
-  (let [record (insert-record! languages german)]
+  (let [record (insert-record languages german)]
     (is (number? (:id record)))
     (is (= (:name record)))
     (is (= "Indo-European" (:family record)))

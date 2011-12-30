@@ -52,7 +52,7 @@
           (if cascade " CASCADE")
           (if restrict " RESTRICT")))))
 
-(defn insert-record!
+(defn insert-record
   "Insert a record into the database table."
   [table record]
   (->> (serialize-row table record)
@@ -72,7 +72,7 @@
     `(do
        (defn ~(symbol (str "insert-" entity#))
          ~(str "Insert the " entity# " into the database.")
-         [~'record] (insert-record! (find-table ~(table-keyword table)) ~'record)))))
+         [~'record] (insert-record (find-table ~(table-keyword table)) ~'record)))))
 
 (defmacro deftable
   "Define and register a database table and it's columns."
