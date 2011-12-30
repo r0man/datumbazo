@@ -98,3 +98,11 @@
          (column-spec id-column)))
   (is (= ["iso_639_1" "varchar(2)" "not null" "unique"]
          (column-spec iso-639-1-column))))
+
+(deftest test-key-columns
+  (are [expected record]
+    (is (= expected (map :name (key-columns languages record))))
+    [] {}
+    [:id] {:id 1}
+    [:id :iso-639-1] {:id 1 :iso-639-1 "de"}
+    [:id :iso-639-1] {:id 1 :iso-639-1 "de" :created-at "2011-12-30"}))

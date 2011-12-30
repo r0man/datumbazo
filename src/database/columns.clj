@@ -52,6 +52,12 @@
   (let [columns (set columns)]
     (filter #(contains? columns (column-keyword %1)) (:columns table))))
 
+(defn key-columns
+  "Returns the key columns for record."
+  [table record]
+  (let [columns (select-columns table (keys record))]
+    (concat (filter :primary-key columns) (filter :unique? columns))))
+
 ;; SQL CLAUSE FNS
 
 (defn default-clause
