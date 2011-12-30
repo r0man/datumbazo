@@ -27,7 +27,7 @@
   (let [row (or row {}) columns (select-columns table (keys row))]
     (reduce #(serialize-column %2 %1) (into {} row) columns)))
 
-(defn define-deserialization
+(defn define-serialization
   "Returns the serialization froms for the database table."
   [table]
   (let [record# (camelize (singular (table-symbol table)))

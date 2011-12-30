@@ -100,5 +100,5 @@
   (let [name# name columns# columns table# (make-table (keyword name#) columns#)]
     `(do
        (register-table (make-table ~(keyword name#) ~columns#))
-       ~(define-deserialization table#)
+       ~(define-serialization table#)
        ~(define-crud table#))))
