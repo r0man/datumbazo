@@ -1,4 +1,5 @@
 (ns database.test.core
+  (:import java.sql.Timestamp)
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.jdbc.internal :as internal])
   (:use clojure.test
@@ -41,3 +42,16 @@
     (is (drop-table table))
     (is (drop-table table :if-exists true))
     (is (thrown? Exception (drop-table table)))))
+
+(database-test test-insert-record!
+  (let [table (create-table (find-table :languages))
+        record (insert-record! table {:name "German" :family "Indo-European" :iso-639-1 "DE" :iso-639-2 "DEU"})]
+    (is (number? (:id record)))
+    (is (= "German" (:name record)))
+    (is (= "Indo-European" (:family record)))
+    ;; (is (= "de" (:iso-639-1 record)))
+    ;; (is (= "deu" (:iso-639-2 record)))
+    ;; (is (instance? Timestamp (:created-at record)))
+    ;; (is (instance? Timestamp (:updated-at record)))
+    ;; (prn record)
+    ))
