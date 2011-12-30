@@ -29,9 +29,8 @@
   "Returns the SQL where clause for record."
   [table record]
   (let [columns (key-columns table record)]
-    (cons
-     (join " OR " (map #(str (column-identifier %1) " = ?") columns))
-     (map #(get (serialize-column %1 record) (column-keyword %1)) columns))))
+    (cons (join " OR " (map #(str (column-identifier %1) " = ?") columns))
+          (map #(get (serialize-column %1 record) (column-keyword %1)) columns))))
 
 (defn delete-rows
   "Delete rows from the database table. If the optional where clause
