@@ -57,5 +57,5 @@
 
 (deftest test-register-table
   (let [table (make-table :photo-thumbnails)]
-    (register-table table)
+    (is (= table (register-table table)))
     (is (= table (:photo-thumbnails @*tables*)))))

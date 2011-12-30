@@ -41,4 +41,6 @@
 
 (defn register-table
   "Register the database table in *tables*."
-  [table] (swap! *tables* assoc (table-keyword table) table))
+  [table]
+  (swap! *tables* assoc (table-keyword table) table)
+  table)
