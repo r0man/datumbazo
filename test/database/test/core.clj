@@ -24,6 +24,12 @@
     (is (instance? database.tables.Table (create-table table)))
     (is (thrown? Exception (create-table table)))))
 
+(deftest test-deftable
+  (let [table (find-table :continents)
+        fields (database.test.examples.Continent/getBasis)]
+    (is (= (count (:columns table)) (count fields)))
+    (is (= (map column-symbol (:columns table)) fields))))
+
 (database-test test-delete-rows
   (let [table (create-table test-table)]
     (delete-rows table)

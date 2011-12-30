@@ -1,6 +1,7 @@
 (ns database.core
   (:require [clojure.java.jdbc :as jdbc])
-  (:use database.columns
+  (:use [inflections.core :only (camelize singular)]
+        database.columns
         database.tables))
 
 (defmulti add-column
@@ -40,8 +41,15 @@
           (if cascade " CASCADE")
           (if restrict " RESTRICT")))))
 
+(defn- define-row
+  "Retruns a defrecord form for the table."
+  [table]
+  `(defrecord ~(camelize (singular (table-symbol table)))
+       [~@(map column-symbol (:columns table))]))
+
 (defmacro deftable
   "Define and register a database table and it's columns."
   [name & [columns]]
   (let [table# (register-table (make-table name columns))]
-    ))
+    `(do
+       ~(define-row table#))))
