@@ -42,7 +42,7 @@
           (if restrict " RESTRICT")))))
 
 (defn- define-row
-  "Retruns a defrecord form for the table."
+  "Returns a defrecord form for the table rows."
   [table]
   `(defrecord ~(camelize (singular (table-symbol table)))
        [~@(map column-symbol (:columns table))]))

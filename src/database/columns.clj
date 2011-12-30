@@ -4,7 +4,7 @@
   (:use [clojure.string :only (join split replace)]
         [inflections.core :only (dasherize)]))
 
-(defrecord Column [name type native? length default not-null primary-key references unique])
+(defrecord Column [name type length default native? not-null primary-key references unique])
 
 (defn column?
   "Returns true if arg is a column, otherwise false."
@@ -33,7 +33,9 @@
   "Returns the type of the column as string."
   [column]
   (let [type (:type column)]
-    (if (string? type) type (replace (name type) #"-+" " "))))
+    (str (if (string? type)
+           type (replace (name type) #"-+" " "))
+         (if-let [length (:length column)] (str "(" length ")")))))
 
 (defn make-column
   "Make a new database column."
@@ -54,7 +56,7 @@
   "Returns the column specification for the clojure.java.jdbc create-table fn."
   [column]
   (->> [(column-identifier column)
-        (str (column-type-name column) (if-let [length (:length column)] (str "(" length ")")))
+        (column-type-name column)
         (references-clause column)
         (if (:primary-key column) "primary key")
         (if (:unique column) "unique")
