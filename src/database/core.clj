@@ -72,12 +72,12 @@
 (defn select-by-column
   "Find a record in the database table by id."
   [table column value]
-  (jdbc/with-query-results results
+  (jdbc/with-query-results rows
     [(format
       "SELECT * FROM %s WHERE %s = ?"
       (table-identifier table)
       (column-identifier column)) value]
-    (doall (map (partial deserialize-row table) results))))
+    (doall (map (partial deserialize-row table) rows))))
 
 (defn- define-crud
   "Returns a defrecord forms for the crud fns."
