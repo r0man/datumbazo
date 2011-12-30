@@ -2,7 +2,8 @@
   (:require [clojure.java.jdbc :as jdbc])
   (:use [inflections.core :only (camelize singular)]
         database.columns
-        database.tables))
+        database.tables
+        database.serialization))
 
 (defmulti add-column
   "Add column to the database table."
@@ -44,12 +45,13 @@
 (defn- define-row
   "Returns a defrecord form for the table rows."
   [table]
-  `(defrecord ~(camelize (singular (table-symbol table)))
-       [~@(map column-symbol (:columns table))]))
+  (let [record# (camelize (singular (table-symbol table)))]
+    `(defrecord ~record# [~@(map column-symbol (:columns table))])))
 
 (defmacro deftable
   "Define and register a database table and it's columns."
   [name & [columns]]
   (let [table# (register-table (make-table name columns))]
     `(do
-       ~(define-row table#))))
+       ~(define-row table#)
+       ~(define-deserialization table#))))
