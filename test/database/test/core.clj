@@ -31,6 +31,8 @@
 
 (database-test test-delete-record
   (create-table languages)
+  (is (nil? (delete-record languages nil)))
+  (is (nil? (delete-record languages {})))
   (let [record (insert-record languages german)]
     (is (= record (delete-record languages record)))
     (insert-record languages german)))
