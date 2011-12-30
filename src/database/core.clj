@@ -43,10 +43,13 @@
 (defn delete-record
   "Delete the record from the database table."
   [table record]
+  (assert (not (empty? record)) "Can't delete empty record.")
   (jdbc/transaction
-   (let [[rows] (delete-rows table (where-clause table record))]
-     (assert (= 1 rows))
-     record)))
+   (let [where-clause (where-clause table record)]
+     (assert (not (empty? where-clause)) "Can't build where clause to delete record.")
+     (let [[rows] (delete-rows table where-clause)]
+       (assert (= 1 rows))
+       record))))
 
 (defn drop-table
   "Drop the database table."
