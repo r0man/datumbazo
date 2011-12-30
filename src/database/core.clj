@@ -49,9 +49,8 @@
       (let [where-clause (where-clause table record)]
         (assert (not (empty? where-clause)) "Can't build where clause to delete record.")
         (jdbc/transaction
-         (let [[rows] (delete-where table where-clause)]
-           (assert (= 1 rows))
-           record))))))
+         (assert (= 1 (first (delete-where table where-clause))))
+         record)))))
 
 (defn drop-table
   "Drop the database table."
