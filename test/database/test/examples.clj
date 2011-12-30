@@ -15,6 +15,9 @@
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]])
 
+(def languages (find-table :languages))
+(def german {:name "German" :family "Indo-European" :iso-639-1 "DE" :iso-639-2 "DEU"})
+
 (deftable photo-thumbnails
   [[:id :serial :primary-key true]
    [:title :text]
@@ -24,9 +27,6 @@
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]])
 
 (def photo-thumbnails (find-table :photo-thumbnails))
-
-(def languages (find-table :languages))
-(def german {:name "German" :family "Indo-European" :iso-639-1 "DE" :iso-639-2 "DEU"})
 
 (deftest test-deserialize-language
   (let [language (deserialize-language {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]

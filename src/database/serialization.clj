@@ -3,10 +3,6 @@
         database.columns
         database.tables))
 
-(defn- select-columns [table columns]
-  (let [columns (set columns)]
-    (filter #(contains? columns (column-keyword %1)) (:columns table))))
-
 (defn- transform-column [column row transform-fn]
   (let [attr-name (column-keyword column) attr-val (get row attr-name)]
     (if (and attr-val transform-fn)

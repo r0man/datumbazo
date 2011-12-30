@@ -46,6 +46,12 @@
     :native? (if (sequential? type) false true)
     :not-null? (or (:not-null? attributes) (:primary-key attributes))))
 
+(defn select-columns
+  "Select columns of table by keywords."
+  [table columns]
+  (let [columns (set columns)]
+    (filter #(contains? columns (column-keyword %1)) (:columns table))))
+
 ;; SQL CLAUSE FNS
 
 (defn default-clause
