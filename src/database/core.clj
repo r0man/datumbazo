@@ -28,7 +28,8 @@
 (defn where-clause
   "Returns the SQL where clause for record."
   [table record]
-  (let [columns (key-columns table record)]
+  (let [table (find-table table)
+        columns (key-columns table record)]
     (cons (join " OR " (map #(str (column-identifier %1) " = ?") columns))
           (map #(get (serialize-column %1 record) (column-keyword %1)) columns))))
 
@@ -44,7 +45,8 @@
   "Delete the record from the database table."
   [table record]
   (if (not (empty? record))
-    (let [where-clause (where-clause table record)]
+    (let [table (find-table table)
+          where-clause (where-clause table record)]
       (assert (not (empty? where-clause)) "Can't build where clause to delete record.")
       (jdbc/transaction
        (let [[rows] (delete-where table where-clause)]
@@ -73,12 +75,13 @@
 (defn select-by-column
   "Find a record in the database table by id."
   [table column value]
-  (jdbc/with-query-results rows
-    [(format
-      "SELECT * FROM %s WHERE %s = ?"
-      (table-identifier table)
-      (column-identifier column)) value]
-    (doall (map (partial deserialize-row table) rows))))
+  (let [table (find-table table)]
+    (jdbc/with-query-results rows
+      [(format
+        "SELECT * FROM %s WHERE %s = ?"
+        (table-identifier table)
+        (column-identifier column)) value]
+      (doall (map (partial deserialize-row table) rows)))))
 
 (defn- define-crud
   "Returns a defrecord forms for the crud fns."
