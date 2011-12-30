@@ -37,7 +37,7 @@
     :photo-thumbnails :photo-thumbnails
     :photo-thumbnails 'photo-thumbnails
     "photo-thumbnails" "photo-thumbnails"
-    :photo-thumbnails photo-thumbnails-table))
+    :photo-thumbnails photo-thumbnails))
 
 (deftest test-table-keyword
   (are [expected table]
@@ -45,7 +45,7 @@
     :photo-thumbnails :photo-thumbnails
     :photo-thumbnails 'photo-thumbnails
     :photo-thumbnails "photo-thumbnails"
-    :photo-thumbnails photo-thumbnails-table))
+    :photo-thumbnails photo-thumbnails))
 
 (deftest test-table-symbol
   (are [expected table]
@@ -53,7 +53,7 @@
     'photo-thumbnails :photo-thumbnails
     'photo-thumbnails 'photo-thumbnails
     'photo-thumbnails "photo-thumbnails"
-    'photo-thumbnails photo-thumbnails-table))
+    'photo-thumbnails photo-thumbnails))
 
 (deftest test-register-table
   (let [table (make-table :photo-thumbnails)]

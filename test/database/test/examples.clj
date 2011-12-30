@@ -22,8 +22,7 @@
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]])
 
-(def continents-table (find-table :continents))
-(def photo-thumbnails-table (find-table :photo-thumbnails))
+(def photo-thumbnails (find-table :photo-thumbnails))
 
 (def languages (find-table :languages))
 (def german {:name "German" :family "Indo-European" :iso-639-1 "DE" :iso-639-2 "DEU"})
