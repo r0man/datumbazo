@@ -1,4 +1,4 @@
-(defproject database "0.0.1-SNAPSHOT"
+(defproject database-clj "0.0.1-SNAPSHOT"
   :description "Clojure Database Kung-Foo"
   :dependencies [[c3p0/c3p0 "0.9.1.2"]
                  [inflections "0.6.5-SNAPSHOT"]
