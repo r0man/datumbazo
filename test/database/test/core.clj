@@ -11,28 +11,28 @@
         database.test.examples))
 
 (database-test test-add-column
-  (let [table (create-table test-table)
+  (let [table (create-table languages)
         column (make-column :x :integer)]
     (is (= column (add-column table column)))))
+
+(database-test test-create-table-with-languages
+  (let [table (find-table :languages)]
+    (is (instance? database.tables.Table (create-table table)))
+    (is (thrown? Exception (create-table table)))))
 
 (database-test test-create-table-with-photo-thumbnails
   (let [table (find-table :photo-thumbnails)]
     (is (instance? database.tables.Table (create-table table)))
     (is (thrown? Exception (create-table table)))))
 
-(database-test test-create-with-continents
-  (let [table (find-table :continents)]
-    (is (instance? database.tables.Table (create-table table)))
-    (is (thrown? Exception (create-table table)))))
-
 (deftest test-deftable
-  (let [table (find-table :continents)
-        fields (database.test.examples.Continent/getBasis)]
+  (let [table (find-table :languages)
+        fields (database.test.examples.Language/getBasis)]
     (is (= (count (:columns table)) (count fields)))
     (is (= (map column-symbol (:columns table)) fields))))
 
 (database-test test-delete-rows
-  (let [table (create-table test-table)]
+  (let [table (create-table languages)]
     (delete-rows table)
     (delete-rows table ["1 = 1"])))
 
@@ -44,8 +44,7 @@
     (is (thrown? Exception (drop-table table)))))
 
 (database-test test-insert-record!
-  (let [table (create-table (find-table :languages))
-        record (insert-record! table {:name "German" :family "Indo-European" :iso-639-1 "DE" :iso-639-2 "DEU"})]
+  (let [record (insert-record! (create-table languages) german)]
     (is (number? (:id record)))
     (is (= (:name record)))
     (is (= "Indo-European" (:family record)))
