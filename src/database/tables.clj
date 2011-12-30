@@ -1,6 +1,6 @@
 (ns database.tables
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [database.columns :only (make-column)]
+  (:use [database.columns :only (column? make-column)]
         [inflections.core :only (dasherize)]))
 
 (defonce ^:dynamic *tables* (atom {}))
@@ -9,9 +9,8 @@
 
 (defn make-table
   "Make a new database table."
-  [& {:as attributes}]
-  (assoc (map->Table (or attributes {}))
-    :name (keyword (:name attributes))))
+  [name & [columns]]
+  (Table. name (map #(if (column? %1) %1 (apply make-column %1)) columns)))
 
 (defn table?
   "Returns true if arg is a table, otherwise false."

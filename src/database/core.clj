@@ -43,6 +43,5 @@
 (defmacro deftable
   "Define and register a database table and it's columns."
   [name & [columns]]
-  (->> (map #(apply make-column %1) columns)
-       (make-table :name name :columns)
-       (register-table)))
+  (let [table# (register-table (make-table name columns))]
+    ))

@@ -1,11 +1,12 @@
 (ns database.test.tables
   (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
+        database.columns
         database.tables
         database.test.examples))
 
 (deftest test-find-table
-  (let [table (make-table :name :photo-thumbnails)]
+  (let [table (make-table :photo-thumbnails)]
     (register-table table)
     (is (= table (find-table :photo-thumbnails)))
     (is (= table (find-table 'photo-thumbnails)))
@@ -13,15 +14,16 @@
     (is (= table (find-table (find-table :photo-thumbnails))))))
 
 (deftest test-make-table
-  (let [columns (:columns photo-thumbnails-table)
-        table (make-table :name :photo-thumbnails :columns columns)]
-    (is (= :photo-thumbnails (:name table)))
-    (is (= columns (:columns table)))))
+  (let [table (make-table :test [[:id :serial]])]
+    (is (= :test (:name table)))
+    (let [columns (:columns table)]
+      (is (= 1 (count columns)))
+      (is (every? column? columns)))))
 
 (deftest test-table?
   (is (not (table? nil)))
   (is (not (table? "")))
-  (is (table? (make-table :name :continents))))
+  (is (table? (make-table :continents))))
 
 (deftest test-table-name
   (are [expected table]
@@ -54,6 +56,6 @@
     'photo-thumbnails photo-thumbnails-table))
 
 (deftest test-register-table
-  (let [table (make-table :name :photo-thumbnails)]
+  (let [table (make-table :photo-thumbnails)]
     (register-table table)
     (is (= table (:photo-thumbnails @*tables*)))))
