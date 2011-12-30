@@ -64,9 +64,10 @@
 (defn insert-record
   "Insert a record into the database table."
   [table record]
-  (->> (serialize-row table record)
-       (jdbc/insert-record (table-identifier table))
-       (deserialize-row table)))
+  (if (not (empty? record))
+    (->> (serialize-row table record)
+         (jdbc/insert-record (table-identifier table))
+         (deserialize-row table))))
 
 (defn- define-row
   "Returns a defrecord form for the table rows."

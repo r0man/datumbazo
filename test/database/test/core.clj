@@ -53,6 +53,8 @@
 
 (database-test test-insert-record
   (create-table languages)
+  (is (nil? (insert-record languages nil)))
+  (is (nil? (insert-record languages {})))
   (let [record (insert-record languages german)]
     (is (number? (:id record)))
     (is (= (:name record)))
