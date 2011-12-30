@@ -33,11 +33,11 @@
           (map #(get (serialize-column %1 record) (column-keyword %1)) columns))))
 
 (defn delete-all
-  "Delete all rows from the database table."
+  "Delete all rows from table."
   [table] (jdbc/do-commands (str "DELETE FROM " (table-identifier table))))
 
 (defn delete-where
-  "Delete rows from the database table mathching the where clause."
+  "Delete all rows from table matching the where clause."
   [table where-clause] (jdbc/delete-rows (table-identifier table) where-clause))
 
 (defn delete-record
