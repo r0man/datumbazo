@@ -2,7 +2,7 @@
   (:import com.mchange.v2.c3p0.ComboPooledDataSource)
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.jdbc.internal :as internal])
-  (:use [inflections.core :only (underscore)]
+  (:use [inflections.core :only (dasherize underscore)]
         [leiningen.env.core :only (current-environment *current*)]))
 
 (def ^:dynamic *pools* (atom {}))
@@ -50,3 +50,4 @@
   [db & body] `(jdbc/with-connection {:datasource (current-pool ~db)} ~@body))
 
 (alter-var-root #'internal/*as-str* (constantly underscore))
+(alter-var-root #'internal/*as-key* (constantly (comp keyword dasherize)))
