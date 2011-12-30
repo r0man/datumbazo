@@ -43,14 +43,10 @@
 (defn delete-record
   "Delete the record from the database table."
   [table record]
-  (if-let [column (first (filter :primary-key (:columns table)))]
-    (jdbc/transaction
-     (->> [(str (column-identifier column) " = ?")
-           (get record (column-keyword column))]
-          (delete-rows table)
-          first (= 1) assert)
-     record)
-    (throw (Exception. "No primary key defined."))))
+  (jdbc/transaction
+   (let [[rows] (delete-rows table (where-clause table record))]
+     (assert (= 1 rows))
+     record)))
 
 (defn drop-table
   "Drop the database table."
