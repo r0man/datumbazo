@@ -1,6 +1,7 @@
 (ns database.core
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [inflections.core :only (camelize singular)]
+  (:use [clojure.string :only (join)]
+        [inflections.core :only (camelize singular)]
         database.columns
         database.tables
         database.serialization))
@@ -31,6 +32,15 @@
   (if where
     (jdbc/delete-rows (table-identifier table) where)
     (jdbc/do-commands (str "DELETE FROM " (table-identifier table)))))
+
+(defn delete-record
+  "Delete the record from the database table."
+  [table record]
+  (if-let [column (first (filter :primary-key (:columns table)))]
+    (delete-rows
+     table
+     [(str (column-identifier column) " = ?")
+      (get record (column-keyword column))])))
 
 (defn drop-table
   "Drop the database table."

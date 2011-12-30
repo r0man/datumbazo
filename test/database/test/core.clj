@@ -11,19 +11,17 @@
         database.test.examples))
 
 (database-test test-add-column
-  (let [table (create-table languages)
-        column (make-column :x :integer)]
-    (is (= column (add-column table column)))))
+  (create-table languages)
+  (let [column (make-column :x :integer)]
+    (is (= column (add-column languages column)))))
 
 (database-test test-create-table-with-languages
-  (let [table (find-table :languages)]
-    (is (instance? database.tables.Table (create-table table)))
-    (is (thrown? Exception (create-table table)))))
+  (is (instance? database.tables.Table (create-table languages)))
+  (is (thrown? Exception (create-table languages))))
 
 (database-test test-create-table-with-photo-thumbnails
-  (let [table (find-table :photo-thumbnails)]
-    (is (instance? database.tables.Table (create-table table)))
-    (is (thrown? Exception (create-table table)))))
+  (is (instance? database.tables.Table (create-table photo-thumbnails)))
+  (is (thrown? Exception (create-table photo-thumbnails))))
 
 (deftest test-deftable
   (let [table (find-table :languages)
@@ -31,20 +29,29 @@
     (is (= (count (:columns table)) (count fields)))
     (is (= (map column-symbol (:columns table)) fields))))
 
+(database-test test-delete-record
+  (create-table languages)
+  (let [record (insert-record! languages german)]
+    (delete-record languages record)
+    (insert-record! languages german)))
+
 (database-test test-delete-rows
-  (let [table (create-table languages)]
-    (delete-rows table)
-    (delete-rows table ["1 = 1"])))
+  (create-table languages)
+  (let [language (insert-record! languages german)]
+    (delete-rows languages)
+    (insert-record! languages german)
+    (delete-rows languages ["name = ?" (:name language)])
+    (insert-record! languages german)))
 
 (database-test test-drop-table
-  (let [table (find-table :photo-thumbnails)]
-    (is (create-table table))
-    (is (drop-table table))
-    (is (drop-table table :if-exists true))
-    (is (thrown? Exception (drop-table table)))))
+  (create-table languages)
+  (is (drop-table languages))
+  (is (drop-table languages :if-exists true))
+  (is (thrown? Exception (drop-table languages))))
 
 (database-test test-insert-record!
-  (let [record (insert-record! (create-table languages) german)]
+  (create-table languages)
+  (let [record (insert-record! languages german)]
     (is (number? (:id record)))
     (is (= (:name record)))
     (is (= "Indo-European" (:family record)))

@@ -3,7 +3,8 @@
   (:use clojure.test
         database.core
         database.columns
-        database.connection))
+        database.connection
+        database.test.examples))
 
 (def created-at-column
   (make-column :created-at :timestamp-with-time-zone :default "now()" :not-null? true))
@@ -47,7 +48,8 @@
 (deftest test-column?
   (is (not (column? nil)))
   (is (not (column? "")))
-  (is (column? created-at-column)))
+  (is (column? created-at-column))
+  (is (every? column? (:columns languages))))
 
 (deftest test-column-identifier
   (are [expected column]
