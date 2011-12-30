@@ -46,16 +46,23 @@
   "Insert a record into the database table."
   [table record]
   (->> (serialize-row table record)
-       identity
        (jdbc/insert-record (table-identifier table))
-       (deserialize-row table)
-       ))
+       (deserialize-row table)))
 
 (defn- define-row
   "Returns a defrecord form for the table rows."
   [table]
   (let [record# (camelize (singular (table-symbol table)))]
     `(defrecord ~record# [~@(map column-symbol (:columns table))])))
+
+(defn- define-crud
+  "Returns a defrecord forms for the crud fns."
+  [table]
+  (let [entity# (singular (table-symbol table))]
+    `(do
+       (defn ~(symbol (str "insert-" entity#))
+         ~(str "Insert the " entity# " into the database.")
+         [~'record] (insert-record! (find-table ~(table-keyword table)) ~'record)))))
 
 (defmacro deftable
   "Define and register a database table and it's columns."
@@ -64,4 +71,5 @@
     `(do
        (register-table (make-table ~(keyword name#) ~columns#))
        ~(define-row table#)
-       ~(define-deserialization table#))))
+       ~(define-deserialization table#)
+       ~(define-crud table#))))

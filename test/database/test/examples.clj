@@ -1,4 +1,5 @@
 (ns database.test.examples
+  (:import java.sql.Timestamp)
   (:use [clojure.string :only (lower-case)]
         clojure.test
         database.core
@@ -34,22 +35,22 @@
     (is (= "DE" (:iso-639-1 language)))
     (is (= "DEU" (:iso-639-2 language)))))
 
+(database-test test-insert-language
+  (create-table languages)
+  (let [record (insert-language german)]
+    (is (number? (:id record)))
+    (is (= (:name record)))
+    (is (= "Indo-European" (:family record)))
+    (is (= "de" (:iso-639-1 record)))
+    (is (= "deu" (:iso-639-2 record)))
+    (is (instance? Timestamp (:created-at record)))
+    (is (instance? Timestamp (:updated-at record)))))
+
 (deftest test-serialize-language
   (let [language (serialize-language {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
     (is (map? language))
     (is (= "German" (:name language)))
     (is (= "de" (:iso-639-1 language)))
     (is (= "deu" (:iso-639-2 language)))))
-
-;; (database-test test-insert-language
-;;   (create-table languages)
-;;   (let [record (insert-language german)]
-;;     (is (number? (:id record)))
-;;     (is (= (:name record)))
-;;     (is (= "Indo-European" (:family record)))
-;;     (is (= "de" (:iso-639-1 record)))
-;;     (is (= "deu" (:iso-639-2 record)))
-;;     (is (instance? Timestamp (:created-at record)))
-;;     (is (instance? Timestamp (:updated-at record)))))
 
 (load-environments)

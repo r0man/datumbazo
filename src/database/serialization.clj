@@ -17,13 +17,13 @@
   "Deserialize the column of the database row."
   [column row] (transform-column column row (:deserialize column)))
 
-(defn serialize-column
-  "Serialize the column of the database row."
-  [column row] (transform-column column row (:serialize column)))
-
 (defn deserialize-row
   "Deserialize the database row."
   [table row] (reduce #(deserialize-column %2 %1) row (:columns table)))
+
+(defn serialize-column
+  "Serialize the column of the database row."
+  [column row] (transform-column column row (:serialize column)))
 
 (defn serialize-row
   "Serialize the database row."
