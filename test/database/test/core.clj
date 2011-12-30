@@ -32,7 +32,7 @@
 (database-test test-delete-record
   (create-table languages)
   (let [record (insert-record languages german)]
-    (delete-record languages record)
+    (is (= record (delete-record languages record)))
     (insert-record languages german)))
 
 (database-test test-delete-rows

@@ -46,6 +46,12 @@
     (is (instance? Timestamp (:created-at record)))
     (is (instance? Timestamp (:updated-at record)))))
 
+(database-test test-delete-language
+  (create-table languages)
+  (let [language (insert-language german)]
+    (is (= language (delete-language language)))
+    (insert-language german)))
+
 (deftest test-serialize-language
   (let [language (serialize-language {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
     (is (map? language))

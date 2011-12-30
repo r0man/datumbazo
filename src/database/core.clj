@@ -37,10 +37,13 @@
   "Delete the record from the database table."
   [table record]
   (if-let [column (first (filter :primary-key (:columns table)))]
-    (delete-rows
-     table
-     [(str (column-identifier column) " = ?")
-      (get record (column-keyword column))])
+    (let [result
+          (delete-rows
+           table
+           [(str (column-identifier column) " = ?")
+            (get record (column-keyword column))])]
+      (assert (= 1 (first result)))
+      record)
     (throw (Exception. "No primary key defined."))))
 
 (defn drop-table
@@ -73,7 +76,10 @@
     `(do
        (defn ~(symbol (str "insert-" entity#))
          ~(str "Insert the " entity# " into the database.")
-         [~'record] (insert-record (find-table ~(table-keyword table)) ~'record)))))
+         [~'record] (insert-record (find-table ~(table-keyword table)) ~'record))
+       (defn ~(symbol (str "delete-" entity#))
+         ~(str "Delete the " entity# " from the database.")
+         [~'record] (delete-record (find-table ~(table-keyword table)) ~'record)))))
 
 (defmacro deftable
   "Define and register a database table and it's columns."
