@@ -15,7 +15,7 @@
 
 (defn deserialize-row
   "Deserialize the database row."
-  [table row] (reduce #(deserialize-column %2 %1) row (:columns table)))
+  [table row] (reduce #(deserialize-column %2 %1) (or row {}) (:columns table)))
 
 (defn serialize-column
   "Serialize the column of the database row."
@@ -24,7 +24,7 @@
 (defn serialize-row
   "Serialize the database row."
   [table row]
-  (let [columns (select-columns table (keys row))]
+  (let [row (or row {}) columns (select-columns table (keys row))]
     (reduce #(serialize-column %2 %1) (into {} row) columns)))
 
 (defn define-deserialization

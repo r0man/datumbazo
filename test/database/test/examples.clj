@@ -29,6 +29,8 @@
 (def photo-thumbnails (find-table :photo-thumbnails))
 
 (deftest test-deserialize-language
+  (is (= {} (deserialize-language nil)))
+  (is (= {} (deserialize-language {})))
   (let [language (deserialize-language {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
     (is (map? language))
     (is (= "German" (:name language)))
@@ -37,6 +39,8 @@
 
 (database-test test-insert-language
   (create-table languages)
+  (is (nil? (insert-language nil)))
+  (is (nil? (insert-language {})))
   (let [record (insert-language german)]
     (is (number? (:id record)))
     (is (= (:name record)))
@@ -48,11 +52,15 @@
 
 (database-test test-delete-language
   (create-table languages)
+  (is (nil? (delete-language nil)))
+  (is (nil? (delete-language {})))
   (let [language (insert-language german)]
     (is (= language (delete-language language)))
     (insert-language german)))
 
 (deftest test-serialize-language
+  (is (= {} (serialize-language nil)))
+  (is (= {} (serialize-language {})))
   (let [language (serialize-language {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
     (is (map? language))
     (is (= "German" (:name language)))
