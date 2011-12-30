@@ -25,7 +25,7 @@
     (is (= {} (deserialize-row table {})))
     (is (= {:iso-639-1 "de"} (deserialize-row table {:iso-639-1 "DE"})))))
 
-(deftest atest-serialize-row
+(deftest test-serialize-row
   (let [table (make-table :languages [[:iso-639-1 :varchar :length 2 :serialize lower-case]])]
     (is (= {} (serialize-row table {})))
     (is (= {:iso-639-1 "de"} (serialize-row table {:iso-639-1 "DE"})))))

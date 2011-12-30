@@ -3,10 +3,14 @@
         database.columns
         database.tables))
 
+(defn- select-columns [table columns]
+  (let [columns (set columns)]
+    (filter #(contains? columns (column-keyword %1)) (:columns table))))
+
 (defn- transform-column [column row transform-fn]
-  (let [attribute (column-keyword column) value (get row attribute)]
-    (if (and value transform-fn)
-      (assoc row attribute (transform-fn value))
+  (let [attr-name (column-keyword column) attr-val (get row attr-name)]
+    (if (and attr-val transform-fn)
+      (assoc row attr-name (transform-fn attr-val))
       row)))
 
 (defn deserialize-column
@@ -23,7 +27,9 @@
 
 (defn serialize-row
   "Serialize the database row."
-  [table row] (reduce #(serialize-column %2 %1) (into {} row) (:columns table)))
+  [table row]
+  (let [columns (select-columns table (keys row))]
+    (reduce #(serialize-column %2 %1) (into {} row) columns)))
 
 (defn define-deserialization
   "Returns the serialization froms for the database table."
@@ -34,7 +40,7 @@
     `(do
        (defn ~(symbol (str "deserialize-" entity#))
          ~(str "Deserialize the " entity# " database row.")
-         [~entity#] (deserialize-row (find-table ~(table-keyword table)) (~constructor# ~entity#)))
+         [~entity#] (deserialize-row (find-table ~(table-keyword table)) ~entity#))
        (defn ~(symbol (str "serialize-" entity#))
          ~(str "Serialize the " entity# " database row.")
-         [~entity#] (serialize-row (find-table ~(table-keyword table)) (~constructor# ~entity#))))))
+         [~entity#] (serialize-row (find-table ~(table-keyword table)) ~entity#)))))
