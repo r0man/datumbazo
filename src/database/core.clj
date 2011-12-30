@@ -69,12 +69,6 @@
          (jdbc/insert-record (table-identifier table))
          (deserialize-row table))))
 
-(defn- define-row
-  "Returns a defrecord form for the table rows."
-  [table]
-  (let [record# (camelize (singular (table-symbol table)))]
-    `(defrecord ~record# [~@(map column-symbol (:columns table))])))
-
 (defn- define-crud
   "Returns a defrecord forms for the crud fns."
   [table]
@@ -93,6 +87,5 @@
   (let [name# name columns# columns table# (make-table (keyword name#) columns#)]
     `(do
        (register-table (make-table ~(keyword name#) ~columns#))
-       ~(define-row table#)
        ~(define-deserialization table#)
        ~(define-crud table#))))

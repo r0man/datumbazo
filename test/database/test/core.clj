@@ -23,12 +23,6 @@
   (is (instance? database.tables.Table (create-table photo-thumbnails)))
   (is (thrown? Exception (create-table photo-thumbnails))))
 
-(deftest test-deftable
-  (let [table (find-table :languages)
-        fields (database.test.examples.Language/getBasis)]
-    (is (= (count (:columns table)) (count fields)))
-    (is (= (map column-symbol (:columns table)) fields))))
-
 (database-test test-delete-record
   (create-table languages)
   (is (nil? (delete-record languages nil)))
