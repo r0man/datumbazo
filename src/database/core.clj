@@ -25,6 +25,16 @@
      (add-column table column))
    table))
 
+(defn where-clause
+  "Returns the SQL where clause for record."
+  [table record]
+  (let [columns (select-columns table (keys record))]
+    (cons
+     (->> (concat (filter :primary-key columns) (filter :unique? columns))
+          (map #(str (column-identifier %1) " = ?"))
+          (join " OR "))
+     (map #(get (serialize-column %1 record) (column-keyword %1)) columns))))
+
 (defn delete-rows
   "Delete rows from the database table. If the optional where clause
   is given, only those rows matching the clause will be deleted."

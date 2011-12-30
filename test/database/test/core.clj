@@ -59,3 +59,14 @@
     (is (= "deu" (:iso-639-2 record)))
     (is (instance? Timestamp (:created-at record)))
     (is (instance? Timestamp (:updated-at record)))))
+
+(deftest test-where-clause
+  (let [[sql & values] (where-clause languages {:id 1})]
+    (is (= "id = ?" sql))
+    (is (= [1] values)))
+  (let [[sql & values] (where-clause languages {:iso-639-1 "de"})]
+    (is (= "iso_639_1 = ?" sql))
+    (is (= ["de"] values)))
+  (let [[sql & values] (where-clause languages {:id 1 :iso-639-1 "de" :iso-639-2 "deu"})]
+    (is (= "id = ? OR iso_639_1 = ? OR iso_639_2 = ?" sql))
+    (is (= [1 "de" "deu"] values))))

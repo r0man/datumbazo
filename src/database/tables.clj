@@ -1,7 +1,9 @@
 (ns database.tables
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [database.columns :only (column? make-column)]
-        [inflections.core :only (dasherize)]))
+  (:use [clojure.string :only (join)]
+        [database.columns :only (column? make-column)]
+        [inflections.core :only (dasherize)]
+        database.columns))
 
 (defonce ^:dynamic *tables* (atom {}))
 
