@@ -1,6 +1,7 @@
 (ns database.test.examples
   (:import java.sql.Timestamp)
   (:use [clojure.string :only (lower-case)]
+        [migrate.core :only (defmigration)]
         clojure.test
         database.core
         database.tables
@@ -15,9 +16,6 @@
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]])
 
-(def languages (find-table :languages))
-(def german {:name "German" :family "Indo-European" :iso-639-1 "DE" :iso-639-2 "DEU"})
-
 (deftable photo-thumbnails
   [[:id :serial :primary-key? true]
    [:title :text]
@@ -26,19 +24,31 @@
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]])
 
+(defmigration "2011-12-31T10:00:00"
+  "Create the languages table."
+  (create-table (table :languages))
+  (drop-table (table :languages)))
+
+(defmigration "2011-12-31T11:00:00"
+  "Create the photo thumbnails table."
+  (create-table (table :photo-thumbnails))
+  (drop-table (table :photo-thumbnails)))
+
+(def languages (find-table :languages))
+(def german {:name "German" :family "Indo-European" :iso-639-1 "DE" :iso-639-2 "DEU"})
+
 (def photo-thumbnails (find-table :photo-thumbnails))
 
 (deftest test-deserialize-language
   (is (= {} (deserialize-language nil)))
   (is (= {} (deserialize-language {})))
-  (let [language (deserialize-language {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
+  (let [language (deserialize-language german)]
     (is (map? language))
     (is (= "German" (:name language)))
     (is (= "DE" (:iso-639-1 language)))
     (is (= "DEU" (:iso-639-2 language)))))
 
 (database-test test-insert-language
-  (create-table languages)
   (is (nil? (insert-language nil)))
   (is (nil? (insert-language {})))
   (let [record (insert-language german)]
@@ -51,7 +61,6 @@
     (is (instance? Timestamp (:updated-at record)))))
 
 (database-test test-delete-language
-  (create-table languages)
   (is (nil? (delete-language nil)))
   (is (nil? (delete-language {})))
   (let [language (insert-language german)]
@@ -61,7 +70,7 @@
 (deftest test-serialize-language
   (is (= {} (serialize-language nil)))
   (is (= {} (serialize-language {})))
-  (let [language (serialize-language {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
+  (let [language (serialize-language german)]
     (is (map? language))
     (is (= "German" (:name language)))
     (is (= "de" (:iso-639-1 language)))

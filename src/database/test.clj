@@ -1,6 +1,7 @@
 (ns database.test
   (:require [clojure.java.jdbc :as jdbc]
-            [leiningen.env.core :as env])
+            [leiningen.env.core :as env]
+            [migrate.core :as migrate])
   (:use clojure.test
         database.connection))
 
@@ -10,6 +11,7 @@
   `(deftest ~name
      (env/with-environment :test
        (with-connection :default
+         (migrate/run)
          (jdbc/transaction (try ~@body (finally (jdbc/set-rollback-only))))))))
 
 (defn load-environments
