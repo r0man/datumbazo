@@ -71,6 +71,15 @@
            (jdbc/insert-record (table-identifier table))
            (deserialize-row table)))))
 
+(defn update-record
+  "Update a record into the database table."
+  [table record]
+  (if (not (empty? record))
+    (with-ensure-table table
+      (->> (serialize-row table record)
+           (jdbc/update-values (table-identifier table) (where-clause table record)))
+      record)))
+
 (defn select-by-column
   "Find a record in the database table by id."
   [table column value]
@@ -91,12 +100,15 @@
   [table]
   (let [entity# (singular (table-symbol table))]
     `(do
+       (defn ~(symbol (str "delete-" entity#))
+         ~(str "Delete the " entity# " from the database.")
+         [~'record] (delete-record (find-table ~(table-keyword table)) ~'record))
        (defn ~(symbol (str "insert-" entity#))
          ~(str "Insert the " entity# " into the database.")
          [~'record] (insert-record (find-table ~(table-keyword table)) ~'record))
-       (defn ~(symbol (str "delete-" entity#))
-         ~(str "Delete the " entity# " from the database.")
-         [~'record] (delete-record (find-table ~(table-keyword table)) ~'record)))))
+       (defn ~(symbol (str "update-" entity#))
+         ~(str "Update the " entity# " in the database.")
+         [~'record] (update-record (find-table ~(table-keyword table)) ~'record)))))
 
 (defmacro deftable
   "Define and register a database table and it's columns."
