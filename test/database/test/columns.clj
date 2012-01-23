@@ -99,6 +99,13 @@
   (is (= ["iso_639_1" "varchar(2)" "not null" "unique"]
          (column-spec iso-639-1-column))))
 
+(deftest test-key-column?
+  (is (not (key-column? nil)))
+  (is (not (key-column? {})))
+  (is (not (key-column? created-at-column)))
+  (is (key-column? id-column))
+  (is (key-column? iso-639-1-column)))
+
 (deftest test-key-columns
   (are [expected record]
     (is (= expected (map :name (key-columns languages record))))

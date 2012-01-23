@@ -52,6 +52,10 @@
   (let [columns (set columns)]
     (filter #(contains? columns (column-keyword %1)) (:columns table))))
 
+(defn key-column?
+  "Returns true if `column` is a primary key or is unique, otherwise
+  false." [column] (or (:primary-key? column) (:unique? column)))
+
 (defn key-columns
   "Returns the key columns for record."
   [table record]
