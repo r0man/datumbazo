@@ -119,7 +119,7 @@
        ~(format "Find the %s by the %s column in the database." name (column-keyword column))
        [~'value]
        (~(if (unique-column? column) first identity)
-        (select-by-column (find-table ~(table-keyword table)) ~(:name column) ~'value)))))
+        (select-by-column ~(table-keyword table) ~(:name column) ~'value)))))
 
 (defmacro deftable
   "Define and register a database table and it's columns."
