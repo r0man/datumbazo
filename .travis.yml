@@ -1,0 +1,9 @@
+language: clojure
+
+before_script:
+  - "psql -c 'create database database_test;' -U postgres"
+
+postgres:
+  adapter: postgresql
+  database: database_test
+  username: postgres
