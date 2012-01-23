@@ -102,20 +102,20 @@
   (let [entity# (singular (table-symbol table))]
     `(do
        (defn ~(symbol (str "delete-" entity#))
-         ~(str "Delete the " entity# " from the database.")
+         ~(format "Delete the %s from the database." entity#)
          [~'record] (delete-record (find-table ~(table-keyword table)) ~'record))
        (defn ~(symbol (str "insert-" entity#))
-         ~(str "Insert the " entity# " into the database.")
+         ~(format "Insert the %s into the database." entity#)
          [~'record] (insert-record (find-table ~(table-keyword table)) ~'record))
        (defn ~(symbol (str "update-" entity#))
-         ~(str "Update the " entity# " in the database.")
+         ~(format "Update the %s in the database." entity#)
          [~'record] (update-record (find-table ~(table-keyword table)) ~'record)))))
 
 (defn- define-finder
   [table column]
   (let [name ((if (unique-column? column) singular plural) (singular (table-symbol table)))]
-    `(defn ~(symbol (str "find-" name "-by-" (column-symbol column)))
-       ~(str "Find the " name " in the database.")
+    `(defn ~(symbol (format "find-%s-by-%s" name (column-symbol column)))
+       ~(format "Find the %s by the %s column in the database." name (column-keyword column))
        [~'value]
        (~(if (unique-column? column) first identity)
         (select-by-column (find-table ~(table-keyword table)) ~(:name column) ~'value)))))
