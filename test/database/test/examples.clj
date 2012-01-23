@@ -4,11 +4,12 @@
         [migrate.core :only (defmigration)]
         clojure.test
         database.core
+        database.util
         database.tables
         database.test))
 
 (deftable languages
-  [[:id :serial :primary-key? true]
+  [[:id :serial :primary-key? true :serialize #'parse-int]
    [:name :text :unique? true :not-null? true]
    [:family :text :not-null? true]
    [:iso-639-1 :varchar :length 2 :unique? true :not-null? true :serialize #'lower-case]
@@ -47,6 +48,27 @@
     (is (= "German" (:name language)))
     (is (= "DE" (:iso-639-1 language)))
     (is (= "DEU" (:iso-639-2 language)))))
+
+(database-test test-find-language-by-id
+  (let [record (insert-language german)]
+    (is (nil? (find-language-by-id nil)))
+    (is (nil? (find-language-by-id 0)))
+    (is (= record (find-language-by-id (:id record))))
+    (is (= record (find-language-by-id (str (:id record)))))))
+
+(database-test test-find-language-by-iso-639-1
+  (let [record (insert-language german)]
+    (is (nil? (find-language-by-iso-639-1 nil)))
+    (is (nil? (find-language-by-iso-639-1 "")))
+    (is (nil? (find-language-by-iso-639-1 "xx")))
+    (is (= record (find-language-by-iso-639-1 (:iso-639-1 record))))))
+
+(database-test test-find-language-by-iso-639-2
+  (let [record (insert-language german)]
+    (is (nil? (find-language-by-iso-639-2 nil)))
+    (is (nil? (find-language-by-iso-639-2 "")))
+    (is (nil? (find-language-by-iso-639-2 "xxx")))
+    (is (= record (find-language-by-iso-639-2 (:iso-639-2 record))))))
 
 (database-test test-insert-language
   (is (nil? (insert-language nil)))

@@ -1,7 +1,7 @@
 (ns database.core
   (:require [clojure.java.jdbc :as jdbc])
   (:use [clojure.string :only (join)]
-        [inflections.core :only (camelize singular)]
+        [inflections.core :only (camelize singular plural)]
         database.columns
         database.tables
         database.serialization))
@@ -84,19 +84,20 @@
   "Find a record in the database table by id."
   [table column value]
   (with-ensure-table table
-    (jdbc/with-query-results rows
-      [(format
-        "SELECT * FROM %s WHERE %s = ?"
-        (table-identifier table)
-        (column-identifier column)) value]
-      (doall (map (partial deserialize-row table) rows)))))
+    (let [column (or (column? column) (first (select-columns table [column])))]
+      (assert (column? column))
+      (jdbc/with-query-results rows
+        [(format
+          "SELECT * FROM %s WHERE %s = ?"
+          (table-identifier table)
+          (column-identifier column)) (if value ((or (:serialize column) identity) value))]
+        (doall (map (partial deserialize-row table) rows))))))
 
 (defn table
   "Lookup table in *tables* by name."
   [table] (find-table table))
 
 (defn- define-crud
-  "Returns a defrecord forms for the crud fns."
   [table]
   (let [entity# (singular (table-symbol table))]
     `(do
@@ -110,6 +111,16 @@
          ~(str "Update the " entity# " in the database.")
          [~'record] (update-record (find-table ~(table-keyword table)) ~'record)))))
 
+(defn- define-finder
+  [table]
+  (let [entity# (singular (table-symbol table))]
+    `(do ~@(for [column# (:columns table) :let [name# ((if (unique-column? column#) singular plural) entity#)]]
+             `(defn ~(symbol (str "find-" name# "-by-" (column-symbol column#)))
+                ~(str "Find the " entity# " in the database.")
+                [~'value]
+                (~(if (unique-column? column#) first identity)
+                 (select-by-column (find-table ~(table-keyword table)) ~(:name column#) ~'value)))))))
+
 (defmacro deftable
   "Define and register a database table and it's columns."
   [name & [columns]]
@@ -117,4 +128,5 @@
     `(do
        (register-table (make-table ~(keyword name#) ~columns#))
        ~(define-serialization table#)
-       ~(define-crud table#))))
+       ~(define-crud table#)
+       ~(define-finder table#))))
