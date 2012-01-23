@@ -1,6 +1,6 @@
 (ns database.test.examples
   (:import java.sql.Timestamp)
-  (:use [clojure.string :only (lower-case)]
+  (:use [clojure.string :only (lower-case upper-case)]
         [migrate.core :only (defmigration)]
         clojure.test
         database.core
@@ -61,14 +61,16 @@
     (is (nil? (find-language-by-iso-639-1 nil)))
     (is (nil? (find-language-by-iso-639-1 "")))
     (is (nil? (find-language-by-iso-639-1 "xx")))
-    (is (= record (find-language-by-iso-639-1 (:iso-639-1 record))))))
+    (is (= record (find-language-by-iso-639-1 (:iso-639-1 record))))
+    (is (= record (find-language-by-iso-639-1 (upper-case (:iso-639-1 record)))))))
 
 (database-test test-find-language-by-iso-639-2
   (let [record (insert-language german)]
     (is (nil? (find-language-by-iso-639-2 nil)))
     (is (nil? (find-language-by-iso-639-2 "")))
     (is (nil? (find-language-by-iso-639-2 "xxx")))
-    (is (= record (find-language-by-iso-639-2 (:iso-639-2 record))))))
+    (is (= record (find-language-by-iso-639-2 (:iso-639-2 record))))
+    (is (= record (find-language-by-iso-639-2 (upper-case (:iso-639-2 record)))))))
 
 (database-test test-insert-language
   (is (nil? (insert-language nil)))
