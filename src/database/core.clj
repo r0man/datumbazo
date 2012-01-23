@@ -104,13 +104,13 @@
     `(do
        (defn ~(symbol (str "delete-" entity#))
          ~(format "Delete the %s from the database." entity#)
-         [~'record] (delete-record (find-table ~(table-keyword table)) ~'record))
+         [~'record] (delete-record ~(table-keyword table) ~'record))
        (defn ~(symbol (str "insert-" entity#))
          ~(format "Insert the %s into the database." entity#)
-         [~'record] (insert-record (find-table ~(table-keyword table)) ~'record))
+         [~'record] (insert-record ~(table-keyword table) ~'record))
        (defn ~(symbol (str "update-" entity#))
          ~(format "Update the %s in the database." entity#)
-         [~'record & ~'options] (apply update-record (find-table ~(table-keyword table)) ~'record ~'options)))))
+         [~'record & ~'options] (apply update-record ~(table-keyword table) ~'record ~'options)))))
 
 (defn- define-finder
   [table column]
