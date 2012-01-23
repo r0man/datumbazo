@@ -63,14 +63,15 @@
 (database-test test-update-record
   (is (nil? (update-record languages nil)))
   (is (nil? (update-record languages {})))
-  (let [record (update-record languages (insert-record languages german))]
+  (let [record (update-record languages (insert-record languages german) :name "Deutsch")]
     (is (number? (:id record)))
-    (is (= (:name record)))
+    (is (= "Deutsch" (:name record)))
     (is (= "Indo-European" (:family record)))
     (is (= "de" (:iso-639-1 record)))
     (is (= "deu" (:iso-639-2 record)))
     (is (instance? Timestamp (:created-at record)))
-    (is (instance? Timestamp (:updated-at record)))))
+    (is (instance? Timestamp (:updated-at record)))
+    (is (= record (update-record languages record)))))
 
 (database-test test-select-by-column
   (let [language (insert-record languages german)]

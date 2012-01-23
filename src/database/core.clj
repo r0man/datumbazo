@@ -73,12 +73,13 @@
 
 (defn update-record
   "Update a record into the database table."
-  [table record]
+  [table record & attributes]
   (if (not (empty? record))
     (with-ensure-table table
-      (->> (serialize-row table record)
-           (jdbc/update-values (table-identifier table) (where-clause table record)))
-      record)))
+      (let [record (if attributes (apply assoc record attributes) record)]
+        (->> (serialize-row table record)
+             (jdbc/update-values (table-identifier table) (where-clause table record)))
+        record))))
 
 (defn select-by-column
   "Find a record in the database table by id."
@@ -109,7 +110,7 @@
          [~'record] (insert-record (find-table ~(table-keyword table)) ~'record))
        (defn ~(symbol (str "update-" entity#))
          ~(format "Update the %s in the database." entity#)
-         [~'record] (update-record (find-table ~(table-keyword table)) ~'record)))))
+         [~'record & ~'options] (apply update-record (find-table ~(table-keyword table)) ~'record ~'options)))))
 
 (defn- define-finder
   [table column]

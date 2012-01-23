@@ -77,7 +77,7 @@
   (is (nil? (insert-language {})))
   (let [record (insert-language german)]
     (is (number? (:id record)))
-    (is (= (:name record)))
+    (is (= "German" (:name record)))
     (is (= "Indo-European" (:family record)))
     (is (= "de" (:iso-639-1 record)))
     (is (= "deu" (:iso-639-2 record)))
@@ -87,14 +87,15 @@
 (database-test test-update-language
   (is (nil? (update-language nil)))
   (is (nil? (update-language {})))
-  (let [record (update-language (insert-language german))]
+  (let [record (update-language (insert-language german) :name "Deutsch")]
     (is (number? (:id record)))
-    (is (= (:name record)))
+    (is (= "Deutsch" (:name record)))
     (is (= "Indo-European" (:family record)))
     (is (= "de" (:iso-639-1 record)))
     (is (= "deu" (:iso-639-2 record)))
     (is (instance? Timestamp (:created-at record)))
-    (is (instance? Timestamp (:updated-at record)))))
+    (is (instance? Timestamp (:updated-at record)))
+    (is (= record (update-language record)))))
 
 (database-test test-delete-language
   (is (nil? (delete-language nil)))
