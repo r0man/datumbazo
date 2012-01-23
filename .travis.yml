@@ -1,8 +1,8 @@
 language: clojure
 
+script: "lein test database.test.columns database.test.connection database.test.core database.test.examples database.test.serialization database.test.tables database.test.test"
+
 before_script:
-  - "find / -name postgis.sql"
-  - "find / -name spatial_ref_sys.sql"
   - "psql -c 'create database database_test;' -U postgres"
   - "psql -c \"create user database UNENCRYPTED PASSWORD 'database'\" database_test -U postgres"
 
