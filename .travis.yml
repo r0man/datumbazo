@@ -1,6 +1,8 @@
 language: clojure
 
 before_script:
+  - "find / -name postgis.sql"
+  - "find / -name spatial_ref_sys.sql"
   - "psql -c 'create database database_test;' -U postgres"
   - "psql -c \"create user database UNENCRYPTED PASSWORD 'database'\" database_test -U postgres"
 
