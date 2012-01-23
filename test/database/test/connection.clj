@@ -48,11 +48,13 @@
     (is (= "database" (.getPassword pool)))))
 
 (deftest test-with-connection
-  (with-connection :default
-    (is (instance? Connection (jdbc/find-connection)))))
+  (with-environment :test
+    (with-connection :default
+      (is (instance? Connection (jdbc/find-connection))))))
 
 (deftest test-with-connection-pool
-  (with-connection-pool :default
-    (let [connection (jdbc/find-connection)]
-      (is (instance? Connection connection))
-      (is (instance? C3P0ProxyConnection connection)))))
+  (with-environment :test
+    (with-connection-pool :default
+      (let [connection (jdbc/find-connection)]
+        (is (instance? Connection connection))
+        (is (instance? C3P0ProxyConnection connection))))))

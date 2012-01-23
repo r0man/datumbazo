@@ -43,7 +43,7 @@
 (defmacro with-connection
   "Evaluates body in the context of a new connection to a database
   then closes the connection."
-  [db & body] `(jdbc/with-connection (current-spec) ~@body))
+  [db & body] `(jdbc/with-connection (current-spec ~db) ~@body))
 
 (defmacro with-connection-pool
   "Evaluates body in the context of a pooled connection to the database."
