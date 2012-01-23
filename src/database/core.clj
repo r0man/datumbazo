@@ -112,14 +112,13 @@
          [~'record] (update-record (find-table ~(table-keyword table)) ~'record)))))
 
 (defn- define-finder
-  [table]
-  (let [entity# (singular (table-symbol table))]
-    `(do ~@(for [column# (:columns table) :let [name# ((if (unique-column? column#) singular plural) entity#)]]
-             `(defn ~(symbol (str "find-" name# "-by-" (column-symbol column#)))
-                ~(str "Find the " entity# " in the database.")
-                [~'value]
-                (~(if (unique-column? column#) first identity)
-                 (select-by-column (find-table ~(table-keyword table)) ~(:name column#) ~'value)))))))
+  [table column]
+  (let [name ((if (unique-column? column) singular plural) (singular (table-symbol table)))]
+    `(defn ~(symbol (str "find-" name "-by-" (column-symbol column)))
+       ~(str "Find the " name " in the database.")
+       [~'value]
+       (~(if (unique-column? column) first identity)
+        (select-by-column (find-table ~(table-keyword table)) ~(:name column) ~'value)))))
 
 (defmacro deftable
   "Define and register a database table and it's columns."
@@ -129,4 +128,4 @@
        (register-table (make-table ~(keyword name#) ~columns#))
        ~(define-serialization table#)
        ~(define-crud table#)
-       ~(define-finder table#))))
+       ~@(map #(define-finder table# %1) (:columns table#)))))
