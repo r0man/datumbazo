@@ -2,7 +2,7 @@ language: clojure
 
 before_script:
   - "psql -c 'create database database_test;' -U postgres"
-  - "psql -c \"create user database2 UNENCRYPTED PASSWORD 'database'\" database_test -U postgres"
+  - "psql -c \"create user database UNENCRYPTED PASSWORD 'database'\" database_test -U postgres"
 
 postgres:
   adapter: postgresql
