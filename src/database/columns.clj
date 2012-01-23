@@ -52,7 +52,7 @@
   (let [columns (set columns)]
     (filter #(contains? columns (column-keyword %1)) (:columns table))))
 
-(defn key-column?
+(defn unique-column?
   "Returns true if `column` is a primary key or is unique, otherwise
   false." [column] (or (:primary-key? column) (:unique? column)))
 
