@@ -72,6 +72,13 @@
     (is (= record (find-language-by-iso-639-2 (:iso-639-2 record))))
     (is (= record (find-language-by-iso-639-2 (upper-case (:iso-639-2 record)))))))
 
+(database-test test-find-languages-by-family
+  (let [record (insert-language german)]
+    (is (empty? (find-languages-by-family nil)))
+    (is (empty? (find-languages-by-family "")))
+    (is (empty? (find-languages-by-family "unknown")))
+    (is (= [record] (find-languages-by-family (:family record))))))
+
 (database-test test-insert-language
   (is (nil? (insert-language nil)))
   (is (nil? (insert-language {})))
