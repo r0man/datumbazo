@@ -2,9 +2,9 @@
 
 Clojure Database Kung-Foo.
 
-## Usage
+## Installation
 
-FIXME: write
+Via Clojars: http://clojars.org/database-clj.
 
 ## License
 
