@@ -35,11 +35,11 @@
 
 (defn delete-all
   "Delete all rows from table."
-  [table] (jdbc/do-commands (str "DELETE FROM " (table-identifier table))))
+  [table] (first (jdbc/do-commands (str "DELETE FROM " (table-identifier table)))))
 
 (defn delete-where
   "Delete all rows from table matching the where clause."
-  [table where-clause] (jdbc/delete-rows (table-identifier table) where-clause))
+  [table where-clause] (first (jdbc/delete-rows (table-identifier table) where-clause)))
 
 (defn delete-record
   "Delete the record from the database table."
@@ -49,7 +49,7 @@
       (let [where-clause (where-clause table record)]
         (assert (not (empty? where-clause)) "Can't build where clause to delete record.")
         (jdbc/transaction
-         (assert (= 1 (first (delete-where table where-clause))))
+         (assert (= 1 (delete-where table where-clause)))
          record)))))
 
 (defn drop-table

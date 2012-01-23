@@ -1,5 +1,5 @@
 (ns database.test.core
-  (:import java.sql.Timestamp)
+  (:import java.sql.Timestamp org.postgresql.util.PSQLException)
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.jdbc.internal :as internal])
   (:use clojure.test
@@ -33,12 +33,13 @@
 
 (database-test test-delete-all
   (let [language (insert-record languages german)]
-    (delete-all languages)
-    (insert-record languages german)))
+    (is (= 1 (delete-all languages)))
+    (is (= 0 (delete-all languages)))))
 
 (database-test test-delete-where
   (let [language (insert-record languages german)]
-    (delete-where languages ["name = ?" (:name language)])
+    (is (= 1 (delete-where languages ["name = ?" (:name language)])))
+    (is (= 0 (delete-where languages ["name = ?" (:name language)])))
     (insert-record languages german)))
 
 (database-test test-drop-table
@@ -56,7 +57,8 @@
     (is (= "de" (:iso-639-1 record)))
     (is (= "deu" (:iso-639-2 record)))
     (is (instance? Timestamp (:created-at record)))
-    (is (instance? Timestamp (:updated-at record)))))
+    (is (instance? Timestamp (:updated-at record))))
+  (is (thrown? Exception (insert-record languages german))))
 
 (database-test test-select-by-column
   (let [language (insert-record languages german)]
