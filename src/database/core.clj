@@ -1,5 +1,6 @@
 (ns database.core
-  (:require [clojure.java.jdbc :as jdbc])
+  (:require [clojure.java.jdbc :as jdbc]
+            [korma.core :as k])
   (:use [clojure.string :only (join)]
         [inflections.core :only (camelize singular plural)]
         database.columns
@@ -94,6 +95,24 @@
           (table-identifier table)
           (column-identifier column)) (if value ((or (:serialize column) identity) value))]
         (doall (map (partial deserialize-row table) rows))))))
+
+;; (defn select-by-column
+;;   "Find a record in the database table by id."
+;;   [table column value]
+;;   (with-ensure-table table
+;;     (let [column (or (column? column) (first (select-columns table [column])))
+;;           value (if value ((or (:serialize column) identity) value))]
+;;       (assert (column? column))
+;;       (map
+;;        (partial deserialize-row table)
+;;        (-> (k/select* (table-identifier table))
+;;            (k/where {(column-keyword column) value})
+;;            (k/exec))))))
+
+;; (select-by-column :languages :name "German")
+
+;; (k/sql-only (k/exec (select-by-column :languages :name "German")))
+;; (select-by-column :continents :name "Asia")
 
 (defn table
   "Lookup table in *tables* by name."

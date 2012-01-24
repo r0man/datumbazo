@@ -3,7 +3,9 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.jdbc.internal :as internal])
   (:use [inflections.core :only (dasherize underscore)]
-        [leiningen.env.core :only (current-environment *current*)]))
+        [leiningen.env.core :only (current-environment *current*)]
+        [korma.config :only (set-naming)]
+        [korma.db :only (defdb postgres)]))
 
 (def ^:dynamic *pools* (atom {}))
 
@@ -51,3 +53,13 @@
 
 (alter-var-root #'internal/*as-str* (constantly underscore))
 (alter-var-root #'internal/*as-key* (constantly (comp keyword dasherize)))
+
+(set-naming {:fields underscore :keys dasherize})
+
+(defdb prod
+  (postgres
+   {:db "burningswell_development"
+    :host "localhost"
+    :port 5432
+    :user "burningswell"
+    :password "burningswell13+"}))
