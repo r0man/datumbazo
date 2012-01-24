@@ -23,10 +23,14 @@
 (defmethod add-column :multipolygon-2d [table column]
   (add-geometry-column table column 4326 "MULTIPOLYGON" 2))
 
+(defn make-geometry
+  "Make a org.postgis.PGgeometry from `geometry`."
+  [geometry] (PGgeometry. geometry))
+
 (defn make-point-2d
-  "Make a 2-dimensional org.postgis.Point object."
+  "Make a 2-dimensional org.postgis.Point from `x`, `y` and `srid`."
   [x y & [srid]] (doto (Point. x y) (.setSrid (or srid *srid*))))
 
 (defn make-point-3d
-  "Make a 3-dimensional org.postgis.Point object."
+  "Make a 3-dimensional org.postgis.Point from `x`, `y`, `z` and `srid`."
   [x y z & [srid]] (doto (make-point-2d x y srid) (.setZ z)))
