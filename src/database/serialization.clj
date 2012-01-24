@@ -18,14 +18,14 @@
   [table row] (reduce #(deserialize-column %2 %1) (or row {}) (vals (:columns table))))
 
 (defn serialize-column
-  "Serialize the column of the database row."
-  [column row] (transform-column column row (:serialize column)))
+  "Serialize the `value` of column."
+  [column value] (if value ((or (:serialize column) identity) value)))
 
 (defn serialize-row
   "Serialize the database row."
   [table row]
   (let [row (or row {}) columns (select-columns table (keys row))]
-    (reduce #(serialize-column %2 %1) (into {} row) columns)))
+    (reduce #(assoc %1 (:name %2) (serialize-column %2 (get row (:name %2)))) {} columns)))
 
 (defn define-serialization
   "Returns the serialization froms for the database table."

@@ -119,7 +119,6 @@
     (is (= "German" (:name language)))
     (is (= "de" (:iso-639-1 language)))
     (is (= "deu" (:iso-639-2 language)))
-    ;; (is (not (contains? (set (keys language)) :url)))
-    ))
+    (is (not (contains? (set (keys language)) :url)))))
 
 (load-environments)

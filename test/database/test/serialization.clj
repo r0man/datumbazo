@@ -22,14 +22,15 @@
 
 (deftest test-serialize-column
   (let [column (make-column :iso-639-1 :varchar :length 2)]
-    (is (= "DE" (:iso-639-1 (serialize-column column {:iso-639-1 "DE"})))))
+    (is (= "DE" (serialize-column column "DE"))))
   (let [column (make-column :iso-639-1 :varchar :length 2 :serialize lower-case)]
-    (is (nil? (:iso-639-1 (serialize-column column {}))))
-    (is (= "de" (:iso-639-1 (serialize-column column {:iso-639-1 "DE"}))))))
+    (is (nil? (serialize-column column nil)))
+    (is (= "de" (serialize-column column "DE")))))
 
 (deftest test-serialize-row
-  (let [language (serialize-row languages {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
+  (let [language (serialize-row languages {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU" :not-existing "column"})]
     (is (map? language))
     (is (= "German" (:name language)))
     (is (= "de" (:iso-639-1 language)))
-    (is (= "deu" (:iso-639-2 language)))))
+    (is (= "deu" (:iso-639-2 language)))
+    (is (not (contains? (set (keys language)) :not-existing)))))

@@ -31,7 +31,7 @@
   (with-ensure-table table
     (let [columns (key-columns table record)]
       (cons (join " OR " (map #(str (column-identifier %1) " = ?") columns))
-            (map #(get (serialize-column %1 record) (column-keyword %1)) columns)))))
+            (map #(serialize-column %1 (get record (column-keyword %1))) columns)))))
 
 (defn delete-all
   "Delete all rows from table."
