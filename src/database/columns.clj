@@ -52,6 +52,13 @@
   (let [columns (set columns)]
     (filter #(contains? columns (column-keyword %1)) (vals (:columns table)))))
 
+(defn remove-serial-columns
+  "Remove the serial columns from `record`."
+  [table record]
+  (->> (remove #(= :serial (:type %1)) (vals (:columns table)))
+       (map column-keyword)
+       (select-keys record)))
+
 (defn unique-column?
   "Returns true if `column` is a primary key or is unique, otherwise
   false." [column] (or (:primary-key? column) (:unique? column)))

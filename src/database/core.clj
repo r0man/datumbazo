@@ -67,7 +67,8 @@
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
-      (->> (serialize-row table record)
+      (->> (remove-serial-columns table record)
+           (serialize-row table)
            (jdbc/insert-record (table-identifier table))
            (deserialize-row table)))))
 
