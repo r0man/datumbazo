@@ -1,4 +1,5 @@
 (ns database.test.postgis
+  (:import [org.postgis Geometry PGgeometry PGboxbase PGbox2d PGbox3d Point])
   (:use [clojure.string :only (lower-case)]
         clojure.test
         database.core
@@ -34,3 +35,19 @@
 (database-test test-create-with-continents
   (is (instance? database.tables.Table (create-table continents)))
   (is (thrown? Exception (create-table continents))))
+
+(deftest test-make-point-2d
+  (let [point (make-point-2d 1.0 2.0)]
+    (is (instance? Point point))
+    (is (= 4326 (.getSrid point)))
+    (is (= 1.0 (.getX point)))
+    (is (= 2.0 (.getY point)))
+    (is (= 0.0 (.getZ point)))))
+
+(deftest test-make-point-3d
+  (let [point (make-point-3d 1.0 2.0 3.0)]
+    (is (instance? Point point))
+    (is (= 4326 (.getSrid point)))
+    (is (= 1.0 (.getX point)))
+    (is (= 2.0 (.getY point)))
+    (is (= 3.0 (.getZ point)))))
