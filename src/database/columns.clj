@@ -53,9 +53,11 @@
     (filter #(contains? columns (column-keyword %1)) (vals (:columns table)))))
 
 (defn remove-serial-columns
-  "Remove the serial columns from `record`."
+  "Remove the serial columns from `record` if their value is nil."
   [table record]
-  (->> (remove #(= :serial (:type %1)) (vals (:columns table)))
+  (->> (remove #(and (= :serial (:type %1))
+                     (nil? (get (column-keyword %1) record)))
+               (vals (:columns table)))
        (map column-keyword)
        (select-keys record)))
 
