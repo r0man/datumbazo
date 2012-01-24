@@ -93,5 +93,5 @@
     (is (= "iso_639_1 = ?" (first clause)))
     (is (= ["de"] (rest clause))))
   (let [clause (where-clause languages {:id 1 :iso-639-1 "de" :iso-639-2 "deu"})]
-    (is (= "id = ? OR iso_639_1 = ? OR iso_639_2 = ?" (first clause)))
-    (is (= [1 "de" "deu"] (rest clause)))))
+    (is (= "id = ? OR iso_639_2 = ? OR iso_639_1 = ?"))
+    (is (= [1 "deu" "de"] (rest clause)))))

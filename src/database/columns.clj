@@ -50,7 +50,7 @@
   "Select columns of table by keywords."
   [table columns]
   (let [columns (set columns)]
-    (filter #(contains? columns (column-keyword %1)) (:columns table))))
+    (filter #(contains? columns (column-keyword %1)) (vals (:columns table)))))
 
 (defn unique-column?
   "Returns true if `column` is a primary key or is unique, otherwise

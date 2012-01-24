@@ -18,10 +18,10 @@
   "Create the database table."
   [table]
   (jdbc/transaction
-   (->> (filter :native? (:columns table))
+   (->> (filter :native? (vals (:columns table)))
         (map column-spec)
         (apply jdbc/create-table (table-identifier table)))
-   (doseq [column (remove :native? (:columns table))]
+   (doseq [column (remove :native? (vals (:columns table)))]
      (add-column table column))
    table))
 
@@ -129,4 +129,4 @@
        (register-table (make-table ~(keyword name#) ~columns#))
        ~(define-serialization table#)
        ~(define-crud table#)
-       ~@(map #(define-finder table# %1) (:columns table#)))))
+       ~@(map #(define-finder table# %1) (vals (:columns table#))))))

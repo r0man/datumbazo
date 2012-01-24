@@ -114,10 +114,12 @@
 (deftest test-serialize-language
   (is (= {} (serialize-language nil)))
   (is (= {} (serialize-language {})))
-  (let [language (serialize-language german)]
+  (let [language (serialize-language (assoc german :url "http://germany.de"))]
     (is (map? language))
     (is (= "German" (:name language)))
     (is (= "de" (:iso-639-1 language)))
-    (is (= "deu" (:iso-639-2 language)))))
+    (is (= "deu" (:iso-639-2 language)))
+    ;; (is (not (contains? (set (keys language)) :url)))
+    ))
 
 (load-environments)

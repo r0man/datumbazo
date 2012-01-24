@@ -14,10 +14,11 @@
     (is (= table (find-table (find-table :photo-thumbnails))))))
 
 (deftest test-make-table
-  (let [table (make-table :test [[:id :serial]])]
+  (let [table (make-table :test [[:id :serial] [:name :text]])]
     (is (= :test (:name table)))
-    (let [columns (:columns table)]
-      (is (= 1 (count columns)))
+    (is (= #{:id :name} (set (keys (:columns table)))))
+    (let [columns (vals (:columns table))]
+      (is (= 2 (count columns)))
       (is (every? column? columns)))))
 
 (deftest test-table?
