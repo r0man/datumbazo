@@ -104,6 +104,8 @@
   [table]
   (let [entity# (singular (table-symbol table))]
     `(do
+       (defn ~(symbol (format "make-%s" entity#)) [& {:as ~'attributes}]
+         ~'attributes)
        (defn ~(symbol (str "delete-" entity#))
          ~(format "Delete the %s from the database." entity#)
          [~'record] (delete-record ~(table-keyword table) ~'record))

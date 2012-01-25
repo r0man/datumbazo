@@ -36,7 +36,13 @@
   (drop-table (table :photo-thumbnails)))
 
 (def languages (find-table :languages))
-(def german {:name "German" :family "Indo-European" :iso-639-1 "DE" :iso-639-2 "DEU"})
+
+(def german
+  (make-language
+   :name "German"
+   :family "Indo-European"
+   :iso-639-1 "DE"
+   :iso-639-2 "DEU"))
 
 (def photo-thumbnails (find-table :photo-thumbnails))
 
