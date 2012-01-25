@@ -94,19 +94,6 @@
   "Find a record in the database table by id."
   [table column value]
   (with-ensure-table table
-    (let [column (or (column? column) (first (select-columns table [column])))]
-      (assert (column? column))
-      (jdbc/with-query-results rows
-        [(format
-          "SELECT * FROM %s WHERE %s = ?"
-          (table-identifier table)
-          (column-identifier column)) (if value ((or (:serialize column) identity) value))]
-        (doall (map (partial deserialize-record table) rows))))))
-
-(defn select-by-column
-  "Find a record in the database table by id."
-  [table column value]
-  (with-ensure-table table
     (let [column (or (column? column) (first (select-columns table [column])))
           value (if value ((or (:serialize column) identity) value))]
       (assert (column? column))
