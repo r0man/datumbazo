@@ -13,11 +13,22 @@
   "Deserialize the column of the database row."
   [column row] (transform-column column row (:deserialize column)))
 
+(defn deserialize-column
+  "Deserialize the column of the database row."
+  [column value] (if value ((or (:deserialize column) identity) value)))
+
 (defn deserialize-row
   "Deserialize the database row."
   [table row]
   (with-ensure-table table
     (reduce #(deserialize-column %2 %1) (or row {}) (vals (:columns table)))))
+
+(defn deserialize-row
+  "Deserialize the database row."
+  [table row]
+  (with-ensure-table table
+    (reduce #(assoc %1 (:name %2) (deserialize-column %2 (get row (:name %2))))
+            {} (select-columns table (keys row)))))
 
 (defn serialize-column
   "Serialize the `value` of column."
@@ -28,7 +39,8 @@
   [table row]
   (with-ensure-table table
     (let [row (or row {}) columns (select-columns table (keys row))]
-      (reduce #(assoc %1 (:name %2) (serialize-column %2 (get row (:name %2)))) {} columns))))
+      (reduce #(assoc %1 (:name %2) (serialize-column %2 (get row (:name %2))))
+              {} columns))))
 
 (defn define-serialization
   "Returns the serialization froms for the database table."
