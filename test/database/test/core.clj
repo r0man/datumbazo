@@ -47,6 +47,11 @@
   (is (drop-table languages :if-exists true))
   (is (thrown? Exception (drop-table languages))))
 
+(database-test test-find-record
+  (is (nil? (find-record languages {})))
+  (let [language (insert-record languages german)]
+    (is (= language (find-record languages language)))))
+
 (database-test test-insert-record
   (is (nil? (insert-record languages nil)))
   (is (nil? (insert-record languages {})))
@@ -63,6 +68,7 @@
 (database-test test-update-record
   (is (nil? (update-record languages nil)))
   (is (nil? (update-record languages {})))
+  (is (nil? (update-record languages german)))
   (let [record (update-record languages (insert-record languages german) :name "Deutsch")]
     (is (number? (:id record)))
     (is (= "Deutsch" (:name record)))

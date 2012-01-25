@@ -8,10 +8,10 @@
 
 (deftest test-deserialize-column
   (let [column (make-column :iso-639-1 :varchar :length 2)]
-    (is (= "DE" (:iso-639-1 (deserialize-column column {:iso-639-1 "DE"})))))
+    (is (= "DE" (deserialize-column column "DE"))))
   (let [column (make-column :iso-639-1 :varchar :length 2 :deserialize lower-case)]
-    (is (nil? (:iso-639-1 (deserialize-column column {}))))
-    (is (= "de" (:iso-639-1 (deserialize-column column {:iso-639-1 "DE"}))))))
+    (is (nil? (deserialize-column column nil)))
+    (is (= (:iso-639-1 (deserialize-column column "DE"))))))
 
 (deftest test-deserialize-row
   (let [language (deserialize-row languages {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]

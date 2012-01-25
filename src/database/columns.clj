@@ -56,7 +56,7 @@
   "Remove the serial columns from `record` if their value is nil."
   [table record]
   (->> (remove #(and (= :serial (:type %1))
-                     (nil? (get (column-keyword %1) record)))
+                     (nil? (get record (column-keyword %1))))
                (vals (:columns table)))
        (map column-keyword)
        (select-keys record)))

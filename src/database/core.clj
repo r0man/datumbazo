@@ -63,6 +63,18 @@
           (if cascade " CASCADE")
           (if restrict " RESTRICT")))))
 
+(defn find-record
+  "Find a record in the database table."
+  [table record]
+  (if (not (empty? record))
+    (with-ensure-table table
+      (let [[where & params] (where-clause table record)]
+        (jdbc/with-query-results result-set
+          (apply vector (concat [(format "SELECT * FROM %s WHERE %s" (table-identifier table) where)] params))
+          (assert (< (count result-set) 2) "Expected only one record.")
+          (if-let [row (first result-set)]
+            (deserialize-row table row)))))))
+
 (defn insert-record
   "Insert a record into the database table."
   [table record]
@@ -70,18 +82,18 @@
     (with-ensure-table table
       (->> (remove-serial-columns table record)
            (serialize-row table)
-           (jdbc/insert-record (table-identifier table))
-           (deserialize-row table)))))
+           (jdbc/insert-record (table-identifier table)))
+      (find-record table record))))
 
 (defn update-record
-  "Update a record into the database table."
+  "Update a record in the database table."
   [table record & attributes]
   (if (not (empty? record))
     (with-ensure-table table
-      (let [record (if attributes (apply assoc record attributes) record)]
-        (->> (serialize-row table record)
-             (jdbc/update-values (table-identifier table) (where-clause table record)))
-        record))))
+      (let [record (if attributes (apply assoc record attributes) record)
+            result (->> (serialize-row table record)
+                        (jdbc/update-values (table-identifier table) (where-clause table record)))]
+        (if (= 1 (first  result)) (find-record table record))))))
 
 (defn select-by-column
   "Find a record in the database table by id."
@@ -122,6 +134,8 @@
   [table]
   (let [entity# (singular (table-symbol table))]
     `(do
+       (defn ~(symbol (format "make-%s" entity#)) [& {:as ~'attributes}]
+         ~'attributes)
        (defn ~(symbol (str "delete-" entity#))
          ~(format "Delete the %s from the database." entity#)
          [~'record] (delete-record ~(table-keyword table) ~'record))
