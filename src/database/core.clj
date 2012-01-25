@@ -124,7 +124,7 @@
 (defn- define-finder
   [table column]
   (let [name ((if (unique-column? column) singular plural) (singular (table-symbol table)))]
-    `(defn ~(symbol (format "find-%s-by-%s" name (column-symbol column)))
+    `(defn ~(symbol (format "%s-by-%s" name (column-symbol column)))
        ~(format "Find the %s by the %s column in the database." name (column-keyword column))
        [~'value]
        (~(if (unique-column? column) first identity)

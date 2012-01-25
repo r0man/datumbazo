@@ -56,35 +56,35 @@
     (is (= "DE" (:iso-639-1 language)))
     (is (= "DEU" (:iso-639-2 language)))))
 
-(database-test test-find-language-by-id
+(database-test test-language-by-id
   (let [record (insert-language german)]
-    (is (nil? (find-language-by-id nil)))
-    (is (nil? (find-language-by-id 0)))
-    (is (= record (find-language-by-id (:id record))))
-    (is (= record (find-language-by-id (str (:id record)))))))
+    (is (nil? (language-by-id nil)))
+    (is (nil? (language-by-id 0)))
+    (is (= record (language-by-id (:id record))))
+    (is (= record (language-by-id (str (:id record)))))))
 
-(database-test test-find-language-by-iso-639-1
+(database-test test-language-by-iso-639-1
   (let [record (insert-language german)]
-    (is (nil? (find-language-by-iso-639-1 nil)))
-    (is (nil? (find-language-by-iso-639-1 "")))
-    (is (nil? (find-language-by-iso-639-1 "xx")))
-    (is (= record (find-language-by-iso-639-1 (:iso-639-1 record))))
-    (is (= record (find-language-by-iso-639-1 (upper-case (:iso-639-1 record)))))))
+    (is (nil? (language-by-iso-639-1 nil)))
+    (is (nil? (language-by-iso-639-1 "")))
+    (is (nil? (language-by-iso-639-1 "xx")))
+    (is (= record (language-by-iso-639-1 (:iso-639-1 record))))
+    (is (= record (language-by-iso-639-1 (upper-case (:iso-639-1 record)))))))
 
-(database-test test-find-language-by-iso-639-2
+(database-test test-language-by-iso-639-2
   (let [record (insert-language german)]
-    (is (nil? (find-language-by-iso-639-2 nil)))
-    (is (nil? (find-language-by-iso-639-2 "")))
-    (is (nil? (find-language-by-iso-639-2 "xxx")))
-    (is (= record (find-language-by-iso-639-2 (:iso-639-2 record))))
-    (is (= record (find-language-by-iso-639-2 (upper-case (:iso-639-2 record)))))))
+    (is (nil? (language-by-iso-639-2 nil)))
+    (is (nil? (language-by-iso-639-2 "")))
+    (is (nil? (language-by-iso-639-2 "xxx")))
+    (is (= record (language-by-iso-639-2 (:iso-639-2 record))))
+    (is (= record (language-by-iso-639-2 (upper-case (:iso-639-2 record)))))))
 
-(database-test test-find-languages-by-family
+(database-test test-languages-by-family
   (let [record (insert-language german)]
-    (is (empty? (find-languages-by-family nil)))
-    (is (empty? (find-languages-by-family "")))
-    (is (empty? (find-languages-by-family "unknown")))
-    (is (= [record] (find-languages-by-family (:family record))))))
+    (is (empty? (languages-by-family nil)))
+    (is (empty? (languages-by-family "")))
+    (is (empty? (languages-by-family "unknown")))
+    (is (= [record] (languages-by-family (:family record))))))
 
 (database-test test-insert-language
   (is (nil? (insert-language nil)))
