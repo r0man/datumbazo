@@ -3,6 +3,8 @@
             [korma.core :as k])
   (:use [clojure.string :only (join)]
         [inflections.core :only (camelize singular plural)]
+        [korma.core :exclude (join table)]
+        [korma.sql.fns :only (pred-or)]
         database.columns
         database.tables
         database.serialization))
@@ -26,13 +28,12 @@
      (add-column table column))
    table))
 
-(defn where-clause
+(defn unique-key-clause
   "Returns the SQL where clause for record."
   [table record]
   (with-ensure-table table
     (let [columns (key-columns table record)]
-      (cons (join " OR " (map #(str (column-identifier %1) " = ?") columns))
-            (map #(serialize-column %1 (get record (column-keyword %1))) columns)))))
+      (apply pred-or (map #(apply hash-map %1) (seq (select-keys record (map :name columns))))))))
 
 (defn delete-all
   "Delete all rows from table."
@@ -47,11 +48,8 @@
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
-      (let [where-clause (where-clause table record)]
-        (assert (not (empty? where-clause)) "Can't build where clause to delete record.")
-        (jdbc/transaction
-         (assert (= 1 (delete-where table where-clause)))
-         record)))))
+      (delete (table-identifier table)
+              (where (unique-key-clause table record))))))
 
 (defn drop-table
   "Drop the database table."
@@ -68,22 +66,18 @@
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
-      (let [[where & params] (where-clause table record)]
-        (jdbc/with-query-results result-set
-          (apply vector (concat [(format "SELECT * FROM %s WHERE %s" (table-identifier table) where)] params))
-          (assert (< (count result-set) 2) "Expected only one record.")
-          (if-let [row (first result-set)]
-            (deserialize-row table row)))))))
+      (->> (select (table-identifier table)
+                   (where (unique-key-clause table record)))
+           (first) (deserialize-row table)))))
 
 (defn insert-record
   "Insert a record into the database table."
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
-      (->> (remove-serial-columns table record)
-           (serialize-row table)
-           (jdbc/insert-record (table-identifier table)))
-      (find-record table record))))
+      (insert (table-identifier table)
+              (values (->> (remove-serial-columns table record)
+                           (serialize-row table)))))))
 
 (defn update-record
   "Update a record in the database table."
@@ -92,8 +86,17 @@
     (with-ensure-table table
       (let [record (if attributes (apply assoc record attributes) record)
             result (->> (serialize-row table record)
-                        (jdbc/update-values (table-identifier table) (where-clause table record)))]
+                        (jdbc/update-values (table-identifier table) (unique-key-clause table record)))]
         (if (= 1 (first  result)) (find-record table record))))))
+
+(defn update-record
+  "Update the `record` in the database `table`."
+  [table record]
+  (if (not (empty? record))
+    (with-ensure-table table
+      (update (table-identifier table)
+              (set-fields (serialize-row table record))
+              (where (unique-key-clause table record))))))
 
 (defn select-by-column
   "Find a record in the database table by id."
@@ -108,23 +111,16 @@
           (column-identifier column)) (if value ((or (:serialize column) identity) value))]
         (doall (map (partial deserialize-row table) rows))))))
 
-;; (defn select-by-column
-;;   "Find a record in the database table by id."
-;;   [table column value]
-;;   (with-ensure-table table
-;;     (let [column (or (column? column) (first (select-columns table [column])))
-;;           value (if value ((or (:serialize column) identity) value))]
-;;       (assert (column? column))
-;;       (map
-;;        (partial deserialize-row table)
-;;        (-> (k/select* (table-identifier table))
-;;            (k/where {(column-keyword column) value})
-;;            (k/exec))))))
-
-;; (select-by-column :languages :name "German")
-
-;; (k/sql-only (k/exec (select-by-column :languages :name "German")))
-;; (select-by-column :continents :name "Asia")
+(defn select-by-column
+  "Find a record in the database table by id."
+  [table column value]
+  (with-ensure-table table
+    (let [column (or (column? column) (first (select-columns table [column])))
+          value (if value ((or (:serialize column) identity) value))]
+      (assert (column? column))
+      (->> (select (table-identifier table)
+                   (where {(column-keyword column) value}))
+           (map (partial deserialize-row table))))))
 
 (defn table
   "Lookup table in *tables* by name."

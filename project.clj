@@ -3,7 +3,6 @@
   :dependencies [[c3p0/c3p0 "0.9.1.2"]
                  [inflections "0.6.5-SNAPSHOT"]
                  [korma "0.3.0-alpha13"]
-                 [lein-env "0.0.1-SNAPSHOT"]
                  [migrate "0.0.6-SNAPSHOT"]
                  [org.clojure/clojure "1.3.0"]
                  [org.clojure/java.jdbc "0.0.7"]

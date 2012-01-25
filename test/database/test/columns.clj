@@ -52,13 +52,10 @@
   (is (every? column? (vals (:columns languages)))))
 
 (deftest test-column-identifier
-  (are [expected column]
-    (is (= (jdbc/as-identifier expected) (column-identifier column)))
-    :created-at created-at-column
-    :created-at :created-at
-    :created-at 'created-at
-    "created-at" "created-at"
-    :id id-column))
+  (are [column expected]
+    (is (= expected (column-identifier column)))
+    :created-at "created_at"
+    "created-at" "created_at"))
 
 (deftest test-column-name
   (are [expected column]

@@ -39,6 +39,7 @@
 
 (def german
   (make-language
+   :id 1
    :name "German"
    :family "Indo-European"
    :iso-639-1 "DE"
@@ -88,7 +89,7 @@
 (database-test test-insert-language
   (is (nil? (insert-language nil)))
   (is (nil? (insert-language {})))
-  (let [record (insert-language (assoc german :id -1))]
+  (let [record (insert-language (assoc german :id nil))]
     (is (number? (:id record)))
     (is (not (= -1 (:id record)))) ; filtered, because serial
     (is (= "German" (:name record)))
@@ -101,7 +102,7 @@
 (database-test test-update-language
   (is (nil? (update-language nil)))
   (is (nil? (update-language {})))
-  (let [record (update-language (insert-language german) :name "Deutsch")]
+  (let [record (update-language (assoc (insert-language german) :name "Deutsch"))]
     (is (number? (:id record)))
     (is (= "Deutsch" (:name record)))
     (is (= "Indo-European" (:family record)))
@@ -126,7 +127,4 @@
     (is (= "German" (:name language)))
     (is (= "de" (:iso-639-1 language)))
     (is (= "deu" (:iso-639-2 language)))
-    (is (not (contains? (set (keys language)) :id)))
     (is (not (contains? (set (keys language)) :url)))))
-
-(load-environments)

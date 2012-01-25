@@ -3,7 +3,8 @@
   (:use [clojure.string :only (join)]
         [database.columns :only (column? make-column)]
         [inflections.core :only (dasherize)]
-        database.columns))
+        database.columns
+        database.connection))
 
 (defonce ^:dynamic *tables* (atom {}))
 
@@ -26,7 +27,7 @@
 (defn table-identifier
   "Returns the table identifier. Given a string, return it as-is.
   Given a keyword, return it as a string using the current naming
-  strategy." [table] (jdbc/as-identifier (table-name table)))
+  strategy." [table] ((:fields (naming-strategy)) (table-name table)))
 
 (defn table-symbol
   "Returns the name of the table as a symbol with all underscores in

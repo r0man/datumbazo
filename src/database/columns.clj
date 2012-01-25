@@ -2,7 +2,8 @@
   (:refer-clojure :exclude (replace))
   (:require [clojure.java.jdbc :as jdbc])
   (:use [clojure.string :only (join split replace)]
-        [inflections.core :only (dasherize)]))
+        [inflections.core :only (dasherize)]
+        database.connection))
 
 (defrecord Column [name type length default native? not-null? primary-key? references unique?])
 
@@ -17,7 +18,7 @@
 (defn column-identifier
   "Returns the column identifier. Given a string, return it as-is.
   Given a keyword, return it as a string using the current naming
-  strategy." [column] (jdbc/as-identifier (column-name column)))
+  strategy." [column] ((:fields (naming-strategy)) (column-name column)))
 
 (defn column-symbol
   "Returns the name of the column as a symbol with all underscores in

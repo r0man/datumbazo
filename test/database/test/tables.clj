@@ -33,12 +33,10 @@
     :photo-thumbnails (find-table :photo-thumbnails)))
 
 (deftest test-table-identifier
-  (are [expected-keyword table]
-    (is (= (jdbc/as-identifier expected-keyword) (table-identifier table)))
-    :photo-thumbnails :photo-thumbnails
-    :photo-thumbnails 'photo-thumbnails
-    "photo-thumbnails" "photo-thumbnails"
-    :photo-thumbnails photo-thumbnails))
+  (are [table expected]
+    (is (= expected (table-identifier table)))
+    :photo-thumbnails "photo_thumbnails"
+    "photo-thumbnails" "photo_thumbnails"))
 
 (deftest test-table-keyword
   (are [expected table]
