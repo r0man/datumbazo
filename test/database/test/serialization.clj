@@ -13,8 +13,8 @@
     (is (nil? (deserialize-column column nil)))
     (is (= (:iso-639-1 (deserialize-column column "DE"))))))
 
-(deftest test-deserialize-row
-  (let [language (deserialize-row languages {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
+(deftest test-deserialize-record
+  (let [language (deserialize-record languages {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
     (is (map? language))
     (is (= "German" (:name language)))
     (is (= "DE" (:iso-639-1 language)))
@@ -27,8 +27,8 @@
     (is (nil? (serialize-column column nil)))
     (is (= "de" (serialize-column column "DE")))))
 
-(deftest test-serialize-row
-  (let [language (serialize-row languages {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU" :not-existing "column"})]
+(deftest test-serialize-record
+  (let [language (serialize-record languages {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU" :not-existing "column"})]
     (is (map? language))
     (is (= "German" (:name language)))
     (is (= "de" (:iso-639-1 language)))

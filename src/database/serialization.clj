@@ -17,13 +17,13 @@
   "Deserialize the column of the database row."
   [column value] (if value ((or (:deserialize column) identity) value)))
 
-(defn deserialize-row
+(defn deserialize-record
   "Deserialize the database row."
   [table row]
   (with-ensure-table table
     (reduce #(deserialize-column %2 %1) (or row {}) (vals (:columns table)))))
 
-(defn deserialize-row
+(defn deserialize-record
   "Deserialize the database row."
   [table row]
   (if (not (nil? row))
@@ -35,7 +35,7 @@
   "Serialize the `value` of column."
   [column value] (if value ((or (:serialize column) identity) value)))
 
-(defn serialize-row
+(defn serialize-record
   "Serialize the database row."
   [table row]
   (if (not (nil? row))
@@ -53,7 +53,7 @@
     `(do
        (defn ~(symbol (str "deserialize-" entity#))
          ~(str "Deserialize the " entity# " database row.")
-         [~entity#] (deserialize-row ~(table-keyword table) ~entity#))
+         [~entity#] (deserialize-record ~(table-keyword table) ~entity#))
        (defn ~(symbol (str "serialize-" entity#))
          ~(str "Serialize the " entity# " database row.")
-         [~entity#] (serialize-row ~(table-keyword table) ~entity#)))))
+         [~entity#] (serialize-record ~(table-keyword table) ~entity#)))))

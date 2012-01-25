@@ -68,7 +68,7 @@
     (with-ensure-table table
       (->> (select (table-identifier table)
                    (where (unique-key-clause table record)))
-           (first) (deserialize-row table)))))
+           (first) (deserialize-record table)))))
 
 (defn insert-record
   "Insert the `record` into the database `table`."
@@ -77,8 +77,8 @@
     (with-ensure-table table
       (->> (insert (table-identifier table)
                    (values (->> (remove-serial-columns table record)
-                                (serialize-row table))))
-           (deserialize-row table)))))
+                                (serialize-record table))))
+           (deserialize-record table)))))
 
 (defn update-record
   "Update the `record` in the database `table`."
@@ -86,9 +86,9 @@
   (if (not (empty? record))
     (with-ensure-table table
       (->> (update (table-identifier table)
-                   (set-fields (serialize-row table record))
+                   (set-fields (serialize-record table record))
                    (where (unique-key-clause table record)))
-           (deserialize-row table)))))
+           (deserialize-record table)))))
 
 (defn select-by-column
   "Find a record in the database table by id."
@@ -101,7 +101,7 @@
           "SELECT * FROM %s WHERE %s = ?"
           (table-identifier table)
           (column-identifier column)) (if value ((or (:serialize column) identity) value))]
-        (doall (map (partial deserialize-row table) rows))))))
+        (doall (map (partial deserialize-record table) rows))))))
 
 (defn select-by-column
   "Find a record in the database table by id."
@@ -112,7 +112,7 @@
       (assert (column? column))
       (->> (select (table-identifier table)
                    (where {(column-keyword column) value}))
-           (map (partial deserialize-row table))))))
+           (map (partial deserialize-record table))))))
 
 (defn table
   "Lookup table in *tables* by name."
