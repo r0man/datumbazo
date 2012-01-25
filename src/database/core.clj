@@ -73,14 +73,15 @@
            (deserialize-row table)))))
 
 (defn update-record
-  "Update a record into the database table."
+  "Update a record in the database table."
   [table record & attributes]
   (if (not (empty? record))
     (with-ensure-table table
-      (let [record (if attributes (apply assoc record attributes) record)]
-        (->> (serialize-row table record)
-             (jdbc/update-values (table-identifier table) (where-clause table record)))
-        record))))
+      (let [record (if attributes (apply assoc record attributes) record)
+            result (->> (serialize-row table record)
+                        (jdbc/update-values (table-identifier table) (where-clause table record)))]
+        (if (= 1 (first  result))
+          record)))))
 
 (defn select-by-column
   "Find a record in the database table by id."

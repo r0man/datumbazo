@@ -63,6 +63,7 @@
 (database-test test-update-record
   (is (nil? (update-record languages nil)))
   (is (nil? (update-record languages {})))
+  (is (nil? (update-record languages german)))
   (let [record (update-record languages (insert-record languages german) :name "Deutsch")]
     (is (number? (:id record)))
     (is (= "Deutsch" (:name record)))
