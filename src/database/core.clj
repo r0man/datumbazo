@@ -75,18 +75,20 @@
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
-      (insert (table-identifier table)
-              (values (->> (remove-serial-columns table record)
-                           (serialize-row table)))))))
+      (->> (insert (table-identifier table)
+                   (values (->> (remove-serial-columns table record)
+                                (serialize-row table))))
+           (deserialize-row table)))))
 
 (defn update-record
   "Update the `record` in the database `table`."
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
-      (update (table-identifier table)
-              (set-fields (serialize-row table record))
-              (where (unique-key-clause table record))))))
+      (->> (update (table-identifier table)
+                   (set-fields (serialize-row table record))
+                   (where (unique-key-clause table record)))
+           (deserialize-row table)))))
 
 (defn select-by-column
   "Find a record in the database table by id."

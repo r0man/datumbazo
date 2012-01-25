@@ -48,7 +48,7 @@
 (def photo-thumbnails (find-table :photo-thumbnails))
 
 (deftest test-deserialize-language
-  (is (= {} (deserialize-language nil)))
+  (is (= nil (deserialize-language nil)))
   (is (= {} (deserialize-language {})))
   (let [language (deserialize-language german)]
     (is (map? language))
@@ -120,7 +120,7 @@
     (insert-language german)))
 
 (deftest test-serialize-language
-  (is (= {} (serialize-language nil)))
+  (is (= nil (serialize-language nil)))
   (is (= {} (serialize-language {})))
   (let [language (serialize-language (assoc german :url "http://germany.de"))]
     (is (map? language))
