@@ -17,6 +17,9 @@
       (is (= {:index 1 :value "1"} (first rs)))
       (is (= {:index 2 :value "2"} (second rs))))))
 
+(database-test test-sql-array-seq
+  (is (= ["1" "2"] (sql-array-seq (make-text-array ["1" "2"])))))
+
 (deftest test-parse-int
   (are [serial expected]
     (is (= expected (parse-int serial)))

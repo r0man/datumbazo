@@ -12,6 +12,10 @@
   "Make a text array from `coll`."
   [coll] (make-sql-array "text" (map str coll)))
 
+(defn sql-array-seq
+  "Make a text array from `coll`."
+  [array] (map :value (resultset-seq (.getResultSet array))))
+
 (defn parse-int [s]
   (try (Integer/parseInt (str s))
        (catch NumberFormatException _ nil)))
