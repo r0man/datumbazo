@@ -61,8 +61,8 @@
           (if cascade " CASCADE")
           (if restrict " RESTRICT")))))
 
-(defn find-record
-  "Find a record in the database table."
+(defn reload-record
+  "Find the `record` in the database `table`."
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
@@ -71,23 +71,13 @@
            (first) (deserialize-row table)))))
 
 (defn insert-record
-  "Insert a record into the database table."
+  "Insert the `record` into the database `table`."
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
       (insert (table-identifier table)
               (values (->> (remove-serial-columns table record)
                            (serialize-row table)))))))
-
-(defn update-record
-  "Update a record in the database table."
-  [table record & attributes]
-  (if (not (empty? record))
-    (with-ensure-table table
-      (let [record (if attributes (apply assoc record attributes) record)
-            result (->> (serialize-row table record)
-                        (jdbc/update-values (table-identifier table) (unique-key-clause table record)))]
-        (if (= 1 (first  result)) (find-record table record))))))
 
 (defn update-record
   "Update the `record` in the database `table`."
