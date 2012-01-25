@@ -95,7 +95,7 @@
   [table column value]
   (with-ensure-table table
     (let [column (or (column? column) (first (select-columns table [column])))
-          value (if value ((or (:serialize column) identity) value))]
+          value (serialize-column column value)]
       (assert (column? column))
       (->> (select (table-identifier table)
                    (where {(column-keyword column) value}))
