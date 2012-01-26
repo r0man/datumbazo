@@ -9,6 +9,10 @@
         database.tables
         database.serialization))
 
+(defn- table->entity [table]
+  (-> (create-entity (table-identifier table))
+      (transform (partial deserialize-record table))))
+
 (defmulti add-column
   "Add column to the database table."
   (fn [table column] (:type column)))
@@ -96,8 +100,7 @@
   (with-ensure-table table
     (let [column (or (column? column) (first (select-columns table [column])))]
       (assert (column? column))
-      (select (-> (create-entity (table-identifier table))
-                  (transform (partial deserialize-record table)))
+      (select (table->entity table)
               (where {(column-keyword column)
                       (serialize-column column value)})))))
 
