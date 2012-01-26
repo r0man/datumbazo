@@ -9,10 +9,6 @@
         database.tables
         database.serialization))
 
-(defn- make-entity [table]
-  (-> (create-entity (table-identifier table))
-      (transform (partial deserialize-record table))))
-
 (defmulti add-column
   "Add column to the database table."
   (fn [table column] (:type column)))
@@ -70,27 +66,29 @@
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
-      (-> (select (make-entity table)
-                  (where (unique-key-clause table record)))
-          (first)))))
+      (->> (select (table-identifier table)
+                   (where (unique-key-clause table record)))
+           (first) (deserialize-record table)))))
 
 (defn insert-record
   "Insert the `record` into the database `table`."
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
-      (insert (make-entity table)
-              (values (->> (remove-serial-columns table record)
-                           (serialize-record table)))))))
+      (->> (insert (table-identifier table)
+                   (values (->> (remove-serial-columns table record)
+                                (serialize-record table))))
+           (deserialize-record table)))))
 
 (defn update-record
   "Update the `record` in the database `table`."
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
-      (update (make-entity table)
-              (set-fields (serialize-record table record))
-              (where (unique-key-clause table record))))))
+      (->> (update (table-identifier table)
+                   (set-fields (serialize-record table record))
+                   (where (unique-key-clause table record)))
+           (deserialize-record table)))))
 
 (defn select-by-column
   "Find a record in the database table by id."
@@ -98,7 +96,8 @@
   (with-ensure-table table
     (let [column (or (column? column) (first (select-columns table [column])))]
       (assert (column? column))
-      (select (make-entity table)
+      (select (-> (create-entity (table-identifier table))
+                  (transform (partial deserialize-record table)))
               (where {(column-keyword column)
                       (serialize-column column value)})))))
 
