@@ -55,3 +55,10 @@
   (let [table# table]
     `(if-let [~table# (find-table ~table#)]
        (do ~@body) (throw (Exception. "Table not found.")))))
+
+(defmacro with-ensure-column [table column & body]
+  (let [column# column table# table]
+    `(with-ensure-table ~table#
+       (let [~column# (if (column? ~column#) ~column# (get (:columns ~table#) ~column#))]
+         (assert (column? ~column#))
+         ~@body))))

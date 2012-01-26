@@ -97,12 +97,10 @@
 (defn select-by-column
   "Find a record in the database table by id."
   [table column value]
-  (with-ensure-table table
-    (let [column (or (column? column) (first (select-columns table [column])))]
-      (assert (column? column))
-      (select (table->entity table)
-              (where {(column-keyword column)
-                      (serialize-column column value)})))))
+  (with-ensure-column table column
+    (select (table->entity table)
+            (where {(column-keyword column)
+                    (serialize-column column value)}))))
 
 (defn table
   "Lookup table in *tables* by name."
