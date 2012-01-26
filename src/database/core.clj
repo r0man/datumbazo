@@ -12,8 +12,21 @@
   (-> (create-entity (table-identifier table))
       (transform (partial deserialize-record table))))
 
+(defn unique-key-clause
+  "Returns the SQL where clause for record."
+  [table record]
+  (with-ensure-table table
+    (let [columns (key-columns table record)]
+      (apply pred-or (map #(apply hash-map %1) (seq (select-keys record (map :name columns))))))))
+
+(defn table
+  "Lookup table in *tables* by name."
+  [table] (find-table table))
+
+;; DDL
+
 (defmulti add-column
-  "Add column to the database table."
+  "Add a `column` to the database `table`."
   (fn [table column] (:type column)))
 
 (defmethod add-column :default [table column]
@@ -21,7 +34,7 @@
   column)
 
 (defn create-table
-  "Create the database table."
+  "Create the database `table`."
   [table]
   (jdbc/transaction
    (->> (filter :native? (vals (:columns table)))
@@ -31,12 +44,17 @@
      (add-column table column))
    table))
 
-(defn unique-key-clause
-  "Returns the SQL where clause for record."
-  [table record]
+(defn drop-table
+  "Drop the database table."
+  [table & {:keys [if-exists cascade restrict]}]
   (with-ensure-table table
-    (let [columns (key-columns table record)]
-      (apply pred-or (map #(apply hash-map %1) (seq (select-keys record (map :name columns))))))))
+    (jdbc/do-commands
+     (str "DROP TABLE " (if if-exists "IF EXISTS ")
+          (table-identifier table)
+          (if cascade " CASCADE")
+          (if restrict " RESTRICT")))))
+
+;; CRUD
 
 (defn delete-all
   "Delete all rows from table."
@@ -53,25 +71,6 @@
     (with-ensure-table table
       (delete (table-identifier table)
               (where (unique-key-clause table record))))))
-
-(defn drop-table
-  "Drop the database table."
-  [table & {:keys [if-exists cascade restrict]}]
-  (with-ensure-table table
-    (jdbc/do-commands
-     (str "DROP TABLE " (if if-exists "IF EXISTS ")
-          (table-identifier table)
-          (if cascade " CASCADE")
-          (if restrict " RESTRICT")))))
-
-(defn reload-record
-  "Find the `record` in the database `table`."
-  [table record]
-  (if-not (empty? record)
-    (with-ensure-table table
-      (-> (select (table->entity table)
-                  (where (unique-key-clause table record)))
-          (first)))))
 
 (defn insert-record
   "Insert the `record` into the database `table`."
@@ -93,6 +92,15 @@
                    (where (unique-key-clause table record)))
            (deserialize-record table)))))
 
+(defn reload-record
+  "Find the `record` in the database `table`."
+  [table record]
+  (if-not (empty? record)
+    (with-ensure-table table
+      (-> (select (table->entity table)
+                  (where (unique-key-clause table record)))
+          (first)))))
+
 (defn select-by-column
   "Find a record in the database table by id."
   [table column value]
@@ -100,10 +108,6 @@
     (select (table->entity table)
             (where {(column-keyword column)
                     (serialize-column column value)}))))
-
-(defn table
-  "Lookup table in *tables* by name."
-  [table] (find-table table))
 
 (defn- define-crud
   [table]
