@@ -5,6 +5,7 @@ script: "lein test database.test.columns database.test.connection database.test.
 before_script:
   - "psql -c 'create database database_test;' -U postgres"
   - "psql -c \"create user database UNENCRYPTED PASSWORD 'database'\" database_test -U postgres"
+  - "lein clean"
 
 postgres:
   adapter: postgresql
