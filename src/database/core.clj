@@ -94,12 +94,12 @@
   "Find a record in the database table by id."
   [table column value]
   (with-ensure-table table
-    (let [column (or (column? column) (first (select-columns table [column])))
-          value (serialize-column column value)]
+    (let [column (or (column? column) (first (select-columns table [column])))]
       (assert (column? column))
-      (->> (select (table-identifier table)
-                   (where {(column-keyword column) value}))
-           (map (partial deserialize-record table))))))
+      (select (-> (create-entity (table-identifier table))
+                  (transform (partial deserialize-record table)))
+              (where {(column-keyword column)
+                      (serialize-column column value)})))))
 
 (defn table
   "Lookup table in *tables* by name."
@@ -119,7 +119,12 @@
          [~'record] (insert-record ~(table-keyword table) ~'record))
        (defn ~(symbol (str "update-" entity#))
          ~(format "Update the %s in the database." entity#)
-         [~'record & ~'options] (apply update-record ~(table-keyword table) ~'record ~'options)))))
+         [~'record & ~'options] (apply update-record ~(table-keyword table) ~'record ~'options))
+       (defn ~(symbol (str "save-" entity#))
+         ~(format "Save the %s in the database." entity#)
+         [~'record & ~'options]
+         (or (apply ~(symbol (str "update-" entity#)) ~'record ~'options)
+             (apply ~(symbol (str "insert-" entity#)) ~'record ~'options))))))
 
 (defn- define-finder
   [table column]
