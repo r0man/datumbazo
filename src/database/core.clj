@@ -70,9 +70,9 @@
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
-      (->> (select (table-identifier table)
-                   (where (unique-key-clause table record)))
-           (first) (deserialize-record table)))))
+      (-> (select (table->entity table)
+                  (where (unique-key-clause table record)))
+          (first)))))
 
 (defn insert-record
   "Insert the `record` into the database `table`."
