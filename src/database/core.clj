@@ -9,6 +9,10 @@
         database.tables
         database.serialization))
 
+(defn- make-entity [table]
+  (-> (create-entity (table-identifier table))
+      (transform (partial deserialize-record table))))
+
 (defmulti add-column
   "Add column to the database table."
   (fn [table column] (:type column)))
@@ -85,10 +89,9 @@
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
-      (->> (update (table-identifier table)
-                   (set-fields (serialize-record table record))
-                   (where (unique-key-clause table record)))
-           (deserialize-record table)))))
+      (update (make-entity table)
+              (set-fields (serialize-record table record))
+              (where (unique-key-clause table record))))))
 
 (defn select-by-column
   "Find a record in the database table by id."
@@ -96,8 +99,7 @@
   (with-ensure-table table
     (let [column (or (column? column) (first (select-columns table [column])))]
       (assert (column? column))
-      (select (-> (create-entity (table-identifier table))
-                  (transform (partial deserialize-record table)))
+      (select (make-entity table)
               (where {(column-keyword column)
                       (serialize-column column value)})))))
 
