@@ -1,6 +1,5 @@
 (ns database.core
-  (:require [clojure.java.jdbc :as jdbc]
-            [korma.core :as k])
+  (:require [clojure.java.jdbc :as jdbc])
   (:use [clojure.string :only (join)]
         [inflections.core :only (camelize singular plural)]
         [korma.core :exclude (join table)]
