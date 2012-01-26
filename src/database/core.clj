@@ -50,7 +50,7 @@
 (defn delete-record
   "Delete the record from the database table."
   [table record]
-  (if (not (empty? record))
+  (if-not (empty? record)
     (with-ensure-table table
       (delete (table-identifier table)
               (where (unique-key-clause table record))))))
@@ -68,7 +68,7 @@
 (defn reload-record
   "Find the `record` in the database `table`."
   [table record]
-  (if (not (empty? record))
+  (if-not (empty? record)
     (with-ensure-table table
       (-> (select (table->entity table)
                   (where (unique-key-clause table record)))
@@ -77,7 +77,7 @@
 (defn insert-record
   "Insert the `record` into the database `table`."
   [table record]
-  (if (not (empty? record))
+  (if-not (empty? record)
     (with-ensure-table table
       (->> (insert (table-identifier table)
                    (values (->> (remove-serial-columns table record)
@@ -87,7 +87,7 @@
 (defn update-record
   "Update the `record` in the database `table`."
   [table record]
-  (if (not (empty? record))
+  (if-not (empty? record)
     (with-ensure-table table
       (->> (update (table-identifier table)
                    (set-fields (serialize-record table record))
