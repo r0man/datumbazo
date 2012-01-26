@@ -70,19 +70,18 @@
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
-      (->> (select (table-identifier table)
-                   (where (unique-key-clause table record)))
-           (first) (deserialize-record table)))))
+      (-> (select (make-entity table)
+                  (where (unique-key-clause table record)))
+          (first)))))
 
 (defn insert-record
   "Insert the `record` into the database `table`."
   [table record]
   (if (not (empty? record))
     (with-ensure-table table
-      (->> (insert (table-identifier table)
-                   (values (->> (remove-serial-columns table record)
-                                (serialize-record table))))
-           (deserialize-record table)))))
+      (insert (make-entity table)
+              (values (->> (remove-serial-columns table record)
+                           (serialize-record table)))))))
 
 (defn update-record
   "Update the `record` in the database `table`."
