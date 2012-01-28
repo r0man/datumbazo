@@ -59,3 +59,9 @@
     (is (= 1.0 (.getX point)))
     (is (= 2.0 (.getY point)))
     (is (= 3.0 (.getZ point)))))
+
+(deftest test-read-geometry
+  (let [point (make-point-2d 1 2)]
+    (is (= point (.getGeometry (read-geometry point)))))
+  (let [point (make-point-3d 1 2 3)]
+    (is (= point (.getGeometry (read-geometry point))))))

@@ -7,6 +7,9 @@
 
 (def ^:dynamic *srid* 4326)
 
+(defprotocol GeometryProtocol
+  (to-geometry [obj] "Convert `obj` into a PostGIS geometry."))
+
 (defn add-geometry-column
   "Add a PostGIS geometry column to table with the AddGeometryColumn SQL fn."
   [table column code geometry dimension]
@@ -34,3 +37,10 @@
 (defn make-point-3d
   "Make a 3-dimensional org.postgis.Point from `x`, `y`, `z` and `srid`."
   [x y z & [srid]] (doto (make-point-2d x y srid) (.setZ z)))
+
+(defmethod print-dup PGgeometry [geometry writer]
+  (print-dup (str (.getGeometry geometry)) writer))
+
+(defn read-geometry
+  "Parse `s` and return a org.postgis.PGgeometry object. "
+  [s] (org.postgis.PGgeometry. (str s)))
