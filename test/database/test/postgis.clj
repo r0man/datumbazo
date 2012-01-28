@@ -36,6 +36,12 @@
   (is (instance? database.tables.Table (create-table continents)))
   (is (thrown? Exception (create-table continents))))
 
+(deftest test-geometry?
+  (is (not (geometry? nil)))
+  (is (not (geometry? "")))
+  (is (not (geometry? (make-point-2d 1 2))))
+  (is (geometry? (make-geometry (make-point-2d 1 2)))))
+
 (deftest test-make-geometry
   (let [geometry (make-geometry (make-point-2d 1.0 2.0))]
     (is (instance? PGgeometry geometry))

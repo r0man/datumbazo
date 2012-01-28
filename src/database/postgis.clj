@@ -26,6 +26,10 @@
 (defmethod add-column :multipolygon-2d [table column]
   (add-geometry-column table column 4326 "MULTIPOLYGON" 2))
 
+(defn geometry?
+  "Returns true if `arg` is a geometry, otherwise false."
+  [arg] (instance? PGgeometry arg))
+
 (defn make-geometry
   "Make a org.postgis.PGgeometry from `geometry`."
   [geometry] (PGgeometry. geometry))
