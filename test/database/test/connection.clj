@@ -1,4 +1,5 @@
 (ns database.test.connection
+  (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
         database.connection
         database.test))
@@ -18,3 +19,7 @@
     (is (not (= identity (:keys strategy))))
     (is (fn? (:fields strategy)))
     (is (not (= identity (:fields strategy))))))
+
+(deftest test-with-connection
+  (with-connection test-database
+    (is (instance? java.sql.Connection (jdbc/connection)))))
