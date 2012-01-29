@@ -48,7 +48,7 @@
 (def spanish
   (make-language
    :id 2
-   :name "Spansih"
+   :name "Spanish"
    :family "Indo-European"
    :iso-639-1 "ES"
    :iso-639-2 "ESP"))
@@ -92,7 +92,9 @@
     (is (empty? (languages-by-family nil)))
     (is (empty? (languages-by-family "")))
     (is (empty? (languages-by-family "unknown")))
-    (is (= [record] (languages-by-family (:family record))))))
+    (is (= [record] (languages-by-family (:family record))))
+    (is (= [record] (languages-by-family (:family record) :page 1 :per-page 2)))
+    (is (empty? (languages-by-family (:family record) :page 2 :per-page 2)))))
 
 (database-test test-insert-language
   (is (nil? (insert-language nil)))

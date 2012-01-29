@@ -32,13 +32,21 @@
        (assert-per-page ~per-page#)
        ~@body)))
 
+(defn- remove-transformations [query]
+  (if (and (map? query)
+           (:ent query)
+           (map? (:ent query))
+           (:transforms (:ent query)))
+    (assoc-in query [:ent :transforms] [])
+    query))
+
 (defn- count-query
   "Transform `query` into a count query."
-  [query page per-page]
-  (with-params page per-page
-    (-> (assoc query :fields [:korma.core/*])
-        (aggregate (count :*) :count)
-        exec first :count)))
+  [query]
+  (-> (assoc query :fields [:korma.core/*])
+      (remove-transformations)
+      (aggregate (count :*) :count)
+      exec first :count))
 
 (defn- result-query
   "Transform `query` into a result query."
@@ -51,10 +59,15 @@
 (defn paginate*
   [query & {:keys [page per-page]}]
   (with-params page per-page
-    (with-meta (result-query query page per-page)
-      {:page page :per-page per-page :total (count-query query page per-page)})))
+    (let [result (result-query query page per-page)]
+      (if (instance? clojure.lang.IMeta result)
+        (with-meta result
+          {:page page :per-page per-page :total (count-query query)})
+        result))))
 
 (defmacro paginate
-  "Paginate the given relation by page and per-page."
+  "Paginate the `query` with `page` and `per-page`."
   [query & {:keys [count page per-page]}]
-  `(paginate* (query-only ~query) :count ~count :page ~page :per-page ~per-page))
+  `(paginate*
+    (with-redefs [exec identity] (doall ~query))
+    :page ~page :per-page ~per-page))

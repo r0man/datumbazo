@@ -6,7 +6,8 @@
         [korma.sql.fns :only (pred-or)]
         database.columns
         database.tables
-        database.serialization))
+        database.serialization
+        database.pagination))
 
 (defn table->entity [table]
   (with-ensure-table table
@@ -108,11 +109,17 @@
 
 (defn select-by-column
   "Find records in the database `table` by `column` and `value`."
-  [table column value]
+  [table column value & {:keys [page per-page]}]
   (with-ensure-column table column
-    (select (table->entity table)
-            (where {(column-keyword column)
-                    (serialize-column column value)}))))
+    (if (or page per-page)
+      (paginate
+       (select (table->entity table)
+               (where {(column-keyword column)
+                       (serialize-column column value)}))
+       :page page :per-page per-page)
+      (select (table->entity table)
+              (where {(column-keyword column)
+                      (serialize-column column value)})))))
 
 (defn- define-crud
   [table]
@@ -135,12 +142,13 @@
 
 (defn- define-finder
   [table column]
-  (let [name ((if (unique-column? column) singular plural) (singular (table-symbol table)))]
-    `(defn ~(symbol (format "%s-by-%s" name (column-symbol column)))
-       ~(format "Find the %s by the %s column in the database." name (column-keyword column))
-       [~'value]
-       (~(if (unique-column? column) first identity)
-        (select-by-column ~(table-keyword table) ~(:name column) ~'value)))))
+  (if (unique-column? column)
+    `(defn ~(symbol (format "%s-by-%s" (singular (table-symbol table)) (column-symbol column)))
+       ~(format "Find the first %s by the %s column in the database." (singular (table-symbol table)) (column-symbol column))
+       [~'value] (first (select-by-column ~(table-keyword table) ~(:name column) ~'value)))
+    `(defn ~(symbol (format "%s-by-%s" (table-symbol table) (column-symbol column)))
+       ~(format "Find %s by the %s column in the database." (table-symbol table) (column-symbol column))
+       [~'value & ~'options] (apply select-by-column ~(table-keyword table) ~(:name column) ~'value ~'options))))
 
 (defmacro deftable
   "Define and register a database table and it's columns."

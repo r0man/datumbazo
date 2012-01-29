@@ -24,4 +24,17 @@
       (let [meta (meta result)]
         (is (= 2 (:page meta)))
         (is (= 1 (:per-page meta)))
+        (is (= 2 (:total meta)))))
+    (let [result (paginate (languages-by-family (:family german)) :page 2 :per-page 1)]
+      (is (= [spanish] result))
+      (let [meta (meta result)]
+        (is (= 2 (:page meta)))
+        (is (= 1 (:per-page meta)))
         (is (= 2 (:total meta)))))))
+
+(database-test test-paginate*
+  (let [german (save-language german) spanish (save-language spanish)]
+    (let [result (paginate* (-> (select* :languages)
+                                (where {:family (:family german)}))
+                            :page 1 :per-page 2)]
+      (is (= [german spanish] result)))))
