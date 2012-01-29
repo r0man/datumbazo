@@ -8,9 +8,10 @@
         database.tables
         database.serialization))
 
-(defn- table->entity [table]
-  (-> (create-entity (table-identifier table))
-      (transform (partial deserialize-record table))))
+(defn table->entity [table]
+  (with-ensure-table table
+    (-> (create-entity (table-identifier table))
+        (transform (partial deserialize-record table)))))
 
 (defn unique-key-clause
   "Returns the SQL where clause for record."
