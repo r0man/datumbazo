@@ -45,6 +45,14 @@
    :iso-639-1 "DE"
    :iso-639-2 "DEU"))
 
+(def spanish
+  (make-language
+   :id 2
+   :name "Spansih"
+   :family "Indo-European"
+   :iso-639-1 "ES"
+   :iso-639-2 "ESP"))
+
 (def photo-thumbnails (find-table :photo-thumbnails))
 
 (deftest test-deserialize-language
@@ -118,6 +126,11 @@
   (let [language (insert-language german)]
     (is (= language (delete-language language)))
     (insert-language german)))
+
+(database-test test-save-language
+  (let [language (save-language german)]
+    (is (pos? (:id language)))
+    (is (= language (save-language language)))))
 
 (deftest test-serialize-language
   (is (= nil (serialize-language nil)))
