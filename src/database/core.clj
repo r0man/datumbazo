@@ -95,7 +95,7 @@
            (deserialize-record table)))))
 
 (defn reload-record
-  "Find the `record` in the database `table`."
+  "Reload the `record` from the database `table`."
   [table record]
   (if-not (empty? record)
     (with-ensure-table table
@@ -108,7 +108,8 @@
   [table record] (or (update-record table record) (insert-record table record)))
 
 (defn select-by-column
-  "Find records in the database `table` by `column` and `value`."
+  "Returns a query that finds all records in the database `table` by
+  `column` and `value`."
   [table column value]
   (with-ensure-column table column
     (-> (select* (table->entity table))
