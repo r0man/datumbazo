@@ -32,19 +32,21 @@
   (fn [table column] (:type column)))
 
 (defmethod add-column :default [table column]
-  (jdbc/do-commands (add-column-statement table column))
-  column)
+  (with-ensure-column table column
+    (jdbc/do-commands (add-column-statement table column))
+    column))
 
 (defn create-table
   "Create the database `table`."
   [table]
-  (jdbc/transaction
-   (->> (filter :native? (vals (:columns table)))
-        (map column-spec)
-        (apply jdbc/create-table (table-identifier table)))
-   (doseq [column (remove :native? (vals (:columns table)))]
-     (add-column table column))
-   table))
+  (with-ensure-table table
+    (jdbc/transaction
+     (->> (filter :native? (vals (:columns table)))
+          (map column-spec)
+          (apply jdbc/create-table (table-identifier table)))
+     (doseq [column (remove :native? (vals (:columns table)))]
+       (add-column table column))
+     table)))
 
 (defn drop-table
   "Drop the database table."

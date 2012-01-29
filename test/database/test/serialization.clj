@@ -14,7 +14,7 @@
     (is (= (:iso-639-1 (deserialize-column column "DE"))))))
 
 (deftest test-deserialize-record
-  (let [language (deserialize-record language-table {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
+  (let [language (deserialize-record :languages {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU"})]
     (is (map? language))
     (is (= "German" (:name language)))
     (is (= "DE" (:iso-639-1 language)))
@@ -28,7 +28,7 @@
     (is (= "de" (serialize-column column "DE")))))
 
 (deftest test-serialize-record
-  (let [language (serialize-record language-table {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU" :not-existing "column"})]
+  (let [language (serialize-record :languages {:name "German" :iso-639-1 "DE" :iso-639-2 "DEU" :not-existing "column"})]
     (is (map? language))
     (is (= "German" (:name language)))
     (is (= "de" (:iso-639-1 language)))
