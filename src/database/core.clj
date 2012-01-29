@@ -145,17 +145,26 @@
          [~'record & ~'options] (apply save-record ~(table-keyword table) ~'record ~'options)))))
 
 (defn- define-finder
-  [table column]
+  [table]
   `(do
-     (defn ~(symbol (format "%s-by-%s" (table-symbol table) (column-symbol column)))
-       ~(format "Find all %s by the %s column in the database." (table-symbol table) (column-symbol column))
-       [~'value & ~'options] (apply find-by-column ~(table-keyword table) ~(:name column) ~'value ~'options))
-     (defn ~(symbol (format "%s-by-%s*" (table-symbol table) (column-symbol column)))
-       ~(format "Returns a query that finds all %s by the %s column in the database." (table-symbol table) (column-symbol column))
-       [~'value] (select-by-column ~(table-keyword table) ~(:name column) ~'value))
-     (defn ~(symbol (format "%s-by-%s" (singular (table-symbol table)) (column-symbol column)))
-       ~(format "Find the first %s by the %s column in the database." (singular (table-symbol table)) (column-symbol column))
-       [~'value] (first (find-by-column ~(table-keyword table) ~(:name column) ~'value)))))
+     (defn ~(symbol (str (table-symbol table) "*"))
+       ~(format "Returns a query that selects all %s in the database." (table-symbol table))
+       [] (select* (table->entity ~(table-keyword table))))
+     (defn ~(symbol (str (table-symbol table) ""))
+       ~(format "Find all %s in the database." (table-symbol table))
+       [& {:keys [~'page ~'per-page]}]
+       (paginate* (select* (table->entity ~(table-keyword table))) :page ~'page :per-page ~'per-page))
+     ~@(for [column (vals (:columns table))]
+         `(do
+            (defn ~(symbol (format "%s-by-%s" (table-symbol table) (column-symbol column)))
+              ~(format "Find all %s by the %s column in the database." (table-symbol table) (column-symbol column))
+              [~'value & ~'options] (apply find-by-column ~(table-keyword table) ~(:name column) ~'value ~'options))
+            (defn ~(symbol (format "%s-by-%s*" (table-symbol table) (column-symbol column)))
+              ~(format "Returns a query that finds all %s by the %s column in the database." (table-symbol table) (column-symbol column))
+              [~'value] (select-by-column ~(table-keyword table) ~(:name column) ~'value))
+            (defn ~(symbol (format "%s-by-%s" (singular (table-symbol table)) (column-symbol column)))
+              ~(format "Find the first %s by the %s column in the database." (singular (table-symbol table)) (column-symbol column))
+              [~'value] (first (find-by-column ~(table-keyword table) ~(:name column) ~'value)))))))
 
 (defmacro deftable
   "Define and register a database table and it's columns."
@@ -165,4 +174,4 @@
        (register-table (make-table ~(keyword name#) ~columns#))
        ~(define-serialization table#)
        ~(define-crud table#)
-       ~@(map #(define-finder table# %1) (vals (:columns table#))))))
+       ~(define-finder table#))))

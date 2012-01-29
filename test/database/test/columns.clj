@@ -49,7 +49,7 @@
   (is (not (column? nil)))
   (is (not (column? "")))
   (is (column? created-at-column))
-  (is (every? column? (vals (:columns languages)))))
+  (is (every? column? (vals (:columns language-table)))))
 
 (deftest test-column-identifier
   (are [column expected]
@@ -105,7 +105,7 @@
 
 (deftest test-key-columns
   (are [expected record]
-    (is (= expected (map :name (key-columns languages record))))
+    (is (= expected (map :name (key-columns language-table record))))
     [] {}
     [:id] {:id 1}
     [:id :iso-639-1] {:id 1 :iso-639-1 "de"}

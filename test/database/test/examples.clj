@@ -2,6 +2,7 @@
   (:import java.sql.Timestamp)
   (:use [clojure.string :only (lower-case upper-case)]
         [migrate.core :only (defmigration)]
+        [korma.core :exclude (join table)]
         clojure.test
         database.core
         database.util
@@ -35,7 +36,7 @@
   (create-table (table :photo-thumbnails))
   (drop-table (table :photo-thumbnails)))
 
-(def languages (find-table :languages))
+(def language-table (find-table :languages))
 
 (def german
   (make-language
@@ -86,6 +87,20 @@
     (is (nil? (language-by-iso-639-2 "xxx")))
     (is (= record (language-by-iso-639-2 (:iso-639-2 record))))
     (is (= record (language-by-iso-639-2 (upper-case (:iso-639-2 record)))))))
+
+(database-test test-languages*
+  (is (empty? (languages)))
+  (let [german (save-language german)
+        spanish (save-language spanish)]
+    (is (= [german spanish] (exec (languages*))))))
+
+(database-test test-languages
+  (is (empty? (languages)))
+  (let [german (save-language german)
+        spanish (save-language spanish)]
+    (is (= [german spanish] (languages)))
+    (is (= [german] (languages :page 1 :per-page 1)))
+    (is (= [spanish] (languages :page 2 :per-page 1)))))
 
 (database-test test-languages-by-family
   (let [record (insert-language german)]
