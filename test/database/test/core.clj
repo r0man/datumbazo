@@ -81,6 +81,11 @@
     (is (instance? Timestamp (:updated-at record)))
     (is (= record (update-record languages record)))))
 
+(database-test test-save-record
+  (let [language (save-record :languages german)]
+    (is (pos? (:id language)))
+    (is (= language (save-record :languages language)))))
+
 (database-test test-select-by-column
   (let [language (insert-record languages german)]
     (is (empty? (select-by-column languages :name nil)))

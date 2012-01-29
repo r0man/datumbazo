@@ -102,8 +102,12 @@
                   (where (unique-key-clause table record)))
           (first)))))
 
+(defn save-record
+  "Update or insert the `record` in the database `table`."
+  [table record] (or (update-record table record) (insert-record table record)))
+
 (defn select-by-column
-  "Find a record in the database table by id."
+  "Find records in the database `table` by `column` and `value`."
   [table column value]
   (with-ensure-column table column
     (select (table->entity table)
@@ -127,9 +131,7 @@
          [~'record & ~'options] (apply update-record ~(table-keyword table) ~'record ~'options))
        (defn ~(symbol (str "save-" entity#))
          ~(format "Save the %s in the database." entity#)
-         [~'record & ~'options]
-         (or (apply ~(symbol (str "update-" entity#)) ~'record ~'options)
-             (apply ~(symbol (str "insert-" entity#)) ~'record ~'options))))))
+         [~'record & ~'options] (apply save-record ~(table-keyword table) ~'record ~'options)))))
 
 (defn- define-finder
   [table column]
