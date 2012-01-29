@@ -146,13 +146,16 @@
 
 (defn- define-finder
   [table column]
-  (if (unique-column? column)
-    `(defn ~(symbol (format "%s-by-%s" (singular (table-symbol table)) (column-symbol column)))
+  `(do
+     (defn ~(symbol (format "%s-by-%s" (table-symbol table) (column-symbol column)))
+       ~(format "Find all %s by the %s column in the database." (table-symbol table) (column-symbol column))
+       [~'value & ~'options] (apply find-by-column ~(table-keyword table) ~(:name column) ~'value ~'options))
+     (defn ~(symbol (format "%s-by-%s*" (table-symbol table) (column-symbol column)))
+       ~(format "Returns a query that finds all %s by the %s column in the database." (table-symbol table) (column-symbol column))
+       [~'value] (select-by-column ~(table-keyword table) ~(:name column) ~'value))
+     (defn ~(symbol (format "%s-by-%s" (singular (table-symbol table)) (column-symbol column)))
        ~(format "Find the first %s by the %s column in the database." (singular (table-symbol table)) (column-symbol column))
-       [~'value] (first (find-by-column ~(table-keyword table) ~(:name column) ~'value)))
-    `(defn ~(symbol (format "%s-by-%s" (table-symbol table) (column-symbol column)))
-       ~(format "Find %s by the %s column in the database." (table-symbol table) (column-symbol column))
-       [~'value & ~'options] (apply find-by-column ~(table-keyword table) ~(:name column) ~'value ~'options))))
+       [~'value] (first (find-by-column ~(table-keyword table) ~(:name column) ~'value)))))
 
 (defmacro deftable
   "Define and register a database table and it's columns."

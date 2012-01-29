@@ -2,7 +2,8 @@
   (:import java.sql.Timestamp org.postgresql.util.PSQLException)
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.jdbc.internal :as internal])
-  (:use [korma.sql.fns :only (pred-or)]
+  (:use [korma.core :exclude (join table)]
+        [korma.sql.fns :only (pred-or)]
         clojure.test
         database.core
         database.columns
@@ -48,6 +49,13 @@
   (is (drop-table languages :if-exists true))
   (is (thrown? Exception (drop-table languages))))
 
+(database-test test-find-by-column
+  (let [language (insert-record languages german)]
+    (is (empty? (find-by-column languages :name nil)))
+    (is (empty? (find-by-column languages :name "NOT-EXISTING")))
+    (is (= [language] (find-by-column languages :name (:name language))))
+    (is (= [language] (find-by-column languages :created-at (:created-at language))))))
+
 (database-test test-reload-record
   (is (nil? (reload-record languages {})))
   (let [language (insert-record languages german)]
@@ -86,12 +94,12 @@
     (is (pos? (:id language)))
     (is (= language (save-record :languages language)))))
 
-(database-test test-find-by-column
+(database-test test-select-by-column
   (let [language (insert-record languages german)]
-    (is (empty? (find-by-column languages :name nil)))
-    (is (empty? (find-by-column languages :name "NOT-EXISTING")))
-    (is (= [language] (find-by-column languages :name (:name language))))
-    (is (= [language] (find-by-column languages :created-at (:created-at language))))))
+    (is (empty? (exec (select-by-column languages :name nil))))
+    (is (empty? (exec (select-by-column languages :name "NOT-EXISTING"))))
+    (is (= [language] (exec (select-by-column languages :name (:name language)))))
+    (is (= [language] (exec (select-by-column languages :created-at (:created-at language)))))))
 
 (deftest test-table
   (is (table? (table :languages)))
