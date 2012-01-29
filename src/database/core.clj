@@ -107,19 +107,21 @@
   "Update or insert the `record` in the database `table`."
   [table record] (or (update-record table record) (insert-record table record)))
 
+(defn select-by-column*
+  "Find records in the database `table` by `column` and `value`."
+  [table column value]
+  (with-ensure-column table column
+    (-> (select* (table->entity table))
+        (where {(column-keyword column) (serialize-column column value)}))))
+
 (defn select-by-column
   "Find records in the database `table` by `column` and `value`."
   [table column value & {:keys [page per-page]}]
-  (with-ensure-column table column
-    (if (or page per-page)
-      (paginate
-       (select (table->entity table)
-               (where {(column-keyword column)
-                       (serialize-column column value)}))
-       :page page :per-page per-page)
-      (select (table->entity table)
-              (where {(column-keyword column)
-                      (serialize-column column value)})))))
+  (if (or page per-page)
+    (paginate*
+     (select-by-column* table column value)
+     :page page :per-page per-page)
+    (exec (select-by-column* table column value))))
 
 (defn- define-crud
   [table]
