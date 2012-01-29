@@ -112,7 +112,8 @@
   [table column value]
   (with-ensure-column table column
     (-> (select* (table->entity table))
-        (where {(column-keyword column) (serialize-column column value)}))))
+        (where {(column-keyword column)
+                (serialize-column column value)}))))
 
 (defn select-by-column
   "Find records in the database `table` by `column` and `value`."
