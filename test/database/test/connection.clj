@@ -2,7 +2,8 @@
   (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
         database.connection
-        database.test))
+        database.test
+        database.test.examples))
 
 (deftest test-connection-spec
   (let [spec (connection-spec)]
@@ -22,4 +23,6 @@
 
 (deftest test-with-connection
   (with-connection test-database
-    (is (instance? java.sql.Connection (jdbc/connection)))))
+    (is (instance? java.sql.Connection (jdbc/connection)))
+    (is (empty? (languages)))
+    (is (empty? (jdbc/with-query-results rs ["SELECT * FROM languages"] (doall rs))))))
