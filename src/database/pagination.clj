@@ -44,6 +44,7 @@
   "Transform `query` into a count query."
   [query]
   (-> (assoc query :fields [:korma.core/*])
+      (dissoc :order)
       (remove-transformations)
       (aggregate (count :*) :count)
       exec first :count))
