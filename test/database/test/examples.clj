@@ -127,6 +127,7 @@
     (is (= "Indo-European" (:family record)))
     (is (= "de" (:iso-639-1 record)))
     (is (= "deu" (:iso-639-2 record)))
+    (is (= (language-url record) (:url record)))
     (is (instance? Timestamp (:created-at record)))
     (is (instance? Timestamp (:updated-at record)))))
 
@@ -139,6 +140,7 @@
     (is (= "Indo-European" (:family record)))
     (is (= "de" (:iso-639-1 record)))
     (is (= "deu" (:iso-639-2 record)))
+    (is (= (language-url record) (:url record)))
     (is (instance? Timestamp (:created-at record)))
     (is (instance? Timestamp (:updated-at record)))
     (is (= record (update-language record)))))
@@ -148,6 +150,7 @@
   (is (nil? (delete-language {})))
   (let [language (insert-language german)]
     (is (= language (delete-language language)))
+    (is (= (language-url language) (:url language)))
     (insert-language german)))
 
 (database-test test-save-language
