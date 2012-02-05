@@ -73,8 +73,9 @@
   [table record]
   (if-not (empty? record)
     (with-ensure-table table
-      (delete (table-identifier table)
-              (where (unique-key-clause table record))))))
+      (->> (delete (table-identifier table)
+                   (where (unique-key-clause table record)))
+           (deserialize-record table)))))
 
 (defn insert-record
   "Insert the `record` into the database `table`."
@@ -170,10 +171,13 @@
 
 (defmacro deftable
   "Define and register a database table and it's columns."
-  [name & [columns]]
-  (let [name# name columns# columns table# (make-table (keyword name#) columns#)]
+  [name & [columns & options]]
+  (let [name# name
+        columns# columns
+        options# options
+        table# (apply make-table (keyword name#) columns# options#)]
     `(do
-       (register-table (make-table ~(keyword name#) ~columns#))
+       (register-table (make-table ~(keyword name#) ~columns# ~@options#))
        ~(define-serialization table#)
        ~(define-crud table#)
        ~(define-finder table#))))

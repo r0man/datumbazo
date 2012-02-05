@@ -3,6 +3,12 @@
         database.columns
         database.tables))
 
+(defn- assoc-url [record url-fn]
+  (if (fn? url-fn)
+    (if-let [url (url-fn record)]
+      (assoc record :url url) record)
+    record))
+
 (defn- transform-column [column row transform-fn]
   (let [attr-name (column-keyword column) attr-val (get row attr-name)]
     (if (and attr-val transform-fn)
@@ -28,8 +34,10 @@
   [table row]
   (if (not (nil? row))
     (with-ensure-table table
-      (reduce #(assoc %1 (:name %2) (deserialize-column %2 (get row (:name %2))))
-              {} (select-columns table (keys row))))))
+      (assoc-url
+       (reduce #(assoc %1 (:name %2) (deserialize-column %2 (get row (:name %2))))
+               {} (select-columns table (keys row)))
+       (:url table)))))
 
 (defn serialize-column
   "Serialize the `value` of column."

@@ -12,9 +12,9 @@
 
 (defn make-table
   "Make a new database table."
-  [name & [columns]]
+  [name & [columns & {:as options}]]
   (let [columns (map #(if (column? %1) %1 (apply make-column %1)) columns)]
-    (Table. name (zipmap (map :name columns) columns))))
+    (merge (Table. name (zipmap (map :name columns) columns)) options)))
 
 (defn table?
   "Returns true if arg is a table, otherwise false."
