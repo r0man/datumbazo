@@ -58,6 +58,15 @@
           (if cascade " CASCADE")
           (if restrict " RESTRICT")))))
 
+(defn reload-record
+  "Reload the `record` from the database `table`."
+  [table record]
+  (if-not (empty? record)
+    (with-ensure-table table
+      (-> (select (table->entity table)
+                  (where (unique-key-clause table record)))
+          (first)))))
+
 ;; CRUD
 
 (defn delete-all
@@ -73,38 +82,29 @@
   [table record]
   (if-not (empty? record)
     (with-ensure-table table
-      (->> (delete (table-identifier table)
-                   (where (unique-key-clause table record)))
-           (deserialize-record table)))))
+      (delete (table-identifier table)
+              (where (unique-key-clause table record)))
+      record)))
 
 (defn insert-record
   "Insert the `record` into the database `table`."
   [table record]
   (if-not (empty? record)
     (with-ensure-table table
-      (->> (insert (table-identifier table)
-                   (values (->> (remove-serial-columns table record)
-                                (serialize-record table))))
-           (deserialize-record table)))))
+      (insert (table-identifier table)
+              (values (->> (remove-serial-columns table record)
+                           (serialize-record table))))
+      (reload-record table record))))
 
 (defn update-record
   "Update the `record` in the database `table`."
   [table record]
   (if-not (empty? record)
     (with-ensure-table table
-      (->> (update (table-identifier table)
-                   (set-fields (serialize-record table record))
-                   (where (unique-key-clause table record)))
-           (deserialize-record table)))))
-
-(defn reload-record
-  "Reload the `record` from the database `table`."
-  [table record]
-  (if-not (empty? record)
-    (with-ensure-table table
-      (-> (select (table->entity table)
-                  (where (unique-key-clause table record)))
-          (first)))))
+      (update (table-identifier table)
+              (set-fields (serialize-record table record))
+              (where (unique-key-clause table record)))
+      (reload-record table record))))
 
 (defn save-record
   "Update or insert the `record` in the database `table`."
