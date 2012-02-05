@@ -4,7 +4,7 @@
         database.tables))
 
 (defn- assoc-url [record url-fn]
-  (if (fn? url-fn)
+  (if url-fn
     (if-let [url (url-fn record)]
       (assoc record :url url) record)
     record))
