@@ -25,4 +25,4 @@
   (with-connection test-database
     (is (instance? java.sql.Connection (jdbc/connection)))
     (is (empty? (languages)))
-    (is (empty? (jdbc/with-query-results rs ["SELECT * FROM languages"] (doall rs))))))
+    (is (jdbc/with-query-results rs ["SELECT 1"] (doall rs)))))
