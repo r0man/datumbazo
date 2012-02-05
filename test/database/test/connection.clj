@@ -24,5 +24,4 @@
 (deftest test-with-connection
   (with-connection test-database
     (is (instance? java.sql.Connection (jdbc/connection)))
-    (is (empty? (languages)))
     (is (jdbc/with-query-results rs ["SELECT 1"] (doall rs)))))
