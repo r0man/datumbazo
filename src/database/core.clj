@@ -1,13 +1,33 @@
 (ns database.core
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [clojure.string :only (join)]
+  (:use [clojure.string :only (join upper-case)]
         [inflections.core :only (camelize singular plural)]
         [korma.core :exclude (join table)]
+        [korma.sql.engine :only [infix try-prefix]]
         [korma.sql.fns :only (pred-or)]
+        [korma.sql.utils :only (func)]
         database.columns
         database.tables
         database.serialization
         database.pagination))
+
+(defn sql-cast [arg type]
+  (func (str "CAST(%s AS " type ")") [(try-prefix arg)]))
+
+(defn to-tsvector
+  "Reduce the document text into tsvector."
+  [document & [config]]
+  (let [config (or config "english")]
+    (sqlfn to_tsvector (sql-cast config "regconfig") (sql-cast document "text"))))
+
+(defn plainto-tsquery
+  "Produce a tsquery ignoring punctuation."
+  [query & [config]]
+  (let [config (or config "english")]
+    (sqlfn plainto_tsquery (sql-cast config "regconfig") (sql-cast query "text"))))
+
+(defn text= [arg-1 arg-2]
+  (infix (to-tsvector arg-1) "@@" (plainto-tsquery arg-2)))
 
 (defn table->entity [table]
   (with-ensure-table table

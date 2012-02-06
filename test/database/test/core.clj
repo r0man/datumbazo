@@ -56,6 +56,10 @@
     (is (= [language] (find-by-column :languages :name (:name language))))
     (is (= [language] (find-by-column :languages :created-at (:created-at language))))))
 
+(database-test test-text=
+  (let [language (insert-record :languages german)]
+    (is (= language (first (select (table->entity :languages) (where {:name [text= (:name language)]})))))))
+
 (database-test test-reload-record
   (is (nil? (reload-record :languages {})))
   (let [language (insert-record :languages german)]
