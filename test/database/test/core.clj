@@ -121,3 +121,7 @@
     ;; {:id 1 :iso-639-1 "de"} (pred-or {:id 1} {:iso-639-1 "de"})
     ;; {:id 1 :iso-639-1 "de" :undefined "column"} {:id 1 :iso-639-1 "de"}
     ))
+
+(deftest test-where-text=
+  (is (= "SELECT * FROM \"languages\" WHERE (TO_TSVECTOR(CAST(? AS regconfig), CAST(\"name\" AS text)) @@ PLAINTO_TSQUERY(CAST(? AS regconfig), CAST(? AS text)))"
+         (sql-only (select :languages (where-text= :name "x"))))))

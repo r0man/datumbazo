@@ -1,6 +1,6 @@
 (ns database.core
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [clojure.string :only (join upper-case)]
+  (:use [clojure.string :only (blank? join upper-case)]
         [inflections.core :only (camelize singular plural)]
         [korma.core :exclude (join table)]
         [korma.sql.engine :only [infix try-prefix]]
@@ -44,6 +44,13 @@
 (defn table
   "Lookup table in *tables* by name."
   [table] (find-table table))
+
+(defn where-text=
+  "Add a full text condition for `term` on `columm` to `query`."
+  [query column term]
+  (if-not (blank? term)
+    (where query {column [text= term]})
+    query))
 
 ;; DDL
 
