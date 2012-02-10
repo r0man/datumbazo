@@ -94,6 +94,14 @@
                   (where (unique-key-clause table record)))
           (first)))))
 
+(defn validate-record
+  "Validate `record`."
+  [table record]
+  (with-ensure-table table
+    (if-let [validation-fn (:validate table)]
+      (validation-fn record)
+      record)))
+
 ;; CRUD
 
 (defn delete-all
@@ -116,22 +124,22 @@
 (defn insert-record
   "Insert the `record` into the database `table`."
   [table record]
-  (if-not (empty? record)
-    (with-ensure-table table
-      (insert (table-identifier table)
-              (values (->> (remove-serial-columns table record)
-                           (serialize-record table))))
-      (reload-record table record))))
+  (with-ensure-table table
+    (validate-record table record)
+    (insert (table-identifier table)
+            (values (->> (remove-serial-columns table record)
+                         (serialize-record table))))
+    (reload-record table record)))
 
 (defn update-record
   "Update the `record` in the database `table`."
   [table record]
-  (if-not (empty? record)
-    (with-ensure-table table
-      (update (table-identifier table)
-              (set-fields (serialize-record table record))
-              (where (unique-key-clause table record)))
-      (reload-record table record))))
+  (with-ensure-table table
+    (validate-record table record)
+    (update (table-identifier table)
+            (set-fields (serialize-record table record))
+            (where (unique-key-clause table record)))
+    (reload-record table record)))
 
 (defn save-record
   "Update or insert the `record` in the database `table`."

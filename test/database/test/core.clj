@@ -66,8 +66,7 @@
     (is (= language (reload-record :languages language)))))
 
 (database-test test-insert-record
-  (is (nil? (insert-record :languages nil)))
-  (is (nil? (insert-record :languages {})))
+  (is (thrown? Exception (insert-record :languages {})))
   (let [record (insert-record :languages german)]
     (is (number? (:id record)))
     (is (= "German" (:name record)))
@@ -81,8 +80,7 @@
   )
 
 (database-test test-update-record
-  (is (nil? (update-record :languages nil)))
-  (is (nil? (update-record :languages {})))
+  (is (thrown? Exception (update-record :languages {})))
   (is (nil? (update-record :languages german)))
   (let [record (update-record :languages (assoc (insert-record :languages german) :name "Deutsch"))]
     (is (number? (:id record)))
@@ -96,6 +94,7 @@
     (is (= record (update-record :languages record)))))
 
 (database-test test-save-record
+  (is (thrown? Exception (save-record :languages {})))
   (let [language (save-record :languages german)]
     (is (pos? (:id language)))
     (is (= language (save-record :languages language)))))

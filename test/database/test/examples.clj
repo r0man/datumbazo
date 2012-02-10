@@ -7,11 +7,24 @@
         database.core
         database.util
         database.tables
-        database.test))
+        database.test
+        validation.core))
 
 (defn language-url [language]
   (if (:id language)
     (format "http://example.com/languages/%s-%s" (:id language) (:name language))))
+
+(defvalidate language
+  (presence-of :name)
+  (min-length-of :name 2)
+  (max-length-of :name 32)
+  (presence-of :family)
+  (min-length-of :family 2)
+  (max-length-of :family 32)
+  (presence-of :iso-639-1)
+  (exact-length-of :iso-639-1 2)
+  (presence-of :iso-639-2)
+  (exact-length-of :iso-639-2 3))
 
 (deftable languages
   [[:id :serial :primary-key? true :serialize #'parse-int]
@@ -21,7 +34,8 @@
    [:iso-639-2 :varchar :length 3 :unique? true :not-null? true :serialize #'lower-case]
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
-  :url language-url)
+  :url language-url
+  :validate validate-language!)
 
 (deftable photo-thumbnails
   [[:id :serial :primary-key? true]
@@ -118,8 +132,8 @@
     (is (empty? (languages-by-family (:family record) :page 2 :per-page 2)))))
 
 (database-test test-insert-language
-  (is (nil? (insert-language nil)))
-  (is (nil? (insert-language {})))
+  (is (thrown? Exception (insert-language nil)))
+  (is (thrown? Exception (insert-language {})))
   (let [record (insert-language (assoc german :id nil))]
     (is (number? (:id record)))
     (is (not (= -1 (:id record)))) ; filtered, because serial
@@ -132,8 +146,8 @@
     (is (instance? Timestamp (:updated-at record)))))
 
 (database-test test-update-language
-  (is (nil? (update-language nil)))
-  (is (nil? (update-language {})))
+  (is (thrown? Exception (update-language nil)))
+  (is (thrown? Exception (update-language {})))
   (let [record (update-language (assoc (insert-language german) :name "Deutsch"))]
     (is (number? (:id record)))
     (is (= "Deutsch" (:name record)))
@@ -154,6 +168,8 @@
     (insert-language german)))
 
 (database-test test-save-language
+  (is (thrown? Exception (save-language nil)))
+  (is (thrown? Exception (save-language {})))
   (let [language (save-language german)]
     (is (pos? (:id language)))
     (is (= language (save-language language)))))
