@@ -63,6 +63,12 @@
   (is (not (new-record? {:id 1})))
   (is (not (new-record? {:id "1"}))))
 
+(database-test test-record-exists?
+  (is (not (record-exists? :languages {})))
+  (is (not (record-exists? :languages german)))
+  (let [german (insert-record :languages german)]
+    (is (record-exists? :languages german))))
+
 (database-test test-text=
   (let [language (insert-record :languages german)]
     (is (= language (first (select (table->entity :languages) (where {:name [text= (:name language)]})))))))

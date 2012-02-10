@@ -48,6 +48,16 @@
     (let [columns (key-columns table record)]
       (apply pred-or (map #(apply hash-map %1) (seq (select-keys record (map :name columns))))))))
 
+(defn record-exists?
+  "Returns true if `record` exists in the database, otherwise false."
+  [table record]
+  (if-not (empty? record)
+    (with-ensure-table table
+      (-> (select (table->entity table)
+                  (where (unique-key-clause table record)))
+          empty? not))
+    false))
+
 (defn table
   "Lookup table in *tables* by name."
   [table] (find-table table))
