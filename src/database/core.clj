@@ -9,10 +9,17 @@
         database.columns
         database.tables
         database.serialization
-        database.pagination))
+        database.pagination
+        validation.core
+        validation.errors))
 
-(defn sql-cast [arg type]
-  (func (str "CAST(%s AS " type ")") [(try-prefix arg)]))
+(defn new-record?
+  "Returns true if `record` doesn't have a `id` column, otherwise false."
+  [record] (or (nil? (:id record)) (blank? (str (:id record)))))
+
+(defn sql-cast
+  "Cast `arg` to `type`."
+  [arg type] (func (str "CAST(%s AS " type ")") [(try-prefix arg)]))
 
 (defn to-tsvector
   "Reduce the document text into tsvector."
