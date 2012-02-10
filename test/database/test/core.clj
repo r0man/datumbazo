@@ -134,6 +134,13 @@
     ;; {:id 1 :iso-639-1 "de" :undefined "column"} {:id 1 :iso-639-1 "de"}
     ))
 
+(database-test test-uniqueness-of
+  (let [validate-iso-639-1 (uniqueness-of :languages :iso-639-1)]
+    (is (nil? (meta (validate-iso-639-1 german))))
+    (insert-record :languages german)
+    (is (= {:errors {:iso-639-1 ["has already been taken."]}}
+           (meta (validate-iso-639-1 german))))))
+
 (deftest test-where-text=
   (is (= "SELECT * FROM \"languages\" WHERE (TO_TSVECTOR(CAST(? AS regconfig), CAST(\"name\" AS text)) @@ PLAINTO_TSQUERY(CAST(? AS regconfig), CAST(? AS text)))"
          (sql-only (select :languages (where-text= :name "x"))))))

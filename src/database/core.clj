@@ -49,6 +49,27 @@
     (let [columns (key-columns table record)]
       (apply pred-or (map #(apply hash-map %1) (seq (select-keys record (map :name columns))))))))
 
+(defn uniqueness-of
+  "Validates that the record's columns are unique."
+  [table columns & {:as options}]
+  (let [message (or (:message options) "has already been taken.")
+        columns (if (sequential? columns) columns [columns])]
+    (fn [record]
+      (with-ensure-table table
+        (if (and
+             (or (nil? (:if options)) ((:if options) record))
+             (or (nil? (:unless options)) (not ((:unless options) record)))
+             (not (empty? (select (table->entity table)
+                                  (where (reduce
+                                          #(assoc %1
+                                             (column-keyword %2)
+                                             (serialize-column %2 (get record (column-keyword %2))))
+                                          {} (select-columns table columns)))))))
+          (reduce
+           #(add-error-message-on %1 %2 message)
+           record columns)
+          record)))))
+
 (defn record-exists?
   "Returns true if `record` exists in the database, otherwise false."
   [table record]
