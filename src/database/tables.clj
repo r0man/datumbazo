@@ -1,5 +1,4 @@
 (ns database.tables
-  (:require [clojure.java.jdbc :as jdbc])
   (:use [clojure.string :only (join)]
         [database.columns :only (column? make-column)]
         [inflections.core :only (dasherize)]
