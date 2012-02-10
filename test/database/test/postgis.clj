@@ -2,10 +2,11 @@
   (:import [org.postgis Geometry PGgeometry PGboxbase PGbox2d PGbox3d Point])
   (:use [clojure.string :only (lower-case)]
         clojure.test
-        database.core
-        database.tables
         database.columns
+        database.core
         database.postgis
+        database.registry
+        database.tables
         database.test
         database.test.examples))
 

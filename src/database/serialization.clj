@@ -1,7 +1,8 @@
 (ns database.serialization
   (:use [inflections.core :only (camelize singular)]
         database.columns
-        database.tables))
+        database.tables
+        database.registry))
 
 (defn- assoc-url [record url-fn]
   (if url-fn

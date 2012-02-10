@@ -10,6 +10,7 @@
         database.tables
         database.serialization
         database.pagination
+        database.registry
         validation.core
         validation.errors))
 
@@ -53,8 +54,7 @@
   [table record]
   (if-not (empty? record)
     (with-ensure-table table
-      (-> (select (table->entity table)
-                  (where (unique-key-clause table record)))
+      (-> (select (table->entity table) (where (unique-key-clause table record)))
           empty? not))
     false))
 

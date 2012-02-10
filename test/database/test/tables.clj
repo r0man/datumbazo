@@ -3,15 +3,8 @@
   (:use clojure.test
         database.columns
         database.tables
-        database.test.examples))
-
-(deftest test-find-table
-  (let [table (make-table :photo-thumbnails)]
-    (register-table table)
-    (is (= table (find-table :photo-thumbnails)))
-    (is (= table (find-table 'photo-thumbnails)))
-    (is (= table (find-table "photo-thumbnails")))
-    (is (= table (find-table (find-table :photo-thumbnails))))))
+        database.test.examples
+        database.registry))
 
 (deftest test-make-table
   (let [table (make-table :test [[:id :serial] [:name :text]] :url identity)]
@@ -54,8 +47,3 @@
     'photo-thumbnails 'photo-thumbnails
     'photo-thumbnails "photo-thumbnails"
     'photo-thumbnails photo-thumbnails))
-
-(deftest test-register-table
-  (let [table (make-table :photo-thumbnails)]
-    (is (= table (register-table table)))
-    (is (= table (:photo-thumbnails @*tables*)))))

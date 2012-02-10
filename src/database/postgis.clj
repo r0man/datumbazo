@@ -3,7 +3,8 @@
   (:require [clojure.java.jdbc :as jdbc])
   (:use database.columns
         database.core
-        database.tables))
+        database.tables
+        database.registry))
 
 (def ^:dynamic *srid* 4326)
 

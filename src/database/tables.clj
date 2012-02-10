@@ -6,8 +6,6 @@
         database.columns
         database.connection))
 
-(defonce ^:dynamic *tables* (atom {}))
-
 (defrecord Table [name columns])
 
 (defn make-table
@@ -38,27 +36,3 @@
   "Returns the name of the table as a keyword with all underscores in
   the name replaced by dashes."
   [table] (keyword (table-symbol table)))
-
-(defn find-table
-  "Find the database table in *tables* by it's name."
-  [name] (get @*tables* (table-keyword name)))
-
-(defn register-table
-  "Register the database table in *tables*."
-  [table]
-  (swap! *tables* assoc (table-keyword table) table)
-  table)
-
-(defmacro with-ensure-table
-  "Evaluate body with a resolved table."
-  [table & body]
-  (let [table# table]
-    `(if-let [~table# (find-table ~table#)]
-       (do ~@body) (throw (Exception. "Table not found.")))))
-
-(defmacro with-ensure-column [table column & body]
-  (let [column# column table# table]
-    `(with-ensure-table ~table#
-       (let [~column# (if (column? ~column#) ~column# (get (:columns ~table#) ~column#))]
-         (assert (column? ~column#))
-         ~@body))))

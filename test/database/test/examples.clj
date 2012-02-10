@@ -8,6 +8,7 @@
         database.util
         database.tables
         database.test
+        database.registry
         validation.core))
 
 (defn language-url [language]

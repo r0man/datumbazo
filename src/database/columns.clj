@@ -67,10 +67,21 @@
   false." [column] (or (:primary-key? column) (:unique? column)))
 
 (defn key-columns
-  "Returns the key columns for record."
+  "Returns the key columns of `table` for `record`."
   [table record]
   (let [columns (select-columns table (keys record))]
     (concat (filter :primary-key? columns) (filter :unique? columns))))
+
+;; (defn key-columns
+;;   "Returns the key columns of `table` for `record`."
+;;   [table & record]
+;;   (let [columns (vals (:columns table))
+;;         columns (concat (filter :primary-key? columns) (filter :unique? columns))]
+;;     (if record
+;;       (filter #(get record (column-keyword %1)) columns)
+;;       columns)))
+
+;; (key-columns :languages )
 
 ;; SQL CLAUSE FNS
 
