@@ -7,9 +7,6 @@
 
 (def ^:dynamic *srid* 4326)
 
-(defprotocol GeometryProtocol
-  (to-geometry [obj] "Convert `obj` into a PostGIS geometry."))
-
 (defn add-geometry-column
   "Add a PostGIS geometry column to table with the AddGeometryColumn SQL fn."
   [table column code geometry dimension]
