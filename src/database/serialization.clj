@@ -18,17 +18,7 @@
 
 (defn deserialize-column
   "Deserialize the column of the database row."
-  [column row] (transform-column column row (:deserialize column)))
-
-(defn deserialize-column
-  "Deserialize the column of the database row."
   [column value] (if value ((or (:deserialize column) identity) value)))
-
-(defn deserialize-record
-  "Deserialize the database row."
-  [table row]
-  (with-ensure-table table
-    (reduce #(deserialize-column %2 %1) (or row {}) (vals (:columns table)))))
 
 (defn deserialize-record
   "Deserialize the database row."
