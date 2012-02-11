@@ -10,12 +10,6 @@
       (assoc record :url url) record)
     record))
 
-(defn- transform-column [column row transform-fn]
-  (let [attr-name (column-keyword column) attr-val (get row attr-name)]
-    (if (and attr-val transform-fn)
-      (assoc row attr-name (transform-fn attr-val))
-      row)))
-
 (defn deserialize-column
   "Deserialize the column of the database row."
   [column value] (if value ((or (:deserialize column) identity) value)))
