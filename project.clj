@@ -1,6 +1,7 @@
 (defproject database-clj "0.0.1-SNAPSHOT"
   :description "Clojure Database Kung-Foo"
   :dependencies [[c3p0/c3p0 "0.9.1.2"]
+                 [clj-time "0.3.6-SNAPSHOT"]
                  [inflections "0.6.5-SNAPSHOT"]
                  [korma "0.3.0-beta2"]
                  [migrate "0.0.6-SNAPSHOT"]

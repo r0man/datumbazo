@@ -1,5 +1,5 @@
 (ns database.test.core
-  (:import java.sql.Timestamp org.postgresql.util.PSQLException)
+  (:import org.joda.time.DateTime org.postgresql.util.PSQLException)
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.jdbc.internal :as internal])
   (:use [korma.core :exclude (join table)]
@@ -53,8 +53,7 @@
   (let [language (insert-record :languages german)]
     (is (empty? (find-by-column :languages :name nil)))
     (is (empty? (find-by-column :languages :name "NOT-EXISTING")))
-    (is (= [language] (find-by-column :languages :name (:name language))))
-    (is (= [language] (find-by-column :languages :created-at (:created-at language))))))
+    (is (= [language] (find-by-column :languages :name (:name language))))))
 
 (deftest test-new-record?
   (is (new-record? {}))
@@ -87,8 +86,8 @@
     (is (= "de" (:iso-639-1 record)))
     (is (= "deu" (:iso-639-2 record)))
     (is (= "http://example.com/languages/1-German" (:url record)))
-    (is (instance? Timestamp (:created-at record)))
-    (is (instance? Timestamp (:updated-at record))))
+    (is (instance? DateTime (:created-at record)))
+    (is (instance? DateTime (:updated-at record))))
   ;; (is (thrown? Exception (insert-record :languages german)))
   )
 
@@ -102,8 +101,8 @@
     (is (= "de" (:iso-639-1 record)))
     (is (= "deu" (:iso-639-2 record)))
     (is (= "http://example.com/languages/1-Deutsch" (:url record)))
-    (is (instance? Timestamp (:created-at record)))
-    (is (instance? Timestamp (:updated-at record)))
+    (is (instance? DateTime (:created-at record)))
+    (is (instance? DateTime (:updated-at record)))
     (is (= record (update-record :languages record)))))
 
 (database-test test-save-record
@@ -116,8 +115,7 @@
   (let [language (insert-record :languages german)]
     (is (empty? (exec (select-by-column :languages :name nil))))
     (is (empty? (exec (select-by-column :languages :name "NOT-EXISTING"))))
-    (is (= [language] (exec (select-by-column :languages :name (:name language)))))
-    (is (= [language] (exec (select-by-column :languages :created-at (:created-at language)))))))
+    (is (= [language] (exec (select-by-column :languages :name (:name language)))))))
 
 (deftest test-table
   (is (table? (table :languages)))

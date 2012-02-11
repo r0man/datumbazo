@@ -1,6 +1,7 @@
 (ns database.test.examples
-  (:import java.sql.Timestamp)
+  (:import org.joda.time.DateTime)
   (:use [clojure.string :only (lower-case upper-case)]
+        [clj-time.coerce :only (to-date-time to-timestamp)]
         [migrate.core :only (defmigration)]
         [korma.core :exclude (join table)]
         clojure.test
@@ -33,8 +34,8 @@
    [:family :text :not-null? true]
    [:iso-639-1 :varchar :length 2 :unique? true :not-null? true :serialize #'lower-case]
    [:iso-639-2 :varchar :length 3 :unique? true :not-null? true :serialize #'lower-case]
-   [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
-   [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
+   [:created-at :timestamp-with-time-zone :not-null? true :default "now()" :serialize #'to-timestamp :deserialize #'to-date-time]
+   [:updated-at :timestamp-with-time-zone :not-null? true :default "now()" :serialize #'to-timestamp :deserialize #'to-date-time]]
   :url language-url
   :validate validate-language!)
 
@@ -143,8 +144,8 @@
     (is (= "de" (:iso-639-1 record)))
     (is (= "deu" (:iso-639-2 record)))
     (is (= (language-url record) (:url record)))
-    (is (instance? Timestamp (:created-at record)))
-    (is (instance? Timestamp (:updated-at record)))))
+    (is (instance? DateTime (:created-at record)))
+    (is (instance? DateTime (:updated-at record)))))
 
 (database-test test-update-language
   (is (thrown? Exception (update-language nil)))
@@ -156,8 +157,8 @@
     (is (= "de" (:iso-639-1 record)))
     (is (= "deu" (:iso-639-2 record)))
     (is (= (language-url record) (:url record)))
-    (is (instance? Timestamp (:created-at record)))
-    (is (instance? Timestamp (:updated-at record)))
+    (is (instance? DateTime (:created-at record)))
+    (is (instance? DateTime (:updated-at record)))
     (is (= record (update-language record)))))
 
 (database-test test-delete-language
@@ -173,7 +174,7 @@
   (is (thrown? Exception (save-language {})))
   (let [language (save-language german)]
     (is (pos? (:id language)))
-    (is (= language (save-language language)))))
+    (is (=  language (save-language language)))))
 
 (deftest test-serialize-language
   (is (= nil (serialize-language nil)))
