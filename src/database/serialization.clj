@@ -3,8 +3,9 @@
   (:use [clj-time.coerce :only (to-date-time to-timestamp)]
         [inflections.core :only (camelize singular)]
         database.columns
+        database.registry
         database.tables
-        database.registry))
+        database.util))
 
 ;; DESERIALIZATION
 
@@ -15,12 +16,6 @@
 
 (defmethod deserialize-column :timestamp-with-time-zone [column value]
   (to-date-time value))
-
-(defn- assoc-url [record url-fn]
-  (if url-fn
-    (if-let [url (url-fn record)]
-      (assoc record :url url) record)
-    record))
 
 (defn deserialize-record
   "Deserialize the database row."
@@ -38,6 +33,12 @@
 
 (defmethod serialize-column :default [column value]
   (if value ((or (:serialize column) identity) value)))
+
+(defmethod serialize-column :integer [column value]
+  (parse-integer value :junk-allowed true))
+
+(defmethod serialize-column :serial [column value]
+  (parse-integer value :junk-allowed true))
 
 (defmethod serialize-column :timestamp-with-time-zone [column value]
   (to-timestamp value))

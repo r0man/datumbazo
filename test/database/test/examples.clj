@@ -6,10 +6,10 @@
         [korma.core :exclude (join table)]
         clojure.test
         database.core
-        database.util
+        database.registry
+        database.serialization
         database.tables
         database.test
-        database.registry
         validation.core))
 
 (defn language-url [language]
@@ -29,13 +29,13 @@
   (exact-length-of :iso-639-2 3))
 
 (deftable languages
-  [[:id :serial :primary-key? true :serialize #'parse-int]
+  [[:id :serial :primary-key? true]
    [:name :text :unique? true :not-null? true]
    [:family :text :not-null? true]
    [:iso-639-1 :varchar :length 2 :unique? true :not-null? true :serialize #'lower-case]
    [:iso-639-2 :varchar :length 3 :unique? true :not-null? true :serialize #'lower-case]
-   [:created-at :timestamp-with-time-zone :not-null? true :default "now()" :serialize #'to-timestamp :deserialize #'to-date-time]
-   [:updated-at :timestamp-with-time-zone :not-null? true :default "now()" :serialize #'to-timestamp :deserialize #'to-date-time]]
+   [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
+   [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
   :url language-url
   :validate validate-language!)
 

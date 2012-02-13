@@ -1,23 +1,20 @@
-(ns database.util
-  (:import [com.mchange.v2.c3p0 C3P0ProxyConnection])
-  (:require [clojure.java.jdbc :as jdbc])
-  (:use korma.db))
+(ns database.util)
 
-;; (defn make-sql-array
-;;   "Make a java.sql.Array of `type` from `coll`."
-;;   [type coll]
-;;   (let [connection (.getConnection (:datasource (get-connection @_default)))]
-;;     (assert connection "No database connection.")
-;;     (.createArrayOf connection type (object-array coll))))
+(defn assoc-url
+  "Assoc the result of applying `record` to `url-fn` under the :url
+  key onto `record`."
+  [record url-fn]
+  (if url-fn
+    (if-let [url (url-fn record)]
+      (assoc record :url url) record)
+    record))
 
-;; (defn make-text-array
-;;   "Make a text array from `coll`."
-;;   [coll] (make-sql-array "text" (map str coll)))
-
-;; (defn sql-array-seq
-;;   "Make a text array from `coll`."
-;;   [array] (map :value (resultset-seq (.getResultSet array))))
-
-(defn parse-int [s]
-  (try (Integer/parseInt (str s))
-       (catch NumberFormatException _ nil)))
+(defn parse-integer
+  "Parse `string` as an integer."
+  [string & {:keys [junk-allowed radix]}]
+  (if (integer? string)
+    (int string)
+    (try (Integer/parseInt (first (re-find #"([+-]?\d+)" string)) (or radix 10))
+         (catch Exception e
+           (when-not junk-allowed
+             (throw e))))))

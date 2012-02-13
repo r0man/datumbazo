@@ -26,8 +26,8 @@
 
 (defmacro with-params [page per-page & body]
   (let [page# page per-page# per-page]
-    `(let [~page# (or (parse-int ~page#) 1)
-           ~per-page# (or (parse-int ~per-page#) *per-page*)]
+    `(let [~page# (or (parse-integer ~page# :junk-allowed true) 1)
+           ~per-page# (or (parse-integer ~per-page# :junk-allowed true) *per-page*)]
        (assert-page ~page#)
        (assert-per-page ~per-page#)
        ~@body)))
