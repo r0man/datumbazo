@@ -1,5 +1,7 @@
 (ns database.test.serialization
+  (:import java.sql.Timestamp)
   (:use [clojure.string :only (lower-case)]
+        [clj-time.core :only (date-time)]
         clojure.test
         database.columns
         database.tables
@@ -34,3 +36,9 @@
     (is (= "de" (:iso-639-1 language)))
     (is (= "deu" (:iso-639-2 language)))
     (is (not (contains? (set (keys language)) :not-existing)))))
+
+(deftest test-deserialize
+  (is (= nil (deserialize nil)))
+  (is (= 1 (deserialize 1)))
+  (is (= "x" (deserialize "x")))
+  (is (= (date-time 1970 1 1) (deserialize (Timestamp. 0)))))

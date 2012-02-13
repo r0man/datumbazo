@@ -1,8 +1,26 @@
 (ns database.serialization
-  (:use [inflections.core :only (camelize singular)]
+  (:import java.sql.Timestamp)
+  (:use [clj-time.coerce :only (from-date)]
+        [inflections.core :only (camelize singular)]
         database.columns
         database.tables
         database.registry))
+
+(defprotocol IDeserialization
+  (deserialize [obj] "Deserialize `obj`."))
+
+;; (defprotocol ISerialization
+;;   (serialize [obj] "Serialize `obj`."))
+
+;; (defrecord Serializer [type serialize-fn deserialize-fn]
+;;   IDeserialization
+;;   (deserialize [value]
+;;     (if (and value deserialize-fn)
+;;       (deserialize-fn value)))
+;;   ISerialization
+;;   (serialize [value]
+;;     (if (and value serialize-fn)
+;;       (serialize-fn value))))
 
 (defn- assoc-url [record url-fn]
   (if url-fn
@@ -50,3 +68,14 @@
        (defn ~(symbol (str "serialize-" entity#))
          ~(str "Serialize the " entity# " database row.")
          [~entity#] (serialize-record ~(table-keyword table) ~entity#)))))
+
+(extend-protocol IDeserialization
+  nil
+  (deserialize [_]
+    nil)
+  Object
+  (deserialize [object]
+    object)
+  Timestamp
+  (deserialize [timestamp]
+    (from-date timestamp)))
