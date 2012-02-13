@@ -1,36 +1,26 @@
 (ns database.serialization
   (:import java.sql.Timestamp)
-  (:use [clj-time.coerce :only (from-date)]
+  (:use [clj-time.coerce :only (to-date-time to-timestamp)]
         [inflections.core :only (camelize singular)]
         database.columns
         database.tables
         database.registry))
 
-(defprotocol IDeserialization
-  (deserialize [obj] "Deserialize `obj`."))
+;; DESERIALIZATION
 
-;; (defprotocol ISerialization
-;;   (serialize [obj] "Serialize `obj`."))
+(defmulti deserialize-column (fn [column value] (:type column)))
 
-;; (defrecord Serializer [type serialize-fn deserialize-fn]
-;;   IDeserialization
-;;   (deserialize [value]
-;;     (if (and value deserialize-fn)
-;;       (deserialize-fn value)))
-;;   ISerialization
-;;   (serialize [value]
-;;     (if (and value serialize-fn)
-;;       (serialize-fn value))))
+(defmethod deserialize-column :default [column value]
+  (if value ((or (:deserialize column) identity) value)))
+
+(defmethod deserialize-column :timestamp-with-time-zone [column value]
+  (to-date-time value))
 
 (defn- assoc-url [record url-fn]
   (if url-fn
     (if-let [url (url-fn record)]
       (assoc record :url url) record)
     record))
-
-(defn deserialize-column
-  "Deserialize the column of the database row."
-  [column value] (if value ((or (:deserialize column) identity) value)))
 
 (defn deserialize-record
   "Deserialize the database row."
@@ -42,9 +32,15 @@
                {} (select-columns table (keys row)))
        (:url table)))))
 
-(defn serialize-column
-  "Serialize the `value` of column."
-  [column value] (if value ((or (:serialize column) identity) value)))
+;; SERIALIZATION
+
+(defmulti serialize-column (fn [column value] (:type column)))
+
+(defmethod serialize-column :default [column value]
+  (if value ((or (:serialize column) identity) value)))
+
+(defmethod serialize-column :timestamp-with-time-zone [column value]
+  (to-timestamp value))
 
 (defn serialize-record
   "Serialize the database row."
@@ -68,14 +64,3 @@
        (defn ~(symbol (str "serialize-" entity#))
          ~(str "Serialize the " entity# " database row.")
          [~entity#] (serialize-record ~(table-keyword table) ~entity#)))))
-
-(extend-protocol IDeserialization
-  nil
-  (deserialize [_]
-    nil)
-  Object
-  (deserialize [object]
-    object)
-  Timestamp
-  (deserialize [timestamp]
-    (from-date timestamp)))
