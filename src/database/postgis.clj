@@ -40,6 +40,15 @@
   "Make a 3-dimensional org.postgis.Point from `x`, `y`, `z` and `srid`."
   [x y z & [srid]] (doto (make-point-2d x y srid) (.setZ z)))
 
+(defn make-box-2d
+  "Make a 2-dimensional org.postgis.PGBox2d."
+  ([south-west north-east]
+     (PGbox2d. south-west north-east))
+  ([sw-lat sw-lon ne-lat ne-lon]
+     (make-box-2d
+      (make-point-2d sw-lon sw-lat)
+      (make-point-2d ne-lon ne-lat))))
+
 (defmethod print-dup PGgeometry [geometry writer]
   (print-dup (str (.getGeometry geometry)) writer))
 

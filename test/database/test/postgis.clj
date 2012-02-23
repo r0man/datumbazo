@@ -43,6 +43,18 @@
   (is (not (geometry? (make-point-2d 1 2))))
   (is (geometry? (make-geometry (make-point-2d 1 2)))))
 
+(deftest test-make-box-2d
+  (let [box (make-box-2d 1 2 3 4)]
+    (is (= 1.0 (.getY (.getLLB box))))
+    (is (= 2.0 (.getX (.getLLB box))))
+    (is (= 3.0 (.getY (.getURT box))))
+    (is (= 4.0 (.getX (.getURT box)))))
+  (let [box (make-box-2d (make-point-2d 2 1) (make-point-2d 4 3))]
+    (is (= 1.0 (.getY (.getLLB box))))
+    (is (= 2.0 (.getX (.getLLB box))))
+    (is (= 3.0 (.getY (.getURT box))))
+    (is (= 4.0 (.getX (.getURT box))))))
+
 (deftest test-make-geometry
   (let [geometry (make-geometry (make-point-2d 1.0 2.0))]
     (is (instance? PGgeometry geometry))
