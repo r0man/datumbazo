@@ -131,3 +131,10 @@
         (not-null-clause column)
         (unique-clause column)]
        (join " ")))
+
+(defn drop-column-statement
+  "Returns the drop column SQL statement."
+  [table column]
+  (format "ALTER TABLE %s DROP COLUMN %s"
+          (jdbc/as-identifier (:name table))
+          (column-identifier column)))

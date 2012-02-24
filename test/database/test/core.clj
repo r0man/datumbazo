@@ -16,6 +16,9 @@
   (let [column (make-column :x :integer)]
     (is (= column (add-column :languages column)))))
 
+(database-test test-drop-column
+  (is (drop-column :languages :created-at)))
+
 (database-test test-create-table-with-languages
   (drop-table :languages)
   (is (instance? database.tables.Table (create-table :languages)))

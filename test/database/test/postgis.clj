@@ -3,6 +3,7 @@
   (:use [clojure.string :only (lower-case)]
         [geo.box :only (north-east south-west to-box)]
         [geo.location :only (make-location latitude longitude to-location)]
+        [migrate.core :only (defmigration)]
         clojure.test
         database.columns
         database.core
@@ -21,21 +22,25 @@
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]])
 
+(defmigration "2012-02-24T13:35:00"
+  "Create the continents table."
+  (create-table (table :continents))
+  (drop-table (table :continents)))
+
 (def continents (find-table :continents))
 (def point-2d (make-column :point_2d [:point-2d]))
 (def multipolygon-2d (make-column :multipolygon_2d [:multipolygon-2d]))
 
 (database-test test-add-column
-  (let [table (create-table continents)]
-    (is (= point-2d (add-column table point-2d)))
-    (is (= multipolygon-2d (add-column table multipolygon-2d)))))
+  (is (= point-2d (add-column :continents point-2d)))
+  (is (= multipolygon-2d (add-column :continents multipolygon-2d))))
 
 (database-test test-add-geometry-column
-  (let [table (create-table continents)]
-    (is (= point-2d (add-geometry-column table point-2d 4326 "POINT" 2)))
-    (is (= multipolygon-2d (add-geometry-column table multipolygon-2d 4326 "MULTIPOLYGON" 2)))))
+  (is (= point-2d (add-geometry-column :continents point-2d 4326 "POINT" 2)))
+  (is (= multipolygon-2d (add-geometry-column :continents multipolygon-2d 4326 "MULTIPOLYGON" 2))))
 
 (database-test test-create-with-continents
+  (drop-table (table :continents))
   (is (instance? database.tables.Table (create-table continents)))
   (is (thrown? Exception (create-table continents))))
 

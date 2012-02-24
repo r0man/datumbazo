@@ -93,13 +93,19 @@
 ;; DDL
 
 (defmulti add-column
-  "Add a `column` to the database `table`."
+  "Add the `column` to the database `table`."
   (fn [table column] (:type column)))
 
 (defmethod add-column :default [table column]
   (with-ensure-column table column
     (jdbc/do-commands (add-column-statement table column))
     column))
+
+(defn drop-column
+  "Drop `column` from `table`."
+  [table column]
+  (with-ensure-column table column
+    (jdbc/do-commands (drop-column-statement table column))))
 
 (defn create-table
   "Create the database `table`."
