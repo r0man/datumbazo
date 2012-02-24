@@ -1,6 +1,8 @@
 (ns database.test.postgis
   (:import [org.postgis Geometry PGgeometry PGboxbase PGbox2d PGbox3d Point])
   (:use [clojure.string :only (lower-case)]
+        [geo.box :only (north-east south-west to-box)]
+        [geo.location :only (make-location latitude longitude to-location)]
         clojure.test
         database.columns
         database.core
@@ -43,8 +45,14 @@
   (is (not (geometry? (make-point-2d 1 2))))
   (is (geometry? (make-geometry (make-point-2d 1 2)))))
 
+(deftest test-latitude
+  (is (= 43.4073349 (latitude (make-point-2d -2.6983217 43.4073349)))))
+
+(deftest test-longitude
+  (is (= -2.6983217 (longitude (make-point-2d -2.6983217 43.4073349)))))
+
 (deftest test-make-box-2d
-  (let [box (make-box-2d 1 2 3 4)]
+  (let [box (make-box-2d 2 1 4 3)]
     (is (= 1.0 (.getY (.getLLB box))))
     (is (= 2.0 (.getX (.getLLB box))))
     (is (= 3.0 (.getY (.getURT box))))
@@ -79,8 +87,47 @@
     (is (= 2.0 (.getY point)))
     (is (= 3.0 (.getZ point)))))
 
+(deftest test-north-east
+  (let [location (north-east (make-box-2d 148.045733 -35.522452 153.242267 -33.256207))]
+    (is (= -33.256207 (latitude location)))
+    (is (= 153.242267 (longitude location)))))
+
+(deftest test-south-west
+  (let [location (south-west (make-box-2d 148.045733 -35.522452 153.242267 -33.256207))]
+    (is (= -35.522452 (latitude location)))
+    (is (= 148.045733 (longitude location)))))
+
 (deftest test-read-geometry
   (let [point (make-point-2d 1 2)]
     (is (= point (.getGeometry (read-geometry point)))))
   (let [point (make-point-3d 1 2 3)]
     (is (= point (.getGeometry (read-geometry point))))))
+
+(deftest test-to-box
+  (let [box (to-box (make-box-2d 148.045733 -35.522452 153.242267 -33.256207))]
+    (is (= -35.522452 (latitude (south-west box))))
+    (is (= 148.045733 (longitude (south-west box))))
+    (is (= -33.256207 (latitude (north-east box))))
+    (is (= 153.242267 (longitude (north-east box))))))
+
+(deftest test-to-box-2d
+  (let [point (to-point-2d (make-location 43.4073349 -2.6983217))]
+    (is (= -2.6983217 (.getX point)))
+    (is (= 43.4073349 (.getY point)))))
+
+(deftest test-to-location
+  (let [location (to-location (make-point-2d -2.6983217 43.4073349))]
+    (is (= 43.4073349 (latitude location)))
+    (is (= -2.6983217 (longitude location)))))
+
+(deftest test-to-point-2d
+  (let [box (to-box-2d (make-box-2d 148.045733 -35.522452 153.242267 -33.256207))]
+    (is (= 148.045733 (.getX (.getLLB box))))
+    (is (= -35.522452 (.getY (.getLLB box))))
+    (is (= 153.242267 (.getX (.getURT box))))
+    (is (= -33.256207 (.getY (.getURT box)))))
+  (let [box (to-box-2d "-35.522452 148.045733 -33.256207 153.242267")]
+    (is (= 148.045733 (.getX (.getLLB box))))
+    (is (= -35.522452 (.getY (.getLLB box))))
+    (is (= 153.242267 (.getX (.getURT box))))
+    (is (= -33.256207 (.getY (.getURT box))))))
