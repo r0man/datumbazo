@@ -1,8 +1,10 @@
 (ns database.test.postgis
-  (:import [org.postgis Geometry PGgeometry PGboxbase PGbox2d PGbox3d Point])
+  (:import [org.postgis Geometry PGgeometry PGboxbase PGbox2d PGbox3d Point]
+           org.joda.time.DateTime)
   (:use [clojure.string :only (lower-case)]
         [geo.box :only (north-east south-west to-box)]
         [geo.location :only (make-location latitude longitude to-location)]
+        [korma.core :exclude (table)]
         [migrate.core :only (defmigration)]
         clojure.test
         database.columns
@@ -27,6 +29,17 @@
   (create-table (table :continents))
   (drop-table (table :continents)))
 
+(def europe
+  {:id 2
+   :name "Europe"
+   :iso-3166-1-alpha-2 "eu"
+   :freebase-guid "#9202a8c04000641f800000000001413e"
+   :geonames-id 6255148
+   :location (make-location 54.5259614 15.2551187)
+   :countries 0
+   :regions 0
+   :spots 0})
+
 (def continents (find-table :continents))
 (def point-2d (make-column :point_2d [:point-2d]))
 (def multipolygon-2d (make-column :multipolygon_2d [:multipolygon-2d]))
@@ -49,6 +62,16 @@
   (is (not (geometry? "")))
   (is (not (geometry? (make-point-2d 1 2))))
   (is (geometry? (make-geometry (make-point-2d 1 2)))))
+
+(database-test test-insert-continent
+  (let [continent (insert-continent europe)]
+    (is (pos? (:id continent)))
+    (is (= (:id europe) (:id continent)))
+    (is (= (:name europe) (:name continent)))
+    (is (= (:iso-3166-1-alpha-2 europe) (:iso-3166-1-alpha-2 continent)))
+    (is (= (:location europe) (:location continent)))
+    (is (instance? DateTime (:created-at continent)))
+    (is (instance? DateTime (:updated-at continent)))))
 
 (deftest test-latitude
   (is (= 43.4073349 (latitude (make-point-2d -2.6983217 43.4073349)))))
@@ -97,16 +120,36 @@
     (is (= -33.256207 (latitude location)))
     (is (= 153.242267 (longitude location)))))
 
-(deftest test-south-west
-  (let [location (south-west (make-box-2d 148.045733 -35.522452 153.242267 -33.256207))]
-    (is (= -35.522452 (latitude location)))
-    (is (= 148.045733 (longitude location)))))
-
 (deftest test-read-geometry
   (let [point (make-point-2d 1 2)]
     (is (= point (.getGeometry (read-geometry point)))))
   (let [point (make-point-3d 1 2 3)]
     (is (= point (.getGeometry (read-geometry point))))))
+
+(database-test test-save-continent
+  (let [continent (save-continent europe)]
+    (is (pos? (:id continent)))
+    (is (= (:id europe) (:id continent)))
+    (is (= (:name europe) (:name continent)))
+    (is (= (:iso-3166-1-alpha-2 europe) (:iso-3166-1-alpha-2 continent)))
+    (is (= (:location europe) (:location continent)))
+    (is (instance? DateTime (:created-at continent)))
+    (is (instance? DateTime (:updated-at continent)))
+    (is (= continent (save-continent europe)))))
+
+(database-test test-select-by-location
+  (let [[continent] (select-by-location (continents*) :location (:location (save-continent europe)))]
+    (is (= (:id europe) (:id continent)))
+    (is (= (:name europe) (:name continent)))
+    (is (= (:iso-3166-1-alpha-2 europe) (:iso-3166-1-alpha-2 continent)))
+    (is (= (:location europe) (:location continent)))
+    (is (instance? DateTime (:created-at continent)))
+    (is (instance? DateTime (:updated-at continent)))))
+
+(deftest test-south-west
+  (let [location (south-west (make-box-2d 148.045733 -35.522452 153.242267 -33.256207))]
+    (is (= -35.522452 (latitude location)))
+    (is (= 148.045733 (longitude location)))))
 
 (deftest test-to-box
   (let [box (to-box (make-box-2d 148.045733 -35.522452 153.242267 -33.256207))]
@@ -136,3 +179,15 @@
     (is (= -35.522452 (.getY (.getLLB box))))
     (is (= 153.242267 (.getX (.getURT box))))
     (is (= -33.256207 (.getY (.getURT box))))))
+
+(database-test test-update-continent
+  (let [continent (insert-continent europe)]
+    (let [continent (update-continent (assoc europe :name "Europa"))]
+     (is (pos? (:id continent)))
+     (is (= (:id europe) (:id continent)))
+     (is (= "Europa" (:name continent)))
+     (is (= (:iso-3166-1-alpha-2 europe) (:iso-3166-1-alpha-2 continent)))
+     (is (= (:location europe) (:location continent)))
+     (is (instance? DateTime (:created-at continent)))
+     (is (instance? DateTime (:updated-at continent)))
+     (is (= continent (update-continent continent))))))

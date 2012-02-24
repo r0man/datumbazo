@@ -260,3 +260,12 @@
        ~(define-serialization table#)
        ~(define-crud table#)
        ~(define-finder table#))))
+
+(defmacro defquery [name doc args & body]
+  (let [name# name args# args
+        query# (symbol (str name# "*"))]
+    `(do
+       (defn ~query# [~@args#] ~doc
+         ~@body)
+       (defn ~name [~@args#] ~doc
+         (exec (~query# ~@args#))))))

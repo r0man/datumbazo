@@ -1,11 +1,14 @@
 (ns database.postgis
   (:import [org.postgis Geometry PGgeometry PGboxbase PGbox2d PGbox3d Point])
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [geo.box :only (make-box north-east south-west to-box)]
+  (:use [geo.box :only (make-box north-east south-west to-box safe-boxes)]
         [geo.location :only (latitude longitude make-location to-location ILocation)]
+        [korma.core :exclude (table)]
+        [korma.sql.engine :only [infix]]
         database.columns
         database.core
         database.tables
+        database.serialization
         database.registry))
 
 (def ^:dynamic *srid* 4326)
@@ -15,6 +18,16 @@
 
 (defprotocol IPoint
   (to-point-2d [obj] "Convert `obj` to a 2-dimensional PostGIS Point."))
+
+(defn set-srid
+  "Set the SRID of `geometry` with the ST_SetSRID PostGIS fn."
+  [geometry & [srid]] (sqlfn ST_SetSRID geometry (Integer. (or srid *srid*))))
+
+(defn && [geo-1 geo-2]
+  (infix (set-srid geo-1) "&&" (set-srid geo-2)))
+
+(defn geo= [geo-1 geo-2]
+  (infix geo-1 "~=" geo-2))
 
 (defn add-geometry-column
   "Add a PostGIS geometry column to table with the AddGeometryColumn SQL fn."
@@ -64,6 +77,20 @@
   "Parse `s` and return a org.postgis.PGgeometry object. "
   [s] (org.postgis.PGgeometry. (str s)))
 
+(defquery select-by-location
+  "Select all rows of `table` at `location`."
+  [query field location]
+  (if-let [point (to-point-2d location)]
+    (let [point (make-geometry (to-point-2d location))]
+      (where query {field [geo= point]}))
+    query))
+
+(defmethod serialize-column :point-2d [column location]
+  (make-geometry (to-point-2d location)))
+
+(defmethod deserialize-column :point-2d [column point-2d]
+  (to-location point-2d))
+
 (extend-type nil
   IBox
   (to-box-2d [obj]
@@ -99,6 +126,15 @@
      (longitude (to-location (.getLLB box)))))
   (to-box [box]
     (make-box (south-west box) (north-east box))))
+
+(extend-type PGgeometry
+  ILocation
+  (latitude [geometry]
+    (latitude (to-location geometry)))
+  (longitude [geometry]
+    (longitude (to-location geometry)))
+  (to-location [geometry]
+    (to-location (.getGeometry geometry))))
 
 (extend-type Point
   ILocation
