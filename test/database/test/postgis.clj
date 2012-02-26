@@ -171,10 +171,10 @@
     (is (= -35.522452 (latitude location)))
     (is (= 148.045733 (longitude location)))))
 
-(database-test test-sort-by-location
+(database-test test-sort-by-distance
   (let [asia (save-continent asia) europe (save-continent europe)]
-    (is (= [asia europe] (sort-by-location (continents*) (:location asia))))
-    (is (= [europe asia] (sort-by-location (continents*) (:location europe))))))
+    (is (= [asia europe] (sort-by-distance (continents*) :location (:location asia))))
+    (is (= [europe asia] (sort-by-distance (continents*) :location (:location europe))))))
 
 (deftest test-to-box
   (let [box (to-box (make-box-2d 148.045733 -35.522452 153.242267 -33.256207))]

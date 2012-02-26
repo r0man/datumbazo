@@ -94,11 +94,11 @@
       (where* query (apply pred-or (map #(hash-map field [&& %1]) geometries))))
     query))
 
-(defquery sort-by-location
+(defquery sort-by-distance
   "Sort query by location."
-  [query location & [direction]]
+  [query field location & [direction]]
   (if-let [point (to-point-2d location)]
-    (-> (update-in query [:fields] #(conj %1 [(sqlfn distance :location (make-geometry point)) :distance]))
+    (-> (update-in query [:fields] #(conj %1 [(sqlfn distance field (make-geometry point)) :distance]))
         (update-in [:aliases] #(conj %1 :distance))
         (order :distance (or direction :asc)))
     query))
