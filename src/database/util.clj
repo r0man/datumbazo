@@ -18,3 +18,11 @@
          (catch Exception e
            (when-not junk-allowed
              (throw e))))))
+
+(defn split-args [args]
+  (let [[args options]
+        [(take-while (complement keyword?) args)
+         (drop-while (complement keyword?) args)]]
+    (if (odd? (count options))
+      [(concat args [(first options)]) (rest options)]
+      [args options])))
