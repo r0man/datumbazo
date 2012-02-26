@@ -2,7 +2,7 @@
   (:import [org.postgis Geometry PGgeometry PGboxbase PGbox2d PGbox3d Point]
            org.joda.time.DateTime)
   (:use [clojure.string :only (lower-case)]
-        [geo.box :only (north-east south-west to-box)]
+        [geo.box :only (north-east south-west to-box make-box)]
         [geo.location :only (make-location latitude longitude to-location)]
         [korma.core :exclude (table)]
         [migrate.core :only (defmigration)]
@@ -14,6 +14,10 @@
         database.tables
         database.test
         database.test.examples))
+
+(def world-box (make-box (make-location -90 -180) (make-location 90 180)))
+
+(def world-box-wraped (make-box (make-location -90 0) (make-location 90 -180)))
 
 (deftable continents
   [[:id :serial :primary-key? true]
@@ -156,6 +160,11 @@
     (is (= (:location europe) (:location continent)))
     (is (instance? DateTime (:created-at continent)))
     (is (instance? DateTime (:updated-at continent)))))
+
+(database-test test-select-in-box
+  (let [asia (save-continent asia) europe (save-continent europe)]
+    (is (= #{asia europe} (set (select-in-box (continents*) :location world-box))))
+    (is (= #{asia europe} (set (select-in-box (continents*) :location world-box-wraped))))))
 
 (deftest test-south-west
   (let [location (south-west (make-box-2d 148.045733 -35.522452 153.242267 -33.256207))]

@@ -1,10 +1,11 @@
 (ns database.postgis
-  (:import [org.postgis Geometry PGgeometry PGboxbase PGbox2d PGbox3d Point])
+  (:import [org.postgis Geometry PGgeometry PGbox2d Point])
   (:require [clojure.java.jdbc :as jdbc])
   (:use [geo.box :only (make-box north-east south-west to-box safe-boxes)]
         [geo.location :only (latitude longitude make-location to-location ILocation)]
         [korma.core :exclude (table)]
         [korma.sql.engine :only [infix]]
+        [korma.sql.fns :only [pred-or]]
         database.columns
         database.core
         database.tables
@@ -83,6 +84,14 @@
   (if-let [point (to-point-2d location)]
     (let [geometry (make-geometry (to-point-2d location))]
       (where query {field [geo= geometry]}))
+    query))
+
+(defquery select-in-box
+  "Select all rows of `query` where `field` is in `box`."
+  [query field box]
+  (if-let [box (to-box box)]
+    (let [geometries (map to-box-2d (safe-boxes box))]
+      (where* query (apply pred-or (map #(hash-map field [&& %1]) geometries))))
     query))
 
 (defquery sort-by-location
