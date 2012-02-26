@@ -22,11 +22,11 @@
       2344 2344)))
 
 (deftest test-split-args
-  (is (= [[] []]
+  (is (= [[] {}]
          (split-args [])))
-  (is (= [[1 2 3] []]
+  (is (= [[1 2 3] {}]
          (split-args [1 2 3])))
-  (is (= [["x"] [:page 1 :per-page 20]]
+  (is (= [["x"] {:page 1 :per-page 20}]
          (split-args ["x" :page 1 :per-page 20])))
-  (is (= [["x" :doit] [:page 1 :per-page 20]]
+  (is (= [["x" :doit] {:page 1 :per-page 20}]
          (split-args ["x" :doit :page 1 :per-page 20]))))

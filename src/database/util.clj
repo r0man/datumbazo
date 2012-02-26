@@ -24,5 +24,6 @@
         [(take-while (complement keyword?) args)
          (drop-while (complement keyword?) args)]]
     (if (odd? (count options))
-      [(concat args [(first options)]) (rest options)]
-      [args options])))
+      [(concat args [(first options)])
+       (apply hash-map (rest options))]
+      [args (apply hash-map options)])))
