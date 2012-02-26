@@ -267,5 +267,5 @@
     `(do
        (defn ~query# [~@args#] ~doc
          ~@body)
-       (defn ~name [~@args#] ~doc
-         (exec (~query# ~@args#))))))
+       (defn ~name [& ~'args] ~doc
+         (exec (apply ~query# ~'args))))))

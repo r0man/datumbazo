@@ -29,6 +29,17 @@
   (create-table (table :continents))
   (drop-table (table :continents)))
 
+(def asia
+  {:id 1
+   :name "Asia"
+   :iso-3166-1-alpha-2 "as"
+   :freebase-guid "#9202a8c04000641f8000000000004011"
+   :geonames-id 6255147
+   :location (make-location 49.837982 105.820313)
+   :countries 0
+   :regions 0
+   :spots 0})
+
 (def europe
   {:id 2
    :name "Europe"
@@ -151,6 +162,11 @@
     (is (= -35.522452 (latitude location)))
     (is (= 148.045733 (longitude location)))))
 
+(database-test test-sort-by-location
+  (let [asia (save-continent asia) europe (save-continent europe)]
+    (is (= [asia europe] (sort-by-location (continents*) (:location asia))))
+    (is (= [europe asia] (sort-by-location (continents*) (:location europe))))))
+
 (deftest test-to-box
   (let [box (to-box (make-box-2d 148.045733 -35.522452 153.242267 -33.256207))]
     (is (= -35.522452 (latitude (south-west box))))
@@ -183,11 +199,11 @@
 (database-test test-update-continent
   (let [continent (insert-continent europe)]
     (let [continent (update-continent (assoc europe :name "Europa"))]
-     (is (pos? (:id continent)))
-     (is (= (:id europe) (:id continent)))
-     (is (= "Europa" (:name continent)))
-     (is (= (:iso-3166-1-alpha-2 europe) (:iso-3166-1-alpha-2 continent)))
-     (is (= (:location europe) (:location continent)))
-     (is (instance? DateTime (:created-at continent)))
-     (is (instance? DateTime (:updated-at continent)))
-     (is (= continent (update-continent continent))))))
+      (is (pos? (:id continent)))
+      (is (= (:id europe) (:id continent)))
+      (is (= "Europa" (:name continent)))
+      (is (= (:iso-3166-1-alpha-2 europe) (:iso-3166-1-alpha-2 continent)))
+      (is (= (:location europe) (:location continent)))
+      (is (instance? DateTime (:created-at continent)))
+      (is (instance? DateTime (:updated-at continent)))
+      (is (= continent (update-continent continent))))))

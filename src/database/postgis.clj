@@ -78,11 +78,20 @@
   [s] (org.postgis.PGgeometry. (str s)))
 
 (defquery select-by-location
-  "Select all rows of `table` at `location`."
+  "Select all rows of `query` where `field` matches `location`."
   [query field location]
   (if-let [point (to-point-2d location)]
-    (let [point (make-geometry (to-point-2d location))]
-      (where query {field [geo= point]}))
+    (let [geometry (make-geometry (to-point-2d location))]
+      (where query {field [geo= geometry]}))
+    query))
+
+(defquery sort-by-location
+  "Sort query by location."
+  [query location & [direction]]
+  (if-let [point (to-point-2d location)]
+    (-> (update-in query [:fields] #(conj %1 [(sqlfn distance :location (make-geometry point)) :distance]))
+        (update-in [:aliases] #(conj %1 :distance))
+        (order :distance (or direction :asc)))
     query))
 
 (defmethod serialize-column :point-2d [column location]
