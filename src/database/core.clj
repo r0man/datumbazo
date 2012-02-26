@@ -279,7 +279,5 @@
          ~@body)
        (defn ~name [& ~'args] ~doc
          (let [[args# options#] (split-args ~'args)]
-           (if (or (:page options#) (:per-page options#))
-             (-> (apply ~query# (apply concat args# (seq (dissoc options# :page :per-page))))
-                 (paginate* :page (:page options#) :per-page (:per-page options#)))
-             (exec (apply ~query# ~'args))))))))
+           (-> (apply ~query# (apply concat args# (seq (dissoc options# :page :per-page))))
+               (paginate* :page (:page options#) :per-page (:per-page options#))))))))
