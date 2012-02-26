@@ -7,10 +7,11 @@
         [korma.sql.fns :only (pred-or)]
         [korma.sql.utils :only (func)]
         database.columns
-        database.tables
-        database.serialization
         database.pagination
         database.registry
+        database.serialization
+        database.tables
+        database.util
         validation.core
         validation.errors))
 
@@ -269,3 +270,16 @@
          ~@body)
        (defn ~name [& ~'args] ~doc
          (exec (apply ~query# ~'args))))))
+
+(defmacro defquery [name doc args & body]
+  (let [name# name args# args
+        query# (symbol (str name# "*"))]
+    `(do
+       (defn ~query# [~@args#] ~doc
+         ~@body)
+       (defn ~name [& ~'args] ~doc
+         (let [[args# options#] (split-args ~'args)]
+           (if (or (:page options#) (:per-page options#))
+             (-> (apply ~query# args# (seq (dissoc options# :page :per-page)))
+                 (paginate* :page (:page options#) :per-page (:per-page options#)))
+             (exec (apply ~query# ~'args))))))))

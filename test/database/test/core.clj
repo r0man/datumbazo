@@ -145,3 +145,12 @@
 (deftest test-where-text=
   (is (= "SELECT * FROM \"languages\" WHERE (TO_TSVECTOR(CAST(? AS regconfig), CAST(\"name\" AS text)) @@ PLAINTO_TSQUERY(CAST(? AS regconfig), CAST(? AS text)))"
          (sql-only (select :languages (where-text= :name "x"))))))
+
+(database-test test-defquery
+  (let [german (save-language german)
+        spanish (save-language spanish)]
+    (defquery example-query "Doc" [arg-1 & options]
+      (-> (languages*) (order :name)))
+    (is (= [german spanish] (example-query "arg-1")))
+    (is (= [german] (example-query "arg-1" :page 1 :per-page 1)))
+    (is (= [spanish] (example-query "arg-1" :page 2 :per-page 1)))))
