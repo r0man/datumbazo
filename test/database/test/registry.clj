@@ -8,6 +8,7 @@
 (deftest test-find-table
   (let [table (make-table :photo-thumbnails)]
     (register-table table)
+    (is (table? (find-table :photo-thumbnails)))
     (is (= table (find-table :photo-thumbnails)))
     (is (= table (find-table 'photo-thumbnails)))
     (is (= table (find-table "photo-thumbnails")))
