@@ -51,7 +51,8 @@
   "Select columns of table by keywords."
   [table columns]
   (let [columns (set columns)]
-    (filter #(contains? columns (column-keyword %1)) (vals (:columns table)))))
+    (filter #(contains? columns (column-keyword %1))
+            (vals (apply dissoc (:columns table) (:exclude (:fields table)))))))
 
 (defn remove-serial-columns
   "Remove the serial columns from `record` if their value is nil."

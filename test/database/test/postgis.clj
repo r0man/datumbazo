@@ -26,7 +26,8 @@
    [:location [:point-2d]]
    [:geometry [:multipolygon-2d]]
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
-   [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]])
+   [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
+  :fields {:exclude [:geometry]})
 
 (defmigration "2012-02-24T13:35:00"
   "Create the continents table."
@@ -55,7 +56,6 @@
    :regions 0
    :spots 0})
 
-(def continents (find-table :continents))
 (def point-2d (make-column :point_2d [:point-2d]))
 (def multipolygon-2d (make-column :multipolygon_2d [:multipolygon-2d]))
 
@@ -69,8 +69,20 @@
 
 (database-test test-create-with-continents
   (drop-table (table :continents))
-  (is (instance? database.tables.Table (create-table continents)))
-  (is (thrown? Exception (create-table continents))))
+  (is (instance? database.tables.Table (create-table (table :continents))))
+  (is (thrown? Exception (create-table (table :continents)))))
+
+(database-test test-continents
+  (insert-continent europe)
+  (let [continent (first (continents))]
+    (is (pos? (:id continent)))
+    (is (= (:id europe) (:id continent)))
+    (is (= (:name europe) (:name continent)))
+    (is (= (:iso-3166-1-alpha-2 europe) (:iso-3166-1-alpha-2 continent)))
+    (is (= (:location europe) (:location continent)))
+    (is (instance? DateTime (:created-at continent)))
+    (is (instance? DateTime (:updated-at continent)))
+    (is (not (contains? (set (keys continent)) :geometry)))))
 
 (deftest test-geometry?
   (is (not (geometry? nil)))
@@ -86,7 +98,8 @@
     (is (= (:iso-3166-1-alpha-2 europe) (:iso-3166-1-alpha-2 continent)))
     (is (= (:location europe) (:location continent)))
     (is (instance? DateTime (:created-at continent)))
-    (is (instance? DateTime (:updated-at continent)))))
+    (is (instance? DateTime (:updated-at continent)))
+    (is (not (contains? (set (keys continent)) :geometry)))))
 
 (deftest test-latitude
   (is (= 43.4073349 (latitude (make-point-2d -2.6983217 43.4073349)))))
@@ -150,7 +163,8 @@
     (is (= (:location europe) (:location continent)))
     (is (instance? DateTime (:created-at continent)))
     (is (instance? DateTime (:updated-at continent)))
-    (is (= continent (save-continent europe)))))
+    (is (= continent (save-continent europe)))
+    (is (not (contains? (set (keys continent)) :geometry)))))
 
 (database-test test-select-by-location
   (let [[continent] (select-by-location (continents*) :location (:location (save-continent europe)))]
@@ -215,4 +229,5 @@
       (is (= (:location europe) (:location continent)))
       (is (instance? DateTime (:created-at continent)))
       (is (instance? DateTime (:updated-at continent)))
-      (is (= continent (update-continent continent))))))
+      (is (= continent (update-continent continent)))
+      (is (not (contains? (set (keys continent)) :geometry))))))

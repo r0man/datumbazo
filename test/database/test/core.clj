@@ -69,6 +69,14 @@
   (let [language (insert-record :languages german)]
     (is (= language (first (select (table->entity :languages) (where {:name [text= (:name language)]})))))))
 
+(deftest test-table->entity
+  (let [entity (table->entity :continents)]
+    (is (= (set [])
+           (set (:set-fields entity)))))
+  (let [entity (table->entity :languages)]
+    (is (= (set [])
+           (set (:set-fields entity))))))
+
 (database-test test-record-exists?
   (is (not (record-exists? :languages {})))
   (is (not (record-exists? :languages german)))

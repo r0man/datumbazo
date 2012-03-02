@@ -22,10 +22,9 @@
   [table row]
   (if (not (nil? row))
     (with-ensure-table table
-      (assoc-url
-       (reduce #(assoc %1 (:name %2) (deserialize-column %2 (get row (:name %2))))
-               {} (select-columns table (keys row)))
-       (:url table)))))
+      (-> (reduce #(assoc %1 (:name %2) (deserialize-column %2 (get row (:name %2))))
+                  {} (select-columns table (keys row)))
+          (assoc-url (:url table))))))
 
 ;; SERIALIZATION
 
