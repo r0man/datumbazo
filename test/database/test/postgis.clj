@@ -219,6 +219,15 @@
     (is (= 153.242267 (.getX (.getURT box))))
     (is (= -33.256207 (.getY (.getURT box))))))
 
+(deftest test-table?
+  (is (table? (table :continents)))
+  (is (table? (find-table :continents))))
+
+(deftest test-table->entity
+  (let [entity (table->entity :continents)]
+    (is (= (set [:iso-3166-1-alpha-2 :name :location :updated-at :created-at :id])
+           (set (:set-fields entity))))))
+
 (database-test test-update-continent
   (let [continent (insert-continent europe)]
     (let [continent (update-continent (assoc europe :name "Europa"))]

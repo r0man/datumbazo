@@ -26,6 +26,15 @@
     :photo-thumbnails :photo-thumbnails
     :photo-thumbnails (find-table :photo-thumbnails)))
 
+;; (table-identifier (find-table :continents))
+
+;; (table? (find-table :continents))
+
+;; (table? (find-table :continents))
+;; (instance? database.tables.Table (find-table :continents))
+
+;; (= database.tables.Table (class (find-table :continents)))
+
 (deftest test-table-identifier
   (are [table expected]
     (is (= expected (table-identifier table)))

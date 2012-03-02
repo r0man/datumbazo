@@ -70,11 +70,8 @@
     (is (= language (first (select (table->entity :languages) (where {:name [text= (:name language)]})))))))
 
 (deftest test-table->entity
-  (let [entity (table->entity :continents)]
-    (is (= (set [])
-           (set (:set-fields entity)))))
   (let [entity (table->entity :languages)]
-    (is (= (set [])
+    (is (= (set [:iso-639-2 :iso-639-1 :name :family :updated-at :created-at :id])
            (set (:set-fields entity))))))
 
 (database-test test-record-exists?

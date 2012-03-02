@@ -43,6 +43,13 @@
     (-> (create-entity (table-identifier table))
         (transform (partial deserialize-record table)))))
 
+(defn table->entity [table]
+  (with-ensure-table table
+    (let [entity (create-entity (table-identifier table))
+          field-keys (keys (apply dissoc (:columns table) (:exclude (:fields table))))]
+      (-> (apply fields entity field-keys)
+          (transform (partial deserialize-record table))))))
+
 (defn unique-key-clause
   "Returns the SQL where clause for record."
   [table record]
