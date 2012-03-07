@@ -2,8 +2,7 @@
   (:refer-clojure :exclude (replace))
   (:require [clojure.java.jdbc :as jdbc])
   (:use [clojure.string :only (join split replace)]
-        [inflections.core :only (dasherize)]
-        database.connection))
+        [database.connection :only (naming-strategy)]))
 
 (defprotocol IColumn
   (column-name [column]
@@ -62,17 +61,6 @@
   [table record]
   (let [columns (select-columns table (keys record))]
     (concat (filter :primary-key? columns) (filter :unique? columns))))
-
-;; (defn key-columns
-;;   "Returns the key columns of `table` for `record`."
-;;   [table & record]
-;;   (let [columns (vals (:columns table))
-;;         columns (concat (filter :primary-key? columns) (filter :unique? columns))]
-;;     (if record
-;;       (filter #(get record (column-keyword %1)) columns)
-;;       columns)))
-
-;; (key-columns :languages )
 
 ;; SQL CLAUSE FNS
 
