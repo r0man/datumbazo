@@ -5,30 +5,20 @@
         [inflections.core :only (dasherize)]
         database.connection))
 
+(defprotocol IColumn
+  (column-name [column]
+    "Returns the name of the column as a string."))
+
 (defrecord Column [name type length default native? not-null? primary-key? references unique?])
 
 (defn column?
   "Returns true if arg is a column, otherwise false."
   [arg] (instance? Column arg))
 
-(defn column-name
-  "Returns the name of the column."
-  [column] (if (column? column) (:name column) column))
-
 (defn column-identifier
   "Returns the column identifier. Given a string, return it as-is.
   Given a keyword, return it as a string using the current naming
   strategy." [column] ((:fields (naming-strategy)) (column-name column)))
-
-(defn column-symbol
-  "Returns the name of the column as a symbol with all underscores in
-  the name replaced by dashes."
-  [column] (symbol (name (dasherize (column-name column)))))
-
-(defn column-keyword
-  "Returns the name of the column as a keyword with all underscores in
-  the name replaced by dashes."
-  [column] (keyword (column-symbol column)))
 
 (defn column-type-name
   "Returns the type of the column as string."
@@ -51,16 +41,16 @@
   "Select columns of table by keywords."
   [table columns]
   (let [columns (set columns)]
-    (filter #(contains? columns (column-keyword %1))
+    (filter #(contains? columns (keyword (column-name %1)))
             (vals (apply dissoc (:columns table) (:exclude (:fields table)))))))
 
 (defn remove-serial-columns
   "Remove the serial columns from `record` if their value is nil."
   [table record]
   (->> (remove #(and (= :serial (:type %1))
-                     (nil? (get record (column-keyword %1))))
+                     (nil? (get record (keyword (column-name %1)))))
                (vals (:columns table)))
-       (map column-keyword)
+       (map (comp keyword column-name))
        (select-keys record)))
 
 (defn unique-column?
@@ -139,3 +129,30 @@
   (format "ALTER TABLE %s DROP COLUMN %s"
           (jdbc/as-identifier (:name table))
           (column-identifier column)))
+
+(extend-type Column
+  IColumn
+  (column-name [column]
+    (column-name (:name column))))
+
+(extend-type String
+  IColumn
+  (column-name [string]
+    string))
+
+(extend-type clojure.lang.IPersistentMap
+  IColumn
+  (column-name [column]
+    (if-let [name (:name column)]
+      (column-name name)
+      (throw (IllegalArgumentException. (format "Not a column: %s" (prn-str column)))))))
+
+(extend-type clojure.lang.Keyword
+  IColumn
+  (column-name [keyword]
+    (name keyword)))
+
+(extend-type clojure.lang.Symbol
+  IColumn
+  (column-name [symbol]
+    (str symbol)))

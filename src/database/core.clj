@@ -67,8 +67,8 @@
              (not (empty? (select (entity table)
                                   (where (reduce
                                           #(assoc %1
-                                             (column-keyword %2)
-                                             (serialize-column %2 (get record (column-keyword %2))))
+                                             (keyword (column-name %2))
+                                             (serialize-column %2 (get record (keyword (column-name %2)))))
                                           {} (select-columns table columns)))))))
           (reduce
            #(add-error-message-on %1 %2 message)
@@ -200,7 +200,7 @@
   [table column value]
   (with-ensure-column table column
     (-> (select* (entity table))
-        (where {(column-keyword column)
+        (where {(keyword (column-name column))
                 (serialize-column column value)}))))
 
 (defn find-by-column
@@ -243,14 +243,14 @@
        (paginate* (select* (entity ~(keyword (table-name table)))) :page ~'page :per-page ~'per-page))
      ~@(for [column (vals (:columns table))]
          `(do
-            (defn ~(symbol (format "%s-by-%s" (symbol (table-name table)) (column-symbol column)))
-              ~(format "Find all %s by the %s column in the database." (symbol (table-name table)) (column-symbol column))
+            (defn ~(symbol (format "%s-by-%s" (symbol (table-name table)) (symbol (column-name column))))
+              ~(format "Find all %s by the %s column in the database." (symbol (table-name table)) (symbol (column-name column)))
               [~'value & ~'options] (apply find-by-column ~(keyword (table-name table)) ~(:name column) ~'value ~'options))
-            (defn ~(symbol (format "%s-by-%s*" (symbol (table-name table)) (column-symbol column)))
-              ~(format "Returns a query that finds all %s by the %s column in the database." (symbol (table-name table)) (column-symbol column))
+            (defn ~(symbol (format "%s-by-%s*" (symbol (table-name table)) (symbol (column-name column))))
+              ~(format "Returns a query that finds all %s by the %s column in the database." (symbol (table-name table)) (symbol (column-name column)))
               [~'value] (select-by-column ~(keyword (table-name table)) ~(:name column) ~'value))
-            (defn ~(symbol (format "%s-by-%s" (singular (symbol (table-name table))) (column-symbol column)))
-              ~(format "Find the first %s by the %s column in the database." (singular (symbol (table-name table))) (column-symbol column))
+            (defn ~(symbol (format "%s-by-%s" (singular (symbol (table-name table))) (symbol (column-name column))))
+              ~(format "Find the first %s by the %s column in the database." (singular (symbol (table-name table))) (symbol (column-name column)))
               [~'value] (first (find-by-column ~(keyword (table-name table)) ~(:name column) ~'value)))))))
 
 (defmacro deftable

@@ -48,7 +48,7 @@
   (if (not (nil? row))
     (with-ensure-table table
       (let [row (or row {}) columns (select-columns table (keys row))]
-        (reduce #(assoc %1 (column-keyword %2) (serialize-column %2 (get row (:name %2))))
+        (reduce #(assoc %1 (keyword (column-name %2)) (serialize-column %2 (get row (:name %2))))
                 {} columns)))))
 
 (defn define-serialization

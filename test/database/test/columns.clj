@@ -58,19 +58,12 @@
     "created-at" "created_at"))
 
 (deftest test-column-name
-  (are [expected column]
+  (are [column expected]
     (is (= expected (column-name column)))
-    :created-at :created-at
-    :created-at created-at-column))
-
-(deftest test-column-keyword
-  (are [expected column]
-    (is (= expected (column-keyword column)))
-    :created-at :created-at
-    :created-at 'created-at
+    "created-at" "created-at"
+    'created-at "created-at"
     :created-at "created-at"
-    :created-at created-at-column
-    :id id-column))
+    created-at-column "created-at"))
 
 (deftest test-column-type-name
   (are [expected column]
@@ -78,15 +71,6 @@
     "timestamp with time zone" created-at-column
     "serial" id-column
     "varchar(2)" iso-639-1-column))
-
-(deftest test-column-symbol
-  (are [expected column]
-    (is (= expected (column-symbol column)))
-    'created-at :created-at
-    'created-at 'created-at
-    'created-at "created-at"
-    'created-at created-at-column
-    'id id-column))
 
 (deftest test-column-spec
   (is (= ["created_at" "timestamp with time zone" "default now()" "not null"]
