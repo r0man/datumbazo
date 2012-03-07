@@ -285,6 +285,3 @@
          (let [[args# options#] (split-args ~'args)]
            (-> (apply ~query# (apply concat args# (seq (dissoc options# :page :per-page))))
                (paginate* :page (:page options#) :per-page (:per-page options#))))))))
-
-;; (defn column-prefix [table column]
-;;   (keyword (str (table-name table) "-" (column-name column))))

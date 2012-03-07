@@ -86,11 +86,3 @@
   (is (not (unique-column? created-at-column)))
   (is (unique-column? id-column))
   (is (unique-column? iso-639-1-column)))
-
-(deftest test-key-columns
-  (are [expected record]
-    (is (= expected (map :name (key-columns language-table record))))
-    [] {}
-    [:id] {:id 1}
-    [:id :iso-639-1] {:id 1 :iso-639-1 "de"}
-    [:id :iso-639-1] {:id 1 :iso-639-1 "de" :created-at "2011-12-30"}))

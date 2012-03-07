@@ -5,6 +5,14 @@
         database.test.examples
         database.registry))
 
+(deftest test-key-columns
+  (are [expected record]
+    (is (= expected (map :name (key-columns language-table record))))
+    [] {}
+    [:id] {:id 1}
+    [:id :iso-639-1] {:id 1 :iso-639-1 "de"}
+    [:id :iso-639-1] {:id 1 :iso-639-1 "de" :created-at "2011-12-30"}))
+
 (deftest test-make-table
   (let [table (make-table :test [[:id :serial] [:name :text]] :url identity)]
     (is (= :test (:name table)))

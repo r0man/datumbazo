@@ -36,13 +36,6 @@
     :native? (if (sequential? type) false true)
     :not-null? (or (:not-null? attributes) (:primary-key? attributes))))
 
-(defn select-columns
-  "Select columns of table by keywords."
-  [table columns]
-  (let [columns (set columns)]
-    (filter #(contains? columns (keyword (column-name %1)))
-            (vals (apply dissoc (:columns table) (:exclude (:fields table)))))))
-
 (defn remove-serial-columns
   "Remove the serial columns from `record` if their value is nil."
   [table record]
@@ -55,12 +48,6 @@
 (defn unique-column?
   "Returns true if `column` is a primary key or is unique, otherwise
   false." [column] (or (:primary-key? column) (:unique? column)))
-
-(defn key-columns
-  "Returns the key columns of `table` for `record`."
-  [table record]
-  (let [columns (select-columns table (keys record))]
-    (concat (filter :primary-key? columns) (filter :unique? columns))))
 
 ;; SQL CLAUSE FNS
 

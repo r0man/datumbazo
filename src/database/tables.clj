@@ -1,5 +1,5 @@
 (ns database.tables
-  (:use [database.columns :only (column? make-column)]
+  (:use [database.columns :only (column? column-name make-column)]
         [database.connection :only (naming-strategy)]))
 
 (defprotocol ITable
@@ -7,6 +7,9 @@
     "Returns the name of the table as a string."))
 
 (defrecord Table [name columns])
+
+(defn column-prefix [table column]
+  (keyword (str (table-name table) "-" (column-name column))))
 
 (defn make-table
   "Make a new database table."
@@ -22,6 +25,19 @@
   "Returns the table identifier. Given a string, return it as-is.
   Given a keyword, return it as a string using the current naming
   strategy." [table] ((:fields (naming-strategy)) (table-name table)))
+
+(defn select-columns
+  "Select all columns of `table` which are in `selection`."
+  [table selection]
+  (let [selection (set (map column-name selection))]
+    (filter #(contains? selection (column-name %1))
+            (vals (apply dissoc (:columns table) (:exclude (:fields table)))))))
+
+(defn key-columns
+  "Returns the key columns of `table` for `record`."
+  [table record]
+  (let [columns (select-columns table (keys record))]
+    (concat (filter :primary-key? columns) (filter :unique? columns))))
 
 (extend-type Table
   ITable
