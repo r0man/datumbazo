@@ -67,10 +67,10 @@
 
 (database-test test-text=
   (let [language (insert-record :languages german)]
-    (is (= language (first (select (table->entity :languages) (where {:name [text= (:name language)]})))))))
+    (is (= language (first (select (entity :languages) (where {:name [text= (:name language)]})))))))
 
-(deftest test-table->entity
-  (let [entity (table->entity :languages)]
+(deftest test-entity
+  (let [entity (entity :languages)]
     (is (= (set [:iso-639-2 :iso-639-1 :name :family :updated-at :created-at :id])
            (set (:set-fields entity))))))
 

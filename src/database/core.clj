@@ -38,12 +38,9 @@
 (defn text= [arg-1 arg-2]
   (infix (to-tsvector arg-1) "@@" (plainto-tsquery arg-2)))
 
-(defn table->entity [table]
-  (with-ensure-table table
-    (-> (create-entity (table-identifier table))
-        (transform (partial deserialize-record table)))))
-
-(defn table->entity [table]
+(defn entity
+  "Returns the Korma entity of `table`."
+  [table]
   (with-ensure-table table
     (let [entity (create-entity (table-identifier table))
           field-keys (keys (apply dissoc (:columns table) (:exclude (:fields table))))]
@@ -67,7 +64,7 @@
         (if (and
              (or (nil? (:if options)) ((:if options) record))
              (or (nil? (:unless options)) (not ((:unless options) record)))
-             (not (empty? (select (table->entity table)
+             (not (empty? (select (entity table)
                                   (where (reduce
                                           #(assoc %1
                                              (column-keyword %2)
@@ -83,7 +80,7 @@
   [table record]
   (if-not (empty? record)
     (with-ensure-table table
-      (-> (select (table->entity table) (where (unique-key-clause table record)))
+      (-> (select (entity table) (where (unique-key-clause table record)))
           empty? not))
     false))
 
@@ -142,7 +139,7 @@
   [table record]
   (if-not (empty? record)
     (with-ensure-table table
-      (-> (select (table->entity table)
+      (-> (select (entity table)
                   (where (unique-key-clause table record)))
           (first)))))
 
@@ -202,7 +199,7 @@
   `column` and `value`."
   [table column value]
   (with-ensure-column table column
-    (-> (select* (table->entity table))
+    (-> (select* (entity table))
         (where {(column-keyword column)
                 (serialize-column column value)}))))
 
@@ -239,11 +236,11 @@
   `(do
      (defn ~(symbol (str (table-symbol table) "*"))
        ~(format "Returns a query that selects all %s in the database." (table-symbol table))
-       [] (select* (table->entity ~(table-keyword table))))
+       [] (select* (entity ~(table-keyword table))))
      (defn ~(symbol (str (table-symbol table) ""))
        ~(format "Find all %s in the database." (table-symbol table))
        [& {:keys [~'page ~'per-page]}]
-       (paginate* (select* (table->entity ~(table-keyword table))) :page ~'page :per-page ~'per-page))
+       (paginate* (select* (entity ~(table-keyword table))) :page ~'page :per-page ~'per-page))
      ~@(for [column (vals (:columns table))]
          `(do
             (defn ~(symbol (format "%s-by-%s" (table-symbol table) (column-symbol column)))

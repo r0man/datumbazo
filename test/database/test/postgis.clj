@@ -223,8 +223,8 @@
   (is (table? (table :continents)))
   (is (table? (find-table :continents))))
 
-(deftest test-table->entity
-  (let [entity (table->entity :continents)]
+(deftest test-entity
+  (let [entity (entity :continents)]
     (is (= (set [:iso-3166-1-alpha-2 :name :location :updated-at :created-at :id])
            (set (:set-fields entity))))))
 
