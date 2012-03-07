@@ -44,3 +44,10 @@
     :photo-thumbnails "photo_thumbnails"
     photo-thumbnails "photo_thumbnails"
     (find-table :photo-thumbnails) "photo_thumbnails"))
+
+(deftest test-primary-key-columns
+  (is (= [:id] (map :name (primary-key-columns (find-table :languages))))))
+
+(deftest test-unique-columns
+  (is (= [:iso-639-2 :iso-639-1 :name]
+         (map :name (unique-columns (find-table :languages))))))

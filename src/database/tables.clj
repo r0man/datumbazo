@@ -33,6 +33,14 @@
     (filter #(contains? selection (column-name %1))
             (vals (apply dissoc (:columns table) (:exclude (:fields table)))))))
 
+(defn primary-key-columns
+  "Returns all primary key columns of `table`."
+  [table] (filter :primary-key? (vals (:columns table))))
+
+(defn unique-columns
+  "Returns all unique columns of `table`."
+  [table] (filter :unique? (vals (:columns table))))
+
 (defn key-columns
   "Returns the key columns of `table` for `record`."
   [table record]
