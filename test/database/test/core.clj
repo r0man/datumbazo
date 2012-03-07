@@ -16,6 +16,11 @@
   (let [column (make-column :x :integer)]
     (is (= column (add-column :languages column)))))
 
+;; (deftest test-column-prefix
+;;   (are [table column expected]
+;;     (is (= expected (column-prefix table column)))
+;;     :languages :name :languages-name))
+
 (database-test test-drop-column
   (is (drop-column :languages :created-at)))
 

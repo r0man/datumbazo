@@ -1,5 +1,4 @@
 (ns database.test.tables
-  (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
         database.columns
         database.tables
@@ -21,38 +20,19 @@
   (is (table? (make-table :continents))))
 
 (deftest test-table-name
-  (are [expected table]
+  (are [table expected]
     (is (= expected (table-name table)))
-    :photo-thumbnails :photo-thumbnails
-    :photo-thumbnails (find-table :photo-thumbnails)))
-
-;; (table-identifier (find-table :continents))
-
-;; (table? (find-table :continents))
-
-;; (table? (find-table :continents))
-;; (instance? database.tables.Table (find-table :continents))
-
-;; (= database.tables.Table (class (find-table :continents)))
+    "photo-thumbnails" "photo-thumbnails"
+    'photo-thumbnails "photo-thumbnails"
+    :photo-thumbnails "photo-thumbnails"
+    photo-thumbnails "photo-thumbnails"
+    (find-table :photo-thumbnails) "photo-thumbnails"))
 
 (deftest test-table-identifier
   (are [table expected]
     (is (= expected (table-identifier table)))
+    "photo-thumbnails" "photo_thumbnails"
+    'photo-thumbnails "photo_thumbnails"
     :photo-thumbnails "photo_thumbnails"
-    "photo-thumbnails" "photo_thumbnails"))
-
-(deftest test-table-keyword
-  (are [expected table]
-    (is (= expected (table-keyword table)))
-    :photo-thumbnails :photo-thumbnails
-    :photo-thumbnails 'photo-thumbnails
-    :photo-thumbnails "photo-thumbnails"
-    :photo-thumbnails photo-thumbnails))
-
-(deftest test-table-symbol
-  (are [expected table]
-    (is (= expected (table-symbol table)))
-    'photo-thumbnails :photo-thumbnails
-    'photo-thumbnails 'photo-thumbnails
-    'photo-thumbnails "photo-thumbnails"
-    'photo-thumbnails photo-thumbnails))
+    photo-thumbnails "photo_thumbnails"
+    (find-table :photo-thumbnails) "photo_thumbnails"))

@@ -54,13 +54,13 @@
 (defn define-serialization
   "Returns the serialization froms for the database table."
   [table]
-  (let [record# (camelize (singular (table-symbol table)))
-        entity# (singular (table-symbol table))
+  (let [record# (symbol (camelize (singular (table-name table))))
+        entity# (symbol (singular (table-name table)))
         constructor# (symbol (str "map->" record#))]
     `(do
        (defn ~(symbol (str "deserialize-" entity#))
          ~(str "Deserialize the " entity# " database row.")
-         [~entity#] (deserialize-record ~(table-keyword table) ~entity#))
+         [~entity#] (deserialize-record ~(keyword (table-name table)) ~entity#))
        (defn ~(symbol (str "serialize-" entity#))
          ~(str "Serialize the " entity# " database row.")
-         [~entity#] (serialize-record ~(table-keyword table) ~entity#)))))
+         [~entity#] (serialize-record ~(keyword (table-name table)) ~entity#)))))

@@ -5,6 +5,10 @@
         database.columns
         database.connection))
 
+(defprotocol ITable
+  (table-name [table]
+    "Returns the name of the table as a string."))
+
 (defrecord Table [name columns])
 
 (defn make-table
@@ -17,21 +21,34 @@
   "Returns true if arg is a table, otherwise false."
   [arg] (instance? Table arg))
 
-(defn table-name
-  "Returns the name of the table."
-  [table] (if (table? table) (:name table) table))
-
 (defn table-identifier
   "Returns the table identifier. Given a string, return it as-is.
   Given a keyword, return it as a string using the current naming
   strategy." [table] ((:fields (naming-strategy)) (table-name table)))
 
-(defn table-symbol
-  "Returns the name of the table as a symbol with all underscores in
-  the name replaced by dashes."
-  [table] (symbol (name (dasherize (table-name table)))))
+(extend-type Table
+  ITable
+  (table-name [table]
+    (table-name (:name table))))
 
-(defn table-keyword
-  "Returns the name of the table as a keyword with all underscores in
-  the name replaced by dashes."
-  [table] (keyword (table-symbol table)))
+(extend-type String
+  ITable
+  (table-name [string]
+    string))
+
+(extend-type clojure.lang.IPersistentMap
+  ITable
+  (table-name [table]
+    (if-let [name (:name table)]
+      (table-name name)
+      (throw (IllegalArgumentException. (format "Not a table: %s" (prn-str table)))))))
+
+(extend-type clojure.lang.Keyword
+  ITable
+  (table-name [keyword]
+    (name keyword)))
+
+(extend-type clojure.lang.Symbol
+  ITable
+  (table-name [symbol]
+    (str symbol)))
