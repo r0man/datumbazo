@@ -16,6 +16,15 @@
     :password "database"
     :naming {:keys (comp keyword dasherize) :fields (comp name underscore)}}))
 
+(defdb development-database
+  (postgres
+   {:db "database_development"
+    :host "localhost"
+    :port "5432"
+    :user "database"
+    :password "database"
+    :naming {:keys (comp keyword dasherize) :fields (comp name underscore)}}))
+
 (defmacro database-test
   "Define a database test."
   [name & body]

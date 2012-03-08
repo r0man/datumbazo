@@ -28,6 +28,14 @@
   (presence-of :iso-639-2)
   (exact-length-of :iso-639-2 3))
 
+(defvalidate user
+  (presence-of :nick)
+  (min-length-of :nick 2)
+  (max-length-of :nick 32)
+  (presence-of :email)
+  (min-length-of :nick 2)
+  (max-length-of :nick 256))
+
 (deftable languages
   [[:id :serial :primary-key? true]
    [:name :text :unique? true :not-null? true]
@@ -47,6 +55,14 @@
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]])
 
+(deftable users
+  [[:id :serial :primary-key? true]
+   [:nick :text :unique? true :not-null? true]
+   [:email :text :unique? true :not-null? true :serialize #'lower-case]
+   [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
+   [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
+  :validate validate-user!)
+
 (defmigration "2011-12-31T10:00:00"
   "Create the languages table."
   (create-table (table :languages))
@@ -57,7 +73,18 @@
   (create-table (table :photo-thumbnails))
   (drop-table (table :photo-thumbnails)))
 
+(defmigration "2012-08-03T20:00:00"
+  "Create the users table."
+  (create-table (table :users))
+  (drop-table (table :users)))
+
 (def language-table (find-table :languages))
+
+(def bodhi
+  (make-user
+   :id 1
+   :nick "Bodhi"
+   :email "bodhi@example.com"))
 
 (def german
   (make-language
@@ -136,7 +163,7 @@
 (database-test test-insert-language
   (is (thrown? Exception (insert-language nil)))
   (is (thrown? Exception (insert-language {})))
-  (let [record (insert-language (assoc german :id nil))]
+  (let [record (insert-language german)]
     (is (number? (:id record)))
     (is (not (= -1 (:id record)))) ; filtered, because serial
     (is (= "German" (:name record)))
@@ -144,6 +171,17 @@
     (is (= "de" (:iso-639-1 record)))
     (is (= "deu" (:iso-639-2 record)))
     (is (= (language-url record) (:url record)))
+    (is (instance? DateTime (:created-at record)))
+    (is (instance? DateTime (:updated-at record)))))
+
+(database-test test-insert-user
+  (is (thrown? Exception (insert-user nil)))
+  (is (thrown? Exception (insert-user {})))
+  (let [record (insert-user bodhi)]
+    (is (number? (:id record)))
+    (is (not (= -1 (:id record)))) ; filtered, because serial
+    (is (= "Bodhi" (:nick record)))
+    (is (= "bodhi@example.com" (:email record)))
     (is (instance? DateTime (:created-at record)))
     (is (instance? DateTime (:updated-at record)))))
 
