@@ -33,6 +33,13 @@
     (filter #(contains? selection (column-name %1))
             (vals (apply dissoc (:columns table) (:exclude (:fields table)))))))
 
+;; (defn select-columns
+;;   "Select all columns of `table` which are in `selection`."
+;;   [table & [selection]]
+;;   (let [columns (apply dissoc (:columns table) (:exclude (:fields table)))]
+;;     (if (empty? selection) (vals columns)
+;;         (select-keys columns (map (comp keyword column-name) selection)))))
+
 (defn primary-key-columns
   "Returns all primary key columns of `table`."
   [table] (filter :primary-key? (vals (:columns table))))
@@ -44,8 +51,10 @@
 (defn key-columns
   "Returns the key columns of `table` for `record`."
   [table record]
-  (let [columns (select-columns table (keys record))]
-    (concat (filter :primary-key? columns) (filter :unique? columns))))
+  (let [key-set (set (keys record))]
+    (filter #(contains? key-set (:name %1))
+            (concat (primary-key-columns table)
+                    (unique-columns table)))))
 
 (extend-type Table
   ITable
