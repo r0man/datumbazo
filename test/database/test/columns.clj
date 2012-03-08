@@ -49,7 +49,7 @@
   (is (not (column? nil)))
   (is (not (column? "")))
   (is (column? created-at-column))
-  (is (every? column? (vals (:columns language-table)))))
+  (is (every? column? (vals (:columns (table :languages))))))
 
 (deftest test-column-identifier
   (are [column expected]

@@ -1,5 +1,6 @@
 (ns database.test.tables
   (:use clojure.test
+        database.core
         database.columns
         database.tables
         database.test.examples
@@ -7,7 +8,7 @@
 
 (deftest test-key-columns
   (are [expected record]
-    (is (= expected (map :name (key-columns language-table record))))
+    (is (= expected (map :name (key-columns (table :languages) record))))
     [] {}
     [:id] {:id 1}
     [:id :iso-639-1] {:id 1 :iso-639-1 "de"}
@@ -33,7 +34,6 @@
     "photo-thumbnails" "photo-thumbnails"
     'photo-thumbnails "photo-thumbnails"
     :photo-thumbnails "photo-thumbnails"
-    photo-thumbnails "photo-thumbnails"
     (find-table :photo-thumbnails) "photo-thumbnails"))
 
 (deftest test-table-identifier
@@ -42,7 +42,6 @@
     "photo-thumbnails" "photo_thumbnails"
     'photo-thumbnails "photo_thumbnails"
     :photo-thumbnails "photo_thumbnails"
-    photo-thumbnails "photo_thumbnails"
     (find-table :photo-thumbnails) "photo_thumbnails"))
 
 (deftest test-primary-key-columns

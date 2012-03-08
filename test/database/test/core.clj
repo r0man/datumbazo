@@ -30,9 +30,9 @@
   (is (thrown? Exception (create-table :languages))))
 
 (database-test test-create-table-with-photo-thumbnails
-  (drop-table photo-thumbnails)
-  (is (instance? database.tables.Table (create-table photo-thumbnails)))
-  (is (thrown? Exception (create-table photo-thumbnails))))
+  (drop-table (table :photo-thumbnails))
+  (is (instance? database.tables.Table (create-table (table :photo-thumbnails))))
+  (is (thrown? Exception (create-table (table :photo-thumbnails)))))
 
 (database-test test-delete-record
   (is (nil? (delete-record :languages nil)))

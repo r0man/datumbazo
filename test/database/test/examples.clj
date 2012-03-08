@@ -19,22 +19,25 @@
 (defvalidate language
   (presence-of :name)
   (min-length-of :name 2)
-  (max-length-of :name 32)
+  (max-length-of :name 64)
   (presence-of :family)
   (min-length-of :family 2)
-  (max-length-of :family 32)
+  (max-length-of :family 64)
   (presence-of :iso-639-1)
   (exact-length-of :iso-639-1 2)
   (presence-of :iso-639-2)
   (exact-length-of :iso-639-2 3))
 
-(defvalidate user
-  (presence-of :nick)
-  (min-length-of :nick 2)
-  (max-length-of :nick 32)
-  (presence-of :email)
-  (min-length-of :nick 2)
-  (max-length-of :nick 256))
+(defvalidate photo
+  (presence-of :title)
+  (min-length-of :title 2)
+  (max-length-of :title 64))
+
+(defvalidate photo-thumbnail
+  (presence-of :photo-id)
+  (presence-of :url)
+  (presence-of :width)
+  (presence-of :heigth))
 
 (deftable languages
   [[:id :serial :primary-key? true]
@@ -47,21 +50,23 @@
   :url language-url
   :validate validate-language!)
 
-(deftable photo-thumbnails
+(deftable photos
   [[:id :serial :primary-key? true]
-   [:title :text]
-   [:description :text]
+   [:title :text :not-null? true]
    [:taken-at :timestamp-with-time-zone]
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
-   [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]])
+   [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
+  :validate validate-photo!)
 
-(deftable users
+(deftable photo-thumbnails
   [[:id :serial :primary-key? true]
-   [:nick :text :unique? true :not-null? true]
-   [:email :text :unique? true :not-null? true :serialize #'lower-case]
+   [:photo-id :integer :references :photos/id :not-null? true]
+   [:url :text :not-null? true]
+   [:width :integer :not-null? true]
+   [:heigth :integer :not-null? true]
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
-  :validate validate-user!)
+  :validate validate-photo-thumbnail!)
 
 (defmigration "2011-12-31T10:00:00"
   "Create the languages table."
@@ -69,22 +74,16 @@
   (drop-table (table :languages)))
 
 (defmigration "2011-12-31T11:00:00"
+  "Create the photos table."
+  (create-table (table :photos))
+  (drop-table (table :photos)))
+
+(defmigration "2011-12-31T12:00:00"
   "Create the photo thumbnails table."
   (create-table (table :photo-thumbnails))
   (drop-table (table :photo-thumbnails)))
 
-(defmigration "2012-08-03T20:00:00"
-  "Create the users table."
-  (create-table (table :users))
-  (drop-table (table :users)))
-
-(def language-table (find-table :languages))
-
-(def bodhi
-  (make-user
-   :id 1
-   :nick "Bodhi"
-   :email "bodhi@example.com"))
+;; LANGUAGES
 
 (def german
   (make-language
@@ -102,7 +101,30 @@
    :iso-639-1 "ES"
    :iso-639-2 "ESP"))
 
-(def photo-thumbnails (find-table :photo-thumbnails))
+;; PHOTOS
+
+(def street-art-berlin
+  (make-photo
+   :id 1
+   :title "Street Art Berlin"))
+
+;; PHOTO THUMBNAILS
+
+(def street-art-berlin-small
+  (make-photo-thumbnail
+   :id 1
+   :photo-id (:id street-art-berlin)
+   :url "http://www.flickr.com/photos/eric795/6818646318/sizes/s/in/photostream"
+   :width 240
+   :heigth 180))
+
+(def street-art-berlin-medium
+  (make-photo-thumbnail
+   :id 2
+   :photo-id (:id street-art-berlin)
+   :url "http://www.flickr.com/photos/eric795/6818646318/sizes/m/in/photostream"
+   :width 500
+   :heigth 375))
 
 (deftest test-deserialize-language
   (is (= nil (deserialize-language nil)))
@@ -174,14 +196,37 @@
     (is (instance? DateTime (:created-at record)))
     (is (instance? DateTime (:updated-at record)))))
 
-(database-test test-insert-user
-  (is (thrown? Exception (insert-user nil)))
-  (is (thrown? Exception (insert-user {})))
-  (let [record (insert-user bodhi)]
+(database-test test-insert-photo
+  (is (thrown? Exception (insert-photo nil)))
+  (is (thrown? Exception (insert-photo {})))
+  (let [record (insert-photo street-art-berlin)]
     (is (number? (:id record)))
     (is (not (= -1 (:id record)))) ; filtered, because serial
-    (is (= "Bodhi" (:nick record)))
-    (is (= "bodhi@example.com" (:email record)))
+    (is (= "Street Art Berlin" (:title record)))
+    (is (nil? (:taken-at record))) ; can be nil
+    (is (instance? DateTime (:created-at record)))
+    (is (instance? DateTime (:updated-at record)))))
+
+(database-test test-insert-photo-thumbnail
+  (is (thrown? Exception (insert-photo-thumbnail nil)))
+  (is (thrown? Exception (insert-photo-thumbnail {})))
+  (insert-photo street-art-berlin)
+  (let [record (insert-photo-thumbnail street-art-berlin-small)]
+    (is (number? (:id record)))
+    (is (not (= -1 (:id record)))) ; filtered, because serial
+    (is (number? (:photo-id record)))
+    (is (= "http://www.flickr.com/photos/eric795/6818646318/sizes/s/in/photostream" (:url record)))
+    (is (= 240 (:width record)))
+    (is (= 180 (:heigth record)))
+    (is (instance? DateTime (:created-at record)))
+    (is (instance? DateTime (:updated-at record))))
+  (let [record (insert-photo-thumbnail street-art-berlin-medium)]
+    (is (number? (:id record)))
+    (is (not (= -1 (:id record)))) ; filtered, because serial
+    (is (number? (:photo-id record)))
+    (is (= "http://www.flickr.com/photos/eric795/6818646318/sizes/m/in/photostream" (:url record)))
+    (is (= 500 (:width record)))
+    (is (= 375 (:heigth record)))
     (is (instance? DateTime (:created-at record)))
     (is (instance? DateTime (:updated-at record)))))
 
