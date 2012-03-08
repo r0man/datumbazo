@@ -273,15 +273,6 @@
        (defn ~query# [~@args#] ~doc
          ~@body)
        (defn ~name [& ~'args] ~doc
-         (exec (apply ~query# ~'args))))))
-
-(defmacro defquery [name doc args & body]
-  (let [name# name args# args
-        query# (symbol (str name# "*"))]
-    `(do
-       (defn ~query# [~@args#] ~doc
-         ~@body)
-       (defn ~name [& ~'args] ~doc
          (let [[args# options#] (split-args ~'args)]
            (-> (apply ~query# (apply concat args# (seq (dissoc options# :page :per-page))))
                (paginate* :page (:page options#) :per-page (:per-page options#))))))))
