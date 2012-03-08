@@ -76,8 +76,10 @@
 
 (deftest test-entity
   (let [entity (entity :languages)]
-    (is (= (set [:iso-639-2 :iso-639-1 :name :family :updated-at :created-at :id])
-           (set (:set-fields entity))))))
+    (is (= [:updated-at :created-at :iso-639-2 :iso-639-1 :family :name :id]
+           (:fields entity)))
+    (is (= [:updated-at :created-at :iso-639-2 :iso-639-1 :family :name :id]
+           (:set-fields entity)))))
 
 (database-test test-record-exists?
   (is (not (record-exists? :languages {})))

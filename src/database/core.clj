@@ -45,6 +45,7 @@
     (let [entity (create-entity (table-identifier table))
           field-keys (keys (apply dissoc (:columns table) (:exclude (:fields table))))]
       (-> (apply fields entity field-keys)
+          (assoc :fields field-keys)
           (transform (partial deserialize-record table))))))
 
 (defn unique-key-clause
@@ -236,7 +237,10 @@
   `(do
      (defn ~(symbol (str (symbol (table-name table)) "*"))
        ~(format "Returns a query that selects all %s in the database." (symbol (table-name table)))
-       [] (select* (entity ~(keyword (table-name table)))))
+       [] (-> (select* (entity ~(keyword (table-name table))))
+              identity
+              ;; (fields ~@(map :name (select-columns (find-table table))))
+              ))
      (defn ~(symbol (str (symbol (table-name table)) ""))
        ~(format "Find all %s in the database." (symbol (table-name table)))
        [& {:keys [~'page ~'per-page]}]

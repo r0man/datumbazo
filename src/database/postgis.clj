@@ -98,9 +98,7 @@
   "Sort query by location."
   [query field location & [direction]]
   (if-let [point (to-point-2d location)]
-    (-> (update-in query [:fields] #(conj %1 [(sqlfn distance field (make-geometry point)) :distance]))
-        (update-in [:aliases] #(conj %1 :distance))
-        (order :distance (or direction :asc)))
+    (order query (sqlfn distance field (make-geometry point)) (or direction :asc))
     query))
 
 (defmethod serialize-column :point-2d [column location]
