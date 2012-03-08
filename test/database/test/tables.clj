@@ -44,6 +44,18 @@
     :photo-thumbnails "photo_thumbnails"
     (find-table :photo-thumbnails) "photo_thumbnails"))
 
+(deftest test-default-columns
+  (let [columns (default-columns (table :languages))]
+    (is (every? column? columns))
+    (is (= [:updated-at :created-at :iso-639-2 :iso-639-1 :family :name :id]
+           (map :name columns)))))
+
+(deftest test-select-columns
+  [empty? (select-columns (table :languages) [])]
+  (let [columns (select-columns (table :languages) [:id])]
+    (is (every? column? columns))
+    (is (= [:id] (map :name columns)))))
+
 (deftest test-primary-key-columns
   (is (= [:id] (map :name (primary-key-columns (find-table :languages))))))
 

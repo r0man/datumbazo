@@ -26,19 +26,16 @@
   Given a keyword, return it as a string using the current naming
   strategy." [table] ((:fields (naming-strategy)) (table-name table)))
 
+(defn default-columns
+  "Returns the default columns of `table`."
+  [table] (vals (apply dissoc (:columns table) (:exclude (:fields table)))))
+
 (defn select-columns
   "Select all columns of `table` which are in `selection`."
   [table selection]
   (let [selection (set (map column-name selection))]
     (filter #(contains? selection (column-name %1))
             (vals (apply dissoc (:columns table) (:exclude (:fields table)))))))
-
-;; (defn select-columns
-;;   "Select all columns of `table` which are in `selection`."
-;;   [table & [selection]]
-;;   (let [columns (apply dissoc (:columns table) (:exclude (:fields table)))]
-;;     (if (empty? selection) (vals columns)
-;;         (select-keys columns (map (comp keyword column-name) selection)))))
 
 (defn primary-key-columns
   "Returns all primary key columns of `table`."
