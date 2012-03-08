@@ -262,6 +262,7 @@
         table# (apply make-table (keyword name#) columns# options#)]
     `(do
        (register-table (make-table ~(keyword name#) ~columns# ~@options#))
+       (def ~(symbol (str name# "-entity")) (entity ~(keyword name#)))
        ~(define-serialization table#)
        ~(define-crud table#)
        ~(define-finder table#))))

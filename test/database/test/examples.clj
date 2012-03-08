@@ -182,6 +182,19 @@
     (is (= [record] (languages-by-family (:family record) :page 1 :per-page 2)))
     (is (empty? (languages-by-family (:family record) :page 2 :per-page 2)))))
 
+(database-test test-languages-entity
+  (let [entity languages-entity]
+    (is (= :id (:pk entity)))
+    (is (= "languages" (:name entity)))
+    (is (= "languages" (:table entity)))
+    (is (nil? (:aliases entity)))
+    (is (nil? (:db entity)))
+    (is (empty? (:fields entity)))
+    (is (empty? (:prepares entity)))
+    (is (= {} (:rel entity)))
+    (is (every? fn? (:transforms entity)))
+    (is (= [:updated-at :created-at :iso-639-2 :iso-639-1 :family :name :id] (:set-fields entity)))))
+
 (database-test test-insert-language
   (is (thrown? Exception (insert-language nil)))
   (is (thrown? Exception (insert-language {})))
