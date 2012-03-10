@@ -140,9 +140,11 @@
   [table record]
   (if-not (empty? record)
     (with-ensure-table table
-      (-> (select (entity table)
-                  (where (unique-key-clause table record)))
-          (first)))))
+      (-> (apply fields
+                 (-> (select* (entity table))
+                     (where (unique-key-clause table record)))
+                 (map :name (default-columns table)))
+          exec first))))
 
 (defn validate-record
   "Validate `record`."
@@ -237,14 +239,12 @@
   `(do
      (defn ~(symbol (str (symbol (table-name table)) "*"))
        ~(format "Returns a query that selects all %s in the database." (symbol (table-name table)))
-       [] (-> (select* (entity ~(keyword (table-name table))))
-              identity
-              ;; (fields ~@(map :name (select-columns (find-table table))))
-              ))
+       [] (apply fields (select* (entity ~(keyword (table-name table))))
+                 (map :name (default-columns (find-table ~(keyword (table-name table)))))))
      (defn ~(symbol (str (symbol (table-name table)) ""))
        ~(format "Find all %s in the database." (symbol (table-name table)))
        [& {:keys [~'page ~'per-page]}]
-       (paginate* (select* (entity ~(keyword (table-name table)))) :page ~'page :per-page ~'per-page))
+       (paginate* (~(symbol (str (symbol (table-name table)) "*"))) :page ~'page :per-page ~'per-page))
      ~@(for [column (vals (:columns table))]
          `(do
             (defn ~(symbol (format "%s-by-%s" (symbol (table-name table)) (symbol (column-name column))))
