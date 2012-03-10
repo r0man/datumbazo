@@ -42,7 +42,7 @@
   "Returns the Korma entity of `table`."
   [table]
   (with-ensure-table table
-    (let [entity (create-entity (table-identifier table))
+    (let [entity (create-entity (table-name table))
           field-keys (keys (apply dissoc (:columns table) (:exclude (:fields table))))]
       (-> (apply fields entity field-keys)
           (assoc :fields field-keys)
@@ -240,7 +240,7 @@
      (defn ~(symbol (str (symbol (table-name table)) "*"))
        ~(format "Returns a query that selects all %s in the database." (symbol (table-name table)))
        [] (apply fields (select* (entity ~(keyword (table-name table))))
-                 (map :name (default-columns (find-table ~(keyword (table-name table)))))))
+              (map :name (default-columns (find-table ~(keyword (table-name table)))))))
      (defn ~(symbol (str (symbol (table-name table)) ""))
        ~(format "Find all %s in the database." (symbol (table-name table)))
        [& {:keys [~'page ~'per-page]}]
