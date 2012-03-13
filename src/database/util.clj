@@ -1,4 +1,6 @@
-(ns database.util)
+(ns database.util
+  (:refer-clojure :exclude (replace))
+  (:use [clojure.string :only (replace)]))
 
 (defn assoc-url
   "Assoc the result of applying `record` to `url-fn` under the :url
@@ -27,3 +29,17 @@
       [(concat args [(first options)])
        (apply hash-map (rest options))]
       [args (apply hash-map options)])))
+
+(defn shift-columns
+  "Shift all columns in record starting with prefix into a sub map
+  under `path` in `record`."
+  [record prefix & path]
+  (if prefix
+    (let [path (concat path [prefix])
+          keys (filter #(.startsWith (str %) (str prefix)) (keys record))]
+      (reduce
+       #(-> (if-let [value (get %1 %2)]
+              (assoc-in %1 (concat path [(keyword (apply str (rest (replace (str %2) (str prefix) ""))))]) value)
+              %1)
+            (dissoc %2)) (into {} record) keys))
+    record))

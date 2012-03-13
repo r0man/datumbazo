@@ -30,3 +30,13 @@
          (split-args ["x" :page 1 :per-page 20])))
   (is (= [["x" :doit] {:page 1 :per-page 20}]
          (split-args ["x" :doit :page 1 :per-page 20]))))
+
+(deftest test-shift-columns
+  (is (= {} (shift-columns {} nil)))
+  (is (= {:a 1} (shift-columns {:a 1} nil)))
+  (is (= {:name "Mundaka" :country {:name "Spain"}}
+         (shift-columns {:name "Mundaka" :country_name "Spain"} :country)))
+  (is (= {:name "Mundaka" :country {:name "Spain"}}
+         (shift-columns {:name "Mundaka" :country-name "Spain"} :country)))
+  (is (= {:name "Mundaka" :address {:country {:name "Spain"}}}
+         (shift-columns {:name "Mundaka" :country_name "Spain"} :country :address))))
