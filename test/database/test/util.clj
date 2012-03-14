@@ -40,3 +40,11 @@
          (shift-columns {:name "Mundaka" :country-name "Spain"} :country)))
   (is (= {:name "Mundaka" :address {:country {:name "Spain"}}}
          (shift-columns {:name "Mundaka" :country_name "Spain"} :country :address))))
+
+(deftest test-prefix-keywords
+  (are [prefix keywords separator expected]
+    (is (= expected (prefix-keywords prefix keywords separator)))
+    :photo [:id :name] nil [:photoid :photoname]
+    :photo [:id :name] "" [:photoid :photoname]
+    :photo [:id :name] "." [:photo.id :photo.name]
+    :photo [:id :name] "-" [:photo-id :photo-name]))

@@ -43,3 +43,10 @@
               %1)
             (dissoc %2)) (into {} record) keys))
     record))
+
+(defn prefix-keywords
+  "Prefix all `keywords` by `prefix` and join them with a blank or the
+  given separator."
+  [prefix keywords & [separator]]
+  (let [separator (or separator "")]
+    (map #(keyword (str (name prefix) separator (name %1))) keywords)))
