@@ -226,7 +226,7 @@
 (deftest test-entity
   (let [entity (entity :continents)]
     (is (= (set [:iso-3166-1-alpha-2 :name :location :updated-at :created-at :id])
-           (set (:set-fields entity))))))
+           (set (:fields entity))))))
 
 (database-test test-update-continent
   (let [continent (insert-continent europe)]
@@ -240,3 +240,28 @@
       (is (instance? DateTime (:updated-at continent)))
       (is (= continent (update-continent continent)))
       (is (not (contains? (set (keys continent)) :geometry))))))
+
+(deftest test-test-box2d
+  (let [result (box2d :geometry)]
+    (is (= "BOX2D(%s)" (:korma.sql.utils/func result)))
+    (is (= [:geometry] (:korma.sql.utils/args result)))))
+
+(deftest test-test-st-centroid
+  (let [result (st-centroid :geometry)]
+    (is (= "ST_CENTROID(%s)" (:korma.sql.utils/func result)))
+    (is (= [:geometry] (:korma.sql.utils/args result)))))
+
+(deftest test-test-st-translate
+  (let [result (st-translate :geometry 1 2)]
+    (is (= "ST_TRANSLATE(%s)" (:korma.sql.utils/func result)))
+    (is (= [:geometry 1 2] (:korma.sql.utils/args result)))))
+
+(deftest test-test-st-x
+  (let [result (st-x :geometry)]
+    (is (= "ST_X(%s)" (:korma.sql.utils/func result)))
+    (is (= [:geometry] (:korma.sql.utils/args result)))))
+
+(deftest test-test-st-y
+  (let [result (st-y :geometry)]
+    (is (= "ST_Y(%s)" (:korma.sql.utils/func result)))
+    (is (= [:geometry] (:korma.sql.utils/args result)))))

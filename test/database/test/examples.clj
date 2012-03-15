@@ -3,13 +3,14 @@
   (:use [clojure.string :only (lower-case upper-case)]
         [clj-time.coerce :only (to-date-time to-timestamp)]
         [migrate.core :only (defmigration)]
-        [korma.core :exclude (join table)]
+        [korma.core :exclude (table)]
         clojure.test
         database.core
         database.columns
         database.registry
         database.serialization
         database.tables
+        database.util
         database.test
         validation.core))
 
@@ -113,78 +114,53 @@
 ;; (save-photo-thumbnail street-art-berlin-small)
 ;; (save-photo-thumbnail street-art-berlin-medium)
 
-(defn prefix-column [column prefix]
-  (keyword (str (name prefix) "-" (column-name column))))
+(defn prefix-columns
+  "Return the names of `columns` prefixed with `prefix`."
+  [prefix columns & [separator]]
+  (let [separator (or separator "-")]
+    (map #(keyword (str (name prefix) separator (column-name %1))) columns)))
 
-(defn prefix-columns [columns prefix]
-  (map #(vector (keyword (column-name %1)) (prefix-column %1 prefix)) columns))
+(defn prefix-fields
+  [query table prefix fields]
+  (let [aliases (prefix-columns prefix fields "-")
+        qualified (prefix-columns table fields ".")]
+    (-> (update-in query [:aliases] clojure.set/union (set aliases))
+        (update-in [:fields] concat (seq (zipmap qualified aliases))))))
 
-(defn prefix-fields [query prefix & fields]
-  ;; (clojure.pprint/pprint query)
-  ;; (prn (:set-fields (:ent query)))
-  (let [columns (if (empty? fields) (:set-fields (:ent query)) fields)]
-    (apply korma.core/fields query (prefix-columns columns prefix))))
+(defn shift-fields
+  [query table prefix fields]
+  (let [aliases (prefix-columns prefix fields "-")
+        qualified (prefix-columns table fields ".")]
+    (-> (update-in query [:ent] #(if (keyword? %1) (entity %1) %1))
+        (update-in [:aliases] clojure.set/union (set aliases))
+        (update-in [:fields] concat (seq (zipmap qualified aliases)))
+        (update-in [:ent :transforms] conj #(shift-columns %1 prefix)))))
 
-;; (select (entity :photos)
-;;         (prefix-fields :photo :id :title))
+(-> (select* :photo-thumbnails)
+    (join :photos (= :photo-thumbnails.photo-id :photos.id))
+    (fields :photo-thumbnails.id :photo-thumbnails.width :photo-thumbnails.heigth)
+    (shift-fields :photos :photo [:id :title])
+    (exec))
 
-;; (select (entity :photos)
-;;         (prefix-fields :photo))
+;; (clojure.pprint/pprint
+;;  (query-only
+;;   (select (entity :photo-thumbnails)
+;;           (join :photos
+;;                 (= :photo-thumbnails.photo-id :photos.id))
+;;           (fields :photo-thumbnails.id :photo-thumbnails.width :photo-thumbnails.heigth)
+;;           (shift-fields :photos :photo [:id :title]))))
 
-
-;; (create-entity :photos)
-;; (select (create-entity :photos)
-;;         (prefix-fields :photo))
-
-;; (prefix-column :id :photo)
-;; (prefix-columns [:id :title] :photo)
-
-
-;;  (select :photos
-;;          (fields [:title :photo-title]))
+;; (select (entity :photo-thumbnails)
+;;         (join :photos (= :photo-thumbnails.photo-id :photos.id))
+;;         (fields :photo-thumbnails.id :photo-thumbnails.width :photo-thumbnails.heigth)
+;;         (shift-fields :photos :photo [:id :title]))
 
 ;; (sql-only
-;;  (-> (select* :photos)
-;;      (prefix-fields :photo :a)
+;;  (-> (select* :photo-thumbnails)
+;;      (fields :photo-thumbnails.id :photo-thumbnails.width :photo-thumbnails.heigth)
+;;      ;; (shift-fields :photos :photo [:id :title])
+;;      (join :photos (= :photo-thumbnails.photo-id :photos.id))
 ;;      (exec)))
-
-;;  (-> (select* :photos)
-;;      (prefix-fields :photo :a)
-;;      (exec))
-
-;; (select* :photos
-;;          (prefix-fields :photo :a))
-
-;; (sql-only
-;;  (-> (select* :photos)
-;;      (fields [:title :photo-title])))
-
-;;  (select :photos
-;;          (fields [:title :photo-title]))
-
-;;  (select :photos
-;;          (prefix-fields :photo [:title :photo-title]))
-
-
-
-;; (prefix-fields (photos*) :photos)
-;; (sql-only (select (prefix-fields (photos*) :photos :id)))
-
-;; (sql-only (prefix-fields (photos*) :photos))
-
-;; (fields (photos) :id)
-
-;; (:set-fields (photos*))
-
-
-;; (:set-fields (:ent (photos*)))
-;; (dissoc (photos*) :from)
-
-;; (photo-thumbnails*)
-;; (-> (photo-thumbnails*)
-;;     (prefix-fields :photos :id)
-;;     ;; (exec)
-;;     )
 
 ;; PHOTO THUMBNAILS
 
@@ -270,8 +246,7 @@
     (is (empty? (:prepares entity)))
     (is (= {} (:rel entity)))
     (is (every? fn? (:transforms entity)))
-    (is (= [:updated-at :created-at :iso-639-2 :iso-639-1 :family :name :id] (:fields entity)))
-    (is (= [:updated-at :created-at :iso-639-2 :iso-639-1 :family :name :id] (:set-fields entity)))))
+    (is (= [:updated-at :created-at :iso-639-2 :iso-639-1 :family :name :id] (:fields entity)))))
 
 (database-test test-insert-language
   (is (thrown? Exception (insert-language nil)))

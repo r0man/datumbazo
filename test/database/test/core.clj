@@ -77,9 +77,7 @@
 (deftest test-entity
   (let [entity (entity :languages)]
     (is (= [:updated-at :created-at :iso-639-2 :iso-639-1 :family :name :id]
-           (:fields entity)))
-    (is (= [:updated-at :created-at :iso-639-2 :iso-639-1 :family :name :id]
-           (:set-fields entity)))))
+           (:fields entity)))))
 
 (database-test test-record-exists?
   (is (not (record-exists? :languages {})))
@@ -155,7 +153,7 @@
            (meta (validate-iso-639-1 german))))))
 
 (deftest test-where-text=
-  (is (= "SELECT * FROM \"languages\" WHERE (TO_TSVECTOR(CAST(? AS regconfig), CAST(\"name\" AS text)) @@ PLAINTO_TSQUERY(CAST(? AS regconfig), CAST(? AS text)))"
+  (is (= "SELECT \"languages\".* FROM \"languages\" WHERE (TO_TSVECTOR(CAST(? AS regconfig), CAST(\"languages\".\"name\" AS text)) @@ PLAINTO_TSQUERY(CAST(? AS regconfig), CAST(? AS text)))"
          (sql-only (select :languages (where-text= :name "x"))))))
 
 (database-test test-defquery

@@ -78,6 +78,29 @@
   "Parse `s` and return a org.postgis.PGgeometry object. "
   [s] (org.postgis.PGgeometry. (str s)))
 
+(defn box2d
+  "Returns a BOX2D representing the maximum extents of the geometry."
+  [geometry] (sqlfn box2d geometry))
+
+(defn st-centroid
+  "Returns the geometric center of a geometry."
+  [geometry] (sqlfn st_centroid geometry))
+
+(defn st-translate
+  "Translates the geometry to a new location using the numeric
+  parameters as offsets."
+  [geometry delta-x delta-y] (sqlfn st_translate geometry delta-x delta-y))
+
+(defn st-x
+  "Return the X coordinate of the point, or NULL if not
+  available. Input must be a point."
+  [geometry] (sqlfn st_x geometry))
+
+(defn st-y
+  "Return the Y coordinate of the point, or NULL if not
+  available. Input must be a point."
+  [geometry] (sqlfn st_y geometry))
+
 (defquery select-by-location
   "Select all rows of `query` where `field` matches `location`."
   [query field location]
@@ -163,3 +186,16 @@
   IPoint
   (to-point-2d [point]
     point))
+
+;; (select :spots (limit 1)
+;;         (fields [(raw "st_x(spots.location)") :x]))
+
+;; (select :spots (limit 1)
+;;         (fields [(st-x :location) :x]))
+
+;; (select :spots (limit 1)
+;;         (join :countries (= :countries.id :spots.country-id))
+;;         (fields (st-translate
+;;                  :countries.geometry
+;;                  (infix (st-x :location) "-" (st-x (st-centroid :countries.geometry)))
+;;                  (infix (st-y :location) "-" (st-y (st-centroid :countries.geometry))))))
