@@ -3,6 +3,7 @@
   (:use [korma.core :exclude (join table offset)]
         database.util))
 
+(def ^:dynamic *page* 1)
 (def ^:dynamic *per-page* 15)
 
 (defn- assert-page
@@ -26,7 +27,7 @@
 
 (defmacro with-params [page per-page & body]
   (let [page# page per-page# per-page]
-    `(let [~page# (or (parse-integer ~page# :junk-allowed true) 1)
+    `(let [~page# (or (parse-integer ~page# :junk-allowed true) *page*)
            ~per-page# (or (parse-integer ~per-page# :junk-allowed true) *per-page*)]
        (assert-page ~page#)
        (assert-per-page ~per-page#)
