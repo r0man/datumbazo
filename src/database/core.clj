@@ -43,6 +43,7 @@
   [table]
   (with-ensure-table table
     (let [entity (create-entity (table-name table))
+          entity (assoc entity :transforms (:transforms table))
           field-keys (keys (apply dissoc (:columns table) (:exclude (:fields table))))]
       (-> (apply fields entity field-keys)
           (assoc :fields field-keys)

@@ -49,7 +49,7 @@
    [:iso-639-2 :varchar :length 3 :unique? true :not-null? true :serialize #'lower-case]
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
-  :url language-url
+  :transforms [#(assoc %1 :url (language-url %1))]
   :validate validate-language!)
 
 (deftable photos
@@ -187,8 +187,7 @@
     (is (map? language))
     (is (= "German" (:name language)))
     (is (= "DE" (:iso-639-1 language)))
-    (is (= "DEU" (:iso-639-2 language)))
-    (is (= (language-url language) (:url language)))))
+    (is (= "DEU" (:iso-639-2 language)))))
 
 (database-test test-language-by-id
   (let [record (insert-language german)]
