@@ -25,3 +25,6 @@
   (with-connection test-database
     (is (instance? java.sql.Connection (jdbc/connection)))
     (is (jdbc/with-query-results rs ["SELECT 1"] (doall rs)))))
+
+;; (with-connection test-database
+;;   (migrate.core/run))

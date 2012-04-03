@@ -15,4 +15,5 @@
                  [postgresql/postgresql "9.1-901.jdbc4"]]
   :profiles {:dev {:dependencies [[validation-clj "0.2.1-SNAPSHOT"]]
                    :resource-paths ["test-resources"]}}
-  :plugins [[migrate "0.0.7-SNAPSHOT"]])
+  :plugins [[migrate "0.0.7-SNAPSHOT"]]
+  :migrate [database.fixtures])

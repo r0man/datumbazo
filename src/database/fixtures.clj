@@ -93,7 +93,7 @@
 
 (deftable roles-users
   [[:role-id :integer :references :roles/id :not-null? true]
-   [:user-id :integer :references :users/rolid :not-null? true]])
+   [:user-id :integer :references :users/id :not-null? true]])
 
 (defmigration "2011-12-31T10:00:00"
   "Create the languages table."
@@ -110,17 +110,17 @@
   (create-table (table :photo-thumbnails))
   (drop-table (table :photo-thumbnails)))
 
-(defmigration "2011-04-03T22:00:00"
+(defmigration "2012-04-03T22:00:00"
   "Create the roles table."
   (create-table (table :roles))
   (drop-table (table :roles)))
 
-(defmigration "2011-04-03T22:12:00"
+(defmigration "2012-04-03T22:12:00"
   "Create the users table."
   (create-table (table :users))
   (drop-table (table :users)))
 
-(defmigration "2011-04-03T22:12:00"
+(defmigration "2012-04-03T22:45:00"
   "Create the join table between roles and users."
   (create-table (table :roles-users))
   (drop-table (table :roles-users)))

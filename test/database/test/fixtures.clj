@@ -37,12 +37,6 @@
         (update-in [:fields] concat (seq (zipmap qualified aliases)))
         (update-in [:ent :transforms] conj #(shift-columns %1 prefix)))))
 
-(-> (select* :photo-thumbnails)
-    (join :photos (= :photo-thumbnails.photo-id :photos.id))
-    (fields :photo-thumbnails.id :photo-thumbnails.width :photo-thumbnails.heigth)
-    (shift-fields :photos :photo [:id :title])
-    (exec))
-
 ;; (clojure.pprint/pprint
 ;;  (query-only
 ;;   (select (entity :photo-thumbnails)
