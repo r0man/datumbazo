@@ -41,6 +41,21 @@
   (presence-of :width)
   (presence-of :heigth))
 
+(defvalidate role
+  (presence-of :name)
+  (uniqueness-of :roles :name :if new-record?)
+  (min-length-of :name 2)
+  (max-length-of :name 32))
+
+(defvalidate user
+  (presence-of :nick)
+  (min-length-of :nick 2)
+  (max-length-of :nick 16)
+  (uniqueness-of :users :nick :if new-record?)
+  (presence-of :email)
+  (is-email :email)
+  (uniqueness-of :users :email :if new-record?))
+
 (deftable languages
   [[:id :serial :primary-key? true]
    [:name :text :unique? true :not-null? true]
@@ -70,6 +85,26 @@
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
   :validate validate-photo-thumbnail!)
 
+(deftable roles
+  [[:id :serial :primary-key? true]
+   [:name :text :unique? true :not-null? true]
+   [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
+   [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
+  :validate validate-role!)
+
+(deftable users
+  [[:id :serial :primary-key? true]
+   [:nick :text :not-null? true :unique? true]
+   [:email :text :not-null? true :unique? true]
+   [:crypted-password :text]
+   [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
+   [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
+  :validate validate-user!)
+
+(deftable roles-users
+  [[:role-id :integer :references :roles/id :not-null? true]
+   [:user-id :integer :references :users/rolid :not-null? true]])
+
 (defmigration "2011-12-31T10:00:00"
   "Create the languages table."
   (create-table (table :languages))
@@ -84,6 +119,21 @@
   "Create the photo thumbnails table."
   (create-table (table :photo-thumbnails))
   (drop-table (table :photo-thumbnails)))
+
+(defmigration "2011-04-03T22:00:00"
+  "Create the roles table."
+  (create-table (table :roles))
+  (drop-table (table :roles)))
+
+(defmigration "2011-04-03T22:12:00"
+  "Create the users table."
+  (create-table (table :users))
+  (drop-table (table :users)))
+
+(defmigration "2011-04-03T22:12:00"
+  "Create the join table between roles and users."
+  (create-table (table :roles-users))
+  (drop-table (table :roles-users)))
 
 ;; LANGUAGES
 
