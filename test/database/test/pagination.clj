@@ -2,7 +2,7 @@
   (:use [korma.core :exclude (join table offset)]
         database.pagination
         database.test
-        database.test.examples
+        database.fixtures
         clojure.test))
 
 (database-test test-paginate

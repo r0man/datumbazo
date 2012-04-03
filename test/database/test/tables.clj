@@ -3,7 +3,7 @@
         database.core
         database.columns
         database.tables
-        database.test.examples
+        database.fixtures
         database.registry))
 
 (deftest test-key-columns

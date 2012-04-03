@@ -10,7 +10,7 @@
         database.tables
         database.postgis
         database.test
-        database.test.examples))
+        database.fixtures))
 
 (database-test test-add-column
   (let [column (make-column :x :integer)]

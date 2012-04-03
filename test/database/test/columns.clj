@@ -4,7 +4,7 @@
         database.core
         database.columns
         database.connection
-        database.test.examples))
+        database.fixtures))
 
 (def created-at-column
   (make-column :created-at :timestamp-with-time-zone :default "now()" :not-null? true))

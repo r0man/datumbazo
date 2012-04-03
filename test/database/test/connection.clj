@@ -3,7 +3,7 @@
   (:use clojure.test
         database.connection
         database.test
-        database.test.examples))
+        database.fixtures))
 
 (deftest test-connection-spec
   (let [spec (connection-spec)]

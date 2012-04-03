@@ -6,7 +6,7 @@
         database.columns
         database.tables
         database.serialization
-        database.test.examples))
+        database.fixtures))
 
 (deftest test-deserialize-column
   (let [column (make-column :created-at :timestamp-with-time-zone)]

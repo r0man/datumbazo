@@ -2,7 +2,7 @@
   (:use clojure.test
         database.columns
         database.tables
-        database.test.examples
+        database.fixtures
         database.registry))
 
 (deftest test-find-table

@@ -13,7 +13,7 @@
         database.registry
         database.tables
         database.test
-        database.test.examples))
+        database.fixtures))
 
 (def world-box (make-box (make-location -90 -180) (make-location 90 180)))
 
