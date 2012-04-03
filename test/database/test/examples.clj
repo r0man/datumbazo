@@ -160,9 +160,31 @@
    :id 1
    :title "Street Art Berlin"))
 
-;; (save-photo street-art-berlin)
-;; (save-photo-thumbnail street-art-berlin-small)
-;; (save-photo-thumbnail street-art-berlin-medium)
+;; ROLES
+
+(def administrator
+  (make-role :id 1 :name "Administrator"))
+
+(def editor
+  (make-role :id 2 :name "Editor"))
+
+;; USERS
+
+(def bodhi
+  (make-user
+   :id 1
+   :nick "Bodhi"
+   :email "bodhi@example.com"
+   :crypted-password "$2a$10$ajTnLiS/sGn7XrK/FrhPE.xSBiUiu60wIksc3RxDpTcMPAovfZ.5q" ; secret
+   ))
+
+(def roach
+  (make-user
+   :id 2
+   :nick "Roach"
+   :email "roach@example.com"
+   :crypted-password "$2a$10$ajTnLiS/sGn7XrK/FrhPE.xSBiUiu60wIksc3RxDpTcMPAovfZ.5q" ; secret
+   ))
 
 (defn prefix-columns
   "Return the names of `columns` prefixed with `prefix`."
