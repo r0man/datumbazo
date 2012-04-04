@@ -8,6 +8,12 @@
   (if (:id language)
     (format "http://example.com/languages/%s-%s" (:id language) (:name language))))
 
+;; VALIDATIONS
+
+(defvalidate country
+  (presence-of :name)
+  (uniqueness-of :countries :name :if new-record?))
+
 (defvalidate language
   (presence-of :name)
   (min-length-of :name 2)
@@ -45,6 +51,15 @@
   (presence-of :email)
   (is-email :email)
   (uniqueness-of :users :email :if new-record?))
+
+;; TABLES
+
+(deftable countries
+  [[:id :serial :primary-key? true]
+   [:name :text :not-null? true :unique? true]
+   [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
+   [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
+  :validate validate-country!)
 
 (deftable languages
   [[:id :serial :primary-key? true]
@@ -84,6 +99,7 @@
 
 (deftable users
   [[:id :serial :primary-key? true]
+   [:country-id :integer :references :countries/id :not-null? true]
    [:nick :text :not-null? true :unique? true]
    [:email :text :not-null? true :unique? true]
    [:crypted-password :text]
@@ -95,35 +111,49 @@
   [[:role-id :integer :references :roles/id :not-null? true]
    [:user-id :integer :references :users/id :not-null? true]])
 
-(defmigration "2011-12-31T10:00:00"
+;; MIGRATIONS
+
+(defmigration "2012-01-01T00:00:00"
+  "Create the countries table."
+  (create-table (table :countries))
+  (drop-table (table :countries)))
+
+(defmigration "2012-01-01T00:01:00"
   "Create the languages table."
   (create-table (table :languages))
   (drop-table (table :languages)))
 
-(defmigration "2011-12-31T11:00:00"
+(defmigration "2012-01-01T00:02:00"
   "Create the photos table."
   (create-table (table :photos))
   (drop-table (table :photos)))
 
-(defmigration "2011-12-31T12:00:00"
+(defmigration "2012-01-01T00:03:00"
   "Create the photo thumbnails table."
   (create-table (table :photo-thumbnails))
   (drop-table (table :photo-thumbnails)))
 
-(defmigration "2012-04-03T22:00:00"
+(defmigration "2012-01-01T00:04:00"
   "Create the roles table."
   (create-table (table :roles))
   (drop-table (table :roles)))
 
-(defmigration "2012-04-03T22:12:00"
+(defmigration "2012-01-01T00:05:00"
   "Create the users table."
   (create-table (table :users))
   (drop-table (table :users)))
 
-(defmigration "2012-04-03T22:45:00"
+(defmigration "2012-01-01T00:06:00"
   "Create the join table between roles and users."
   (create-table (table :roles-users))
   (drop-table (table :roles-users)))
+
+;; COUNTRIES
+
+(def usa
+  (make-language
+   :id 1
+   :name "United States"))
 
 ;; LANGUAGES
 
@@ -163,6 +193,7 @@
 (def bodhi
   (make-user
    :id 1
+   :country-id (:id usa)
    :nick "Bodhi"
    :email "bodhi@example.com"
    :crypted-password "$2a$10$ajTnLiS/sGn7XrK/FrhPE.xSBiUiu60wIksc3RxDpTcMPAovfZ.5q" ; secret
@@ -171,6 +202,7 @@
 (def roach
   (make-user
    :id 2
+   :country-id (:id usa)
    :nick "Roach"
    :email "roach@example.com"
    :crypted-password "$2a$10$ajTnLiS/sGn7XrK/FrhPE.xSBiUiu60wIksc3RxDpTcMPAovfZ.5q" ; secret
