@@ -24,7 +24,7 @@
 (deftest test-with-connection
   (with-connection test-database
     (is (instance? java.sql.Connection (jdbc/connection)))
-    (is (jdbc/with-query-results rs ["SELECT 1"] (doall rs)))))
+    (is (= 1 (:n (first (jdbc/with-query-results rs ["SELECT 1 AS n"] (doall rs))))))))
 
-;; (with-connection test-database
+;; (with-connection development-database
 ;;   (migrate.core/run))
