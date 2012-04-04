@@ -65,9 +65,9 @@
         (update-in [:fields] concat (seq (zipmap qualified aliases))))))
 
 (defn shift-fields
-  [query table into fields]
+  [query table path fields]
   (with-ensure-table table
-    (let [prefix (keyword (gensym (str (name into) "-")))
+    (let [prefix (keyword (gensym (str (name path) "-")))
           aliases (prefix-columns prefix fields "-")
           renaming (zipmap aliases fields)
           qualified (prefix-columns (:name table) fields ".")]
@@ -75,7 +75,7 @@
           (update-in [:aliases] clojure.set/union (set aliases))
           (update-in [:fields] concat (seq (zipmap qualified aliases)))
           (update-in [:ent :transforms] conj
-                     #(assoc-in (apply dissoc %1 aliases) [into]
+                     #(assoc-in (apply dissoc (into {} %1) aliases) [path]
                                 (deserialize-record
                                  table
                                  (-> (select-keys %1 aliases)
