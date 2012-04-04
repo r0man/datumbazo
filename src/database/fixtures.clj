@@ -185,8 +185,8 @@
 (def administrator
   (make-role :id 1 :name "Administrator"))
 
-(def editor
-  (make-role :id 2 :name "Editor"))
+(def surfer
+  (make-role :id 2 :name "Surfer"))
 
 ;; USERS
 
@@ -199,6 +199,12 @@
    :crypted-password "$2a$10$ajTnLiS/sGn7XrK/FrhPE.xSBiUiu60wIksc3RxDpTcMPAovfZ.5q" ; secret
    ))
 
+(def bodhi-is-surfer
+  {:user-id (:id bodhi) :role-id (:id surfer)})
+
+(def roach-is-surfer
+  {:user-id (:id bodhi) :role-id (:id surfer)})
+
 (def roach
   (make-user
    :id 2
@@ -207,3 +213,13 @@
    :email "roach@example.com"
    :crypted-password "$2a$10$ajTnLiS/sGn7XrK/FrhPE.xSBiUiu60wIksc3RxDpTcMPAovfZ.5q" ; secret
    ))
+
+(defn insert-fixtures []
+  (save-country usa)
+  (save-role surfer)
+  (save-user bodhi)
+  (save-user roach)
+  (save-roles-user {:role-id (:id surfer) :user-id (:id bodhi)})
+  (save-roles-user {:role-id (:id surfer) :user-id (:id roach)}))
+
+;; (insert-fixtures)

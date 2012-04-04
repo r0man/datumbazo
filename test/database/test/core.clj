@@ -3,7 +3,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.jdbc.internal :as internal])
   (:use [korma.core :exclude (join table)]
-        [korma.sql.fns :only (pred-or)]
+        [korma.sql.fns :only (pred-and pred-or)]
         clojure.test
         database.core
         database.columns
@@ -135,6 +135,10 @@
   (is (= :languages (:name (table :languages))))
   (is (= (table :languages) (table (table :languages)))))
 
+(deftest test-all-clause
+  (is (= (pred-and {:role-id 2} {:user-id 1})
+         (all-clause :roles-users bodhi-is-surfer))))
+
 (deftest test-unique-key-clause
   (are [record expected]
     (is (= expected (unique-key-clause :languages record)))
@@ -145,6 +149,12 @@
     ;; {:id 1 :iso-639-1 "de" :undefined "column"} {:id 1 :iso-639-1 "de"}
     ))
 
+(deftest test-where-clause
+  (is (= (all-clause :roles-users bodhi-is-surfer)
+         (where-clause :roles-users bodhi-is-surfer)))
+  (is (= (unique-key-clause :users bodhi)
+         (where-clause :users bodhi))))
+
 (database-test test-uniqueness-of
   (let [validate-iso-639-1 (uniqueness-of :languages :iso-639-1)]
     (is (nil? (meta (validate-iso-639-1 german))))
@@ -153,7 +163,8 @@
            (meta (validate-iso-639-1 german))))))
 
 (deftest test-where-text=
-  (is (= "SELECT \"languages\".* FROM \"languages\" WHERE (TO_TSVECTOR(CAST(? AS regconfig), CAST(\"languages\".\"name\" AS text)) @@ PLAINTO_TSQUERY(CAST(? AS regconfig), CAST(? AS text)))"
+  (is (= (str "SELECT \"languages\".* FROM \"languages\" WHERE (TO_TSVECTOR(CAST(? AS regconfig), "
+              "CAST(\"languages\".\"name\" AS text)) @@ PLAINTO_TSQUERY(CAST(? AS regconfig), CAST(? AS text)))")
          (sql-only (select :languages (where-text= :name "x"))))))
 
 (database-test test-defquery

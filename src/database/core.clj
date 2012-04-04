@@ -4,7 +4,7 @@
         [inflections.core :only (camelize singular plural)]
         [korma.core :exclude (join table)]
         [korma.sql.engine :only [infix try-prefix]]
-        [korma.sql.fns :only (pred-or)]
+        [korma.sql.fns :only (pred-and pred-or)]
         [korma.sql.utils :only (func)]
         database.columns
         database.pagination
@@ -49,12 +49,24 @@
           (assoc :fields field-keys)
           (transform (partial deserialize-record table))))))
 
+(defn all-clause
+  [table record]
+  (with-ensure-table table
+    (let [columns (vals (:columns table))]
+      (apply pred-and (map #(apply hash-map %1) (seq (select-keys record (map :name columns))))))))
+
 (defn unique-key-clause
   "Returns the SQL where clause for record."
   [table record]
   (with-ensure-table table
     (let [columns (key-columns table record)]
       (apply pred-or (map #(apply hash-map %1) (seq (select-keys record (map :name columns))))))))
+
+(defn where-clause [table record]
+  (with-ensure-table table
+    (if (empty? (key-columns table record))
+      (all-clause table record)
+      (unique-key-clause table record))))
 
 (defn uniqueness-of
   "Validates that the record's columns are unique."
@@ -82,7 +94,7 @@
   [table record]
   (if-not (empty? record)
     (with-ensure-table table
-      (-> (select (entity table) (where (unique-key-clause table record)))
+      (-> (select (entity table) (where (where-clause table record)))
           empty? not))
     false))
 
@@ -143,7 +155,7 @@
     (with-ensure-table table
       (-> (apply fields
                  (-> (select* (entity table))
-                     (where (unique-key-clause table record)))
+                     (where (where-clause table record)))
                  (map :name (default-columns table)))
           exec first))))
 
@@ -171,7 +183,7 @@
   (if-not (empty? record)
     (with-ensure-table table
       (delete (table-identifier table)
-              (where (unique-key-clause table record)))
+              (where (where-clause table record)))
       record)))
 
 (defn insert-record
@@ -191,7 +203,7 @@
     (validate-record table record)
     (update (table-identifier table)
             (set-fields (serialize-record table record))
-            (where (unique-key-clause table record)))
+            (where (where-clause table record)))
     (reload-record table record)))
 
 (defn save-record
