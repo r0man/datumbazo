@@ -3,7 +3,7 @@
   (:use [clojure.string :only (lower-case upper-case)]
         [clj-time.coerce :only (to-date-time to-timestamp)]
         [migrate.core :only (defmigration)]
-        [korma.core :exclude (table)]
+        [korma.core :exclude (join* join table)]
         clojure.test
         database.columns
         database.core
@@ -14,28 +14,6 @@
         database.util
         database.test
         validation.core))
-
-(defn prefix-columns
-  "Return the names of `columns` prefixed with `prefix`."
-  [prefix columns & [separator]]
-  (let [separator (or separator "-")]
-    (map #(keyword (str (name prefix) separator (column-name %1))) columns)))
-
-(defn prefix-fields
-  [query table prefix fields]
-  (let [aliases (prefix-columns prefix fields "-")
-        qualified (prefix-columns table fields ".")]
-    (-> (update-in query [:aliases] clojure.set/union (set aliases))
-        (update-in [:fields] concat (seq (zipmap qualified aliases))))))
-
-(defn shift-fields
-  [query table prefix fields]
-  (let [aliases (prefix-columns prefix fields "-")
-        qualified (prefix-columns table fields ".")]
-    (-> (update-in query [:ent] #(if (keyword? %1) (entity %1) %1))
-        (update-in [:aliases] clojure.set/union (set aliases))
-        (update-in [:fields] concat (seq (zipmap qualified aliases)))
-        (update-in [:ent :transforms] conj #(shift-columns %1 prefix)))))
 
 ;; (clojure.pprint/pprint
 ;;  (query-only

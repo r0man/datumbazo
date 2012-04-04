@@ -4,7 +4,7 @@
   (:use [clojure.string :only (lower-case)]
         [geo.box :only (north-east south-west to-box make-box)]
         [geo.location :only (make-location latitude longitude to-location)]
-        [korma.core :exclude (table)]
+        [korma.core :exclude (join join* table)]
         [migrate.core :only (defmigration)]
         clojure.test
         database.columns

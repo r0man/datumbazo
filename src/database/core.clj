@@ -1,8 +1,10 @@
 (ns database.core
-  (:require [clojure.java.jdbc :as jdbc])
-  (:use [clojure.string :only (blank? join upper-case)]
+  (:require [clojure.java.jdbc :as jdbc]
+            [korma.sql.engine :as eng])
+  (:use [clojure.string :only (blank? upper-case)]
+        [clojure.set :only (rename-keys)]
         [inflections.core :only (camelize singular plural)]
-        [korma.core :exclude (join table)]
+        [korma.core :exclude (join join* table)]
         [korma.sql.engine :only [infix try-prefix]]
         [korma.sql.fns :only (pred-and pred-or)]
         [korma.sql.utils :only (func)]
@@ -48,6 +50,36 @@
       (-> (apply fields entity field-keys)
           (assoc :fields field-keys)
           (transform (partial deserialize-record table))))))
+
+(defn prefix-columns
+  "Return the names of `columns` prefixed with `prefix`."
+  [prefix columns & [separator]]
+  (let [separator (or separator "-")]
+    (map #(keyword (str (name prefix) separator (column-name %1))) columns)))
+
+(defn prefix-fields
+  [query table prefix fields]
+  (let [aliases (prefix-columns prefix fields "-")
+        qualified (prefix-columns table fields ".")]
+    (-> (update-in query [:aliases] clojure.set/union (set aliases))
+        (update-in [:fields] concat (seq (zipmap qualified aliases))))))
+
+(defn shift-fields
+  [query table into fields]
+  (with-ensure-table table
+    (let [prefix (keyword (gensym (str (name into) "-")))
+          aliases (prefix-columns prefix fields "-")
+          renaming (zipmap aliases fields)
+          qualified (prefix-columns (:name table) fields ".")]
+      (-> (update-in query [:ent] #(if (keyword? %1) (entity %1) %1))
+          (update-in [:aliases] clojure.set/union (set aliases))
+          (update-in [:fields] concat (seq (zipmap qualified aliases)))
+          (update-in [:ent :transforms] conj
+                     #(assoc-in (apply dissoc %1 aliases) [into]
+                                (deserialize-record
+                                 table
+                                 (-> (select-keys %1 aliases)
+                                     (rename-keys renaming)))))))))
 
 (defn all-clause
   [table record]
@@ -296,3 +328,29 @@
          (let [[args# options#] (split-args ~'args)]
            (-> (apply ~query# (apply concat args# (seq (dissoc options# :page :per-page))))
                (paginate* :page (:page options#) :per-page (:per-page options#))))))))
+
+
+;; JOIN
+
+(defn join* [query type table clause]
+  (with-ensure-table table
+    (-> (update-in query [:joins] conj [type (:name table) clause])
+        (shift-fields (:name table) (singular (:name table))
+                      (map :name (default-columns table))))))
+
+(defmacro join
+  "Add a join clause to a select query, specifying the table name to join and the predicate
+  to join on.
+
+  (join query addresses)
+  (join query addresses (= :addres.users_id :users.id))
+  (join query :right addresses (= :address.users_id :users.id))"
+  ([query ent]
+     `(let [q# ~query
+            e# ~ent
+            rel# (get-rel (:ent q#) e#)]
+        (join* q# :left e# (sfns/pred-= (:pk rel#) (:fk rel#)))))
+  ([query table clause]
+     `(join* ~query :left ~table (eng/pred-map ~(eng/parse-where clause))))
+  ([query type table clause]
+     `(join* ~query ~type ~table (eng/pred-map ~(eng/parse-where clause)))))

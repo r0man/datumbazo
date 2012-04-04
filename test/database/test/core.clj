@@ -2,7 +2,7 @@
   (:import org.joda.time.DateTime org.postgresql.util.PSQLException)
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.jdbc.internal :as internal])
-  (:use [korma.core :exclude (join table)]
+  (:use [korma.core :exclude (join join* table)]
         [korma.sql.fns :only (pred-and pred-or)]
         clojure.test
         database.core
@@ -175,3 +175,31 @@
     (is (= [german spanish] (example-query "arg-1")))
     (is (= [german] (example-query "arg-1" :page 1 :per-page 1)))
     (is (= [spanish] (example-query "arg-1" :page 2 :per-page 1)))))
+
+
+(database-test test-shift-fields
+  (insert-fixtures)
+  (let [users (select (entity :users)
+                      (korma.core/join :countries (= :countries.id :users.country-id))
+                      (shift-fields :countries :country [:id :name :created-at :updated-at]))]
+    (is (= 2 (count users)))
+    (let [user (first users)]
+      (is (= (:id bodhi) (:id user)))
+      (is (= (:country-id bodhi) (:country-id user)))
+      (is (= (:nick bodhi) (:nick user)))
+      (is (= (:email bodhi) (:email user)))
+      (is (= (:crypted-password bodhi) (:crypted-password user)))
+      (is (instance? DateTime (:created-at user)))
+      (is (instance? DateTime (:updated-at user)))
+      (let [country (:country user)]
+        (is (= (:id usa) (:id country)))
+        (is (= (:name usa) (:name country)))
+        (is (instance? DateTime (:created-at country)))
+        (is (instance? DateTime (:updated-at country)))))))
+
+(database-test test-join
+  (insert-fixtures)
+  (= (select (entity :users)
+             (korma.core/join :countries (= :countries.id :users.country-id))
+             (shift-fields :countries :country [:id :name :created-at :updated-at]))
+     (select (entity :users) (join :countries (= :countries.id :users.country-id)))))

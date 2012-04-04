@@ -3,7 +3,7 @@
   (:require [clojure.java.jdbc :as jdbc])
   (:use [geo.box :only (make-box north-east south-west to-box safe-boxes)]
         [geo.location :only (latitude longitude make-location to-location ILocation)]
-        [korma.core :exclude (table)]
+        [korma.core :exclude (join join* table)]
         [korma.sql.engine :only [infix]]
         [korma.sql.fns :only [pred-or]]
         database.columns

@@ -1,6 +1,6 @@
 (ns database.pagination
   (:require [korma.core :as k])
-  (:use [korma.core :exclude (join table offset)]
+  (:use [korma.core :exclude (join join* table offset)]
         database.util))
 
 (def ^:dynamic *page* 1)
