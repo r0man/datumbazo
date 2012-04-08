@@ -1,6 +1,7 @@
 (ns database.test.pagination
   (:use database.fixtures
         database.pagination
+        database.core
         database.test
         clojure.test))
 
@@ -30,6 +31,10 @@
         (is (= 2 (:page meta)))
         (is (= 1 (:per-page meta)))
         (is (= 2 (:total meta)))))))
+
+
+;; (exec (query-only (select :languages (where (= :family "Indo-European")))))
+;; (sql-only (exec (query-only (select :languages (where (= :family "Indo-European"))))))
 
 (database-test test-paginate*
   (let [german (save-language german) spanish (save-language spanish)]

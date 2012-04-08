@@ -1,13 +1,9 @@
 (ns database.pagination
-  (:require [korma.core :as korma])
-  (:use database.util))
+  (:use database.util
+        korma.core))
 
 (def ^:dynamic *page* 1)
 (def ^:dynamic *per-page* 15)
-
-(defn- offset
-  "Calculate the OFFSET clause from page and per-page."
-  [page per-page] (* (dec page) per-page))
 
 (defn parse-page
   "Parse `string` as the page number or return the default *page*."
@@ -31,16 +27,16 @@
   (-> (assoc query :fields [:korma.core/*])
       (dissoc :order)
       (remove-transformations)
-      (korma/aggregate (count :*) :count)
-      korma/exec first :count))
+      (aggregate (count :*) :count)
+      exec first :count))
 
 (defn- result-query
   "Transform `query` into a result query."
   [query page per-page]
   (let [page (parse-page page) per-page (parse-per-page per-page)]
-    (-> (korma/offset query (offset page per-page))
-        (korma/limit per-page)
-        (korma/exec))))
+    (-> (offset query (* (dec page) per-page))
+        (limit per-page)
+        (exec))))
 
 (defn paginate*
   [query & {:keys [page per-page]}]
@@ -56,7 +52,7 @@
   "Paginate the `query` with `page` and `per-page`."
   [query & {:keys [count page per-page]}]
   `(paginate*
-    (with-redefs [korma/exec identity] (doall ~query))
+    (query-only ~query)
     :page ~page :per-page ~per-page))
 
 (defn wrap-pagination

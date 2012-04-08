@@ -3,7 +3,6 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.jdbc.internal :as internal])
   (:use [korma.sql.fns :only (pred-and pred-or)]
-        [korma.core :exclude (join* join table)]
         clojure.test
         database.core
         database.columns

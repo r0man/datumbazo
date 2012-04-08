@@ -1,7 +1,6 @@
 (ns database.fixtures
   (:use [clojure.string :only (lower-case)]
         [migrate.core :only (defmigration)]
-        [korma.core :exclude (join join* table)]
         database.core
         validation.core))
 

@@ -3,7 +3,6 @@
   (:use [clojure.string :only (lower-case upper-case)]
         [clj-time.coerce :only (to-date-time to-timestamp)]
         [migrate.core :only (defmigration)]
-        [korma.core :exclude (join* join table)]
         clojure.test
         database.columns
         database.core

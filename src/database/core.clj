@@ -4,7 +4,6 @@
   (:use [clojure.string :only (blank? upper-case)]
         [clojure.set :only (rename-keys)]
         [inflections.core :only (camelize singular plural)]
-        [korma.core :exclude (join join* table)]
         [korma.sql.engine :only [infix try-prefix]]
         [korma.sql.fns :only (pred-and pred-or)]
         [korma.sql.utils :only (func)]
@@ -16,6 +15,8 @@
         database.util
         validation.core
         validation.errors))
+
+(immigrate 'korma.core)
 
 (defn new-record?
   "Returns true if `record` doesn't have a `id` column, otherwise false."
