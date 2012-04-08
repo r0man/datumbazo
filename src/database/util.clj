@@ -2,6 +2,23 @@
   (:refer-clojure :exclude (replace))
   (:use [clojure.string :only (replace)]))
 
+(defn immigrate
+  "Create a public var in this namespace for each public var in the
+namespaces named by ns-names. The created vars have the same name, root
+binding, and metadata as the original except that their :ns metadata
+value is this namespace."
+  [& ns-names]
+  (doseq [ns ns-names]
+    (require ns)
+    (doseq [[sym var] (ns-publics ns)]
+      (let [v (if (.hasRoot var)
+                (var-get var))
+            var-obj (if v (intern *ns* sym v))]
+        (when var-obj
+          (alter-meta! var-obj
+                       (fn [old] (merge (meta var) old)))
+          var-obj)))))
+
 (defn parse-integer
   "Parse `string` as an integer."
   [string & {:keys [junk-allowed radix]}]

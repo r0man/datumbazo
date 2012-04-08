@@ -329,14 +329,15 @@
            (-> (apply ~query# (apply concat args# (seq (dissoc options# :page :per-page))))
                (paginate* :page (:page options#) :per-page (:per-page options#))))))))
 
-
 ;; JOIN
 
-(defn join* [query type table clause]
+(defn join* [query type table clause & [columns]]
   (with-ensure-table table
-    (-> (update-in query [:joins] conj [type (:name table) clause])
-        (shift-fields (:name table) (singular (:name table))
-                      (map :name (default-columns table))))))
+    (let [columns (if-not (empty? columns)
+                    (vals (select-keys (:columns table) columns))
+                    (default-columns table))]
+      (-> (update-in query [:joins] conj [type (:name table) clause])
+          (shift-fields (:name table) (singular (:name table)) (map :name columns))))))
 
 (defmacro join
   "Add a join clause to a select query, specifying the table name to join and the predicate
@@ -353,4 +354,6 @@
   ([query table clause]
      `(join* ~query :left ~table (eng/pred-map ~(eng/parse-where clause))))
   ([query type table clause]
-     `(join* ~query ~type ~table (eng/pred-map ~(eng/parse-where clause)))))
+     `(join* ~query ~type ~table (eng/pred-map ~(eng/parse-where clause))))
+  ([query type table clause columns]
+     `(join* ~query ~type ~table (eng/pred-map ~(eng/parse-where clause)) ~columns)))

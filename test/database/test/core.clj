@@ -2,8 +2,8 @@
   (:import org.joda.time.DateTime org.postgresql.util.PSQLException)
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.jdbc.internal :as internal])
-  (:use [korma.core :exclude (join join* table)]
-        [korma.sql.fns :only (pred-and pred-or)]
+  (:use [korma.sql.fns :only (pred-and pred-or)]
+        [korma.core :exclude (join* join table)]
         clojure.test
         database.core
         database.columns
@@ -202,4 +202,6 @@
   (= (select (entity :users)
              (korma.core/join :countries (= :countries.id :users.country-id))
              (shift-fields :countries :country [:id :name :created-at :updated-at]))
-     (select (entity :users) (join :countries (= :countries.id :users.country-id)))))
+     (select (entity :users) (join :countries (= :countries.id :users.country-id))))
+  (let [result (select (entity :users) (join :left :countries (= :countries.id :users.country-id) [:id :name]))]
+    (is (= {:id 1 :name "United States"} (:country (first result))))))
