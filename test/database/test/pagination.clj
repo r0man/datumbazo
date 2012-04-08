@@ -1,8 +1,7 @@
 (ns database.test.pagination
-  (:use [korma.core :exclude (join table offset)]
+  (:use database.fixtures
         database.pagination
         database.test
-        database.fixtures
         clojure.test))
 
 (database-test test-paginate
