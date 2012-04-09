@@ -56,12 +56,6 @@
   (is (drop-table :languages :if-exists true))
   (is (thrown? Exception (drop-table :languages))))
 
-(database-test test-find-by-column
-  (let [language (insert-record :languages german)]
-    (is (empty? (find-by-column :languages :name nil)))
-    (is (empty? (find-by-column :languages :name "NOT-EXISTING")))
-    (is (= [language] (find-by-column :languages :name (:name language))))))
-
 (deftest test-new-record?
   (is (new-record? {}))
   (is (new-record? {:id nil}))
@@ -122,12 +116,6 @@
   (let [language (save-record :languages german)]
     (is (pos? (:id language)))
     (is (= language (save-record :languages language)))))
-
-(database-test test-select-by-column
-  (let [language (insert-record :languages german)]
-    (is (empty? (exec (select-by-column :languages :name nil))))
-    (is (empty? (exec (select-by-column :languages :name "NOT-EXISTING"))))
-    (is (= [language] (exec (select-by-column :languages :name (:name language)))))))
 
 (deftest test-table
   (is (table? (table :languages)))

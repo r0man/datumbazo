@@ -2,6 +2,7 @@
   (:use [clojure.string :only (lower-case)]
         [migrate.core :only (defmigration)]
         database.core
+        database.util
         validation.core))
 
 (defn language-url [language]
@@ -55,14 +56,14 @@
 ;; TABLES
 
 (deftable countries
-  [[:id :serial :primary-key? true]
+  [[:id :serial :primary-key? true :serialize #'parse-integer]
    [:name :text :not-null? true :unique? true]
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
   :validate validate-country!)
 
 (deftable languages
-  [[:id :serial :primary-key? true]
+  [[:id :serial :primary-key? true :serialize #'parse-integer]
    [:name :text :unique? true :not-null? true]
    [:family :text :not-null? true]
    [:iso-639-1 :varchar :length 2 :unique? true :not-null? true :serialize #'lower-case]
@@ -73,7 +74,7 @@
   :validate validate-language!)
 
 (deftable photos
-  [[:id :serial :primary-key? true]
+  [[:id :serial :primary-key? true :serialize #'parse-integer]
    [:title :text :not-null? true]
    [:taken-at :timestamp-with-time-zone]
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
@@ -81,7 +82,7 @@
   :validate validate-photo!)
 
 (deftable photo-thumbnails
-  [[:id :serial :primary-key? true]
+  [[:id :serial :primary-key? true :serialize #'parse-integer]
    [:photo-id :integer :references :photos/id :not-null? true]
    [:url :text :not-null? true]
    [:width :integer :not-null? true]
@@ -91,7 +92,7 @@
   :validate validate-photo-thumbnail!)
 
 (deftable roles
-  [[:id :serial :primary-key? true]
+  [[:id :serial :primary-key? true :serialize #'parse-integer]
    [:name :text :unique? true :not-null? true]
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
@@ -108,8 +109,8 @@
   :validate validate-user!)
 
 (deftable roles-users
-  [[:role-id :integer :references :roles/id :not-null? true]
-   [:user-id :integer :references :users/id :not-null? true]])
+  [[:role-id :integer :references :roles/id :not-null? true :serialize #'parse-integer]
+   [:user-id :integer :references :users/id :not-null? true :serialize #'parse-integer]])
 
 ;; MIGRATIONS
 

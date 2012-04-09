@@ -243,24 +243,15 @@
   "Update or insert the `record` in the database `table`."
   [table record] (or (update-record table record) (insert-record table record)))
 
-(defn select-by-column
-  "Returns a query that finds all records in the database `table` by
-  `column` and `value`."
-  [table column value]
-  (with-ensure-column table column
-    (-> (select* (entity table))
-        (assoc :fields (map :name (default-columns table)))
-        (where {(keyword (column-name column))
-                (serialize-column column value)}))))
-
-(defn find-by-column
-  "Find records in the database `table` by `column` and `value`."
-  [table column value & {:keys [page per-page]}]
-  (if (or page per-page)
-    (paginate*
-     (select-by-column table column value)
-     :page page :per-page per-page)
-    (exec (select-by-column table column value))))
+(defmacro defquery [name doc args & body]
+  (let [name# name, args# args, query# (symbol (str name# "*"))]
+    `(do
+       (defn ~query# [~@args#] ~doc
+         ~@body)
+       (defn ~name [& ~'args] ~doc
+         (let [[args# options#] (split-args ~'args)]
+           (-> (apply ~query# (apply concat args# (seq (dissoc options# :page :per-page))))
+               (paginate* :page (:page options#) :per-page (:per-page options#))))))))
 
 (defn- define-crud
   [table]
@@ -283,27 +274,21 @@
 
 (defn- define-finder
   [table]
-  (let [finder# (symbol (str (symbol (table-name table)) "*"))]
+  (let [find-all# (symbol (str (symbol (table-name table)) "*"))]
     `(do
-       (defn ~finder#
+       (defquery ~(symbol (table-name table))
          ~(format "Returns a query that selects all %s in the database." (symbol (table-name table)))
          [] (apply fields (select* (entity ~(keyword (table-name table))))
                    (map :name (default-columns (find-table ~(keyword (table-name table)))))))
-       (defn ~(symbol (str (symbol (table-name table)) ""))
-         ~(format "Find all %s in the database." (symbol (table-name table)))
-         [& {:keys [~'page ~'per-page]}]
-         (paginate* (~finder#) :page ~'page :per-page ~'per-page))
-       ~@(for [column (vals (:columns table))]
+       ~@(for [column (vals (:columns table))
+               :let [find-by-column# (symbol (format "%s-by-%s" (symbol (table-name table)) (symbol (column-name column))))]]
            `(do
-              (defn ~(symbol (format "%s-by-%s" (symbol (table-name table)) (symbol (column-name column))))
-                ~(format "Find all %s by the %s column in the database." (symbol (table-name table)) (symbol (column-name column)))
-                [~'value & ~'options] (apply find-by-column ~(keyword (table-name table)) ~(:name column) ~'value ~'options))
-              (defn ~(symbol (format "%s-by-%s*" (symbol (table-name table)) (symbol (column-name column))))
+              (defquery ~find-by-column#
                 ~(format "Returns a query that finds all %s by the %s column in the database." (symbol (table-name table)) (symbol (column-name column)))
-                [~'value] (select-by-column ~(keyword (table-name table)) ~(:name column) ~'value))
+                [~'value] (where (~find-all#) (~'= ~(:name column) (if ~'value (~(or (:serialize column) identity) ~'value)))))
               (defn ~(symbol (format "%s-by-%s" (singular (symbol (table-name table))) (symbol (column-name column))))
                 ~(format "Find the first %s by the %s column in the database." (singular (symbol (table-name table))) (symbol (column-name column)))
-                [~'value] (first (find-by-column ~(keyword (table-name table)) ~(:name column) ~'value))))))))
+                [~'value] (first (~find-by-column# ~'value))))))))
 
 (defmacro deftable
   "Define and register a database table and it's columns."
@@ -318,17 +303,6 @@
        ~(define-serialization table#)
        ~(define-crud table#)
        ~(define-finder table#))))
-
-(defmacro defquery [name doc args & body]
-  (let [name# name args# args
-        query# (symbol (str name# "*"))]
-    `(do
-       (defn ~query# [~@args#] ~doc
-         ~@body)
-       (defn ~name [& ~'args] ~doc
-         (let [[args# options#] (split-args ~'args)]
-           (-> (apply ~query# (apply concat args# (seq (dissoc options# :page :per-page))))
-               (paginate* :page (:page options#) :per-page (:per-page options#))))))))
 
 ;; JOIN
 
