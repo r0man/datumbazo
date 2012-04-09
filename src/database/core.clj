@@ -18,6 +18,20 @@
 
 (immigrate 'korma.core)
 
+(defn- find-by-column-doc [table column]
+  (format "Returns a query that finds all %s by the %s column in the database."
+          (symbol (table-name table)) (symbol (column-name column))))
+
+(defn- find-by-column-sym [table column]
+  (symbol (format "%s-by-%s" (symbol (table-name table)) (symbol (column-name column)))))
+
+(defn- find-first-by-column-doc [table column]
+  (format "Find the first %s by the %s column in the database."
+          (singular (symbol (table-name table))) (symbol (column-name column))))
+
+(defn- find-first-by-column-sym [table column]
+  (symbol (format "%s-by-%s" (singular (symbol (table-name table))) (symbol (column-name column)))))
+
 (defn new-record?
   "Returns true if `record` doesn't have a `id` column, otherwise false."
   [record] (or (nil? (:id record)) (blank? (str (:id record)))))
@@ -280,15 +294,14 @@
          ~(format "Returns a query that selects all %s in the database." (symbol (table-name table)))
          [] (apply fields (select* (entity ~(keyword (table-name table))))
                    (map :name (default-columns (find-table ~(keyword (table-name table)))))))
-       ~@(for [column (vals (:columns table))
-               :let [find-by-column# (symbol (format "%s-by-%s" (symbol (table-name table)) (symbol (column-name column))))]]
+       ~@(for [column (vals (:columns table))]
            `(do
-              (defquery ~find-by-column#
-                ~(format "Returns a query that finds all %s by the %s column in the database." (symbol (table-name table)) (symbol (column-name column)))
+              (defquery ~(find-by-column-sym table column)
+                ~(find-by-column-doc table column)
                 [~'value] (where (~find-all#) (~'= ~(:name column) (if ~'value (~(or (:serialize column) identity) ~'value)))))
-              (defn ~(symbol (format "%s-by-%s" (singular (symbol (table-name table))) (symbol (column-name column))))
-                ~(format "Find the first %s by the %s column in the database." (singular (symbol (table-name table))) (symbol (column-name column)))
-                [~'value] (first (~find-by-column# ~'value))))))))
+              (defn ~(find-first-by-column-sym table column)
+                ~(find-first-by-column-doc table column)
+                [~'value] (first (~(find-by-column-sym table column) ~'value))))))))
 
 (defmacro deftable
   "Define and register a database table and it's columns."
