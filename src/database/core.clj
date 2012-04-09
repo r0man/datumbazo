@@ -290,6 +290,18 @@
                       (where-clause ~'table ~singular))
                exec first))))))
 
+(defn define-update-fn [table]
+  (let [singular (singular (symbol (name (:name table))))]
+    `(defn ~(symbol (str "update-" singular))
+       ~(format "Update the %s in the database." singular)
+       [~singular]
+       (with-ensure-table [~'table ~(:name table)]
+         (validate-record ~'table ~singular)
+         (update (table-identifier ~'table)
+                 (set-fields (serialize-record ~'table ~singular))
+                 (where (where-clause ~'table ~singular)))
+         (~(symbol (str "reload-" singular)) ~singular)))))
+
 (defmacro defquery [name doc args & body]
   (let [name# name, args# args, query# (symbol (str name# "*"))]
     `(do
@@ -307,11 +319,9 @@
        ~(define-delete-fn table)
        ~(define-reload-fn table)
        ~(define-insert-fn table)
+       ~(define-update-fn table)
        (defn ~(symbol (format "make-%s" entity#)) [& {:as ~'attributes}]
          ~'attributes)
-       (defn ~(symbol (str "update-" entity#))
-         ~(format "Update the %s in the database." entity#)
-         [~'record & ~'options] (apply update-record ~(keyword (table-name table)) ~'record ~'options))
        (defn ~(symbol (str "save-" entity#))
          ~(format "Save the %s in the database." entity#)
          [~'record & ~'options] (apply save-record ~(keyword (table-name table)) ~'record ~'options)))))
