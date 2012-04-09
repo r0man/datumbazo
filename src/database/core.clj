@@ -257,6 +257,39 @@
   "Update or insert the `record` in the database `table`."
   [table record] (or (update-record table record) (insert-record table record)))
 
+(defn define-delete-fn [table]
+  (let [singular (singular (symbol (name (:name table))))]
+    `(defn ~(symbol (str "delete-" singular))
+       ~(format "Reload the %s from the database." singular)
+       [~singular]
+       (if-not (empty? ~singular)
+         (with-ensure-table [~'table ~(:name table)]
+           (delete ~(:name table) (where (where-clause ~'table ~singular)))
+           ~singular)))))
+
+(defn define-insert-fn [table]
+  (let [singular (singular (symbol (name (:name table))))]
+    `(defn ~(symbol (str "insert-" singular))
+       ~(format "Insert the %s into the database." singular)
+       [~singular]
+       (with-ensure-table [~'table ~(:name table)]
+         (validate-record ~'table ~singular)
+         (insert (table-identifier ~'table)
+                 (values (->> (remove-serial-columns ~'table ~singular)
+                              (serialize-record ~'table))))
+         (~(symbol (str "reload-" singular)) ~singular)))))
+
+(defn define-reload-fn [table]
+  (let [singular (singular (symbol (name (:name table))))]
+    `(defn ~(symbol (str "reload-" singular))
+       ~(format "Reload the %s from the database." singular)
+       [~singular]
+       (if-not (empty? ~singular)
+         (with-ensure-table [~'table ~(:name table)]
+           (-> (where (~(symbol (str (name (:name table)) "*")))
+                      (where-clause ~'table ~singular))
+               exec first))))))
+
 (defmacro defquery [name doc args & body]
   (let [name# name, args# args, query# (symbol (str name# "*"))]
     `(do
@@ -271,14 +304,11 @@
   [table]
   (let [entity# (symbol (singular (table-name table)))]
     `(do
+       ~(define-delete-fn table)
+       ~(define-reload-fn table)
+       ~(define-insert-fn table)
        (defn ~(symbol (format "make-%s" entity#)) [& {:as ~'attributes}]
          ~'attributes)
-       (defn ~(symbol (str "delete-" entity#))
-         ~(format "Delete the %s from the database." entity#)
-         [~'record] (delete-record ~(keyword (table-name table)) ~'record))
-       (defn ~(symbol (str "insert-" entity#))
-         ~(format "Insert the %s into the database." entity#)
-         [~'record] (insert-record ~(keyword (table-name table)) ~'record))
        (defn ~(symbol (str "update-" entity#))
          ~(format "Update the %s in the database." entity#)
          [~'record & ~'options] (apply update-record ~(keyword (table-name table)) ~'record ~'options))
@@ -316,8 +346,8 @@
        (register-table (make-table ~(keyword name#) ~columns# ~@options#))
        (def ~(symbol (str name# "-entity")) (entity ~(keyword name#)))
        ~(define-serialization table#)
-       ~(define-crud table#)
-       ~(define-finder table#))))
+       ~(define-finder table#)
+       ~(define-crud table#))))
 
 ;; JOIN
 

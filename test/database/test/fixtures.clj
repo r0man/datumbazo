@@ -14,26 +14,6 @@
         database.test
         validation.core))
 
-;; (clojure.pprint/pprint
-;;  (query-only
-;;   (select (entity :photo-thumbnails)
-;;           (join :photos
-;;                 (= :photo-thumbnails.photo-id :photos.id))
-;;           (fields :photo-thumbnails.id :photo-thumbnails.width :photo-thumbnails.heigth)
-;;           (shift-fields :photos :photo [:id :title]))))
-
-;; (select (entity :photo-thumbnails)
-;;         (join :photos (= :photo-thumbnails.photo-id :photos.id))
-;;         (fields :photo-thumbnails.id :photo-thumbnails.width :photo-thumbnails.heigth)
-;;         (shift-fields :photos :photo [:id :title]))
-
-;; (sql-only
-;;  (-> (select* :photo-thumbnails)
-;;      (fields :photo-thumbnails.id :photo-thumbnails.width :photo-thumbnails.heigth)
-;;      ;; (shift-fields :photos :photo [:id :title])
-;;      (join :photos (= :photo-thumbnails.photo-id :photos.id))
-;;      (exec)))
-
 ;; PHOTO THUMBNAILS
 
 (def street-art-berlin-small
@@ -132,6 +112,12 @@
     (is (= (language-url record) (:url record)))
     (is (instance? DateTime (:created-at record)))
     (is (instance? DateTime (:updated-at record)))))
+
+(database-test test-reload-language
+  (is (nil? (reload-language nil)))
+  (is (nil? (reload-language {})))
+  (let [record (insert-language german)]
+    (is (= record (reload-language record)))))
 
 (database-test test-insert-photo
   (is (thrown? Exception (insert-photo nil)))
