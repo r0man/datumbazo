@@ -19,7 +19,7 @@
   [table & body]
   (let [table# table]
     `(if-let [~table# (find-table ~table#)]
-       (do ~@body) (throw (Exception. "Table not found.")))))
+       (do ~@body) (throw (Exception. (str "Table not found: " ~table))))))
 
 (defmacro with-ensure-column
   "Evaluate body with a resolved `table` and `column`."
