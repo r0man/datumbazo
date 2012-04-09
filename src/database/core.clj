@@ -298,7 +298,9 @@
            `(do
               (defquery ~(find-by-column-sym table column)
                 ~(find-by-column-doc table column)
-                [~'value] (where (~find-all#) (~'= ~(:name column) (if ~'value (~(or (:serialize column) identity) ~'value)))))
+                [~'value]
+                (with-ensure-column [~(:name table) [~'column ~(:name column)]]
+                  (where (~find-all#) (~'= ~(:name column) (serialize-column ~'column ~'value)))))
               (defn ~(find-first-by-column-sym table column)
                 ~(find-first-by-column-doc table column)
                 [~'value] (first (~(find-by-column-sym table column) ~'value))))))))
