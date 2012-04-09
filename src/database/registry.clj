@@ -16,16 +16,17 @@
 
 (defmacro with-ensure-table
   "Evaluate body with a resolved `table`."
-  [table & body]
+  [[sym table] & body]
   (let [table# table]
-    `(if-let [~table# (find-table ~table#)]
-       (do ~@body) (throw (Exception. (str "Table not found: " ~table))))))
+    `(if-let [~sym (find-table ~table#)]
+       (do ~@body) (throw (Exception. (str "Table not found: " ~table#))))))
 
 (defmacro with-ensure-column
   "Evaluate body with a resolved `table` and `column`."
-  [table column & body]
-  (let [column# column table# table]
-    `(with-ensure-table ~table#
-       (let [~column# (if (column? ~column#) ~column# (get (:columns ~table#) ~column#))]
-         (assert (column? ~column#))
+  [[table [sym column]] & body]
+  (let [column# column table# (gensym)]
+    `(with-ensure-table [~table# ~table]
+       (let [~sym (if (column? ~column#) ~column# (get (:columns ~table#) ~column#))
+             ~sym (assoc ~sym :table ~table#)]
+         (assert (column? ~sym))
          ~@body))))

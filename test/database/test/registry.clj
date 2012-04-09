@@ -20,15 +20,19 @@
     (is (= table (:photo-thumbnails @*tables*)))))
 
 (deftest test-with-ensure-table
-  (let [table :languages]
-    (with-ensure-table table
-      (is (table? table))
-      (is (= :languages (:name table))))))
+  (with-ensure-table [languages :languages]
+    (is (table? languages))
+    (is (= :languages (:name languages))))
+  (with-ensure-table [languages (find-table :languages)]
+    (is (table? languages))
+    (is (= :languages (:name languages)))))
 
 (deftest test-with-ensure-column
-  (let [table :languages column :id]
-    (with-ensure-column table column
-      (is (table? table))
-      (is (= :languages (:name table)))
-      (is (column? column))
-      (is (= :id (:name column))))))
+  (with-ensure-column [:languages [column :id]]
+    (is (column? column))
+    (is (= :id (:name column)))
+    (is (= (find-table :languages) (:table column))))
+  (with-ensure-column [(find-table :languages) [column :id]]
+    (is (column? column))
+    (is (= :id (:name column)))
+    (is (= (find-table :languages) (:table column)))))

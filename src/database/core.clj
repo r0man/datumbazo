@@ -44,7 +44,7 @@
 (defn entity
   "Returns the Korma entity of `table`."
   [table]
-  (with-ensure-table table
+  (with-ensure-table [table table]
     (let [entity (create-entity (table-name table))
           entity (assoc entity :transforms (:transforms table))
           field-keys (keys (apply dissoc (:columns table) (:exclude (:fields table))))]
@@ -67,7 +67,7 @@
 
 (defn shift-fields
   [query table path fields]
-  (with-ensure-table table
+  (with-ensure-table [table table]
     (let [prefix (keyword (gensym (str (name path) "-")))
           aliases (prefix-columns prefix fields "-")
           renaming (zipmap aliases fields)
@@ -84,19 +84,19 @@
 
 (defn all-clause
   [table record]
-  (with-ensure-table table
+  (with-ensure-table [table table]
     (let [columns (vals (:columns table))]
       (apply pred-and (map #(apply hash-map %1) (seq (select-keys record (map :name columns))))))))
 
 (defn unique-key-clause
   "Returns the SQL where clause for record."
   [table record]
-  (with-ensure-table table
+  (with-ensure-table [table table]
     (let [columns (key-columns table record)]
       (apply pred-or (map #(apply hash-map %1) (seq (select-keys record (map :name columns))))))))
 
 (defn where-clause [table record]
-  (with-ensure-table table
+  (with-ensure-table [table table]
     (if (empty? (key-columns table record))
       (all-clause table record)
       (unique-key-clause table record))))
@@ -107,7 +107,7 @@
   (let [message (or (:message options) "has already been taken.")
         columns (if (sequential? columns) columns [columns])]
     (fn [record]
-      (with-ensure-table table
+      (with-ensure-table [table table]
         (if (and
              (or (nil? (:if options)) ((:if options) record))
              (or (nil? (:unless options)) (not ((:unless options) record)))
@@ -126,7 +126,7 @@
   "Returns true if `record` exists in the database, otherwise false."
   [table record]
   (if-not (empty? record)
-    (with-ensure-table table
+    (with-ensure-table [table table]
       (-> (select (entity table) (where (where-clause table record)))
           empty? not))
     false))
@@ -149,20 +149,20 @@
   (fn [table column] (:type column)))
 
 (defmethod add-column :default [table column]
-  (with-ensure-column table column
-    (jdbc/do-commands (add-column-statement table column))
+  (with-ensure-column [table [column column]]
+    (jdbc/do-commands (add-column-statement (:table column) column))
     column))
 
 (defn drop-column
   "Drop `column` from `table`."
   [table column]
-  (with-ensure-column table column
-    (jdbc/do-commands (drop-column-statement table column))))
+  (with-ensure-column [table [column column]]
+    (jdbc/do-commands (drop-column-statement (:table column) column))))
 
 (defn create-table
   "Create the database `table`."
   [table]
-  (with-ensure-table table
+  (with-ensure-table [table table]
     (jdbc/transaction
      (->> (filter :native? (vals (:columns table)))
           (map column-spec)
@@ -174,7 +174,7 @@
 (defn drop-table
   "Drop the database table."
   [table & {:keys [if-exists cascade restrict]}]
-  (with-ensure-table table
+  (with-ensure-table [table table]
     (jdbc/do-commands
      (str "DROP TABLE " (if if-exists "IF EXISTS ")
           (table-identifier table)
@@ -185,7 +185,7 @@
   "Reload the `record` from the database `table`."
   [table record]
   (if-not (empty? record)
-    (with-ensure-table table
+    (with-ensure-table [table table]
       (-> (apply fields
                  (-> (select* (entity table))
                      (where (where-clause table record)))
@@ -195,7 +195,7 @@
 (defn validate-record
   "Validate `record`."
   [table record]
-  (with-ensure-table table
+  (with-ensure-table [table table]
     (if-let [validation-fn (:validate table)]
       (validation-fn record)
       record)))
@@ -214,7 +214,7 @@
   "Delete the record from the database table."
   [table record]
   (if-not (empty? record)
-    (with-ensure-table table
+    (with-ensure-table [table table]
       (delete (table-identifier table)
               (where (where-clause table record)))
       record)))
@@ -222,7 +222,7 @@
 (defn insert-record
   "Insert the `record` into the database `table`."
   [table record]
-  (with-ensure-table table
+  (with-ensure-table [table table]
     (validate-record table record)
     (insert (table-identifier table)
             (values (->> (remove-serial-columns table record)
@@ -232,7 +232,7 @@
 (defn update-record
   "Update the `record` in the database `table`."
   [table record]
-  (with-ensure-table table
+  (with-ensure-table [table table]
     (validate-record table record)
     (update (table-identifier table)
             (set-fields (serialize-record table record))
@@ -307,7 +307,7 @@
 ;; JOIN
 
 (defn join* [query type table clause & [columns]]
-  (with-ensure-table table
+  (with-ensure-table [table table]
     (let [columns (if-not (empty? columns)
                     (vals (select-keys (:columns table) columns))
                     (default-columns table))]

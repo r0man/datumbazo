@@ -13,7 +13,8 @@
 
 (database-test test-add-column
   (let [column (make-column :x :integer)]
-    (is (= column (add-column :languages column)))))
+    (is (= (assoc column :table (table :languages))
+           (add-column :languages column)))))
 
 ;; (deftest test-column-prefix
 ;;   (are [table column expected]

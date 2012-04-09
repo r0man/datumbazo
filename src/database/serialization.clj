@@ -21,7 +21,7 @@
   "Deserialize the database row."
   [table row]
   (if (not (nil? row))
-    (with-ensure-table table
+    (with-ensure-table [table table]
       (-> (reduce #(assoc %1 (:name %2) (deserialize-column %2 (get row (:name %2))))
                   (into {} row) (select-columns table (keys row)))))))
 
@@ -45,7 +45,7 @@
   "Serialize the database row."
   [table row]
   (if (not (nil? row))
-    (with-ensure-table table
+    (with-ensure-table [table table]
       (let [row (or row {}) columns (select-columns table (keys row))]
         (reduce #(assoc %1 (keyword (column-name %2)) (serialize-column %2 (get row (:name %2))))
                 {} columns)))))
