@@ -302,6 +302,14 @@
                  (where (where-clause ~'table ~singular)))
          (~(symbol (str "reload-" singular)) ~singular)))))
 
+(defn define-save-fn [table]
+  (let [singular (singular (symbol (name (:name table))))]
+    `(defn ~(symbol (str "save-" singular))
+       ~(format "Save the %s in the database." singular)
+       [~singular]
+       (or (~(symbol (str "update-" singular)) ~singular)
+           (~(symbol (str "insert-" singular)) ~singular)))))
+
 (defmacro defquery [name doc args & body]
   (let [name# name, args# args, query# (symbol (str name# "*"))]
     `(do
@@ -320,11 +328,9 @@
        ~(define-reload-fn table)
        ~(define-insert-fn table)
        ~(define-update-fn table)
+       ~(define-save-fn table)
        (defn ~(symbol (format "make-%s" entity#)) [& {:as ~'attributes}]
-         ~'attributes)
-       (defn ~(symbol (str "save-" entity#))
-         ~(format "Save the %s in the database." entity#)
-         [~'record & ~'options] (apply save-record ~(keyword (table-name table)) ~'record ~'options)))))
+         ~'attributes))))
 
 (defn- define-finder
   [table]
