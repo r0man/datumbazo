@@ -18,8 +18,10 @@
   (to-date-time value))
 
 (defn deserialize-record
-  "Deserialize the database row."
+  "Deserialize the database row."  
   [table row]
+  ;; (prn "DESERIALIZE")
+  ;; (prn row)
   (if (not (nil? row))
     (with-ensure-table [table table]
       (-> (reduce #(assoc %1 (:name %2) (deserialize-column %2 (get row (:name %2))))
@@ -44,6 +46,8 @@
 (defn serialize-record
   "Serialize the database row."
   [table row]
+  ;; (prn "SERIALIZE")
+  ;; (prn row)
   (if (not (nil? row))
     (with-ensure-table [table table]
       (let [row (or row {}) columns (select-columns table (keys row))]

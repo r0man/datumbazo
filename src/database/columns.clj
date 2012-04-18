@@ -2,7 +2,8 @@
   (:refer-clojure :exclude (replace))
   (:require [clojure.java.jdbc :as jdbc])
   (:use [clojure.string :only (join split replace)]
-        [database.connection :only (naming-strategy)]))
+        [database.connection :only (naming-strategy)]
+        [database.util :only (dissoc-if)]))
 
 (defprotocol IColumn
   (column-name [column]
@@ -36,14 +37,13 @@
     :native? (if (sequential? type) false true)
     :not-null? (or (:not-null? attributes) (:primary-key? attributes))))
 
+(defn serial-columns [table]
+  (filter #(= :serial (:type %1)) (vals (:columns table))))
+
 (defn remove-serial-columns
   "Remove the serial columns from `record` if their value is nil."
   [table record]
-  (->> (remove #(and (= :serial (:type %1))
-                     (nil? (get record (keyword (column-name %1)))))
-               (vals (:columns table)))
-       (map (comp keyword column-name))
-       (select-keys record)))
+  (apply dissoc-if record nil? (map :name (serial-columns table))))
 
 (defn unique-column?
   "Returns true if `column` is a primary key or is unique, otherwise

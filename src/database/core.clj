@@ -59,11 +59,13 @@
   "Returns the Korma entity of `table`."
   [table]
   (with-ensure-table [table table]
-    (let [entity (create-entity (table-name table))
-          entity (assoc entity :transforms (:transforms table))
+    (let [entity (assoc (create-entity (table-name table))
+                   :transforms (:transforms table)
+                   :prepares (:prepares table))
           field-keys (keys (apply dissoc (:columns table) (:exclude (:fields table))))]
       (-> (apply fields entity field-keys)
-          (assoc :fields field-keys)
+          ;; (assoc :fields field-keys)
+          (prepare (partial serialize-record table))
           (transform (partial deserialize-record table))))))
 
 (defn prefix-columns
@@ -238,9 +240,8 @@
   [table record]
   (with-ensure-table [table table]
     (validate-record table record)
-    (insert (table-identifier table)
-            (values (->> (remove-serial-columns table record)
-                         (serialize-record table))))
+    (insert (entity table)
+            (values (remove-serial-columns table record)))
     (reload-record table record)))
 
 (defn update-record
@@ -248,8 +249,8 @@
   [table record]
   (with-ensure-table [table table]
     (validate-record table record)
-    (update (table-identifier table)
-            (set-fields (serialize-record table record))
+    (update (entity table)
+            (set-fields record)
             (where (where-clause table record)))
     (reload-record table record)))
 
@@ -274,9 +275,8 @@
        [~singular]
        (with-ensure-table [~'table ~(:name table)]
          (validate-record ~'table ~singular)
-         (insert (table-identifier ~'table)
-                 (values (->> (remove-serial-columns ~'table ~singular)
-                              (serialize-record ~'table))))
+         (insert (entity ~'table)
+                 (values (remove-serial-columns ~'table ~singular)))
          (~(symbol (str "reload-" singular)) ~singular)))))
 
 (defn define-reload-fn [table]
@@ -297,8 +297,8 @@
        [~singular]
        (with-ensure-table [~'table ~(:name table)]
          (validate-record ~'table ~singular)
-         (update (table-identifier ~'table)
-                 (set-fields (serialize-record ~'table ~singular))
+         (update (entity ~'table)
+                 (set-fields ~singular)
                  (where (where-clause ~'table ~singular)))
          (~(symbol (str "reload-" singular)) ~singular)))))
 

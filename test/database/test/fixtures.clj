@@ -94,8 +94,8 @@
     (is (= "languages" (:table entity)))
     (is (nil? (:aliases entity)))
     (is (nil? (:db entity)))
-    (is (empty? (:prepares entity)))
     (is (= {} (:rel entity)))
+    (is (every? fn? (:prepares entity)))
     (is (every? fn? (:transforms entity)))
     (is (= [:updated-at :created-at :iso-639-2 :iso-639-1 :family :name :id] (:fields entity)))))
 

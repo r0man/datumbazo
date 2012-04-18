@@ -80,6 +80,13 @@
   (is (= ["iso_639_1" "varchar(2)" "not null" "unique"]
          (column-spec iso-639-1-column))))
 
+(deftest test-remove-serial-columns
+  (= (dissoc german :id) (remove-serial-columns (table :languages) german)))
+
+(deftest test-serialize-columns
+  (= (:id (:columns (table :languages)))
+     (serial-columns (table :languages))))
+
 (deftest test-unique-column?
   (is (not (unique-column? nil)))
   (is (not (unique-column? {})))
