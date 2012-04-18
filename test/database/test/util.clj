@@ -2,6 +2,11 @@
   (:use clojure.test
         database.util))
 
+(deftest test-dissoc-if
+  (is (= {:a 1 :b nil} (dissoc-if {:a 1 :b nil} nil?)))
+  (is (= {:a 1} (dissoc-if {:a 1 :b nil} nil? :a :b)))
+  (is (= {:b nil} (dissoc-if {:a 1 :b nil} (comp not nil?) :a :b))))
+
 (deftest test-parse-integer
   (testing "junk allowed"
     (are [string]

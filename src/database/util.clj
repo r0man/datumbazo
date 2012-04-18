@@ -2,6 +2,11 @@
   (:refer-clojure :exclude (replace))
   (:use [clojure.string :only (replace)]))
 
+(defn dissoc-if [map pred & keys]
+  (reduce
+   #(if (pred (get %1 %2)) (dissoc %1 %2) %1)
+   map keys))
+
 (defn immigrate
   "Create a public var in this namespace for each public var in the
 namespaces named by ns-names. The created vars have the same name, root
