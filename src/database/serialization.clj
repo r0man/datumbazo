@@ -12,15 +12,15 @@
 (defmulti deserialize-column (fn [column value] (:type column)))
 
 (defmethod deserialize-column :default [column value]
-  (if value ((or (:deserialize column) identity) value)))
+  (if-not (nil? value) ((or (:deserialize column) identity) value)))
 
 (defmethod deserialize-column :timestamp-with-time-zone [column value]
   (to-date-time value))
 
 (defn deserialize-record
-  "Deserialize the database row."  
+  "Deserialize the database row."
   [table row]
-  ;; (prn "DESERIALIZE")
+  ;; (println (str "DESERIALIZE: " (:name table)))
   ;; (prn row)
   (if (not (nil? row))
     (with-ensure-table [table table]
@@ -32,7 +32,7 @@
 (defmulti serialize-column (fn [column value] (:type column)))
 
 (defmethod serialize-column :default [column value]
-  (if value ((or (:serialize column) identity) value)))
+  (if-not (nil? value) ((or (:serialize column) identity) value)))
 
 (defmethod serialize-column :integer [column value]
   (parse-integer value :junk-allowed true))
@@ -46,7 +46,7 @@
 (defn serialize-record
   "Serialize the database row."
   [table row]
-  ;; (prn "SERIALIZE")
+  ;; (println (str "SERIALIZE: " (:name table)))
   ;; (prn row)
   (if (not (nil? row))
     (with-ensure-table [table table]

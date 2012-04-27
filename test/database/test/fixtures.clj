@@ -130,6 +130,20 @@
     (is (instance? DateTime (:created-at record)))
     (is (instance? DateTime (:updated-at record)))))
 
+(database-test test-insert-user
+  (is (thrown? Exception (insert-user nil)))
+  (is (thrown? Exception (insert-user {})))
+  (insert-country usa)
+  (let [record (insert-user bodhi)]
+    (is (= 1 (:id record)))
+    (is (= (:id usa) (:country-id record)))
+    (is (= "bodhi@example.com" (:email record)))
+    (is (= "$2a$10$ajTnLiS/sGn7XrK/FrhPE.xSBiUiu60wIksc3RxDpTcMPAovfZ.5q"
+           (:crypted-password record)))
+    (is (= false (:verified record)))
+    (is (instance? DateTime (:created-at record)))
+    (is (instance? DateTime (:updated-at record)))))
+
 (database-test test-insert-photo-thumbnail
   (is (thrown? Exception (insert-photo-thumbnail nil)))
   (is (thrown? Exception (insert-photo-thumbnail {})))

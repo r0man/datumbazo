@@ -60,13 +60,12 @@
   [table]
   (with-ensure-table [table table]
     (let [entity (assoc (create-entity (table-name table))
-                   :transforms (:transforms table)
-                   :prepares (:prepares table))
+                   :transforms (cons (partial deserialize-record table) (:transforms table))
+                   :prepares (cons (partial serialize-record table) (:prepares table)))
           field-keys (keys (apply dissoc (:columns table) (:exclude (:fields table))))]
       (-> (apply fields entity field-keys)
           ;; (assoc :fields field-keys)
-          (prepare (partial serialize-record table))
-          (transform (partial deserialize-record table))))))
+          ))))
 
 (defn prefix-columns
   "Return the names of `columns` prefixed with `prefix`."

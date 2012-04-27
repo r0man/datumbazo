@@ -104,6 +104,7 @@
    [:nick :text :not-null? true :unique? true]
    [:email :text :not-null? true :unique? true]
    [:crypted-password :text]
+   [:verified :boolean :not-null? true :default "false"]
    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
   :validate validate-user!)
