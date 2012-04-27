@@ -22,6 +22,7 @@
   [table row]
   ;; (println (str "DESERIALIZE: " (:name table)))
   ;; (prn row)
+  ;; (println)
   (if (not (nil? row))
     (with-ensure-table [table table]
       (-> (reduce #(assoc %1 (:name %2) (deserialize-column %2 (get row (:name %2))))

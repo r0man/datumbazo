@@ -60,8 +60,11 @@
   [table]
   (with-ensure-table [table table]
     (let [entity (assoc (create-entity (table-name table))
-                   :transforms (cons (partial deserialize-record table) (:transforms table))
-                   :prepares (cons (partial serialize-record table) (:prepares table)))
+                   ;; :transforms (concat (:transforms table) [(partial deserialize-record table)])
+                   ;; :prepares (concat (:prepares table) [(partial serialize-record table)])
+                   :transforms (concat [(partial deserialize-record table)] (:transforms table))
+                   :prepares (concat [(partial serialize-record table)] (:prepares table))
+                   )
           field-keys (keys (apply dissoc (:columns table) (:exclude (:fields table))))]
       (-> (apply fields entity field-keys)
           ;; (assoc :fields field-keys)
@@ -90,12 +93,12 @@
       (-> (update-in query [:ent] #(if (keyword? %1) (entity %1) %1))
           (update-in [:aliases] clojure.set/union (set aliases))
           (update-in [:fields] concat (seq (zipmap qualified aliases)))
-          (update-in [:ent :transforms] conj
-                     #(assoc-in (apply dissoc (into {} %1) aliases) [path]
-                                (deserialize-record
-                                 table
-                                 (-> (select-keys %1 aliases)
-                                     (rename-keys renaming)))))))))
+          (update-in [:ent :transforms] concat
+                     [#(assoc-in (apply dissoc (into {} %1) aliases) [path]
+                                 (deserialize-record
+                                  table
+                                  (-> (select-keys %1 aliases)
+                                      (rename-keys renaming))))])))))
 
 (defn all-clause
   [table record]
