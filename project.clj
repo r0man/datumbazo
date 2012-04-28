@@ -11,7 +11,6 @@
                  [org.clojure/java.jdbc "0.1.4"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.postgis/postgis-jdbc "1.3.3"]
-                 [org.slf4j/slf4j-log4j12 "1.5.6"]
                  [postgresql/postgresql "9.1-901.jdbc4"]]
   :profiles {:dev {:dependencies [[validation-clj "0.2.1-SNAPSHOT"]]
                    :resource-paths ["test-resources"]}}
