@@ -32,8 +32,8 @@
 
 (defmulti serialize-column (fn [column value] (:type column)))
 
-(defmethod serialize-column :default [column value]
-  (if-not (nil? value) ((or (:serialize column) identity) value)))
+(defmethod serialize-column :float [column value]
+  (parse-float value :junk-allowed true))
 
 (defmethod serialize-column :integer [column value]
   (parse-integer value :junk-allowed true))
@@ -43,6 +43,9 @@
 
 (defmethod serialize-column :timestamp-with-time-zone [column value]
   (to-timestamp value))
+
+(defmethod serialize-column :default [column value]
+  (if-not (nil? value) ((or (:serialize column) identity) value)))
 
 (defn serialize-record
   "Serialize the database row."
