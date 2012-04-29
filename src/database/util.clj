@@ -29,7 +29,7 @@ value is this namespace."
   [string & {:keys [junk-allowed]}]
   (if (float? string)
     (float string)
-    (try (Float/parseFloat string)
+    (try (Float/parseFloat (str string))
          (catch Exception e
            (when-not junk-allowed
              (throw e))))))

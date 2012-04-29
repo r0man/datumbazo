@@ -12,7 +12,8 @@
   (is (nil? (parse-float "" :junk-allowed true)))
   (is (= (float 0) (parse-float "0")))
   (is (= (float 1) (parse-float "1")))
-  (is (= (float 1.1) (parse-float "1.1"))))
+  (is (= (float 1.1) (parse-float "1.1")))
+  (is (= (float 1.1) (parse-float 1.1))))
 
 (deftest test-parse-integer
   (testing "junk allowed"
