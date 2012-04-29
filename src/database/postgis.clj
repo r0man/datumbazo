@@ -123,12 +123,20 @@
     (order query (sqlfn distance field (make-geometry point)) (or direction :asc))
     query))
 
-(defmethod serialize-column :point-2d [column location]
-  (if-let [point-2d (to-point-2d location)]
-    (make-geometry point-2d)))
+;; SERIALIZATION
+
+(defmethod deserialize-column :box-2d [column box-2d]
+  (to-box box-2d))
+
+(defmethod serialize-column :box-2d [column bounds]
+  (to-box-2d bounds))
 
 (defmethod deserialize-column :point-2d [column point-2d]
   (if point-2d (to-location point-2d)))
+
+(defmethod serialize-column :point-2d [column location]
+  (if-let [point-2d (to-point-2d location)]
+    (make-geometry point-2d)))
 
 (extend-type nil
   IBox
