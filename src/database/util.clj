@@ -24,6 +24,16 @@ value is this namespace."
                        (fn [old] (merge (meta var) old)))
           var-obj)))))
 
+(defn parse-float
+  "Parse `string` as a float."
+  [string & {:keys [junk-allowed]}]
+  (if (float? string)
+    (float string)
+    (try (Float/parseFloat string)
+         (catch Exception e
+           (when-not junk-allowed
+             (throw e))))))
+
 (defn parse-integer
   "Parse `string` as an integer."
   [string & {:keys [junk-allowed radix]}]

@@ -7,6 +7,13 @@
   (is (= {:a 1} (dissoc-if {:a 1 :b nil} nil? :a :b)))
   (is (= {:b nil} (dissoc-if {:a 1 :b nil} (comp not nil?) :a :b))))
 
+(deftest test-parse-float
+  (is (nil? (parse-float nil :junk-allowed true)))
+  (is (nil? (parse-float "" :junk-allowed true)))
+  (is (= (float 0) (parse-float "0")))
+  (is (= (float 1) (parse-float "1")))
+  (is (= (float 1.1) (parse-float "1.1"))))
+
 (deftest test-parse-integer
   (testing "junk allowed"
     (are [string]
