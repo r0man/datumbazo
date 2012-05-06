@@ -52,6 +52,12 @@
   (let [config (or config "english")]
     (sqlfn plainto_tsquery (sql-cast config "regconfig") (sql-cast query "text"))))
 
+(defn copy-from
+  "Copy rows from `filename` into `table`."
+  [table filename]
+  (let [file (java.io.File. filename)]
+    (jdbc/do-commands (format "COPY %s FROM '%s'" table (.getAbsolutePath file)))))
+
 (defn text= [arg-1 arg-2]
   (infix (to-tsvector arg-1) "@@" (plainto-tsquery arg-2)))
 
