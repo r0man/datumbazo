@@ -1,7 +1,6 @@
 (ns database.test.core
   (:import org.joda.time.DateTime org.postgresql.util.PSQLException)
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.java.jdbc.internal :as internal])
+  (:require [clojure.java.jdbc :as jdbc])
   (:use [korma.sql.fns :only (pred-and pred-or)]
         clojure.test
         database.core
