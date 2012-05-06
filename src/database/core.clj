@@ -328,6 +328,15 @@
            (-> (apply ~query# (apply concat args# (seq (dissoc options# :page :per-page))))
                (paginate* :page (:page options#) :per-page (:per-page options#))))))))
 
+(defmacro defquery [name doc args & body]
+  (let [name# name, args# args, query# (symbol (str name# "*"))]
+    `(do
+       (defn ~query# [~@args# & [{:as ~'options}]] ~doc
+         ~@body)
+       (defn ~name [~@args# & [{:as ~'options}]] ~doc
+         (-> (~query# ~@args# (dissoc ~'options :page :per-page))
+             (paginate* :page (:page ~'options) :per-page (:per-page ~'options)))))))
+
 (defn- define-crud
   [table]
   (let [entity# (symbol (singular (table-name table)))]
@@ -357,7 +366,7 @@
                   (where (~find-all#) (~'= ~(:name column) (serialize-column ~'column ~'value)))))
               (defn ~(find-first-by-column-sym table column)
                 ~(find-first-by-column-doc table column)
-                [~'value] (first (~(find-by-column-sym table column) ~'value))))))))
+                [~'value & [{:as ~'options}]] (first (~(find-by-column-sym table column) ~'value ~'options))))))))
 
 (defmacro deftable
   "Define and register a database table and it's columns."

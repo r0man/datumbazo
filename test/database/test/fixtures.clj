@@ -75,8 +75,8 @@
   (let [german (save-language german)
         spanish (save-language spanish)]
     (is (= [german spanish] (languages)))
-    (is (= [german] (languages :page 1 :per-page 1)))
-    (is (= [spanish] (languages :page 2 :per-page 1)))))
+    (is (= [german] (languages {:page 1 :per-page 1})))
+    (is (= [spanish] (languages {:page 2 :per-page 1})))))
 
 (database-test test-languages-by-family
   (let [record (insert-language german)]
@@ -84,8 +84,8 @@
     (is (empty? (languages-by-family "")))
     (is (empty? (languages-by-family "unknown")))
     (is (= [record] (languages-by-family (:family record))))
-    (is (= [record] (languages-by-family (:family record) :page 1 :per-page 2)))
-    (is (empty? (languages-by-family (:family record) :page 2 :per-page 2)))))
+    (is (= [record] (languages-by-family (:family record) {:page 1 :per-page 2})))
+    (is (empty? (languages-by-family (:family record) {:page 2 :per-page 2})))))
 
 (database-test test-languages-entity
   (let [entity languages-entity]

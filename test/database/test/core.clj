@@ -157,12 +157,11 @@
 (database-test test-defquery
   (let [german (save-language german)
         spanish (save-language spanish)]
-    (defquery example-query "Doc" [arg-1 & options]
+    (defquery example-query "Doc" [arg-1]
       (-> (languages*) (order :name)))
     (is (= [german spanish] (example-query "arg-1")))
-    (is (= [german] (example-query "arg-1" :page 1 :per-page 1)))
-    (is (= [spanish] (example-query "arg-1" :page 2 :per-page 1)))))
-
+    (is (= [german] (example-query "arg-1" {:page 1 :per-page 1})))
+    (is (= [spanish] (example-query "arg-1" {:page 2 :per-page 1})))))
 
 (database-test test-shift-fields
   (insert-fixtures)

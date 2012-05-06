@@ -223,5 +223,3 @@
   (save-user roach)
   (save-roles-user {:role-id (:id surfer) :user-id (:id bodhi)})
   (save-roles-user {:role-id (:id surfer) :user-id (:id roach)}))
-
-;; (insert-fixtures)

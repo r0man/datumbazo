@@ -118,9 +118,9 @@
 
 (defquery sort-by-distance
   "Sort query by location."
-  [query field location & [direction]]
+  [query field location]
   (if-let [point (to-point-2d location)]
-    (order query (sqlfn distance field (make-geometry point)) (or direction :asc))
+    (order query (sqlfn distance field (make-geometry point)) (or (:direction options) :asc))
     query))
 
 ;; SERIALIZATION
