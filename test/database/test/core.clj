@@ -47,8 +47,8 @@
 
 (database-test test-truncate-table
   (let [language (insert-record :languages german)]
-    (is (= 1 (truncate-table :languages)))
-    (is (= 0 (truncate-table :languages)))))
+    (is (= (table :languages) (truncate-table :languages)))
+    (is (= (table :languages) (truncate-table :languages)))))
 
 (database-test test-delete-where
   (let [language (insert-record :languages german)]
