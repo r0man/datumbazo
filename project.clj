@@ -7,6 +7,7 @@
                  [inflections "0.7.0-SNAPSHOT"]
                  [org.clojars.r0man/korma "0.3.0-beta10"]
                  [migrate/migrate.core "0.0.9-SNAPSHOT"]
+                 [migrate/migrate.lein "0.0.9-SNAPSHOT"]
                  [org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.postgis/postgis-jdbc "1.3.3"]
@@ -15,4 +16,4 @@
                    :resource-paths ["test-resources"]}}
   :plugins [[migrate/migrate.lein "0.0.9-SNAPSHOT"]]
   :migrate [database.fixtures]
-  :hooks [environ.leiningen.hooks])
+  :hooks [leiningen.migrate.hooks])
