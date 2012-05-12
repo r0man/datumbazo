@@ -45,6 +45,11 @@
     (is (= 1 (delete-all :languages)))
     (is (= 0 (delete-all :languages)))))
 
+(database-test test-truncate-table
+  (let [language (insert-record :languages german)]
+    (is (= 1 (truncate-table :languages)))
+    (is (= 0 (truncate-table :languages)))))
+
 (database-test test-delete-where
   (let [language (insert-record :languages german)]
     (is (= 1 (delete-where :languages ["name = ?" (:name language)])))

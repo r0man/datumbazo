@@ -226,6 +226,13 @@
 
 ;; CRUD
 
+(defn truncate-table
+  "Truncate the table."
+  [table]
+  (with-ensure-table [table table]
+    (jdbc/do-commands (str "TRUNCATE " (table-identifier table)))
+    table))
+
 (defn delete-all
   "Delete all rows from table."
   [table] (first (jdbc/do-commands (str "DELETE FROM " (table-identifier table)))))
@@ -318,6 +325,12 @@
        (or (~(symbol (str "update-" singular)) ~singular)
            (~(symbol (str "insert-" singular)) ~singular)))))
 
+(defn define-truncate-fn [table]
+  (let [singular (singular (symbol (name (:name table))))]
+    `(defn ~(symbol (str "truncate-" singular))
+       ~(format "Truncate the %s database table." singular)
+       [] (truncate-table ~(:name table)))))
+
 (defmacro defquery [name doc args & body]
   (let [name# name, args# args, query# (symbol (str name# "*"))]
     `(do
@@ -346,6 +359,7 @@
        ~(define-insert-fn table)
        ~(define-update-fn table)
        ~(define-save-fn table)
+       ~(define-truncate-fn table)
        (defn ~(symbol (format "make-%s" entity#)) [& {:as ~'attributes}]
          ~'attributes))))
 
