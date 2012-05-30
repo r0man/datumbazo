@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
+set -e
+
 DATABASE_NAME="database_development"
 
 USER=database
-POSTGIS_VERSION="1.5"
 PGSQL_CONTRIB="/usr/share/postgresql/contrib"
 
 if [ ! -z "$1" ]; then DATABASE_NAME="$1"; fi
 
-createdb -U $USER -O $USER --template template0 --encoding "UTF8" $DATABASE_NAME || exit 1
-psql -q -U $USER -d $DATABASE_NAME -f "$PGSQL_CONTRIB/postgis-$POSTGIS_VERSION/postgis.sql"  || exit 1
-psql -q -U $USER -d $DATABASE_NAME -f "$PGSQL_CONTRIB/postgis-$POSTGIS_VERSION/spatial_ref_sys.sql"  || exit 1
+createdb -U $USER -O $USER --template template0 --encoding "UTF8" $DATABASE_NAME
+psql -U $USER -d $DATABASE_NAME -c "CREATE EXTENSION postgis"

@@ -13,7 +13,8 @@
                  [org.postgis/postgis-jdbc "1.3.3"]
                  [postgresql/postgresql "9.1-901.jdbc4"]]
   :profiles {:dev {:dependencies [[validation-clj "0.4.0-SNAPSHOT"]]
-                   :resource-paths ["test-resources"]}}
+                   :resource-paths ["test-resources"]}
+             :test {:env {:database-url "postgresql://database:database@localhost/database_test"}}}
   :plugins [[migrate/migrate.lein "0.0.9-SNAPSHOT"]]
   :migrate [database.fixtures]
   :hooks [leiningen.migrate.hooks])

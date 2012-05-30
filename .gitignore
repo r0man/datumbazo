@@ -7,3 +7,6 @@
 /checkouts
 /.lein-deps-sum
 /target/pom.xml
+/.lein-env
+/.lein-plugins/checksum
+/target/stale/dependencies

@@ -120,7 +120,7 @@
   "Sort query by location."
   [query field location]
   (if-let [point (to-point-2d location)]
-    (order query (sqlfn distance field (make-geometry point)) (or (:direction options) :asc))
+    (order query (sqlfn ST_Distance field (make-geometry point)) (or (:direction options) :asc))
     query))
 
 ;; SERIALIZATION
