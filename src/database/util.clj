@@ -44,6 +44,19 @@ value is this namespace."
            (when-not junk-allowed
              (throw e))))))
 
+(defn parse-url
+  "Parse the database url and return a JDBC/Korma compatible
+  connection map."
+  [url]
+  (if-let [matches (re-matches #"([^:]+)://([^:]+):([^@]+)@(([^:/]+)(:([0-9]+))?/(([^?]+)(\?(.*))?))" url)]
+    {:subprotocol (nth matches 1)
+     :user (nth matches 2)
+     :password (nth matches 3)
+     :subname (str "//" (nth matches 4))
+     :host (nth matches 5)
+     :port (Integer/parseInt (or (nth matches 7) "5432"))
+     :db (nth matches 9)}))
+
 (defn split-args [args]
   (let [[args options]
         [(take-while (complement keyword?) args)
