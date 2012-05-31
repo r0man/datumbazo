@@ -1,6 +1,6 @@
 (ns database.tables
   (:use [database.columns :only (column? column-name make-column)]
-        [database.connection :only (naming-strategy)]))
+        [database.connection :only (*naming-strategy*)]))
 
 (defprotocol ITable
   (table-name [table]
@@ -24,7 +24,7 @@
 (defn table-identifier
   "Returns the table identifier. Given a string, return it as-is.
   Given a keyword, return it as a string using the current naming
-  strategy." [table] ((:fields (naming-strategy)) (table-name table)))
+  strategy." [table] ((:fields *naming-strategy*) (table-name table)))
 
 (defn default-columns
   "Returns the default columns of `table`."

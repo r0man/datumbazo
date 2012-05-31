@@ -34,8 +34,8 @@
       "321-mundaka" 321
       2344 2344)))
 
-(deftest test-parse-database-url
-  (let [spec (parse-database-url "postgresql://tiger:scotch@localhost/example")]
+(deftest test-parse-url
+  (let [spec (parse-url "postgresql://tiger:scotch@localhost/example")]
     (is (= "postgresql" (:subprotocol spec)))
     (is (= "tiger" (:user spec)))
     (is (= "scotch" (:password spec)))
@@ -43,7 +43,7 @@
     (is (= "localhost" (:host spec)))
     (is (= 5432 (:port spec)))
     (is (= "example" (:db spec))))
-  (let [spec (parse-database-url "postgresql://tiger:scotch@localhost:1234/example?x=1")]
+  (let [spec (parse-url "postgresql://tiger:scotch@localhost:1234/example?x=1")]
     (is (= "postgresql" (:subprotocol spec)))
     (is (= "tiger" (:user spec)))
     (is (= "scotch" (:password spec)))

@@ -15,11 +15,6 @@
     (is (= (assoc column :table (table :languages))
            (add-column :languages column)))))
 
-;; (deftest test-column-prefix
-;;   (are [table column expected]
-;;     (is (= expected (column-prefix table column)))
-;;     :languages :name :languages-name))
-
 (database-test test-drop-column
   (is (drop-column :languages :created-at)))
 
@@ -154,7 +149,7 @@
     (is (= {:errors {:iso-639-1 ["has already been taken."]}}
            (meta (validate-iso-639-1 german))))))
 
-(deftest test-where-text=
+(database-test test-where-text=
   (is (= (str "SELECT \"languages\".* FROM \"languages\" WHERE (TO_TSVECTOR(CAST(? AS regconfig), "
               "CAST(\"languages\".\"name\" AS text)) @@ PLAINTO_TSQUERY(CAST(? AS regconfig), CAST(? AS text)))")
          (sql-only (select :languages (where-text= :name "x"))))))

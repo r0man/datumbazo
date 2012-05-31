@@ -2,29 +2,27 @@
   (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
         database.connection
+        database.fixtures
         database.test
-        database.fixtures))
+        korma.core
+        korma.db))
 
-(deftest test-connection-spec
-  (let [spec (connection-spec)]
-    (is (map? spec))))
-
-(deftest test-connection
-  (let [connection (connection)]
+(deftest test-jdbc-connection
+  (let [connection (jdbc-connection :database-clj-test-db)]
     (is (map? connection))
     (is (instance? javax.sql.DataSource (:datasource connection)))))
 
-(database-test test-naming-strategy
-  (let [strategy (naming-strategy)]
-    (is (fn? (:keys strategy)))
-    (is (not (= identity (:keys strategy))))
-    (is (fn? (:fields strategy)))
-    (is (not (= identity (:fields strategy))))))
+(deftest test-korma-connection
+  (let [connection (korma-connection :database-clj-test-db)]
+    (is (= (jdbc-connection :database-clj-test-db)
+           @(:pool connection)))
+    (is (= ["\"" "\""] (:delimiters (:options connection))))))
 
-(deftest test-with-connection
-  (with-connection test-database
-    (is (instance? java.sql.Connection (jdbc/connection)))
-    (is (= 1 (:n (first (jdbc/with-query-results rs ["SELECT 1 AS n"] (doall rs))))))))
-
-;; (with-connection development-database
-;;   (migrate.core/run))
+(deftest test-with-database
+  (with-database :database-clj-test-db
+    (testing "jdbc connection"
+      (is (instance? java.sql.Connection (jdbc/connection)))
+      (is (= 1 (:n (first (jdbc/with-query-results rs ["SELECT 1 AS n"] (doall rs)))))))
+    (testing "korma connection"
+      (is (= (korma-connection :database-clj-test-db) @_default))
+      (is (select :schema_migrations)))))

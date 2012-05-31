@@ -1,29 +1,40 @@
 (ns database.connection
   (:require [clojure.java.jdbc :as jdbc])
-  (:use korma.db))
+  (:use [clojure.string :only (blank?)]
+        [database.util :only (parse-url)]
+        [environ.core :only (env)]
+        [inflections.core :only (dasherize underscore)]
+        [slingshot.slingshot :only [throw+]]
+        korma.db))
 
-(defn connection
-  "Returns a connection from the current database spec."
-  [] (if-let [connection (get-connection @_default)]
-       connection (throw (Exception. "Can't find current database connection."))))
+(def ^:dynamic *connections* (atom {}))
 
-(defn connection-spec
-  "Returns the current connection spec."
-  [] (if-let [spec @_default]
-       spec (throw (Exception. "Can't find current database connection spec."))))
+(def ^:dynamic *naming-strategy*
+  {:keys (comp keyword dasherize) :fields (comp name underscore)})
 
-(defn naming-strategy
-  "Returns naming strategy of the current connection spec."
-  [] (merge {:keys identity :fields identity}
-            (:naming (:options (connection-spec)))))
+(defn korma-connection
+  "Returns the Korma connection for the given name."
+  [name]
+  (let [url (env name)]
+    (if (blank? url)
+      (throw+ (format "Can't find database url for %s. Please configure environ!" name))
+      (if-let [spec (parse-url url)]
+        (if-let [connection (get @*connections* spec)]
+          connection
+          (do (swap! *connections* assoc spec (create-db (assoc spec :naming *naming-strategy*)))
+              (get @*connections* spec)))
+        (throw+  (str "Can't parse database url: " url))))))
 
-(defmacro with-connection
-  "Evaluate `body` with `connection` as the default Korma and JDBC
-  database connection."
-  [connection & body]
+(defn jdbc-connection
+  "Returns the JDBC connection for the given name."
+  [name] @(:pool (korma-connection name)))
+
+(defmacro with-database
+  "Evaluate `body` with the Korma and JDBC connections set to `connection`."
+  [name & body]
   `(let [connection# @_default]
      (try
-       (default-connection ~connection)
-       (jdbc/with-connection (get-connection @_default)
+       (default-connection (korma-connection ~name))
+       (jdbc/with-connection (jdbc-connection ~name)
          ~@body)
        (finally (default-connection connection#)))))

@@ -2,7 +2,7 @@
   (:refer-clojure :exclude (replace))
   (:require [clojure.java.jdbc :as jdbc])
   (:use [clojure.string :only (join split replace)]
-        [database.connection :only (naming-strategy)]
+        [database.connection :only (*naming-strategy*)]
         [database.util :only (dissoc-if)]))
 
 (defprotocol IColumn
@@ -18,7 +18,7 @@
 (defn column-identifier
   "Returns the column identifier. Given a string, return it as-is.
   Given a keyword, return it as a string using the current naming
-  strategy." [column] ((:fields (naming-strategy)) (column-name column)))
+  strategy." [column] ((:fields *naming-strategy*) (column-name column)))
 
 (defn column-type-name
   "Returns the type of the column as string."
