@@ -109,15 +109,17 @@
 (defn all-clause
   [table record]
   (with-ensure-table [table table]
-    (let [columns (vals (:columns table))]
-      (apply pred-and (map #(apply hash-map %1) (seq (select-keys record (map :name columns))))))))
+    (let [columns (vals (:columns table))
+          record (serialize-record table (select-keys record (map :name columns)))]
+      (apply pred-and (map #(apply hash-map %1) (seq record))))))
 
 (defn unique-key-clause
   "Returns the SQL where clause for record."
   [table record]
   (with-ensure-table [table table]
-    (let [columns (key-columns table record)]
-      (apply pred-or (map #(apply hash-map %1) (seq (select-keys record (map :name columns))))))))
+    (let [columns (key-columns table record)
+          record (serialize-record table (select-keys record (map :name columns)))]
+      (apply pred-or (map #(apply hash-map %1) (seq record))))))
 
 (defn where-clause [table record]
   (with-ensure-table [table table]
