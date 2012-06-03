@@ -1,6 +1,6 @@
 (ns database.connection
   (:require [clojure.java.jdbc :as jdbc])
-  (:use [clojure.string :only (blank?)]
+  (:use [clojure.string :only (blank? join)]
         [database.util :only (parse-url)]
         [environ.core :only (env)]
         [inflections.core :only (dasherize underscore)]
@@ -11,6 +11,17 @@
 
 (def ^:dynamic *naming-strategy*
   {:keys (comp keyword dasherize) :fields (comp name underscore)})
+
+(defn- format-params
+  "Format the `params` map as a query string."
+  [params]
+  (->> (remove #(or (nil? (first %1)) (nil? (last %1))) params)
+       (map #(join "=" (map name %1)))
+       (join "&" )))
+
+(defn database-spec
+  "Returns the database spec for `name`."
+  [name] (parse-url (env name)))
 
 (defn korma-connection
   "Returns the Korma connection for the given name."
@@ -28,6 +39,15 @@
 (defn jdbc-connection
   "Returns the JDBC connection for the given name."
   [name] @(:pool (korma-connection name)))
+
+(defn jdbc-url
+  "Returns the JDBC database url for `name`."
+  [name]
+  (let [spec (database-spec name)]
+    (str "jdbc:" (:subprotocol spec) ":" (:subname spec)
+         (let [params (format-params (select-keys spec [:user :password]))]
+           (if-not (blank? params)
+             (str "?" params))) )))
 
 (defmacro with-database
   "Evaluate `body` with the Korma and JDBC connections set to `connection`."

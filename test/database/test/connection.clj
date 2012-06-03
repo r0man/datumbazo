@@ -7,10 +7,24 @@
         korma.core
         korma.db))
 
+(deftest test-database-spec
+  (let [spec (database-spec :database-clj-test-db)]
+    (is (= "postgresql" (:subprotocol spec)))
+    (is (= "//localhost/database_test" (:subname spec)))
+    (is (= "localhost" (:host spec)))
+    (is (= 5432 (:port spec)))
+    (is (= "database" (:user spec)))
+    (is (= "database" (:password spec)))
+    (is (= "database_test" (:db spec)))))
+
 (deftest test-jdbc-connection
   (let [connection (jdbc-connection :database-clj-test-db)]
     (is (map? connection))
     (is (instance? javax.sql.DataSource (:datasource connection)))))
+
+(deftest test-jdbc-url
+  (is (= "jdbc:postgresql://localhost/database_test?password=database&user=database"
+         (jdbc-url :database-clj-test-db))))
 
 (deftest test-korma-connection
   (let [connection (korma-connection :database-clj-test-db)]
