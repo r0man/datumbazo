@@ -163,6 +163,12 @@
     (is (= [german] (example-query "arg-1" {:page 1 :per-page 1})))
     (is (= [spanish] (example-query "arg-1" {:page 2 :per-page 1})))))
 
+(deftest test-sql-slurp
+  (is (= ["SELECT 1;" "SELECT 2;"] (sql-slurp "test-resources/sql-slurp.sql"))))
+
+(deftest test-sql-exec-file
+  (is (= [1 2] (sql-exec-file "test-resources/sql-slurp.sql"))))
+
 (database-test test-shift-fields
   (insert-fixtures)
   (let [users (select (entity :users)

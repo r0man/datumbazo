@@ -1,7 +1,7 @@
 (ns database.core
   (:require [clojure.java.jdbc :as jdbc]
             [korma.sql.engine :as eng])
-  (:use [clojure.string :only (blank? upper-case)]
+  (:use [clojure.string :only (blank? split upper-case)]
         [clojure.set :only (rename-keys)]
         [inflections.core :only (camelize singular plural)]
         [korma.sql.engine :only [infix try-prefix]]
@@ -39,6 +39,15 @@
 (defn sql-cast
   "Cast `arg` to `type`."
   [arg type] (func (str "CAST(%s AS " type ")") [(try-prefix arg)]))
+
+(defn sql-slurp
+  "Opens a reader on `filename` and reads all lines as SQL commands."
+  [filename] (map #(str %1 ";") (split (slurp filename) #";\n")))
+
+(defn sql-exec-file
+  "Read the SQL commands from `filename` via sql-slurp and execute
+  them in a transaction."
+  [filename] (jdbc/transaction (apply jdbc/do-commands (sql-slurp filename))))
 
 (defn to-tsvector
   "Reduce the document text into tsvector."
