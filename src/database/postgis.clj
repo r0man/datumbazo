@@ -3,8 +3,10 @@
   (:require [clojure.java.jdbc :as jdbc])
   (:use [geo.box :only (make-box north-east south-west to-box safe-boxes)]
         [geo.location :only (latitude longitude make-location to-location ILocation)]
+        [clojure.java.shell :only (sh)]
         [korma.sql.engine :only [infix]]
         [korma.sql.fns :only [pred-or]]
+        [slingshot.slingshot :only [throw+]]
         database.columns
         database.core
         database.serialization
@@ -80,6 +82,25 @@
 (defn box2d
   "Returns a BOX2D representing the maximum extents of the geometry."
   [geometry] (sqlfn box2d geometry))
+
+(defn raster2pgsql*
+  "Returns the command to convert `source` with the PostGIS
+  raster2pgsql command to `target` using `table` as the table name."
+  [source target table & {:as options}]
+  (format "raster2pgsql -a -s %s -F -N -1 %s %s > %s"
+          (or (:srid options) 4326) source table target))
+
+(defn raster2pgsql
+  "Convert `source` with the PostGIS raster2pgsql command to `target`
+  using `table` as the table name."
+  [source target table & {:as options}]
+  (let [result (sh "bash" "-c" (apply raster2pgsql* source target table (mapcat seq options)))]
+    (if (zero? (:exit result))
+      (assoc (merge options result)
+        :source source
+        :target target
+        :table table)
+      (throw+ (assoc result :type :raster2pgsql)))))
 
 (defn st-centroid
   "Returns the geometric center of a geometry."

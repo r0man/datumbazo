@@ -264,3 +264,13 @@
   (let [result (st-y :geometry)]
     (is (= "ST_Y(%s)" (:korma.sql.utils/func result)))
     (is (= [:geometry] (:korma.sql.utils/args result)))))
+
+(deftest test-raster2pgsql*
+  (is (= "raster2pgsql -a -s 4311 -F -N -1 htsgwsfc.tiff htsgwsfc > htsgwsfc.sql"
+         (raster2pgsql* "htsgwsfc.tiff" "htsgwsfc.sql" "htsgwsfc" :srid 4311 :n -1))))
+
+(deftest test-raster2pgsql
+  (let [source "test-resources/htsgwsfc.tiff"
+        target "/tmp/test-raster2pgsql.sql"
+        result (raster2pgsql source target "htsgwsfc" :srid 4311)]
+    (is (= 0 (:exit result))) ))
