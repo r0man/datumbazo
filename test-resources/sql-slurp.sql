@@ -1,2 +1,2 @@
-SELECT 1;
-SELECT 2;
+UPDATE languages SET name = 'x' WHERE 1 = 2;
+ANALYZE;

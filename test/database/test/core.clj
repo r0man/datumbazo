@@ -164,10 +164,11 @@
     (is (= [spanish] (example-query "arg-1" {:page 2 :per-page 1})))))
 
 (deftest test-sql-slurp
-  (is (= ["SELECT 1;" "SELECT 2;"] (sql-slurp "test-resources/sql-slurp.sql"))))
+  (is (= ["UPDATE languages SET name = 'x' WHERE 1 = 2;" "ANALYZE;"]
+         (sql-slurp "test-resources/sql-slurp.sql"))))
 
-(deftest test-sql-exec-file
-  (is (= [1 2] (sql-exec-file "test-resources/sql-slurp.sql"))))
+(database-test test-exec-sql-batch-file
+  (is (= [0 0] (exec-sql-batch-file "test-resources/sql-slurp.sql"))))
 
 (database-test test-shift-fields
   (insert-fixtures)

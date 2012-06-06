@@ -32,7 +32,7 @@
            @(:pool connection)))
     (is (= ["\"" "\""] (:delimiters (:options connection))))))
 
-(deftest test-with-database
+(database-test test-with-database
   (with-database :database-clj-test-db
     (testing "jdbc connection"
       (is (instance? java.sql.Connection (jdbc/connection)))

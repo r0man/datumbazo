@@ -44,9 +44,9 @@
   "Opens a reader on `filename` and reads all lines as SQL commands."
   [filename] (map #(str %1 ";") (split (slurp filename) #";\n")))
 
-(defn sql-exec-file
-  "Read the SQL commands from `filename` via sql-slurp and execute
-  them in a transaction."
+(defn exec-sql-batch-file
+  "Read the SQL batch commands from `filename` via sql-slurp and
+  execute them in a transaction."
   [filename] (jdbc/transaction (apply jdbc/do-commands (sql-slurp filename))))
 
 (defn to-tsvector
