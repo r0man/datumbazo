@@ -1,7 +1,9 @@
 (ns database.core
+  (:refer-clojure :exclude (replace))
+  (:import java.util.UUID)
   (:require [clojure.java.jdbc :as jdbc]
             [korma.sql.engine :as eng])
-  (:use [clojure.string :only (blank? split upper-case)]
+  (:use [clojure.string :only (blank? split upper-case replace)]
         [clojure.set :only (rename-keys)]
         [inflections.core :only (camelize singular plural)]
         [korma.sql.engine :only [infix try-prefix]]
@@ -435,3 +437,13 @@
      `(join* ~query ~type ~table (eng/pred-map ~(eng/parse-where clause))))
   ([query type table clause columns]
      `(join* ~query ~type ~table (eng/pred-map ~(eng/parse-where clause)) ~columns)))
+
+(defmacro with-tmp-table
+  [table columns & body]
+  `(let [name# (replace (str "with-tmp-table-" (UUID/randomUUID)) "-" "_")
+         ~table (make-table (keyword name#) ~columns)]
+     (try
+       (create-table ~table)
+       ~@body
+       (finally
+        (drop-table ~table)))))

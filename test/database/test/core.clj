@@ -198,3 +198,11 @@
      (select (entity :users) (join :countries (= :countries.id :users.country-id))))
   (let [result (select (entity :users) (join :left :countries (= :countries.id :users.country-id) [:id :name]))]
     (is (= {:id 1 :name "United States"} (:country (first result))))))
+
+(database-test test-with-tmp-table
+  (with-tmp-table table
+    [[:id :serial :primary-key? true]
+     [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
+     [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
+    (is (keyword? (:name table)))
+    (is (empty? (select (:name table))))))

@@ -6,7 +6,9 @@
 
 (defn find-table
   "Find the database table in *tables* by it's name."
-  [table] (get @*tables* (keyword (table-name table))))
+  [table]
+  (if (table? table)
+    table (get @*tables* (keyword (table-name table)))))
 
 (defn register-table
   "Register the database table in *tables*."
