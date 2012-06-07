@@ -1,6 +1,7 @@
 (ns database.postgis
   (:import [org.postgis Geometry PGgeometry PGbox2d Point])
-  (:require [clojure.java.jdbc :as jdbc])
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.string :as s])
   (:use [geo.box :only (make-box north-east south-west to-box safe-boxes)]
         [geo.location :only (latitude longitude make-location to-location ILocation)]
         [clojure.java.shell :only (sh)]
@@ -86,9 +87,21 @@
 (defn raster2pgsql*
   "Returns the command to convert `source` with the PostGIS
   raster2pgsql command to `target` using `table` as the table name."
-  [source target table & {:as options}]
-  (format "raster2pgsql -a -s %s -F -N -1 %s %s > %s"
-          (or (:srid options) 4326) source table target))
+  [source target table & {:keys [band column mode srid width height]
+                          :or {mode :append srid 0}}]
+  (->> [["raster2pgsql"]
+        ["-s" srid]
+        (if band ["-b" band])
+        (if (and width height) ["-t" (str width "x" height)])
+        [(condp = mode
+           :append "-a"
+           :create "-c"
+           :drop "-d"
+           :prepare "-p")]
+        (if column ["-f" column])
+        [source table ">" target]]
+       (mapcat concat)
+       (s/join " ")))
 
 (defn raster2pgsql
   "Convert `source` with the PostGIS raster2pgsql command to `target`

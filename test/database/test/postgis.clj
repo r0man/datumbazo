@@ -266,8 +266,10 @@
     (is (= [:geometry] (:korma.sql.utils/args result)))))
 
 (deftest test-raster2pgsql*
-  (is (= "raster2pgsql -a -s 4311 -F -N -1 htsgwsfc.tiff htsgwsfc > htsgwsfc.sql"
-         (raster2pgsql* "htsgwsfc.tiff" "htsgwsfc.sql" "htsgwsfc" :srid 4311 :n -1))))
+  (is (= "raster2pgsql -s 0 -a htsgwsfc.tiff htsgwsfc > htsgwsfc.sql"
+         (raster2pgsql* "htsgwsfc.tiff" "htsgwsfc.sql" "htsgwsfc")))
+  (is (= "raster2pgsql -s 4311 -b 1 -a htsgwsfc.tiff htsgwsfc > htsgwsfc.sql"
+         (raster2pgsql* "htsgwsfc.tiff" "htsgwsfc.sql" "htsgwsfc" :srid 4311 :band 1))))
 
 (deftest test-raster2pgsql
   (let [source "test-resources/htsgwsfc.tiff"
