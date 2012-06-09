@@ -87,19 +87,21 @@
 (defn raster2pgsql*
   "Returns the command to convert `source` with the PostGIS
   raster2pgsql command to `target` using `table` as the table name."
-  [source target table & {:keys [band column mode srid width height]
+  [source target table & {:keys [band column filename mode no-data srid width height]
                           :or {mode :append srid 0}}]
   (->> [["raster2pgsql"]
         ["-s" srid]
         (if band ["-b" band])
         (if (and width height) ["-t" (str width "x" height)])
+        (if no-data ["-N" no-data])
+        (if filename ["-F"])
         [(condp = mode
            :append "-a"
            :create "-c"
            :drop "-d"
            :prepare "-p")]
         (if column ["-f" column])
-        [source table ">" target]]
+        [(format "\"%s\" \"%s\" > \"%s\"" source table target)]]
        (mapcat concat)
        (s/join " ")))
 
