@@ -2,7 +2,7 @@
   :description "Clojure Database Kung-Foo"
   :min-lein-version "2.0.0"
   :dependencies [[c3p0/c3p0 "0.9.1.2"]
-                 [clj-time "0.4.2"]
+                 [clj-time "0.4.3"]
                  [environ "0.2.1"]
                  [geo-clj "0.0.3-SNAPSHOT"]
                  [inflections "0.7.0-SNAPSHOT"]
