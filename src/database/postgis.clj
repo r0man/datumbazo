@@ -103,7 +103,7 @@
            :drop "-d"
            :prepare "-p")]
         (if column ["-f" column])
-        [(format "\"%s\" \"%s\" > \"%s\"" source table target)]]
+        [(format "%s \"%s\" > \"%s\"" source table target)]]
        (mapcat concat)
        (s/join " ")))
 

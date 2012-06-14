@@ -269,11 +269,11 @@
   (are [command expected]
     (is (= expected command))
     (raster2pgsql* "htsgwsfc.tiff" "htsgwsfc.sql" "htsgwsfc")
-    "raster2pgsql -a \"htsgwsfc.tiff\" \"htsgwsfc\" > \"htsgwsfc.sql\""
+    "raster2pgsql -a htsgwsfc.tiff \"htsgwsfc\" > \"htsgwsfc.sql\""
     (raster2pgsql* "htsgwsfc.tiff" "htsgwsfc.sql" "htsgwsfc" :srid 4311 :band 1)
-    "raster2pgsql -b 1 -s 4311 -a \"htsgwsfc.tiff\" \"htsgwsfc\" > \"htsgwsfc.sql\""
+    "raster2pgsql -b 1 -s 4311 -a htsgwsfc.tiff \"htsgwsfc\" > \"htsgwsfc.sql\""
     (raster2pgsql* "htsgwsfc.tiff" "htsgwsfc.sql" "htsgwsfc" :srid 4311 :band 1 :no-data -1 :width 10 :height 10 :copy true)
-    "raster2pgsql -b 1 -Y -N -1 -s 4311 -t 10x10 -a \"htsgwsfc.tiff\" \"htsgwsfc\" > \"htsgwsfc.sql\""))
+    "raster2pgsql -b 1 -Y -N -1 -s 4311 -t 10x10 -a htsgwsfc.tiff \"htsgwsfc\" > \"htsgwsfc.sql\""))
 
 (deftest test-raster2pgsql
   (let [source "test-resources/htsgwsfc.tiff"
