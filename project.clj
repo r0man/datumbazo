@@ -8,7 +8,7 @@
                  [inflections "0.7.0-SNAPSHOT"]
                  [migrate/migrate.core "0.0.9-SNAPSHOT"]
                  [migrate/migrate.lein "0.0.9-SNAPSHOT"]
-                 [org.clojars.r0man/korma "0.3.0-beta10"]
+                 [org.clojars.r0man/korma "0.3.0-beta11"]
                  [org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.postgis/postgis-jdbc "1.3.3"]
