@@ -5,7 +5,7 @@
                  [clj-time "0.4.3"]
                  [environ "0.2.1"]
                  [geo-clj "0.0.3-SNAPSHOT"]
-                 [inflections "0.7.0-SNAPSHOT"]
+                 [inflections "0.7.1-SNAPSHOT"]
                  [migrate/migrate.core "0.0.9-SNAPSHOT"]
                  [migrate/migrate.lein "0.0.9-SNAPSHOT"]
                  [org.clojars.r0man/korma "0.3.0-beta11"]
