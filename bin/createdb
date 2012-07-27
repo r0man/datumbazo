@@ -4,7 +4,7 @@ set -e
 
 DATABASE_NAME="database_development"
 
-USER=$USER
+USER=database
 PGSQL_CONTRIB="/usr/share/postgresql/contrib"
 
 if [ ! -z "$1" ]; then DATABASE_NAME="$1"; fi
