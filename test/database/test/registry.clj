@@ -22,10 +22,10 @@
 (deftest test-with-ensure-table
   (with-ensure-table [languages :languages]
     (is (table? languages))
-    (is (= :languages (:name languages))))
+    (is (= "languages" (:name languages))))
   (with-ensure-table [languages (find-table :languages)]
     (is (table? languages))
-    (is (= :languages (:name languages)))))
+    (is (= "languages" (:name languages)))))
 
 (deftest test-with-ensure-column
   (with-ensure-column [:languages [column :id]]

@@ -16,7 +16,15 @@
 
 (deftest test-make-table
   (let [table (make-table :test [[:id :serial] [:name :text]] :url identity)]
-    (is (= :test (:name table)))
+    (is (= "test" (:name table)))
+    (is (= #{:id :name} (set (keys (:columns table)))))
+    (is (= identity (:url table)))
+    (let [columns (vals (:columns table))]
+      (is (= 2 (count columns)))
+      (is (every? column? columns))))
+  (let [table (make-table :oauth.applications [[:id :serial] [:name :text]] :url identity)]
+    (is (= "oauth" (:schema table)))
+    (is (= "applications" (:name table)))
     (is (= #{:id :name} (set (keys (:columns table)))))
     (is (= identity (:url table)))
     (let [columns (vals (:columns table))]

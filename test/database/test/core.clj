@@ -135,7 +135,7 @@
 
 (deftest test-table
   (is (table? (table :languages)))
-  (is (= :languages (:name (table :languages))))
+  (is (= "languages" (:name (table :languages))))
   (is (= (table :languages) (table (table :languages)))))
 
 (deftest test-all-clause
@@ -220,5 +220,5 @@
     [[:id :serial :primary-key? true]
      [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
      [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]]
-    (is (keyword? (:name table)))
+    (is (string? (:name table)))
     (is (empty? (select (:name table))))))

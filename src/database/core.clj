@@ -428,15 +428,23 @@
   "Define and register a database table and it's columns."
   [name & [columns & options]]
   (let [name# name
+        table# (parse-table name#)
         columns# columns
         options# options
-        table# (apply make-table (keyword name#) columns# options#)]
+        table# (apply make-table name# columns# options#)]
     `(do
        (register-table (make-table ~(keyword name#) ~columns# ~@options#))
-       (def ~(symbol (str name# "-entity")) (entity ~(keyword name#)))
+       (def ~(symbol (str (:name table#) "-entity")) (entity ~(keyword name#)))
        ~(define-serialization table#)
        ~(define-finder table#)
-       ~(define-crud table#))))
+       ~(define-crud table#)
+       )))
+
+;; (deftable burningswell.countries
+;;   [[:id :serial :primary-key? true]
+;;    [:name :text :not-null? true :unique? true]
+;;    [:created-at :timestamp-with-time-zone :not-null? true :default "now()"]
+;;    [:updated-at :timestamp-with-time-zone :not-null? true :default "now()"]])
 
 ;; JOIN
 
@@ -446,7 +454,7 @@
                     (vals (select-keys (:columns table) columns))
                     (default-columns table))]
       (-> (update-in query [:joins] conj [type (:name table) clause])
-          (shift-fields (:name table) (singular (:name table)) (map :name columns))))))
+          (shift-fields (:name table) (keyword (singular (:name table))) (map :name columns))))))
 
 (defmacro join
   "Add a join clause to a select query, specifying the table name to join and the predicate

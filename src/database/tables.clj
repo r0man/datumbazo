@@ -1,21 +1,36 @@
 (ns database.tables
-  (:use [database.columns :only (column? column-name make-column)]
-        [database.connection :only (*naming-strategy*)]))
+  (:require [database.columns :refer [column? column-name make-column]]
+            [database.connection :refer [*naming-strategy*]]
+            [clojure.string :refer [split]]))
 
 (defprotocol ITable
   (table-name [table]
-    "Returns the name of the table as a string."))
+    "Returns the table name.")
+  (qualified-table-name [table]
+    "Returns the qualified table name."))
 
-(defrecord Table [name columns])
+(defrecord Table [schema name columns])
 
 (defn column-prefix [table column]
   (keyword (str (table-name table) "-" (column-name column))))
+
+(defn parse-table [table]
+  (let [[_ _ schema table] (re-matches #"(([^.]+)\.)?([^.]+)" (name table))]
+    (->Table schema table nil)))
 
 (defn make-table
   "Make a new database table."
   [name & [columns & {:as options}]]
   (let [columns (map #(if (column? %1) %1 (apply make-column %1)) columns)]
-    (merge (Table. name (zipmap (map :name columns) columns)) options)))
+    (merge (Table. (:schema options) name (zipmap (map :name columns) columns)) options)))
+
+(defn make-table
+  "Make a new database table."
+  [name & [columns & {:as options}]]
+  (let [table (parse-table name)
+        columns (map #(if (column? %1) %1 (apply make-column %1)) columns)]
+    (assoc (merge table options)
+      :columns (zipmap (map :name columns) columns))))
 
 (defn table?
   "Returns true if arg is a table, otherwise false."
@@ -24,7 +39,10 @@
 (defn table-identifier
   "Returns the table identifier. Given a string, return it as-is.
   Given a keyword, return it as a string using the current naming
-  strategy." [table] ((:fields *naming-strategy*) (table-name table)))
+  strategy." [table]
+  (str (if (:schema table)
+         (str ((:fields *naming-strategy*) (:schema table)) "."))
+       ((:fields *naming-strategy*) (table-name table))))
 
 (defn default-columns
   "Returns the default columns of `table`."
@@ -56,11 +74,17 @@
 (extend-type Table
   ITable
   (table-name [table]
-    (table-name (:name table))))
+    (table-name (:name table)))
+  (qualified-table-name [table]
+    (str (if (:schema table)
+           (str (name (:schema table)) "."))
+         (name (:name table)))))
 
 (extend-type String
   ITable
   (table-name [string]
+    string)
+  (qualified-table-name [string]
     string))
 
 (extend-type clojure.lang.IPersistentMap
@@ -68,14 +92,20 @@
   (table-name [table]
     (if-let [name (:name table)]
       (table-name name)
-      (throw (IllegalArgumentException. (format "Not a table: %s" (prn-str table)))))))
+      (throw (IllegalArgumentException. (format "Not a table: %s" (prn-str table))))))
+  (qualified-table-name [symbol]
+    (name keyword)))
 
 (extend-type clojure.lang.Keyword
   ITable
   (table-name [keyword]
+    (name keyword))
+  (qualified-table-name [symbol]
     (name keyword)))
 
 (extend-type clojure.lang.Symbol
   ITable
   (table-name [symbol]
+    (str symbol))
+  (qualified-table-name [symbol]
     (str symbol)))
