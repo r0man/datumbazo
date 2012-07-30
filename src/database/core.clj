@@ -20,6 +20,14 @@
 
 (immigrate 'korma.core)
 
+(defn create-extension
+  "Install the PostgreSQL `extension`."
+  [extension] (jdbc/do-commands (format "CREATE EXTENSION %s" extension)))
+
+(defn drop-extension
+  "Drop the PostgreSQL `extension`."
+  [extension] (jdbc/do-commands (format "DROP EXTENSION %s" extension)))
+
 (defn- find-by-column-doc [table column]
   (format "Returns a query that finds all %s by the %s column in the database."
           (symbol (table-name table)) (symbol (column-name column))))

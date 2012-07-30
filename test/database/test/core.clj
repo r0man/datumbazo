@@ -10,6 +10,13 @@
         database.test
         database.fixtures))
 
+(database-test test-create-extension
+  (create-extension "hstore"))
+
+(database-test test-drop-extension
+  (create-extension "hstore")
+  (drop-extension "hstore"))
+
 (database-test test-add-column
   (let [column (make-column :x :integer)]
     (is (= (assoc column :table (table :languages))
