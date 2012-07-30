@@ -2,6 +2,7 @@
   (:refer-clojure :exclude (replace))
   (:import java.util.UUID)
   (:require [clojure.java.jdbc :as jdbc]
+            [clojure.string :as s]
             [korma.sql.engine :as eng])
   (:use [clojure.string :only (blank? split upper-case replace)]
         [clojure.set :only (rename-keys)]
@@ -27,6 +28,26 @@
 (defn drop-extension
   "Drop the PostgreSQL `extension`."
   [extension] (jdbc/do-commands (format "DROP EXTENSION %s" (name extension))))
+
+(defn index-name [table columns & [separator]]
+  (let [separator (or separator "_")
+        columns (map column-name columns)]
+    (str (table-name table) separator
+         (s/join (or "_" separator) columns) separator "idx")))
+
+(defn create-index
+  "Create a database index on `table` and `columns`."
+  [table columns & {:keys [name unique separator]}]
+  (let [separator (or separator "_")
+        name (or name (index-name table columns separator))]
+    (jdbc/do-commands
+     (str "CREATE "
+          (if unique "UNIQUE " "")
+          "INDEX "
+          name
+          " ON "
+          (table-name table)
+          "(" (s/join ", " (map column-name columns)) ")"))))
 
 (defn- find-by-column-doc [table column]
   (format "Returns a query that finds all %s by the %s column in the database."

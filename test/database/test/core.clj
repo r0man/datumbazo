@@ -17,6 +17,15 @@
   (create-extension :hstore)
   (is (= [0] (drop-extension :hstore))))
 
+(deftest test-index-name
+  (are [table columns name]
+    (is (= name (index-name table columns)))
+    :continents [:name] "continents_name_idx"
+    :oauth_nonces [:nonce :created_at] "oauth_nonces_nonce_created_at_idx"))
+
+(database-test test-create-index
+  (is (create-index :continents [:id :name])))
+
 (database-test test-add-column
   (let [column (make-column :x :integer)]
     (is (= (assoc column :table (table :languages))
