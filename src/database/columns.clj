@@ -11,6 +11,11 @@
 
 (defrecord Column [name type length default native? not-null? primary-key? references unique?])
 
+(defn- qualified-table-name [table]
+  (if (:schema table)
+    (str (:schema table) "." (:name table))
+    (:name table)))
+
 (defn column?
   "Returns true if arg is a column, otherwise false."
   [arg] (instance? Column arg))
@@ -90,7 +95,7 @@
 (defn add-column-statement
   "Returns the add column SQL statement."
   [table column]
-  (->> [(str "ALTER TABLE " (jdbc/as-identifier (:name table)))
+  (->> [(str "ALTER TABLE " (jdbc/as-identifier (qualified-table-name table)))
         (str "ADD COLUMN " (column-identifier column))
         (column-type-name column)
         (default-clause column)
@@ -102,7 +107,7 @@
   "Returns the drop column SQL statement."
   [table column]
   (format "ALTER TABLE %s DROP COLUMN %s"
-          (jdbc/as-identifier (:name table))
+          (jdbc/as-identifier (qualified-table-name table))
           (column-identifier column)))
 
 (extend-type Column

@@ -1,7 +1,7 @@
 (ns database.tables
   (:require [database.columns :refer [column? column-name make-column]]
             [database.connection :refer [*naming-strategy*]]
-            [clojure.string :refer [split]]))
+            [clojure.string :refer [blank? split]]))
 
 (defprotocol ITable
   (table-name [table]
@@ -90,17 +90,19 @@
 (extend-type clojure.lang.IPersistentMap
   ITable
   (table-name [table]
-    (if-let [name (:name table)]
-      (table-name name)
+    (if-not (blank? (:name table))
+      (table-name (:name table))
       (throw (IllegalArgumentException. (format "Not a table: %s" (prn-str table))))))
-  (qualified-table-name [symbol]
-    (name keyword)))
+  (qualified-table-name [table]
+    (if-not (blank? (:name table))
+      (qualified-table-name (:name table))
+      (throw (IllegalArgumentException. (format "Not a table: %s" (prn-str table)))))))
 
 (extend-type clojure.lang.Keyword
   ITable
   (table-name [keyword]
     (name keyword))
-  (qualified-table-name [symbol]
+  (qualified-table-name [keyword]
     (name keyword)))
 
 (extend-type clojure.lang.Symbol

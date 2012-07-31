@@ -8,7 +8,7 @@
 
 (deftest test-key-columns
   (are [expected record]
-    (is (= expected (map :name (key-columns (table :languages) record))))
+    (is (= expected (map :name (key-columns (table :wikipedia.languages) record))))
     [] {}
     [:id] {:id 1}
     [:id :iso-639-1] {:id 1 :iso-639-1 "de"}
@@ -53,20 +53,20 @@
     (find-table :photo-thumbnails) "photo_thumbnails"))
 
 (deftest test-default-columns
-  (let [columns (default-columns (table :languages))]
+  (let [columns (default-columns (table :wikipedia.languages))]
     (is (every? column? columns))
     (is (= [:updated-at :created-at :iso-639-2 :iso-639-1 :family :name :id]
            (map :name columns)))))
 
 (deftest test-select-columns
-  [empty? (select-columns (table :languages) [])]
-  (let [columns (select-columns (table :languages) [:id])]
+  [empty? (select-columns (table :wikipedia.languages) [])]
+  (let [columns (select-columns (table :wikipedia.languages) [:id])]
     (is (every? column? columns))
     (is (= [:id] (map :name columns)))))
 
 (deftest test-primary-key-columns
-  (is (= [:id] (map :name (primary-key-columns (find-table :languages))))))
+  (is (= [:id] (map :name (primary-key-columns (find-table :wikipedia.languages))))))
 
 (deftest test-unique-columns
   (is (= [:iso-639-2 :iso-639-1 :name]
-         (map :name (unique-columns (find-table :languages))))))
+         (map :name (unique-columns (find-table :wikipedia.languages))))))

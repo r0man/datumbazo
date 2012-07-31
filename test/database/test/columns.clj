@@ -49,7 +49,7 @@
   (is (not (column? nil)))
   (is (not (column? "")))
   (is (column? created-at-column))
-  (is (every? column? (vals (:columns (table :languages))))))
+  (is (every? column? (vals (:columns (table :wikipedia.languages))))))
 
 (deftest test-column-identifier
   (are [column expected]
@@ -81,11 +81,11 @@
          (column-spec iso-639-1-column))))
 
 (deftest test-remove-serial-columns
-  (= (dissoc german :id) (remove-serial-columns (table :languages) german)))
+  (= (dissoc german :id) (remove-serial-columns (table :wikipedia.languages) german)))
 
 (deftest test-serialize-columns
-  (= (:id (:columns (table :languages)))
-     (serial-columns (table :languages))))
+  (= (:id (:columns (table :wikipedia.languages)))
+     (serial-columns (table :wikipedia.languages))))
 
 (deftest test-unique-column?
   (is (not (unique-column? nil)))

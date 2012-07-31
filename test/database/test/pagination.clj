@@ -32,10 +32,6 @@
         (is (= 1 (:per-page meta)))
         (is (= 2 (:total meta)))))))
 
-
-;; (exec (query-only (select :languages (where (= :family "Indo-European")))))
-;; (sql-only (exec (query-only (select :languages (where (= :family "Indo-European"))))))
-
 (database-test test-paginate*
   (let [german (save-language german) spanish (save-language spanish)]
     (let [result (paginate* (languages-by-family* (:family german)) :page 1 :per-page 2)]

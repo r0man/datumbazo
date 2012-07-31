@@ -29,6 +29,14 @@
   "Drop the PostgreSQL `extension`."
   [extension] (jdbc/do-commands (format "DROP EXTENSION %s" (name extension))))
 
+(defn create-schema
+  "Install the PostgreSQL `schema`."
+  [schema] (jdbc/do-commands (format "CREATE SCHEMA %s" (name schema))))
+
+(defn drop-schema
+  "Drop the PostgreSQL `schema`."
+  [schema] (jdbc/do-commands (format "DROP SCHEMA %s" (name schema))))
+
 (defn index-name [table columns & [separator]]
   (let [separator (or separator "_")
         columns (map column-name columns)]
@@ -105,7 +113,7 @@
   "Returns the Korma entity of `table`."
   [table]
   (with-ensure-table [table table]
-    (let [entity (assoc (create-entity (table-name table))
+    (let [entity (assoc (create-entity (qualified-table-name table))
                    ;; :transforms (concat (:transforms table) [(partial deserialize-record table)])
                    ;; :prepares (concat (:prepares table) [(partial serialize-record table)])
                    :transforms (concat [(partial deserialize-record table)] (:transforms table))
@@ -321,8 +329,8 @@
        ~(format "Reload the %s from the database." singular)
        [~singular]
        (if-not (empty? ~singular)
-         (with-ensure-table [~'table ~(:name table)]
-           (delete ~(:name table) (where (where-clause ~'table ~singular)))
+         (with-ensure-table [~'table ~(keyword (qualified-table-name table))]
+           (delete ~(keyword (qualified-table-name table)) (where (where-clause ~'table ~singular)))
            ~singular)))))
 
 (defn define-insert-fn [table]
@@ -330,7 +338,7 @@
     `(defn ~(symbol (str "insert-" singular))
        ~(format "Insert the %s into the database." singular)
        [~singular]
-       (with-ensure-table [~'table ~(:name table)]
+       (with-ensure-table [~'table ~(keyword (qualified-table-name table))]
          (validate-record ~'table ~singular)
          (insert (entity ~'table)
                  (values (remove-serial-columns ~'table ~singular)))
@@ -342,7 +350,7 @@
        ~(format "Reload the %s from the database." singular)
        [~singular]
        (if-not (empty? ~singular)
-         (with-ensure-table [~'table ~(:name table)]
+         (with-ensure-table [~'table ~(keyword (qualified-table-name table))]
            (-> (where (~(symbol (str (name (:name table)) "*")))
                       (where-clause ~'table ~singular))
                exec first))))))
@@ -352,7 +360,7 @@
     `(defn ~(symbol (str "update-" singular))
        ~(format "Update the %s in the database." singular)
        [~singular]
-       (with-ensure-table [~'table ~(:name table)]
+       (with-ensure-table [~'table ~(keyword (qualified-table-name table))]
          (validate-record ~'table ~singular)
          (update (entity ~'table)
                  (set-fields ~singular)
@@ -371,7 +379,7 @@
   (let [singular (singular (symbol (name (:name table))))]
     `(defn ~(symbol (str "truncate-" singular))
        ~(format "Truncate the %s database table." singular)
-       [] (truncate-table ~(:name table)))))
+       [] (truncate-table ~(keyword (qualified-table-name table))))))
 
 (defmacro defquery [name doc args & body]
   (let [name# name, args# args, query# (symbol (str name# "*"))]
@@ -411,14 +419,14 @@
     `(do
        (defquery ~(symbol (table-name table))
          ~(format "Returns a query that selects all %s in the database." (symbol (table-name table)))
-         [] (apply fields (select* (entity ~(keyword (table-name table))))
-                   (map :name (default-columns (find-table ~(keyword (table-name table)))))))
+         [] (apply fields (select* (entity ~(keyword (qualified-table-name table))))
+                   (map :name (default-columns (find-table ~(keyword (qualified-table-name table)))))))
        ~@(for [column (vals (:columns table))]
            `(do
               (defquery ~(find-by-column-sym table column)
                 ~(find-by-column-doc table column)
                 [~'value]
-                (with-ensure-column [~(:name table) [~'column ~(:name column)]]
+                (with-ensure-column [~(keyword (qualified-table-name table)) [~'column ~(:name column)]]
                   (where (~find-all#) (~'= ~(:name column) (serialize-column ~'column ~'value)))))
               (defn ~(find-first-by-column-sym table column)
                 ~(find-first-by-column-doc table column)

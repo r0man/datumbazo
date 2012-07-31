@@ -8,12 +8,12 @@
   "Find the database table in *tables* by it's name."
   [table]
   (if (table? table)
-    table (get @*tables* (keyword (table-name table)))))
+    table (get @*tables* (keyword (qualified-table-name table)))))
 
 (defn register-table
   "Register the database table in *tables*."
   [table]
-  (swap! *tables* assoc (keyword (table-name table)) table)
+  (swap! *tables* assoc (keyword (qualified-table-name table)) table)
   table)
 
 (defmacro with-ensure-table

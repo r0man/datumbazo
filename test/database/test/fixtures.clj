@@ -90,8 +90,8 @@
 (database-test test-languages-entity
   (let [entity languages-entity]
     (is (= :id (:pk entity)))
-    (is (= "languages" (:name entity)))
-    (is (= "languages" (:table entity)))
+    (is (= "wikipedia.languages" (:name entity)))
+    (is (= "wikipedia.languages" (:table entity)))
     (is (nil? (:aliases entity)))
     (is (nil? (:db entity)))
     (is (= {} (:rel entity)))

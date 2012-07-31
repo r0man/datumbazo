@@ -67,7 +67,7 @@
     `(do
        (defn ~(symbol (str "deserialize-" entity#))
          ~(str "Deserialize the " entity# " database row.")
-         [~entity#] (deserialize-record ~(keyword (table-name table)) ~entity#))
+         [~entity#] (deserialize-record ~(keyword (qualified-table-name table)) ~entity#))
        (defn ~(symbol (str "serialize-" entity#))
          ~(str "Serialize the " entity# " database row.")
-         [~entity#] (serialize-record ~(keyword (table-name table)) ~entity#)))))
+         [~entity#] (serialize-record ~(keyword (qualified-table-name table)) ~entity#)))))
