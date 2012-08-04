@@ -113,16 +113,11 @@
   "Returns the Korma entity of `table`."
   [table]
   (with-ensure-table [table table]
-    (let [entity (assoc (create-entity (qualified-table-name table))
-                   ;; :transforms (concat (:transforms table) [(partial deserialize-record table)])
-                   ;; :prepares (concat (:prepares table) [(partial serialize-record table)])
-                   :transforms (concat [(partial deserialize-record table)] (:transforms table))
-                   :prepares (concat [(partial serialize-record table)] (:prepares table))
-                   )
-          field-keys (keys (apply dissoc (:columns table) (:exclude (:fields table))))]
-      (-> (apply fields entity field-keys)
-          ;; (assoc :fields field-keys)
-          ))))
+    (apply fields
+           (assoc (create-entity (qualified-table-name table))
+             :transforms (concat (:transforms table) [(partial deserialize-record table)])
+             :prepares (concat [(partial serialize-record table)] (:prepares table)))
+           (keys (apply dissoc (:columns table) (:exclude (:fields table)))))))
 
 (defn prefix-columns
   "Return the names of `columns` prefixed with `prefix`."
