@@ -5,12 +5,16 @@
         [environ.core :only (env)]
         [inflections.core :only (dasherize underscore)]
         [slingshot.slingshot :only [throw+]]
+        [korma.config :as config]
         korma.db))
 
 (def ^:dynamic *connections* (atom {}))
 
 (def ^:dynamic *naming-strategy*
-  {:keys (comp keyword dasherize) :fields (comp name underscore)})
+  {:keys (comp keyword dasherize)
+   :fields (comp name underscore)})
+
+(def ^:dynamic *quote* \")
 
 (defn- format-params
   "Format the `params` map as a query string."
@@ -49,12 +53,26 @@
            (if-not (blank? params)
              (str "?" params))) )))
 
+(defmacro with-quoted-identifiers
+  "Evaluates body in the context of a simple quoting naming strategy
+  supporting clojure.java.jdbc and Korma."
+  [quote & body]
+  (let [quote# quote]
+    `(jdbc/with-quoted-identifiers ~quote#
+       (let [delimiters# (:delimiters @config/options)]
+         (try
+           (set-delimiters ~quote#)
+           ~@body
+           (finally
+            (set-delimiters delimiters#)))))))
+
 (defmacro with-database
   "Evaluate `body` with the Korma and JDBC connections set to `connection`."
   [name & body]
   `(let [connection# @_default]
      (try
        (default-connection (korma-connection ~name))
-       (jdbc/with-connection (jdbc-connection ~name)
-         ~@body)
+       (jdbc/with-quoted-identifiers *quote*
+         (jdbc/with-connection (jdbc-connection ~name)
+           ~@body))
        (finally (default-connection connection#)))))
