@@ -23,8 +23,6 @@
 
 (defn make-schema
   "Make a new database schema map."
-  [name & tables]
+  [name & [tables]]
   (assert (keyword name) (str "Invalid schema name: " (prn-str name)))
-  (Schema.
-   (keyword name)
-   (zipmap (map (comp keyword :name) tables) tables)))
+  (Schema. (keyword name) tables))

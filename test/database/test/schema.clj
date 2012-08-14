@@ -6,12 +6,12 @@
         database.protocol))
 
 (deftest test-make-schema
-  (is (thrown? AssertionError (make-schema nil)))
-  (is (= (make-schema :public) (make-schema "public")))
-  (let [schema (make-schema :public [{:name :continents} {:name :countries}])]
-    (is (= :public (:name schema)))
-    (is (= {:continents {:name :continents}
-            :countries {:name :countries}}))))
+  (let [tables [{:name :continents} {:name :countries}]]
+    (is (thrown? AssertionError (make-schema nil)))
+    (is (= (make-schema :public) (make-schema "public")))
+    (let [schema (make-schema :public tables)]
+      (is (= :public (:name schema)))
+      (is (= tables (:tables schema))))))
 
 (deftest test-drop-schema
   (with-redefs [jdbc/do-commands #(is (= "DROP SCHEMA public" %1))]
