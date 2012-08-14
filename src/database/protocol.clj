@@ -1,21 +1,21 @@
 (ns database.protocol
   (:require [clojure.java.jdbc :as jdbc]))
 
-(defprotocol IIdentifier
+(defprotocol Nameable
   (as-identifier [obj]
     "Returns the database identifier of `obj`."))
 
 (extend-type clojure.lang.Keyword
-  IIdentifier
+  Nameable
   (as-identifier [k]
     (jdbc/as-identifier k)))
 
 (extend-type clojure.lang.Symbol
-  IIdentifier
+  Nameable
   (as-identifier [s]
     (jdbc/as-identifier (keyword s))))
 
 (extend-type java.lang.String
-  IIdentifier
+  Nameable
   (as-identifier [s]
     (jdbc/as-identifier s)))

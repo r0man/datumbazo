@@ -3,7 +3,7 @@
             [database.protocol :refer [as-identifier]]))
 
 (defrecord Schema [name tables]
-  database.protocol.IIdentifier
+  database.protocol.Nameable
   (as-identifier [k]
     (jdbc/as-identifier name)))
 
