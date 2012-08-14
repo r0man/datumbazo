@@ -1,4 +1,5 @@
 (ns database.test.protocol
+  (:refer-clojure :exclude [drop])
   (:use clojure.test
         database.connection
         database.protocol

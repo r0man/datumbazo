@@ -1,11 +1,25 @@
 (ns database.schema
+  (:refer-clojure :exclude [drop])
   (:require [clojure.java.jdbc :as jdbc]
-            [database.protocol :refer [as-identifier]]))
+            [database.protocol :refer [as-identifier]])
+  (:import database.protocol.Nameable))
 
 (defrecord Schema [name tables]
-  database.protocol.Nameable
-  (as-identifier [k]
-    (jdbc/as-identifier name)))
+  Nameable
+  (as-identifier [schema]
+    (jdbc/as-identifier (:name schema))))
+
+(defn drop-schema
+  "Drop the database `schema`."
+  [schema]
+  (-> (format "DROP SCHEMA %s" (as-identifier schema))
+      (jdbc/do-commands)))
+
+(defn create-schema
+  "Drop the database `schema`."
+  [schema]
+  (-> (format "CREATE SCHEMA %s" (as-identifier schema))
+      (jdbc/do-commands)))
 
 (defn make-schema
   "Make a new database schema map."
@@ -14,9 +28,3 @@
   (Schema.
    (keyword name)
    (zipmap (map (comp keyword :name) tables) tables)))
-
-(defn create-schema
-  "Create the database `schema`."
-  [schema]
-  (-> (format "CREATE SCHEMA %s" (as-identifier schema))
-      (jdbc/do-commands)))

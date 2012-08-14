@@ -13,6 +13,13 @@
     (is (= {:continents {:name :continents}
             :countries {:name :countries}}))))
 
+(deftest test-drop-schema
+  (with-redefs [jdbc/do-commands #(is (= "DROP SCHEMA public" %1))]
+    (drop-schema (make-schema :public)))
+  (with-quoted-identifiers \"
+    (with-redefs [jdbc/do-commands #(is (= "DROP SCHEMA \"public\"" %1))]
+      (drop-schema (make-schema :public)))))
+
 (deftest test-create-schema
   (with-redefs [jdbc/do-commands #(is (= "CREATE SCHEMA public" %1))]
     (create-schema (make-schema :public)))
