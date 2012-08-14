@@ -11,8 +11,8 @@
 (def ^:dynamic *connections* (atom {}))
 
 (def ^:dynamic *naming-strategy*
-  {:keys (comp keyword dasherize)
-   :fields (comp name underscore)})
+  {:keys identity
+   :fields identity})
 
 (def ^:dynamic *quote* \")
 
@@ -53,9 +53,16 @@
            (if-not (blank? params)
              (str "?" params))) )))
 
+(defmacro with-naming-strategy
+  "Evaluates `body` in the context of a naming strategy compatible
+  with clojure.java.jdbc and Korma."
+  [naming-strategy & body]
+  `(jdbc/with-naming-strategy ~naming-strategy
+     ~@body))
+
 (defmacro with-quoted-identifiers
-  "Evaluates body in the context of a simple quoting naming strategy
-  supporting clojure.java.jdbc and Korma."
+  "Evaluates `body` in the context of a quoting strategy compatible
+  with clojure.java.jdbc and Korma."
   [quote & body]
   (let [quote# quote]
     `(jdbc/with-quoted-identifiers ~quote#
@@ -67,12 +74,13 @@
             (set-delimiters delimiters#)))))))
 
 (defmacro with-database
-  "Evaluate `body` with the Korma and JDBC connections set to `connection`."
+  "Evaluates `body` with the Korma and JDBC connections set to the
+  named connection."
   [name & body]
   `(let [connection# @_default]
      (try
        (default-connection (korma-connection ~name))
        (jdbc/with-quoted-identifiers *quote*
-         (jdbc/with-connection (jdbc-connection ~name)
+         (jdbc/with-connection @(:pool (korma-connection ~name))
            ~@body))
        (finally (default-connection connection#)))))

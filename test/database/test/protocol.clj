@@ -1,6 +1,5 @@
 (ns database.test.protocol
-  (:require [clojure.java.jdbc :as jdbc]
-            [inflections.core :refer [dasherize underscore]])
+  (:require [inflections.core :refer [dasherize underscore]])
   (:use clojure.test
         database.connection
         database.protocol
@@ -12,7 +11,7 @@
     :weather-models :weather-models
     "weather-models" :weather-models
     "weather_models" :weather_models)
-  (jdbc/with-naming-strategy {:keyword dasherize}
+  (with-naming-strategy {:keyword dasherize}
     (are [obj expected]
       (is (= expected (as-keyword obj)))
       :weather-models :weather-models
@@ -31,7 +30,7 @@
       :weather-models "\"weather-models\""
       "weather-models" "weather-models"
       "weather_models" "weather_models"))
-  (jdbc/with-naming-strategy {:entity underscore}
+  (with-naming-strategy {:entity underscore}
     (are [obj expected]
       (is (= expected (as-identifier obj)))
       :weather-models "weather_models"
