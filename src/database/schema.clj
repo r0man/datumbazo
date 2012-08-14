@@ -4,7 +4,7 @@
             [database.protocol :refer [as-identifier]])
   (:import database.protocol.Nameable))
 
-(defrecord Schema [name tables]
+(defrecord Schema [name]
   Nameable
   (as-identifier [schema]
     (jdbc/as-identifier (:name schema))))
@@ -23,6 +23,6 @@
 
 (defn make-schema
   "Make a new database schema map."
-  [name & [tables]]
+  [name]
   (assert (keyword name) (str "Invalid schema name: " (prn-str name)))
-  (Schema. (keyword name) tables))
+  (Schema. (keyword name)))
