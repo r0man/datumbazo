@@ -6,6 +6,8 @@
         database.protocol))
 
 (deftest test-make-schema
+  (is (thrown? AssertionError (make-schema nil)))
+  (is (= (make-schema :public) (make-schema "public")))
   (let [schema (make-schema :public [{:name :continents} {:name :countries}])]
     (is (= :public (:name schema)))
     (is (= {:continents {:name :continents}
