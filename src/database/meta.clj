@@ -30,6 +30,10 @@
   (as-identifier [schema]
     (jdbc/as-identifier (:name schema))))
 
+(defn schema?
+  "Returns true if `arg` is a Schema, otherwise false."
+  [arg] (instance? Schema arg))
+
 (defn schema-key
   "Returns the lookup key for `schema` in *schema*"
   [schema] [(as-keyword schema)])
@@ -64,7 +68,7 @@
          (jdbc/as-identifier (:name table)))))
 
 (defn table?
-  "Returns true if arg is a table, otherwise false."
+  "Returns true if `arg` is a Table, otherwise false."
   [arg] (instance? Table arg))
 
 (defn parse-table
@@ -112,7 +116,7 @@
     (jdbc/as-identifier (:name schema))))
 
 (defn column?
-  "Returns true if arg is a column, otherwise false."
+  "Returns true if `arg` is a Column, otherwise false."
   [arg] (instance? Column arg))
 
 (defn parse-column

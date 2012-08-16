@@ -42,6 +42,11 @@
     (is (= schema (register-schema schema)))
     (is (= schema (get @*schemas* (:name schema))))))
 
+(deftest test-schema?
+  (is (not (schema? nil)))
+  (is (not (schema? "")))
+  (is (schema? (make-schema :public))))
+
 (deftest test-schema-key
   (are [schema expected]
     (is (= expected (schema-key schema)))
