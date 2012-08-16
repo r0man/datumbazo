@@ -36,7 +36,7 @@
 
 (defn schema-key
   "Returns the lookup key for `schema` in *schema*"
-  [schema] [(as-keyword schema)])
+  [schema] (if schema [(as-keyword schema)]))
 
 (defn register-schema
   "Register the database schema in *schemas*."

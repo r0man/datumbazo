@@ -50,6 +50,7 @@
 (deftest test-schema-key
   (are [schema expected]
     (is (= expected (schema-key schema)))
+    nil nil
     :public [:public]
     (make-schema :public) [:public]))
 
