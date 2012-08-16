@@ -4,15 +4,23 @@
         database.meta
         database.test))
 
-(database-test test-version
-  (let [version (version (jdbc/connection))]
-    (is (string? (:product-name version)))
-    (is (number? (:major-version version)))
-    (is (number? (:minor-version version)))))
+;; SCHEMAS
 
-(database-test test-schemas
-  (is (schemas (jdbc/connection))))
+(deftest test-lookup-schema
+  (is (nil? (lookup-schema :unknown-schema)))
+  (let [schema (make-schema :oauth)]
+    (is (= schema (lookup-schema (:name schema))))))
 
-(database-test test-tables
-  (is (tables (jdbc/connection)))
-  (tables (jdbc/connection) :table-pattern "x"))
+(deftest test-make-schema
+  (is (thrown? AssertionError (make-schema nil)))
+  (is (= (make-schema :public) (make-schema "public")))
+  (let [schema (make-schema :public)]
+    (is (= :public (:name schema)))))
+
+(deftest test-register-schema
+  (let [schema (make-schema :oauth)]
+    (is (= schema (register-schema schema)))
+    (is (= schema (get @*schemas* (:name schema))))))
+
+(deftest test-schema-key
+  (is (= [:public] (schema-key (make-schema :public)))))
