@@ -43,10 +43,16 @@
   [schema] (lookup *schemas* (schema-key schema)))
 
 (defn make-schema
-  "Make a new database schema map."
+  "Make a new database schema named `name`."
   [name]
   (assert (keyword name) (str "Invalid schema name: " (prn-str name)))
   (register-schema (Schema. (keyword (hyphenize name)))))
+
+(defn load-schemas
+  "Read the database schema from the current database connection."
+  [] (->> (.getSchemas (.getMetaData (jdbc/connection)))
+          (resultset-seq)
+          (map #(make-schema (:table_schem %1)))))
 
 ;; TABLES
 
@@ -101,6 +107,10 @@
   (as-identifier [schema]
     (jdbc/as-identifier (:name schema))))
 
+(defn column?
+  "Returns true if arg is a column, otherwise false."
+  [arg] (instance? Column arg))
+
 (defn parse-column
   "Parse `s` as a database column."
   [s]
@@ -146,6 +156,9 @@
 (register-schema (make-schema :public))
 
 
+(comment
+  (database.connection/with-database :bs-database
+    (load-schemas)))
 
 
 ;; (defn tables

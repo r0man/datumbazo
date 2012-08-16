@@ -1,7 +1,9 @@
 (ns database.test.meta
   (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
+        database.connection
         database.meta
+        database.protocol
         database.test))
 
 (def columns
@@ -10,7 +12,18 @@
    :iso-639-1 (make-column :languages/iso-639-1 :varchar :length 2 :unique? true :not-null? true)
    :location (make-column :continents/location [:point-2d])})
 
+(deftest test-as-identifier
+  (testing "with schema"
+    (is (= "public" (as-identifier (make-schema :public)))))
+  (with-quoted-identifiers \"
+    (testing "with schema"
+      (is (= "\"public\"" (as-identifier (make-schema :public)))))))
+
 ;; SCHEMAS
+
+(database-test test-load-schemas
+  (is (load-schemas))
+  (is (pos? (count @*schemas*))))
 
 (deftest test-lookup-schema
   (is (nil? (lookup-schema :unknown-schema)))
@@ -69,6 +82,13 @@
 
 ;; COLUMNS
 
+(deftest test-column?
+  (is (not (column? nil)))
+  (is (not (column? "")))
+  (is (column? (:created-at columns)))
+  ;; (is (every? column? (vals (:columns (table :wikipedia.languages)))))
+  )
+
 (deftest test-column-key
   (are [expected column]
     (is (= expected (column-key column)))
@@ -121,6 +141,14 @@
     (is (not (:native? column)))
     (is (nil? (:default column)))
     (is (not (:not-null? column)))))
+
+(deftest test-parse-column
+  (is (nil? (parse-column :id)))
+  (is (= (->Column :public :applications :id)
+         (parse-column :applications/id)))
+  (is (= (->Column :oauth :applications :id)
+         (parse-column :oauth.applications/id)
+         (parse-column "oauth.applications/id"))))
 
 (deftest test-register-column
   (let [column (:created-at columns)]
