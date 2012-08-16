@@ -3,6 +3,7 @@
   (:use clojure.test
         database.connection
         database.schema
+        database.test
         database.protocol))
 
 (deftest test-make-schema
@@ -29,3 +30,15 @@
   (is (= "public" (as-identifier (make-schema :public))))
   (with-quoted-identifiers \"
     (is (= "\"public\"" (as-identifier (make-schema :public))))))
+
+(deftest test-schema-key
+  (is (= [:public] (schema-key (make-schema :public)))))
+
+(deftest test-register-schema
+  (let [schema (make-schema :oauth)]
+    (is (= schema (register-schema schema)))
+    (is (= schema (get @*schemas* (:name schema))))))
+
+
+;; (database-test test-load-schemas
+;;   (is (load-schemas)))
