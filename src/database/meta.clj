@@ -63,6 +63,10 @@
            (str (jdbc/as-identifier (:schema table)) "."))
          (jdbc/as-identifier (:name table)))))
 
+(defn table?
+  "Returns true if arg is a table, otherwise false."
+  [arg] (instance? Table arg))
+
 (defn parse-table
   "Parse `s` as a table name with an optional schema at the beginning."
   [s] (let [[_ _ schema table] (re-matches #"(([^.]+)\.)?([^.]+)" (name s))]
@@ -151,6 +155,23 @@
 (defn make-columns [table column-specs]
   (map #(apply make-column (str (:schema table) "." (:name table) "/" (name (first %1)))
                (rest %1)) column-specs))
+
+(defmacro with-table
+  "Evaluate `body` with a resolved `table`."
+  [[sym table] & body]
+  (let [table# table]
+    `(if-let [~sym (lookup-table ~table#)]
+       (do ~@body) (throw (Exception. (str "Table not found: " ~table#))))))
+
+(defmacro with-ensure-column
+  "Evaluate body with a resolved `table` and `column`."
+  [[table [sym column]] & body]
+  (let [column# column table# (gensym)]
+    `(with-ensure-table [~table# ~table]
+       (let [~sym (if (column? ~column#) ~column# (get (:columns ~table#) ~column#))
+             ~sym (assoc ~sym :table ~table#)]
+         (assert (column? ~sym))
+         ~@body))))
 
 ;; INIT DEFAULT PUBLIC SCHEMA
 (register-schema (make-schema :public))

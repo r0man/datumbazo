@@ -73,6 +73,11 @@
     (is (= table (register-table table)))
     (is (= table (get-in @*tables* (table-key table))))))
 
+(deftest test-table?
+  (is (not (table? nil)))
+  (is (not (table? "")))
+  (is (table? (make-table :continents))))
+
 (deftest test-table-key
   (are [expected table]
     (is (= expected (table-key table)))
@@ -154,3 +159,21 @@
   (let [column (:created-at columns)]
     (is (= column (register-column column)))
     (is (= column (get-in @*columns* [:public :continents :created-at])))))
+
+;; (deftest test-with-ensure-table
+;;   (with-ensure-table [languages :wikipedia.languages]
+;;     (is (table? languages))
+;;     (is (= "languages" (:name languages))))
+;;   (with-ensure-table [languages (registry/table :wikipedia.languages)]
+;;     (is (table? languages))
+;;     (is (= "languages" (:name languages)))))
+
+;; (deftest test-with-ensure-column
+;;   (with-ensure-column [:wikipedia.languages [column :id]]
+;;     (is (column? column))
+;;     (is (= :id (:name column)))
+;;     (is (= (registry/table :wikipedia.languages) (:table column))))
+;;   (with-ensure-column [(registry/table :wikipedia.languages) [column :id]]
+;;     (is (column? column))
+;;     (is (= :id (:name column)))
+;;     (is (= (registry/table :wikipedia.languages) (:table column)))))
