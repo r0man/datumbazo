@@ -4,11 +4,18 @@
         database.meta
         database.test))
 
+(def columns
+  {:created-at (make-column :continents/created-at :timestamp-with-time-zone :default "now()" :not-null? true)
+   :id (make-column :languages/id :serial :primary-key? true)
+   :iso-639-1 (make-column :languages/iso-639-1 :varchar :length 2 :unique? true :not-null? true)
+   :location (make-column :continents/location [:point-2d])})
+
 ;; SCHEMAS
 
 (deftest test-lookup-schema
   (is (nil? (lookup-schema :unknown-schema)))
   (let [schema (make-schema :oauth)]
+    (is (= schema (lookup-schema schema)))
     (is (= schema (lookup-schema (:name schema))))))
 
 (deftest test-make-schema
@@ -23,4 +30,99 @@
     (is (= schema (get @*schemas* (:name schema))))))
 
 (deftest test-schema-key
-  (is (= [:public] (schema-key (make-schema :public)))))
+  (are [schema expected]
+    (is (= expected (schema-key schema)))
+    :public [:public]
+    (make-schema :public) [:public]))
+
+;; TABLES
+
+(deftest test-lookup-table
+  (is (nil? (lookup-table :unknown-table)))
+  (let [table (make-table :applications)]
+    (is (= table (lookup-table table)))
+    (is (= table (lookup-table :applications)))
+    (is (= table (lookup-table :public.applications)))))
+
+(deftest test-make-table
+  (let [table (make-table :test [[:id :serial] [:name :text]] :url identity)]
+    (is (= :test (:name table)))
+    (is (= [:id :name] (:columns table)))
+    (is (= identity (:url table))))
+  (let [table (make-table :oauth.applications [[:id :serial] [:name :text]] :url identity)]
+    (is (= :oauth (:schema table)))
+    (is (= :applications (:name table)))
+    (is (= [:id :name] (:columns table)))
+    (is (= identity (:url table)))))
+
+(deftest test-register-table
+  (let [table (make-table :oauth.applications)]
+    (is (= table (register-table table)))
+    (is (= table (get-in @*tables* (table-key table))))))
+
+(deftest test-table-key
+  (are [expected table]
+    (is (= expected (table-key table)))
+    nil nil
+    [:public :applications] (make-table :applications)
+    [:oauth :applications] (make-table :oauth.applications)))
+
+;; COLUMNS
+
+(deftest test-column-key
+  (are [expected column]
+    (is (= expected (column-key column)))
+    nil nil
+    [:public :continents :created-at] (:created-at columns)
+    [:public :continents :location] (:location columns)))
+
+(deftest test-lookup-column
+  (is (nil? (lookup-column :unknown-column)))
+  (let [column (:created-at columns)]
+    (is column)
+    (is (= column (lookup-column column)))
+    (is (= column (lookup-column :continents/created-at)))
+    (is (= column (lookup-column :public.continents/created-at)))))
+
+(deftest test-make-column
+  (let [column (:created-at columns)]
+    (is (= :public (:schema column)))
+    (is (= :continents (:table column)))
+    (is (= :created-at (:name column)))
+    (is (= :timestamp-with-time-zone (:type column)))
+    (is (:native? column))
+    (is (nil? (:length column)))
+    (is (= "now()" (:default column)))
+    (is (:not-null? column)))
+  (let [column (:id columns)]
+    (is (= :public (:schema column)))
+    (is (= :languages (:table column)))
+    (is (= :id (:name column)))
+    (is (= :serial (:type column)))
+    (is (nil? (:length column)))
+    (is (:native? column))
+    (is (nil? (:default column)))
+    (is (:not-null? column)))
+  (let [column (:iso-639-1 columns)]
+    (is (= :public (:schema column)))
+    (is (= :languages (:table column)))
+    (is (= :iso-639-1 (:name column)))
+    (is (= :varchar (:type column)))
+    (is (= 2 (:length column)))
+    (is (:native? column))
+    (is (nil? (:default column)))
+    (is (:not-null? column)))
+  (let [column (:location columns)]
+    (is (= :public (:schema column)))
+    (is (= :continents (:table column)))
+    (is (= :location (:name column)))
+    (is (= :point-2d (:type column)))
+    (is (nil? (:length column)))
+    (is (not (:native? column)))
+    (is (nil? (:default column)))
+    (is (not (:not-null? column)))))
+
+(deftest test-register-column
+  (let [column (:created-at columns)]
+    (is (= column (register-column column)))
+    (is (= column (get-in @*columns* [:public :continents :created-at])))))
