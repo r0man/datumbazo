@@ -7,6 +7,13 @@
   (as-identifier [obj]
     "Returns `obj` as a database identifier"))
 
+(extend-type nil
+  Nameable
+  (as-keyword [s]
+    nil)
+  (as-identifier [s]
+    nil))
+
 (extend-type clojure.lang.Keyword
   Nameable
   (as-keyword [k]
