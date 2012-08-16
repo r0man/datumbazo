@@ -2,7 +2,6 @@
   (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
         database.connection
-        database.fixtures
         database.test
         korma.core
         korma.db))

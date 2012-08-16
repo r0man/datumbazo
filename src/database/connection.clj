@@ -80,7 +80,8 @@
   `(let [connection# @_default]
      (try
        (default-connection (korma-connection ~name))
-       (jdbc/with-quoted-identifiers *quote*
-         (jdbc/with-connection @(:pool (korma-connection ~name))
-           ~@body))
+       (jdbc/with-connection @(:pool (korma-connection ~name))
+         (with-naming-strategy *naming-strategy*
+           (jdbc/with-quoted-identifiers *quote*
+             ~@body)))
        (finally (default-connection connection#)))))
