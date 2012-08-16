@@ -42,7 +42,7 @@
           (map #(make-schema (:table_schem %1)))))
 
 (defn schema-key
-  "Returns the lookup key for `schema` in *tables*."
+  "Returns the lookup key for `schema` in *schema*"
   [schema] [(as-keyword schema)])
 
 (defn register-schema
@@ -53,7 +53,7 @@
   "Load the database schema from the current database connection."
   [] (doall (map register-schema (read-schemas))))
 
-;; (register (make-schema :public))
+(register-schema (make-schema :public))
 
 (comment
   (database.connection/with-database :bs-database

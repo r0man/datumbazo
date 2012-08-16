@@ -39,6 +39,5 @@
     (is (= schema (register-schema schema)))
     (is (= schema (get @*schemas* (:name schema))))))
 
-
-;; (database-test test-load-schemas
-;;   (is (load-schemas)))
+(database-test test-load-schemas
+  (> 0 (count (load-schemas))))
