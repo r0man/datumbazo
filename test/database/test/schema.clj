@@ -34,6 +34,11 @@
 (deftest test-schema-key
   (is (= [:public] (schema-key (make-schema :public)))))
 
+(deftest test-lookup-schema
+  (is (nil? (lookup-schema :unknown-schema)))
+  (let [schema (make-schema :oauth)]
+    (is (= schema (lookup-schema (:name schema))))))
+
 (deftest test-register-schema
   (let [schema (make-schema :oauth)]
     (is (= schema (register-schema schema)))

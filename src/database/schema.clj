@@ -2,8 +2,7 @@
   (:refer-clojure :exclude [drop])
   (:require [clojure.java.jdbc :as jdbc]
             [database.protocol :refer [as-identifier as-keyword]]
-            [database.registry :as registry]
-            [database.util :refer [register]]
+            [database.util :refer [lookup register]]
             [inflections.core :refer [hyphenize]])
   (:import database.protocol.Nameable))
 
@@ -48,6 +47,10 @@
 (defn register-schema
   "Register the database schema in *schemas*."
   [schema] (register *schemas* (schema-key schema) schema))
+
+(defn lookup-schema
+  "Lookup `schema` in *schemas*."
+  [schema] (lookup *schemas* (schema-key schema)))
 
 (defn load-schemas
   "Load the database schema from the current database connection."
