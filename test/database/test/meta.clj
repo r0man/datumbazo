@@ -66,6 +66,10 @@
 
 ;; TABLES
 
+(database-test test-load-tables
+  (is (load-tables))
+  (is (pos? (count @*tables*))))
+
 (deftest test-lookup-table
   (with-frozen-time (now)
     (is (nil? (lookup-table :unknown-table)))
@@ -117,6 +121,10 @@
     (is (every? table? tables))))
 
 ;; COLUMNS
+
+(database-test test-load-columns
+  (is (load-columns))
+  (is (pos? (count @*columns*))))
 
 (deftest test-column?
   (is (not (column? nil)))
@@ -193,6 +201,11 @@
              (register-column column)))
       (is (= (assoc column :registered-at (now))
              (get-in @*columns* [:public :continents :created-at]))))))
+
+(database-test test-read-columns
+  (let [columns (read-columns)]
+    (is (pos? (count columns)))
+    (is (every? column? columns))))
 
 ;; (deftest test-with-ensure-table
 ;;   (with-ensure-table [languages :wikipedia.languages]

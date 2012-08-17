@@ -131,12 +131,7 @@
 
 (defn load-tables
   "Load the tables from the current database connection."
-  [& options]
-  (->> (for [table (apply read-tables options)
-             :let [table (make-table (str (:table_schem table) "." (:table_name table)) [])]]
-         (do (info (format "Loading database meta data for table %s." (as-identifier table)))
-             table))
-       (doall)))
+  [& options] (doall (map register-table (apply read-tables options))))
 
 ;; COLUMNS
 
@@ -202,6 +197,10 @@
                     (if column (name column)))
        (jdbc/resultset-seq)
        (map #(map->Column (hyphenize %1)))))
+
+(defn load-columns
+  "Load the columns from the current database connection."
+  [& options] (doall (map register-column (apply read-columns options))))
 
 ;; INIT DEFAULT PUBLIC SCHEMA
 (register-schema (make-schema :public))
