@@ -87,12 +87,12 @@
 ;;   (is (drop-table :wikipedia.languages :if-exists true))
 ;;   (is (thrown? Exception (drop-table :wikipedia.languages))))
 
-;; (deftest test-new-record?
-;;   (is (new-record? {}))
-;;   (is (new-record? {:id nil}))
-;;   (is (new-record? {:id ""}))
-;;   (is (not (new-record? {:id 1})))
-;;   (is (not (new-record? {:id "1"}))))
+(deftest test-new-record?
+  (is (new-record? {}))
+  (is (new-record? {:id nil}))
+  (is (new-record? {:id ""}))
+  (is (not (new-record? {:id 1})))
+  (is (not (new-record? {:id "1"}))))
 
 ;; (database-test test-text=
 ;;   (let [language (insert-record :wikipedia.languages german)]

@@ -228,9 +228,6 @@
 
 ;; CRUD
 
-(defn table-identifier [table]
-  (as-identifier (lookup-table table)))
-
 (defn truncate-table
   "Truncate the table."
   [table]
