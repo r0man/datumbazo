@@ -44,7 +44,7 @@
       (jdbc/do-commands)))
 
 (defn drop-table
-  "Drop the database table."
+  "Drop the database `table`."
   [table & {:keys [if-exists cascade restrict]}]
   (jdbc/do-commands
    (str "DROP TABLE " (if if-exists "IF EXISTS ")
