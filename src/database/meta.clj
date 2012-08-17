@@ -7,6 +7,7 @@
             [inflections.core :refer [hyphenize]])
   (:import database.protocol.Nameable))
 
+(keys @*schemas*)
 (defonce ^:dynamic *schemas*
   (atom {}))
 
@@ -29,12 +30,12 @@
 
 ;; SCHEMAS
 
-(defrecord Schema [name table-schem]
+(defrecord Schema [table-schem]
   Nameable
   (as-keyword [schema]
-    (jdbc/as-keyword (:name schema)))
+    (keyword (hyphenize table-schem)))
   (as-identifier [schema]
-    (jdbc/as-identifier (:name schema))))
+    (jdbc/as-identifier table-schem)))
 
 (defn schema?
   "Returns true if `arg` is a Schema, otherwise false."
@@ -56,8 +57,7 @@
   "Make a new database schema named `name`."
   [name]
   (assert (keyword name) (str "Invalid schema name: " (prn-str name)))
-  (Schema. (keyword (hyphenize name))
-           (str (clojure.core/name name))))
+  (Schema. (as-identifier name)))
 
 (defn read-schemas
   "Read the schema meta data from the current database connection."
@@ -72,11 +72,13 @@
 
 ;; TABLES
 
-(defrecord Table [schema name columns]
+(defrecord Table [table-schem table-name]
   Nameable
+  (as-keyword [table]
+    (keyword (hyphenize (:table-schem table))))
   (as-identifier [table]
-    (str (if (:schema table)
-           (str (jdbc/as-identifier (:schema table)) "."))
+    (str (if (:table-schem table)
+           (str (jdbc/as-identifier (:table-schem table)) "."))
          (jdbc/as-identifier (:name table)))))
 
 (defn table?
@@ -86,16 +88,16 @@
 (defn parse-table
   "Parse `s` as a table name with an optional schema at the beginning."
   [s] (let [[_ _ schema table] (re-matches #"(([^.]+)\.)?([^.]+)" (name s))]
-        (->Table (as-keyword (or schema :public))
-                 (as-keyword table) nil)))
+        (->Table (as-identifier (or schema "public"))
+                 (as-identifier table))))
 
 (defn table-key
   "Returns the lookup key for `table` in *tables*."
-  [{:keys [schema name] :as table}]
+  [{:keys [table-schem table-name] :as table}]
   (cond
-   (and schema name)
-   [(as-keyword (or schema :public))
-    (as-keyword name)]
+   (and table-schem table-name)
+   [(as-keyword (or table-schem :public))
+    (as-keyword table-name)]
    (keyword? table)
    (table-key (parse-table table))))
 
@@ -119,14 +121,16 @@
 
 (defn read-tables
   "Read the table meta data form the current database connection."
-  [& {:keys [catalog schema table types]
-      :or {schema :public types [:table]}}]
-  (jdbc/resultset-seq
-   (.getTables (.getMetaData (jdbc/connection))
-               (if catalog (name catalog))
-               (if schema (name schema))
-               (if table (name table))
-               (into-array String (map (comp upper-case name) (remove nil? types))))))
+  [& {:keys [catalog schema table]}]
+  (->> (.getTables (.getMetaData (jdbc/connection))
+                   (if catalog (name catalog))
+                   (if schema (name schema))
+                   (if table (name table))
+                   (into-array String ["TABLE"]))
+       (jdbc/resultset-seq)
+       (map #(map->Table (hyphenize %1)))
+       (map #(assoc %1 :table-schem (keyword (or schema :public))
+                    :name (keyword (hyphenize (:table-name %1)))))))
 
 (defn load-tables
   "Load the tables from the current database connection."
@@ -139,7 +143,7 @@
 
 ;; COLUMNS
 
-(defrecord Column [schema table name]
+(defrecord Column [table-schem table-name name]
   Nameable
   (as-keyword [schema]
     (jdbc/as-keyword (:name schema)))
@@ -155,17 +159,17 @@
   [s]
   (if-let [matches (re-matches #":?((.+)\.)?(.+)/(.+)" (str s))]
     (Column.
-     (as-keyword (or (nth matches 2) :public))
-     (as-keyword (nth matches 3))
-     (as-keyword (nth matches 4)))))
+     (as-identifier (or (nth matches 2) :public))
+     (as-identifier(nth matches 3))
+     (as-identifier (nth matches 4)))))
 
 (defn column-key
   "Returns the lookup key for `column` in *columns*."
-  [{:keys [schema table name] :as column}]
+  [{:keys [table-schem table-name name] :as column}]
   (cond
-   (and table name)
-   [(as-keyword (or schema :public))
-    (as-keyword table)
+   (and table-name name)
+   [(as-keyword (or table-schem :public))
+    (as-keyword table-name)
     (as-keyword name)]
    (keyword? column)
    (column-key (parse-column column))))
@@ -187,7 +191,7 @@
     :not-null? (or (:not-null? attributes) (:primary-key? attributes))))
 
 (defn make-columns [table column-specs]
-  (map #(apply make-column (str (:schema table) "." (:name table) "/" (name (first %1)))
+  (map #(apply make-column (str (:table-schem table) "." (:name table) "/" (name (first %1)))
                (rest %1)) column-specs))
 
 (defn read-columns
@@ -210,7 +214,7 @@
 ;;   (map :column_name (read-columns)))
 
 ;; (database.connection/with-database :bs-database
-;;   (prn (read-schemas)))
+;;   (prn (read-tables)))
 
 ;; (comment
 ;;   (database.connection/with-database :bs-database

@@ -21,7 +21,7 @@
     (testing "with schema"
       (is (= "\"public\"" (as-identifier (make-schema :public)))))))
 
-;; SCHEMAS
+;; ;; SCHEMAS
 
 (database-test test-load-schemas
   (is (load-schemas))
@@ -31,13 +31,13 @@
   (is (nil? (lookup-schema :unknown-schema)))
   (let [schema (register-schema (make-schema :oauth))]
     (is (= schema (lookup-schema schema)))
-    (is (= schema (lookup-schema (:name schema))))))
+    (is (= schema (lookup-schema (:table-schem schema))))))
 
 (deftest test-make-schema
   (is (thrown? AssertionError (make-schema nil)))
   (is (= (make-schema :public) (make-schema "public")))
   (let [schema (make-schema :public)]
-    (is (= :public (:name schema)))))
+    (is (= "public" (:table-schem schema)))))
 
 (deftest test-register-schema
   (with-frozen-time (now)
@@ -45,7 +45,7 @@
       (is (= (assoc schema :registered-at (now))
              (register-schema schema)))
       (is (= (assoc schema :registered-at (now))
-             (get @*schemas* (:name schema)))))))
+             (get @*schemas* (keyword (:table-schem schema))))))))
 
 (deftest test-schema?
   (is (not (schema? nil)))
@@ -76,13 +76,14 @@
 
 (deftest test-make-table
   (let [table (make-table :test [[:id :serial] [:name :text]] :url identity)]
-    (is (= :test (:name table)))
-    (is (= [:id :name] (:columns table)))
+    (is (= "public" (:table-schem table)))
+    (is (= "test" (:table-name table)))
+    ;; (is (= [:id :name] (:columns table)))
     (is (= identity (:url table))))
   (let [table (make-table :oauth.applications [[:id :serial] [:name :text]] :url identity)]
-    (is (= :oauth (:schema table)))
-    (is (= :applications (:name table)))
-    (is (= [:id :name] (:columns table)))
+    (is (= "oauth" (:table-schem table)))
+    (is (= "applications" (:table-name table)))
+    ;; (is (= [:id :name] (:columns table)))
     (is (= identity (:url table)))))
 
 (deftest test-register-table
@@ -104,6 +105,16 @@
     nil nil
     [:public :applications] (make-table :applications)
     [:oauth :applications] (make-table :oauth.applications)))
+
+(deftest test-parse-table
+  (let [table (parse-table :oauth.applications)]
+    (is (= "oauth" (:table-schem table)))
+    (is (= "applications" (:table-name table)))))
+
+(database-test test-read-tables
+  (let [tables (read-tables)]
+    (is (pos? (count tables)))
+    (is (every? table? tables))))
 
 ;; COLUMNS
 
@@ -131,36 +142,36 @@
 
 (deftest test-make-column
   (let [column (:created-at columns)]
-    (is (= :public (:schema column)))
-    (is (= :continents (:table column)))
-    (is (= :created-at (:name column)))
+    (is (= "public" (:table-schem column)))
+    (is (= "continents" (:table-name column)))
+    (is (= "created-at" (:name column)))
     (is (= :timestamp-with-time-zone (:type column)))
     (is (:native? column))
     (is (nil? (:length column)))
     (is (= "now()" (:default column)))
     (is (:not-null? column)))
   (let [column (:id columns)]
-    (is (= :public (:schema column)))
-    (is (= :languages (:table column)))
-    (is (= :id (:name column)))
+    (is (= "public" (:table-schem column)))
+    (is (= "languages" (:table-name column)))
+    (is (= "id" (:name column)))
     (is (= :serial (:type column)))
     (is (nil? (:length column)))
     (is (:native? column))
     (is (nil? (:default column)))
     (is (:not-null? column)))
   (let [column (:iso-639-1 columns)]
-    (is (= :public (:schema column)))
-    (is (= :languages (:table column)))
-    (is (= :iso-639-1 (:name column)))
+    (is (= "public" (:table-schem column)))
+    (is (= "languages" (:table-name column)))
+    (is (= "iso-639-1" (:name column)))
     (is (= :varchar (:type column)))
     (is (= 2 (:length column)))
     (is (:native? column))
     (is (nil? (:default column)))
     (is (:not-null? column)))
   (let [column (:location columns)]
-    (is (= :public (:schema column)))
-    (is (= :continents (:table column)))
-    (is (= :location (:name column)))
+    (is (= "public" (:table-schem column)))
+    (is (= "continents" (:table-name column)))
+    (is (= "location" (:name column)))
     (is (= :point-2d (:type column)))
     (is (nil? (:length column)))
     (is (not (:native? column)))
@@ -169,9 +180,9 @@
 
 (deftest test-parse-column
   (is (nil? (parse-column :id)))
-  (is (= (->Column :public :applications :id)
+  (is (= (->Column "public" "applications" "id")
          (parse-column :applications/id)))
-  (is (= (->Column :oauth :applications :id)
+  (is (= (->Column "oauth" "applications" "id")
          (parse-column :oauth.applications/id)
          (parse-column "oauth.applications/id"))))
 
@@ -191,12 +202,12 @@
 ;;     (is (table? languages))
 ;;     (is (= "languages" (:name languages)))))
 
-;; (deftest test-with-ensure-column
-;;   (with-ensure-column [:wikipedia.languages [column :id]]
-;;     (is (column? column))
-;;     (is (= :id (:name column)))
-;;     (is (= (registry/table :wikipedia.languages) (:table column))))
-;;   (with-ensure-column [(registry/table :wikipedia.languages) [column :id]]
-;;     (is (column? column))
-;;     (is (= :id (:name column)))
-;;     (is (= (registry/table :wikipedia.languages) (:table column)))))
+;; ;; (deftest test-with-ensure-column
+;; ;;   (with-ensure-column [:wikipedia.languages [column :id]]
+;; ;;     (is (column? column))
+;; ;;     (is (= :id (:name column)))
+;; ;;     (is (= (registry/table :wikipedia.languages) (:table column))))
+;; ;;   (with-ensure-column [(registry/table :wikipedia.languages) [column :id]]
+;; ;;     (is (column? column))
+;; ;;     (is (= :id (:name column)))
+;; ;;     (is (= (registry/table :wikipedia.languages) (:table-name column)))))
