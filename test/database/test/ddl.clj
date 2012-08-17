@@ -18,3 +18,10 @@
   (with-quoted-identifiers \"
     (with-redefs [jdbc/do-commands #(is (= "DROP SCHEMA \"public\"" %1))]
       (drop-schema (make-schema :public)))))
+
+(deftest test-drop-table
+  (with-redefs [jdbc/do-commands #(is (= "DROP TABLE oauth.applications" %1))]
+    (drop-table (make-table :oauth.applications)))
+  (with-quoted-identifiers \"
+    (with-redefs [jdbc/do-commands #(is (= "DROP TABLE \"oauth\".\"applications\"" %1))]
+      (drop-table (make-table :oauth.applications)))))
