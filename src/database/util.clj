@@ -1,6 +1,6 @@
 (ns database.util
-  (:refer-clojure :exclude (replace))
-  (:use [clojure.string :only (replace)]))
+  (:refer-clojure :exclude [replace])
+  (:require [clojure.string :refer [replace]]))
 
 (defn dissoc-if [map pred & keys]
   (reduce
