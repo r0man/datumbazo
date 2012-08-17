@@ -1,10 +1,12 @@
 (ns database.test.meta
-  (:require [clojure.java.jdbc :as jdbc])
+  (:require [clj-time.core :refer [now]]
+            [clojure.java.jdbc :as jdbc])
   (:use clojure.test
         database.connection
         database.meta
         database.protocol
-        database.test))
+        database.test
+        database.util))
 
 (def columns
   {:created-at (make-column :continents/created-at :timestamp-with-time-zone :default "now()" :not-null? true)
@@ -27,7 +29,7 @@
 
 (deftest test-lookup-schema
   (is (nil? (lookup-schema :unknown-schema)))
-  (let [schema (make-schema :oauth)]
+  (let [schema (register-schema (make-schema :oauth))]
     (is (= schema (lookup-schema schema)))
     (is (= schema (lookup-schema (:name schema))))))
 
@@ -38,9 +40,12 @@
     (is (= :public (:name schema)))))
 
 (deftest test-register-schema
-  (let [schema (make-schema :oauth)]
-    (is (= schema (register-schema schema)))
-    (is (= schema (get @*schemas* (:name schema))))))
+  (with-frozen-time (now)
+    (let [schema (make-schema :oauth)]
+      (is (= (assoc schema :registered-at (now))
+             (register-schema schema)))
+      (is (= (assoc schema :registered-at (now))
+             (get @*schemas* (:name schema)))))))
 
 (deftest test-schema?
   (is (not (schema? nil)))
@@ -54,14 +59,20 @@
     :public [:public]
     (make-schema :public) [:public]))
 
+(database-test test-read-schemas
+  (let [schemas (read-schemas)]
+    (is (pos? (count schemas)))
+    (is (every? schema? schemas))))
+
 ;; TABLES
 
 (deftest test-lookup-table
-  (is (nil? (lookup-table :unknown-table)))
-  (let [table (make-table :applications)]
-    (is (= table (lookup-table table)))
-    (is (= table (lookup-table :applications)))
-    (is (= table (lookup-table :public.applications)))))
+  (with-frozen-time (now)
+    (is (nil? (lookup-table :unknown-table)))
+    (let [table (register-table (make-table :applications))]
+      (is (= table (lookup-table table)))
+      (is (= table (lookup-table :applications)))
+      (is (= table (lookup-table :public.applications))))))
 
 (deftest test-make-table
   (let [table (make-table :test [[:id :serial] [:name :text]] :url identity)]
@@ -75,9 +86,12 @@
     (is (= identity (:url table)))))
 
 (deftest test-register-table
-  (let [table (make-table :oauth.applications)]
-    (is (= table (register-table table)))
-    (is (= table (get-in @*tables* (table-key table))))))
+  (with-frozen-time (now)
+    (let [table (make-table :oauth.applications)]
+      (is (= (assoc table :registered-at (now))
+             (register-table table)))
+      (is (= (assoc table :registered-at (now))
+             (get-in @*tables* (table-key table)))))))
 
 (deftest test-table?
   (is (not (table? nil)))
@@ -108,12 +122,12 @@
     [:public :continents :location] (:location columns)))
 
 (deftest test-lookup-column
-  (is (nil? (lookup-column :unknown-column)))
-  (let [column (:created-at columns)]
-    (is column)
-    (is (= column (lookup-column column)))
-    (is (= column (lookup-column :continents/created-at)))
-    (is (= column (lookup-column :public.continents/created-at)))))
+  (with-frozen-time (now)
+    (is (nil? (lookup-column :unknown-column)))
+    (let [column (register-column (:created-at columns))]
+      (is (= column (lookup-column column)))
+      (is (= column (lookup-column :continents/created-at)))
+      (is (= column (lookup-column :public.continents/created-at))))))
 
 (deftest test-make-column
   (let [column (:created-at columns)]
@@ -162,9 +176,12 @@
          (parse-column "oauth.applications/id"))))
 
 (deftest test-register-column
-  (let [column (:created-at columns)]
-    (is (= column (register-column column)))
-    (is (= column (get-in @*columns* [:public :continents :created-at])))))
+  (with-frozen-time (now)
+    (let [column (:created-at columns)]
+      (is (= (assoc column :registered-at (now))
+             (register-column column)))
+      (is (= (assoc column :registered-at (now))
+             (get-in @*columns* [:public :continents :created-at]))))))
 
 ;; (deftest test-with-ensure-table
 ;;   (with-ensure-table [languages :wikipedia.languages]

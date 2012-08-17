@@ -1,5 +1,8 @@
 (ns database.meta
-  (:require [clojure.java.jdbc :as jdbc]
+  (:require [clj-time.core :refer [now]]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.string :refer [upper-case]]
+            [clojure.tools.logging :refer [info]]
             [database.protocol :refer [as-identifier as-keyword]]
             [inflections.core :refer [hyphenize]])
   (:import database.protocol.Nameable))
@@ -15,7 +18,10 @@
 
 (defn- register
   "Register `v` in `atom` under `ks` and and return `v`."
-  [atom ks v] (swap! atom assoc-in ks v) v)
+  [atom ks v]
+  (let [v (assoc v :registered-at (now))]
+    (swap! atom assoc-in ks v)
+    v))
 
 (defn- lookup
   "Lookup `ks` in `atom`."
@@ -23,7 +29,7 @@
 
 ;; SCHEMAS
 
-(defrecord Schema [name]
+(defrecord Schema [name table-schem]
   Nameable
   (as-keyword [schema]
     (jdbc/as-keyword (:name schema)))
@@ -50,13 +56,19 @@
   "Make a new database schema named `name`."
   [name]
   (assert (keyword name) (str "Invalid schema name: " (prn-str name)))
-  (register-schema (Schema. (keyword (hyphenize name)))))
+  (Schema. (keyword (hyphenize name))
+           (str (clojure.core/name name))))
+
+(defn read-schemas
+  "Read the schema meta data from the current database connection."
+  []
+  (->> (.getSchemas (.getMetaData (jdbc/connection)))
+       (jdbc/resultset-seq)
+       (map #(make-schema (:table_schem %1)))))
 
 (defn load-schemas
-  "Read the database schema from the current database connection."
-  [] (->> (.getSchemas (.getMetaData (jdbc/connection)))
-          (resultset-seq)
-          (map #(make-schema (:table_schem %1)))))
+  "Load the database schema from the current database connection."
+  [] (doall (map register-schema (read-schemas))))
 
 ;; TABLES
 
@@ -102,9 +114,28 @@
   [name & [columns & {:as options}]]
   (let [table (parse-table name)
         columns (make-columns table columns)]
-    (register-table
-     (assoc (merge table options)
-       :columns (apply vector (map :name columns))))))
+    (assoc (merge table options)
+      :columns (apply vector (map :name columns)))))
+
+(defn read-tables
+  "Read the table meta data form the current database connection."
+  [& {:keys [catalog schema table types]
+      :or {schema :public types [:table]}}]
+  (jdbc/resultset-seq
+   (.getTables (.getMetaData (jdbc/connection))
+               (if catalog (name catalog))
+               (if schema (name schema))
+               (if table (name table))
+               (into-array String (map (comp upper-case name) (remove nil? types))))))
+
+(defn load-tables
+  "Load the tables from the current database connection."
+  [& options]
+  (->> (for [table (apply read-tables options)
+             :let [table (make-table (str (:table_schem table) "." (:table_name table)) [])]]
+         (do (info (format "Loading database meta data for table %s." (as-identifier table)))
+             table))
+       (doall)))
 
 ;; COLUMNS
 
@@ -150,40 +181,40 @@
 (defn make-column
   "Make a new database column."
   [name type & {:as attributes}]
-  (register-column
-   (assoc (merge (parse-column name) attributes)
-     :type (keyword (if (sequential? type) (first type) type))
-     :native? (if (sequential? type) false true)
-     :not-null? (or (:not-null? attributes) (:primary-key? attributes)))))
+  (assoc (merge (parse-column name) attributes)
+    :type (keyword (if (sequential? type) (first type) type))
+    :native? (if (sequential? type) false true)
+    :not-null? (or (:not-null? attributes) (:primary-key? attributes))))
 
 (defn make-columns [table column-specs]
   (map #(apply make-column (str (:schema table) "." (:name table) "/" (name (first %1)))
                (rest %1)) column-specs))
 
-(defmacro with-table
-  "Evaluate `body` with a resolved `table`."
-  [[sym table] & body]
-  (let [table# table]
-    `(if-let [~sym (lookup-table ~table#)]
-       (do ~@body) (throw (Exception. (str "Table not found: " ~table#))))))
-
-(defmacro with-ensure-column
-  "Evaluate body with a resolved `table` and `column`."
-  [[table [sym column]] & body]
-  (let [column# column table# (gensym)]
-    `(with-ensure-table [~table# ~table]
-       (let [~sym (if (column? ~column#) ~column# (get (:columns ~table#) ~column#))
-             ~sym (assoc ~sym :table ~table#)]
-         (assert (column? ~sym))
-         ~@body))))
+(defn read-columns
+  "Read the column meta data from the current database connection."
+  [& {:keys [catalog schema table column]
+      :or {schema :public types [:table]}}]
+  (jdbc/resultset-seq
+   (.getColumns (.getMetaData (jdbc/connection))
+                (if catalog (name catalog))
+                (if schema (name schema))
+                (if table (name table))
+                (if column (name column)))))
 
 ;; INIT DEFAULT PUBLIC SCHEMA
 (register-schema (make-schema :public))
 
+;; (lookup-table :spot-weather)
 
-(comment
-  (database.connection/with-database :bs-database
-    (load-schemas)))
+;; (database.connection/with-database :bs-database
+;;   (map :column_name (read-columns)))
+
+;; (database.connection/with-database :bs-database
+;;   (prn (read-schemas)))
+
+;; (comment
+;;   (database.connection/with-database :bs-database
+;;     (load-tables)))
 
 
 ;; (defn tables
@@ -209,3 +240,20 @@
 ;; ;;   (schemas (jdbc/find-connection)))
 
 ;; ;; (jdbc/connection)
+
+(defmacro with-table
+  "Evaluate `body` with a resolved `table`."
+  [[sym table] & body]
+  (let [table# table]
+    `(if-let [~sym (lookup-table ~table#)]
+       (do ~@body) (throw (Exception. (str "Table not found: " ~table#))))))
+
+(defmacro with-ensure-column
+  "Evaluate body with a resolved `table` and `column`."
+  [[table [sym column]] & body]
+  (let [column# column table# (gensym)]
+    `(with-ensure-table [~table# ~table]
+       (let [~sym (if (column? ~column#) ~column# (get (:columns ~table#) ~column#))
+             ~sym (assoc ~sym :table ~table#)]
+         (assert (column? ~sym))
+         ~@body))))
