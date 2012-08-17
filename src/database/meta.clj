@@ -7,7 +7,6 @@
             [inflections.core :refer [hyphenize]])
   (:import database.protocol.Nameable))
 
-(keys @*schemas*)
 (defonce ^:dynamic *schemas*
   (atom {}))
 
@@ -128,9 +127,7 @@
                    (if table (name table))
                    (into-array String ["TABLE"]))
        (jdbc/resultset-seq)
-       (map #(map->Table (hyphenize %1)))
-       (map #(assoc %1 :table-schem (keyword (or schema :public))
-                    :name (keyword (hyphenize (:table-name %1)))))))
+       (map #(map->Table (hyphenize %1)))))
 
 (defn load-tables
   "Load the tables from the current database connection."
@@ -198,12 +195,13 @@
   "Read the column meta data from the current database connection."
   [& {:keys [catalog schema table column]
       :or {schema :public types [:table]}}]
-  (jdbc/resultset-seq
-   (.getColumns (.getMetaData (jdbc/connection))
-                (if catalog (name catalog))
-                (if schema (name schema))
-                (if table (name table))
-                (if column (name column)))))
+  (->> (.getColumns (.getMetaData (jdbc/connection))
+                    (if catalog (name catalog))
+                    (if schema (name schema))
+                    (if table (name table))
+                    (if column (name column)))
+       (jdbc/resultset-seq)
+       (map #(map->Column (hyphenize %1)))))
 
 ;; INIT DEFAULT PUBLIC SCHEMA
 (register-schema (make-schema :public))
@@ -211,7 +209,7 @@
 ;; (lookup-table :spot-weather)
 
 ;; (database.connection/with-database :bs-database
-;;   (map :column_name (read-columns)))
+;;   (clojure.pprint/pprint (first (read-columns))))
 
 ;; (database.connection/with-database :bs-database
 ;;   (prn (read-tables)))
