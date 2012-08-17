@@ -1,4 +1,5 @@
 (ns database.test.util
+  (:require [clj-time.core :refer [now]])
   (:use clojure.test
         database.util))
 
@@ -79,3 +80,10 @@
     :photo [:id :name] "" [:photoid :photoname]
     :photo [:id :name] "." [:photo.id :photo.name]
     :photo [:id :name] "-" [:photo-id :photo-name]))
+
+(deftest test-with-frozen-time
+  (let [expected (now)]
+    (with-frozen-time expected
+      (is (= expected (now)))
+      (Thread/sleep 10)
+      (is (= expected (now))))))

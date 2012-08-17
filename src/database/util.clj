@@ -1,6 +1,7 @@
 (ns database.util
   (:refer-clojure :exclude [replace])
-  (:require [clojure.string :refer [replace]]))
+  (:require [clj-time.core :refer [now]]
+            [clojure.string :refer [replace]]))
 
 (defn dissoc-if [map pred & keys]
   (reduce
@@ -86,3 +87,7 @@ value is this namespace."
   [prefix keywords & [separator]]
   (let [separator (or separator "")]
     (map #(keyword (str (name prefix) separator (name %1))) keywords)))
+
+(defmacro with-frozen-time [frozen-time & body]
+  `(with-redefs [now (constantly ~frozen-time)]
+     ~@body))
