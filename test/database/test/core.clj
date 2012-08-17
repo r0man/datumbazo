@@ -55,16 +55,24 @@
 ;;     (insert-record :wikipedia.languages german)))
 
 (deftest test-delete-all
+  (with-redefs [jdbc/do-commands #(do (is (= "DELETE FROM public.continents" %1)) [0])]
+    (is (= 0 (delete-all :continents))))
   (with-redefs [jdbc/do-commands #(do (is (= "DELETE FROM wikipedia.languages" %1)) [0])]
     (is (= 0 (delete-all :wikipedia.languages))))
   (with-quoted-identifiers \"
+    (with-redefs [jdbc/do-commands #(do (is (= "DELETE FROM \"public\".\"continents\"" %1)) [0])]
+      (is (= 0 (delete-all :continents))))
     (with-redefs [jdbc/do-commands #(do (is (= "DELETE FROM \"wikipedia\".\"languages\"" %1)) [0])]
       (is (= 0 (delete-all :wikipedia.languages))))))
 
 (deftest test-truncate-table
+  (with-redefs [jdbc/do-commands #(is (= "TRUNCATE public.continents" %1))]
+    (truncate-table :continents))
   (with-redefs [jdbc/do-commands #(is (= "TRUNCATE wikipedia.languages" %1))]
     (truncate-table :wikipedia.languages))
   (with-quoted-identifiers \"
+    (with-redefs [jdbc/do-commands #(is (= "TRUNCATE \"public\".\"continents\"" %1))]
+      (truncate-table :continents))
     (with-redefs [jdbc/do-commands #(is (= "TRUNCATE \"wikipedia\".\"languages\"" %1))]
       (truncate-table :wikipedia.languages))))
 
