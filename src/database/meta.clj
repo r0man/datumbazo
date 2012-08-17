@@ -74,11 +74,11 @@
 (defrecord Table [table-schem table-name]
   Nameable
   (as-keyword [table]
-    (keyword (hyphenize (:table-schem table))))
+    (keyword (hyphenize table-schem)))
   (as-identifier [table]
-    (str (if (:table-schem table)
-           (str (jdbc/as-identifier (:table-schem table)) "."))
-         (jdbc/as-identifier (:name table)))))
+    (str (if table-schem
+           (str (jdbc/as-identifier (keyword table-schem)) "."))
+         (jdbc/as-identifier (keyword table-name)))))
 
 (defn table?
   "Returns true if `arg` is a Table, otherwise false."
@@ -135,12 +135,12 @@
 
 ;; COLUMNS
 
-(defrecord Column [table-schem table-name name]
+(defrecord Column [table-schem table-name column-name]
   Nameable
-  (as-keyword [schema]
-    (jdbc/as-keyword (:name schema)))
-  (as-identifier [schema]
-    (jdbc/as-identifier (:name schema))))
+  (as-keyword [column]
+    (jdbc/as-keyword (keyword column-name)))
+  (as-identifier [column]
+    (jdbc/as-identifier (keyword column-name))))
 
 (defn column?
   "Returns true if `arg` is a Column, otherwise false."
@@ -157,12 +157,12 @@
 
 (defn column-key
   "Returns the lookup key for `column` in *columns*."
-  [{:keys [table-schem table-name name] :as column}]
+  [{:keys [table-schem table-name column-name] :as column}]
   (cond
-   (and table-name name)
+   (and table-name column-name)
    [(as-keyword (or table-schem :public))
     (as-keyword table-name)
-    (as-keyword name)]
+    (as-keyword column-name)]
    (keyword? column)
    (column-key (parse-column column))))
 
@@ -209,8 +209,8 @@
 
 ;; (lookup-table :spot-weather)
 
-(database.connection/with-database :bs-database
-  (clojure.pprint/pprint (take 5 (read-columns :table "continents" :column :location))))
+;; (database.connection/with-database :bs-database
+;;   (clojure.pprint/pprint (take 5 (read-columns :table "continents" :column :location))))
 
 ;; (database.connection/with-database :bs-database
 ;;   (prn (read-tables)))

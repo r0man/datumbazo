@@ -15,11 +15,19 @@
    :location (make-column :continents/location [:point-2d])})
 
 (deftest test-as-identifier
-  (testing "with schema"
+  (testing "with schemas"
     (is (= "public" (as-identifier (make-schema :public)))))
+  (testing "with tables"
+    (is (= "public.continents" (as-identifier (make-table :continents)))))
+  (testing "with columns"
+    (is (= "created-at" (as-identifier (:created-at columns)))))
   (with-quoted-identifiers \"
     (testing "with schema"
-      (is (= "\"public\"" (as-identifier (make-schema :public)))))))
+      (is (= "\"public\"" (as-identifier (make-schema :public)))))
+    (testing "with tables"
+      (is (= "\"public\".\"continents\"" (as-identifier (make-table :continents)))))
+    (testing "with columns"
+      (is (= "\"created-at\"" (as-identifier (:created-at columns)))))))
 
 ;; ;; SCHEMAS
 
@@ -152,7 +160,7 @@
   (let [column (:created-at columns)]
     (is (= "public" (:table-schem column)))
     (is (= "continents" (:table-name column)))
-    (is (= "created-at" (:name column)))
+    (is (= "created-at" (:column-name column)))
     (is (= :timestamp-with-time-zone (:type column)))
     (is (:native? column))
     (is (nil? (:length column)))
@@ -161,7 +169,7 @@
   (let [column (:id columns)]
     (is (= "public" (:table-schem column)))
     (is (= "languages" (:table-name column)))
-    (is (= "id" (:name column)))
+    (is (= "id" (:column-name column)))
     (is (= :serial (:type column)))
     (is (nil? (:length column)))
     (is (:native? column))
@@ -170,7 +178,7 @@
   (let [column (:iso-639-1 columns)]
     (is (= "public" (:table-schem column)))
     (is (= "languages" (:table-name column)))
-    (is (= "iso-639-1" (:name column)))
+    (is (= "iso-639-1" (:column-name column)))
     (is (= :varchar (:type column)))
     (is (= 2 (:length column)))
     (is (:native? column))
@@ -179,7 +187,7 @@
   (let [column (:location columns)]
     (is (= "public" (:table-schem column)))
     (is (= "continents" (:table-name column)))
-    (is (= "location" (:name column)))
+    (is (= "location" (:column-name column)))
     (is (= :point-2d (:type column)))
     (is (nil? (:length column)))
     (is (not (:native? column)))
