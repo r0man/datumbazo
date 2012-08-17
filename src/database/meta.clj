@@ -63,10 +63,10 @@
   []
   (->> (.getSchemas (.getMetaData (jdbc/connection)))
        (jdbc/resultset-seq)
-       (map #(make-schema (:table_schem %1)))))
+       (map #(map->Schema (hyphenize %1)))))
 
 (defn load-schemas
-  "Load the database schema from the current database connection."
+  "Load the schema meta data from the current database connection."
   [] (doall (map register-schema (read-schemas))))
 
 ;; TABLES
@@ -130,7 +130,7 @@
        (map #(map->Table (hyphenize %1)))))
 
 (defn load-tables
-  "Load the tables from the current database connection."
+  "Load the table meta data from the current database connection."
   [& options] (doall (map register-table (apply read-tables options))))
 
 ;; COLUMNS
@@ -182,8 +182,10 @@
     :native? (if (sequential? type) false true)
     :not-null? (or (:not-null? attributes) (:primary-key? attributes))))
 
-(defn make-columns [table column-specs]
-  (map #(apply make-column (str (:table-schem table) "." (:name table) "/" (name (first %1)))
+(defn make-columns
+  "Make new database columns for `table` from `column-specs`."
+  [table column-specs]
+  (map #(apply make-column (str (:table-schem table) "." (:table-name table) "/" (name (first %1)))
                (rest %1)) column-specs))
 
 (defn read-columns
@@ -199,7 +201,7 @@
        (map #(map->Column (hyphenize %1)))))
 
 (defn load-columns
-  "Load the columns from the current database connection."
+  "Load the column meta data from the current database connection."
   [& options] (doall (map register-column (apply read-columns options))))
 
 ;; INIT DEFAULT PUBLIC SCHEMA
@@ -207,8 +209,8 @@
 
 ;; (lookup-table :spot-weather)
 
-;; (database.connection/with-database :bs-database
-;;   (clojure.pprint/pprint (first (read-columns))))
+(database.connection/with-database :bs-database
+  (clojure.pprint/pprint (take 5 (read-columns :table "continents" :column :location))))
 
 ;; (database.connection/with-database :bs-database
 ;;   (prn (read-tables)))
