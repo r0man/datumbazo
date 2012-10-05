@@ -15,27 +15,35 @@
          name#)
        ~@body)))
 
-(defn make-table [name & {:as options}]
+(defn make-table
+  "Make a database table."
+  [name & {:as options}]
   (assoc options
     :name (keyword name)))
 
-(defn make-column [name type & {:as options}]
+(defn make-column
+  "Make a database column."
+  [name type & {:as options}]
   (assoc options
     :name (keyword name)))
 
-(defn column [table name type & options]
+(defn column
+  "Add a database column to `table`."
+  [table name type & options]
   (let [column (apply make-column name type options)]
     (-> (update-in table [:columns] #(concat %1 [(:name column)]))
         (assoc-in [:column (:name column)] column))))
 
-(defn schema [table schema]
-  (assoc table :schema schema))
+(defn schema
+  "Assoc `schema` under the :schema key to `table`."
+  [table schema] (assoc table :schema schema))
 
-(defn register-table [table]
-  table)
+(defn register-table
+  "Register a database table."
+  [table] table)
 
 (defmacro deftable
-  "Compose multiple fields into one field-like item."
+  "Define a database table."
   [name doc & body]
   `(def ~name
      (register-table
