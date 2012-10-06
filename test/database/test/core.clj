@@ -84,3 +84,9 @@
          (:doc (meta #'truncate-countries))))
   (is (= 0 (truncate-countries)))
   (is (= 0 (count-rows :countries))))
+
+(deftest test-select
+  (is (= "SELECT id, name FROM continents"
+         (select continents)))
+  (is (= "SELECT id, continent-id, name FROM countries"
+         (select countries))))

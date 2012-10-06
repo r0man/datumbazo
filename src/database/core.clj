@@ -1,5 +1,6 @@
 (ns database.core
-  (:require [clojure.java.jdbc :as jdbc]))
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.string :refer [join]]))
 
 (defn count-rows
   "Count all rows in the database `table`."
@@ -64,6 +65,13 @@
 (defn register-table
   "Register a database table."
   [table] table)
+
+(defn select [table]
+  (format "SELECT %s FROM %s"
+          (if (empty? (:columns table))
+            "*"
+            (join ", " (map jdbc/as-identifier (:columns table))))
+          (jdbc/as-identifier (:name table))))
 
 (defmacro deftable
   "Define a database table."
