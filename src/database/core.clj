@@ -72,18 +72,6 @@
          (register-table
           (-> (make-table ~(keyword name) :doc ~doc)
               ~@body)))
-       (defn ~(symbol (str "truncate-" name))
-         ~(format "Truncate the database table %s." (keyword name))
-         [& ~'opts]
-         (apply truncate-table ~(keyword name) ~'opts))))
-
-(defmacro deftable
-  "Define a database table."
-  [name doc & body]
-  `(do (def ~name
-         (register-table
-          (-> (make-table ~(keyword name) :doc ~doc)
-              ~@body)))
        (defn ~(symbol (str "drop-" name))
          ~(format "Drop the %s database table." (keyword name))
          [& ~'opts]
