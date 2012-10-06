@@ -6,13 +6,13 @@
   "Count all rows in the database `table`."
   [table]
   (jdbc/with-query-results rows
-    [(str "SELECT count(*) FROM " (jdbc/as-identifier table))]
+    [(str "SELECT count(*) FROM " (jdbc/as-identifier (:name table)))]
     (:count (first (doall rows)))))
 
 (defn delete-table
   "Delete all rows from the database `table`."
   [table & {:keys []}]
-  (-> (str "DELETE FROM " (jdbc/as-identifier table))
+  (-> (str "DELETE FROM " (jdbc/as-identifier (:name table)))
       (jdbc/do-commands)
       (first)))
 
@@ -21,7 +21,7 @@
   [table & {:keys [cascade if-exists restrict]}]
   (-> (str "DROP TABLE "
            (if if-exists " IF EXISTS")
-           (jdbc/as-identifier table)
+           (jdbc/as-identifier (:name table))
            (if cascade " CASCADE")
            (if restrict " RESTRICT"))
       (jdbc/do-commands)
@@ -30,7 +30,7 @@
 (defn truncate-table
   "Truncate the database `table`."
   [table & {:keys [cascade continue-identity restart-identity restrict]}]
-  (-> (str "TRUNCATE TABLE " (jdbc/as-identifier table)
+  (-> (str "TRUNCATE TABLE " (jdbc/as-identifier (:name table))
            (if cascade " CASCADE")
            (if continue-identity " CONTINUE IDENTITY")
            (if restart-identity " RESTART IDENTITY")
@@ -81,14 +81,14 @@
           (-> (make-table ~(keyword name) :doc ~doc)
               ~@body)))
        (defn ~(symbol (str "drop-" name))
-         ~(format "Drop the %s database table." (keyword name))
+         ~(format "Drop the %s database table." name)
          [& ~'opts]
-         (apply drop-table ~(keyword name) ~'opts))
+         (apply drop-table ~name ~'opts))
        (defn ~(symbol (str "delete-" name))
-         ~(format "Delete all rows in the %s database table." (keyword name))
+         ~(format "Delete all rows in the %s database table." name)
          [& ~'opts]
-         (apply delete-table ~(keyword name) ~'opts))
+         (apply delete-table ~name ~'opts))
        (defn ~(symbol (str "truncate-" name))
-         ~(format "Truncate the %s database table." (keyword name))
+         ~(format "Truncate the %s database table." name)
          [& ~'opts]
-         (apply truncate-table ~(keyword name) ~'opts))))
+         (apply truncate-table ~name ~'opts))))

@@ -39,51 +39,51 @@
     (is (= :text (:type column)))))
 
 (database-test test-count-rows
-  (is (= 0 (count-rows :continents))))
+  (is (= 0 (count-rows continents))))
 
 (database-test test-delete-table
-  (is (= 0 (delete-table :continents)))
-  (is (= 0 (count-rows :continents))))
+  (is (= 0 (delete-table continents)))
+  (is (= 0 (count-rows continents))))
 
 (database-test test-drop-table
-  (is (= 0 (drop-table :countries)))
-  (is (= 0 (drop-table :continents))))
+  (is (= 0 (drop-table countries)))
+  (is (= 0 (drop-table continents))))
 
 (database-test test-drop-continents
-  (is (= "Drop the :continents database table."
+  (is (= "Drop the continents database table."
          (:doc (meta #'drop-continents))))
   (drop-countries)
   (is (= 0 (drop-continents))))
 
 (database-test test-delete-continents
-  (is (= "Delete all rows in the :continents database table."
+  (is (= "Delete all rows in the continents database table."
          (:doc (meta #'delete-continents))))
   (is (= 0 (delete-continents)))
-  (is (= 0 (count-rows :continents))))
+  (is (= 0 (count-rows continents))))
 
 (database-test test-delete-countries
-  (is (= "Delete all rows in the :countries database table."
+  (is (= "Delete all rows in the countries database table."
          (:doc (meta #'delete-countries))))
   (is (= 0 (delete-countries)))
-  (is (= 0 (count-rows :countries))))
+  (is (= 0 (count-rows countries))))
 
 (database-test test-truncate-table
-  (is (= 0 (truncate-table :continents :cascade true)))
-  (is (= 0 (count-rows :continents)))
-  (is (= 0 (truncate-table :countries)))
-  (is (= 0 (count-rows :countries))))
+  (is (= 0 (truncate-table continents :cascade true)))
+  (is (= 0 (count-rows continents)))
+  (is (= 0 (truncate-table countries)))
+  (is (= 0 (count-rows countries))))
 
 (database-test test-truncate-continents
-  (is (= "Truncate the :continents database table."
+  (is (= "Truncate the continents database table."
          (:doc (meta #'truncate-continents))))
   (is (= 0 (truncate-continents :cascade true)))
-  (is (= 0 (count-rows :continents))))
+  (is (= 0 (count-rows continents))))
 
 (database-test test-truncate-countries
-  (is (= "Truncate the :countries database table."
+  (is (= "Truncate the countries database table."
          (:doc (meta #'truncate-countries))))
   (is (= 0 (truncate-countries)))
-  (is (= 0 (count-rows :countries))))
+  (is (= 0 (count-rows countries))))
 
 (deftest test-select
   (is (= "SELECT id, name FROM continents"
