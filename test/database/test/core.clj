@@ -42,10 +42,35 @@
   (is (= 0 (count-rows :continents))))
 
 (database-test test-delete-table
-  (delete-table :continents)
+  (is (= 0 (delete-table :continents)))
   (is (= 0 (count-rows :continents))))
 
+(database-test test-delete-continents
+  (is (= "Delete all rows in the database table :continents."
+         (:doc (meta #'delete-continents))))
+  (is (= 0 (delete-continents)))
+  (is (= 0 (count-rows :continents))))
+
+(database-test test-delete-countries
+  (is (= "Delete all rows in the database table :countries."
+         (:doc (meta #'delete-countries))))
+  (is (= 0 (delete-countries)))
+  (is (= 0 (count-rows :countries))))
+
 (database-test test-truncate-table
-  (truncate-table :countries)
+  (is (= 0 (truncate-table :continents :cascade true)))
   (is (= 0 (count-rows :continents)))
-  (truncate-table :continents :cascade true))
+  (is (= 0 (truncate-table :countries)))
+  (is (= 0 (count-rows :countries))))
+
+(database-test test-truncate-continents
+  (is (= "Truncate the database table :continents."
+         (:doc (meta #'truncate-continents))))
+  (is (= 0 (truncate-continents :cascade true)))
+  (is (= 0 (count-rows :continents))))
+
+(database-test test-truncate-countries
+  (is (= "Truncate the database table :countries."
+         (:doc (meta #'truncate-countries))))
+  (is (= 0 (truncate-countries)))
+  (is (= 0 (count-rows :countries))))

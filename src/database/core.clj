@@ -10,7 +10,8 @@
 
 (defn delete-table
   "Delete all rows from the database `table`."
-  [table] (jdbc/do-commands (str "DELETE FROM " (jdbc/as-identifier table))))
+  [table] (-> (jdbc/do-commands (str "DELETE FROM " (jdbc/as-identifier table)))
+              (first)))
 
 (defn truncate-table
   "Truncate the database `table`."
@@ -20,7 +21,8 @@
            (if continue-identity "CONTINUE IDENTITY")
            (if restart-identity "RESTART IDENTITY")
            (if restrict " RESTRICT"))
-      (jdbc/do-commands)))
+      (jdbc/do-commands)
+      (first)))
 
 (defn make-table
   "Make a database table."
@@ -53,7 +55,27 @@
 (defmacro deftable
   "Define a database table."
   [name doc & body]
-  `(def ~name
-     (register-table
-      (-> (make-table ~(keyword name) :doc ~doc)
-          ~@body))))
+  `(do (def ~name
+         (register-table
+          (-> (make-table ~(keyword name) :doc ~doc)
+              ~@body)))
+       (defn ~(symbol (str "truncate-" name))
+         ~(format "Truncate the database table %s." (keyword name))
+         [& ~'opts]
+         (apply truncate-table ~(keyword name) ~'opts))))
+
+(defmacro deftable
+  "Define a database table."
+  [name doc & body]
+  `(do (def ~name
+         (register-table
+          (-> (make-table ~(keyword name) :doc ~doc)
+              ~@body)))
+       (defn ~(symbol (str "delete-" name))
+         ~(format "Delete all rows in the database table %s." (keyword name))
+         [& ~'opts]
+         (apply delete-table ~(keyword name) ~'opts))
+       (defn ~(symbol (str "truncate-" name))
+         ~(format "Truncate the database table %s." (keyword name))
+         [& ~'opts]
+         (apply truncate-table ~(keyword name) ~'opts))))
