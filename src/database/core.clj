@@ -1,6 +1,27 @@
 (ns database.core
   (:require [clojure.java.jdbc :as jdbc]))
 
+(defn count-rows
+  "Count all rows in the database `table`."
+  [table]
+  (jdbc/with-query-results rows
+    [(str "SELECT count(*) FROM " (jdbc/as-identifier table))]
+    (:count (first (doall rows)))))
+
+(defn delete-table
+  "Delete all rows from the database `table`."
+  [table] (jdbc/do-commands (str "DELETE FROM " (jdbc/as-identifier table))))
+
+(defn truncate-table
+  "Truncate the database `table`."
+  [table & {:keys [cascade continue-identity restart-identity restrict]}]
+  (-> (str "TRUNCATE TABLE " (jdbc/as-identifier table)
+           (if cascade " CASCADE")
+           (if continue-identity "CONTINUE IDENTITY")
+           (if restart-identity "RESTART IDENTITY")
+           (if restrict " RESTRICT"))
+      (jdbc/do-commands)))
+
 (defn make-table
   "Make a database table."
   [name & {:as options}]

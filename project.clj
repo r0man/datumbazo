@@ -14,7 +14,7 @@
                  [slingshot "0.10.3"]]
   :profiles {:dev {:dependencies [[validation-clj "0.4.0-SNAPSHOT"]]
                    :resource-paths ["test-resources"]
-                   :env {:test-database "jdbc:postgresql://localhost/test"}}}
+                   :env {:test-db "jdbc:postgresql://localhost/test"}}}
   :plugins [[environ/environ.lein "0.3.0"]
             [ragtime/ragtime.lein "0.3.1"]]
   :hooks [environ.leiningen.hooks]

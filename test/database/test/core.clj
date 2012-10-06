@@ -1,6 +1,7 @@
 (ns database.test.core
   (:require [clojure.java.jdbc :as jdbc])
   (:use database.core
+        database.test
         clojure.test))
 
 (deftable continents
@@ -36,3 +37,15 @@
   (let [column (:name (:column countries))]
     (is (= :name (:name column)))
     (is (= :text (:type column)))))
+
+(database-test test-count-rows
+  (is (= 0 (count-rows :continents))))
+
+(database-test test-delete-table
+  (delete-table :continents)
+  (is (= 0 (count-rows :continents))))
+
+(database-test test-truncate-table
+  (truncate-table :countries)
+  (is (= 0 (count-rows :continents)))
+  (truncate-table :continents :cascade true))
