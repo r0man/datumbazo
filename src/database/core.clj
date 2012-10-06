@@ -10,16 +10,29 @@
 
 (defn delete-table
   "Delete all rows from the database `table`."
-  [table] (-> (jdbc/do-commands (str "DELETE FROM " (jdbc/as-identifier table)))
-              (first)))
+  [table & {:keys []}]
+  (-> (str "DELETE FROM " (jdbc/as-identifier table))
+      (jdbc/do-commands)
+      (first)))
+
+(defn drop-table
+  "Drop the database `table`."
+  [table & {:keys [cascade if-exists restrict]}]
+  (-> (str "DROP TABLE "
+           (if if-exists " IF EXISTS")
+           (jdbc/as-identifier table)
+           (if cascade " CASCADE")
+           (if restrict " RESTRICT"))
+      (jdbc/do-commands)
+      (first)))
 
 (defn truncate-table
   "Truncate the database `table`."
   [table & {:keys [cascade continue-identity restart-identity restrict]}]
   (-> (str "TRUNCATE TABLE " (jdbc/as-identifier table)
            (if cascade " CASCADE")
-           (if continue-identity "CONTINUE IDENTITY")
-           (if restart-identity "RESTART IDENTITY")
+           (if continue-identity " CONTINUE IDENTITY")
+           (if restart-identity " RESTART IDENTITY")
            (if restrict " RESTRICT"))
       (jdbc/do-commands)
       (first)))
@@ -71,11 +84,15 @@
          (register-table
           (-> (make-table ~(keyword name) :doc ~doc)
               ~@body)))
+       (defn ~(symbol (str "drop-" name))
+         ~(format "Drop the %s database table." (keyword name))
+         [& ~'opts]
+         (apply drop-table ~(keyword name) ~'opts))
        (defn ~(symbol (str "delete-" name))
-         ~(format "Delete all rows in the database table %s." (keyword name))
+         ~(format "Delete all rows in the %s database table." (keyword name))
          [& ~'opts]
          (apply delete-table ~(keyword name) ~'opts))
        (defn ~(symbol (str "truncate-" name))
-         ~(format "Truncate the database table %s." (keyword name))
+         ~(format "Truncate the %s database table." (keyword name))
          [& ~'opts]
          (apply truncate-table ~(keyword name) ~'opts))))
