@@ -2,17 +2,28 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [join]]))
 
+(defn as-identifier [table]
+  (cond
+   (keyword? table)
+   (jdbc/as-identifier table)
+   (and (map? table)
+        (:name table))
+   (->> (map table [:schema :name])
+        (remove nil?)
+        (map jdbc/as-identifier)
+        (join "."))))
+
 (defn count-rows
   "Count all rows in the database `table`."
   [table]
   (jdbc/with-query-results rows
-    [(str "SELECT count(*) FROM " (jdbc/as-identifier (:name table)))]
+    [(str "SELECT count(*) FROM " (as-identifier table))]
     (:count (first (doall rows)))))
 
 (defn delete-table
   "Delete all rows from the database `table`."
   [table & {:keys []}]
-  (-> (str "DELETE FROM " (jdbc/as-identifier (:name table)))
+  (-> (str "DELETE FROM " (as-identifier table))
       (jdbc/do-commands)
       (first)))
 
@@ -21,7 +32,7 @@
   [table & {:keys [cascade if-exists restrict]}]
   (-> (str "DROP TABLE "
            (if if-exists " IF EXISTS")
-           (jdbc/as-identifier (:name table))
+           (as-identifier table)
            (if cascade " CASCADE")
            (if restrict " RESTRICT"))
       (jdbc/do-commands)
@@ -30,7 +41,7 @@
 (defn truncate-table
   "Truncate the database `table`."
   [table & {:keys [cascade continue-identity restart-identity restrict]}]
-  (-> (str "TRUNCATE TABLE " (jdbc/as-identifier (:name table))
+  (-> (str "TRUNCATE TABLE " (as-identifier table)
            (if cascade " CASCADE")
            (if continue-identity " CONTINUE IDENTITY")
            (if restart-identity " RESTART IDENTITY")
@@ -67,7 +78,7 @@
           (if (empty? (:columns table))
             "*"
             (join ", " (map jdbc/as-identifier (:columns table))))
-          (jdbc/as-identifier (:name table))))
+          (as-identifier table)))
 
 (defmacro deftable
   "Define a database table."

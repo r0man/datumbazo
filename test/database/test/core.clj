@@ -4,6 +4,16 @@
         database.test
         clojure.test))
 
+(deftest test-as-identifier
+  (is (nil? (as-identifier nil)))
+  (is (nil? (as-identifier "")))
+  (is (= "continents" (as-identifier :continents)))
+  (is (= "continents" (as-identifier {:name :continents})))
+  (is (= "public.continents" (as-identifier {:schema :public :name :continents})))
+  (jdbc/with-quoted-identifiers \"
+    (is (= "\"public\".\"continents\""
+           (as-identifier {:schema :public :name :continents})))))
+
 (deftable continents
   "The continents database table."
   (column :id :serial)
