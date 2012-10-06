@@ -67,6 +67,12 @@
   (is (= 0 (delete-countries)))
   (is (= 0 (count-rows countries))))
 
+(deftest test-make-table
+  (let [table (make-table :continents)]
+    (is (= :continents (:name table))))
+  (is (= (make-table :continents)
+         (make-table "continents"))))
+
 (database-test test-truncate-table
   (is (= 0 (truncate-table continents :cascade true)))
   (is (= 0 (count-rows continents)))

@@ -62,10 +62,6 @@
   "Assoc `schema` under the :schema key to `table`."
   [table schema] (assoc table :schema schema))
 
-(defn register-table
-  "Register a database table."
-  [table] table)
-
 (defn select [table]
   (format "SELECT %s FROM %s"
           (if (empty? (:columns table))
@@ -77,9 +73,8 @@
   "Define a database table."
   [name doc & body]
   `(do (def ~name
-         (register-table
-          (-> (make-table ~(keyword name) :doc ~doc)
-              ~@body)))
+         (-> (make-table ~(keyword name) :doc ~doc)
+             ~@body))
        (defn ~(symbol (str "drop-" name))
          ~(format "Drop the %s database table." name)
          [& ~'opts]
