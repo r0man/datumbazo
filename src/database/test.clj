@@ -1,5 +1,6 @@
 (ns database.test
   (:require [database.connection :refer [with-connection-pool]]
+            [clojure.java.jdbc :as jdbc]
             [clojure.test :refer [deftest]]))
 
 (defmacro database-test

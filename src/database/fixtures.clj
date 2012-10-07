@@ -13,7 +13,7 @@
         filename (.getAbsolutePath (file filename))
         fragments (-> (replace filename (str directory "/") "")
                       (split (re-pattern File/separator)))]
-    (replace (join "." fragments) #".clj" "")))
+    (keyword (replace (join "." fragments) #".clj" ""))))
 
 (defn clojure-file?
   "Returns true if `path` is a fixture file, otherwise false."
@@ -21,42 +21,42 @@
   (and (.isFile (file path))
        (re-matches #".*\.cljs?$" (str path))))
 
-(defn fixtures-in-directory
-  "Returns tree a seq of fixture files in `directory`."
-  [directory] (filter clojure-file? (file-seq (file directory))))
-
-(defn fixtures-on-classpath
-  "Returns tree a seq of fixture files in `directory` on the classpath."
-  [directory] (filter clojure-file? (file-seq (file (resource directory)))))
+(defn find-fixtures
+  "Returns tree a seq of fixtures in `directory`."
+  [directory]
+  (for [file (file-seq (file directory))
+        :when (clojure-file? file)]
+    {:file file :table (resolve-table directory file)}))
 
 (defn slurp-fixtures
   "Slurp fixtures from `path`."
-  [path]
-  (binding [*data-readers* (assoc *data-readers* 'inst read-instant-timestamp)]
-    (read-string (slurp path))))
+  [path] (binding [*data-readers* (assoc *data-readers* 'inst read-instant-timestamp)]
+           (read-string (slurp path))))
 
-(defn read-table
-  "Read `filename` as a seq of rows and insert them into the database `table`."
-  [table filename]
-  (apply jdbc/insert-records table (slurp-fixtures filename)))
+(defn load-fixture
+  "Load the database `fixture`."
+  [fixture]
+  (let [records (->> (slurp-fixtures (:file fixture))
+                     (apply jdbc/insert-records (:table fixture)))]
+    (assoc fixture :records records)))
 
-(defn write-table
-  "Write the rows of the database `table` to `filename`."
-  [table filename]
-  (with-open [writer (writer filename)]
-    (jdbc/with-query-results rows
-      [(format "SELECT * FROM %s" (jdbc/as-identifier table))]
-      (pprint rows writer))))
+;; (defn write-table
+;;   "Write the rows of the database `table` to `filename`."
+;;   [table filename]
+;;   (with-open [writer (writer filename)]
+;;     (jdbc/with-query-results rows
+;;       [(format "SELECT * FROM %s" (jdbc/as-identifier table))]
+;;       (pprint rows writer))))
 
-(defn write-fixtures [directory]
-  )
+;; (defn write-fixtures [directory]
+;;   )
 
-(defn read-fixtures
-  "Read all fixtures from `directory` and load them into the database."
-  [directory]
-  (doseq [file (fixture-seq (file directory))
-          :let [table (resolve-table directory file)]]
-    (read-table table file)))
+;; (defn read-fixtures
+;;   "Read all fixtures from `directory` and load them into the database."
+;;   [directory]
+;;   (doseq [file (fixture-seq (file directory))
+;;           :let [table (resolve-table directory file)]]
+;;     (read-table table file)))
 
 ;; (database.connection/with-database "jdbc:postgresql://localhost/burningswell_development"
 ;;   (read-fixtures "fixtures"))
