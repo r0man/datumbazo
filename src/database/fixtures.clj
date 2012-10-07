@@ -8,6 +8,9 @@
             [clojure.java.io :refer [file resource]]
             [clojure.pprint :refer [pprint]]))
 
+(def ^:dynamic *readers*
+  {'inst read-instant-timestamp})
+
 (defn- resolve-table [directory filename]
   (let [directory (.getAbsolutePath (file directory))
         filename (.getAbsolutePath (file filename))
@@ -30,8 +33,9 @@
 
 (defn slurp-rows
   "Slurp a seq of database rows from `filename`."
-  [filename] (binding [*data-readers* (assoc *data-readers* 'inst read-instant-timestamp)]
-               (read-string (slurp filename))))
+  [filename]
+  (binding [*data-readers* (merge *data-readers* *readers*)]
+    (read-string (slurp filename))))
 
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
