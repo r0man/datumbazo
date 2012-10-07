@@ -56,6 +56,7 @@
 (defn load-fixtures
   "Load all database fixtures from `directory`."
   [directory]
-  (->> (find-fixtures directory)
-       (map #(read-fixture (:table %1) (:file %1)))
-       (doall)))
+  (jdbc/transaction
+   (->> (find-fixtures directory)
+        (map #(read-fixture (:table %1) (:file %1)))
+        (doall))))
