@@ -5,7 +5,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [join replace]]
-            [database.util :refer [absolute-path clojure-file-seq path-split path-replace]]))
+            [database.util :refer [clojure-file-seq path-split path-replace]]))
 
 (def ^:dynamic *fixture-path* "db/fixtures")
 
