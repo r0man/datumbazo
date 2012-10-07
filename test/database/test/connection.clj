@@ -15,37 +15,37 @@
   (is (thrown? IllegalArgumentException (connection-spec :unknown-db)))
   (is (map? (connection-spec :test-db))))
 
-;; (deftest test-make-connection-pool
-;;   (let [pool (make-connection-pool :test-db)]
-;;     (is (map? pool))
-;;     (let [datasource (:datasource pool)]
-;;       (is (instance? ComboPooledDataSource datasource))
-;;       (is (= "jdbc:postgresql://localhost/test" (.getJdbcUrl datasource)))
-;;       (is (= 15 (.getMaxPoolSize datasource)))
-;;       (is (= 10800 (.getMaxIdleTime datasource)))
-;;       (is (= 1800 (.getMaxIdleTimeExcessConnections datasource))))
-;;     (with-connection pool
-;;       (is (jdbc/connection))))
-;;   (let [pool (make-connection-pool "postgresql://localhost/test")]
-;;     (is (map? pool))
-;;     (let [datasource (:datasource pool)]
-;;       (is (instance? ComboPooledDataSource datasource))
-;;       (is (= "jdbc:postgresql://localhost/test" (.getJdbcUrl datasource)))
-;;       (is (= 15 (.getMaxPoolSize datasource)))
-;;       (is (= 10800 (.getMaxIdleTime datasource)))
-;;       (is (= 1800 (.getMaxIdleTimeExcessConnections datasource))))
-;;     (with-connection pool
-;;       (is (jdbc/connection))))
-;;   (let [pool (make-connection-pool (parse-url "postgresql://localhost/test"))]
-;;     (is (map? pool))
-;;     (let [datasource (:datasource pool)]
-;;       (is (instance? ComboPooledDataSource datasource))
-;;       (is (= "jdbc:postgresql://localhost/test" (.getJdbcUrl datasource)))
-;;       (is (= 15 (.getMaxPoolSize datasource)))
-;;       (is (= 10800 (.getMaxIdleTime datasource)))
-;;       (is (= 1800 (.getMaxIdleTimeExcessConnections datasource))))
-;;     (with-connection pool
-;;       (is (jdbc/connection)))))
+(deftest test-make-connection-pool
+  (let [pool (make-connection-pool :test-db)]
+    (is (map? pool))
+    (let [datasource (:datasource pool)]
+      (is (instance? ComboPooledDataSource datasource))
+      (is (= "jdbc:postgresql://localhost/test" (.getJdbcUrl datasource)))
+      (is (= 15 (.getMaxPoolSize datasource)))
+      (is (= 10800 (.getMaxIdleTime datasource)))
+      (is (= 1800 (.getMaxIdleTimeExcessConnections datasource))))
+    (with-connection pool
+      (is (jdbc/connection))))
+  (let [pool (make-connection-pool "postgresql://localhost/test")]
+    (is (map? pool))
+    (let [datasource (:datasource pool)]
+      (is (instance? ComboPooledDataSource datasource))
+      (is (= "jdbc:postgresql://localhost/test" (.getJdbcUrl datasource)))
+      (is (= 15 (.getMaxPoolSize datasource)))
+      (is (= 10800 (.getMaxIdleTime datasource)))
+      (is (= 1800 (.getMaxIdleTimeExcessConnections datasource))))
+    (with-connection pool
+      (is (jdbc/connection))))
+  (let [pool (make-connection-pool (parse-url "postgresql://localhost/test"))]
+    (is (map? pool))
+    (let [datasource (:datasource pool)]
+      (is (instance? ComboPooledDataSource datasource))
+      (is (= "jdbc:postgresql://localhost/test" (.getJdbcUrl datasource)))
+      (is (= 15 (.getMaxPoolSize datasource)))
+      (is (= 10800 (.getMaxIdleTime datasource)))
+      (is (= 1800 (.getMaxIdleTimeExcessConnections datasource))))
+    (with-connection pool
+      (is (jdbc/connection)))))
 
 (deftest test-resolve-connection
   (is (= (connection-url :test-db)
