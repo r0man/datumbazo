@@ -7,6 +7,9 @@
             [clojure.string :refer [join replace]]
             [database.util :refer [absolute-path clojure-file-seq file-split]]))
 
+(def ^:dynamic *fixture-path*
+  "db/fixtures")
+
 (def ^:dynamic *readers*
   {'inst read-instant-timestamp})
 
@@ -24,6 +27,14 @@
   [directory]
   (for [file (clojure-file-seq directory)]
     {:file file :table (resolve-table directory file)}))
+
+(defn fixture-path
+  "Returns the fixture path for `db-name`."
+  [db-name] (str (file *fixture-path* db-name)))
+
+(defn fixtures
+  "Returns the fixtures for `db-name`."
+  [db-name] (find-fixtures (resource (fixture-path db-name))))
 
 (defn slurp-rows
   "Slurp a seq of database rows from `filename`."

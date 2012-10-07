@@ -10,6 +10,13 @@
 (def fixture-file
   (str fixture-dir "/continents.clj"))
 
+(deftest test-fixture-path
+  (is (= "db/fixtures/test-db" (fixture-path "test-db"))))
+
+(deftest test-fixtures
+  (is (= (find-fixtures (resource "db/fixtures/test-db"))
+         (fixtures "test-db"))))
+
 (deftest test-find-fixtures
   (let [fixtures (find-fixtures fixture-dir)]
     (is (= 1 (count fixtures)))
