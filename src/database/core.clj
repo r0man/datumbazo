@@ -83,18 +83,25 @@
 (defmacro deftable
   "Define a database table."
   [name doc & body]
-  `(do (def ~name
-         (-> (make-table ~(keyword name) :doc ~doc)
-             ~@body))
-       (defn ~(symbol (str "drop-" name))
-         ~(format "Drop the %s database table." name)
-         [& ~'opts]
-         (apply drop-table ~name ~'opts))
-       (defn ~(symbol (str "delete-" name))
-         ~(format "Delete all rows in the %s database table." name)
-         [& ~'opts]
-         (apply delete-table ~name ~'opts))
-       (defn ~(symbol (str "truncate-" name))
-         ~(format "Truncate the %s database table." name)
-         [& ~'opts]
-         (apply truncate-table ~name ~'opts))))
+  (let [table# (symbol (str name "-table"))]
+    `(do (def ~table#
+           (-> (make-table ~(keyword name) :doc ~doc)
+               ~@body))
+         (defn ~(symbol (str "drop-" name))
+           ~(format "Drop the %s database table." name)
+           [& ~'opts]
+           (apply drop-table ~table# ~'opts))
+         (defn ~(symbol (str "delete-" name))
+           ~(format "Delete all rows in the %s database table." name)
+           [& ~'opts]
+           (apply delete-table ~table# ~'opts))
+         (defn ~(symbol (str "truncate-" name))
+           ~(format "Truncate the %s database table." name)
+           [& ~'opts]
+           (apply truncate-table ~table# ~'opts))
+         (defn ~name
+           ~(format "Select %s from the database table." name)
+           [& {:keys [~'page ~'per-page]}]
+           (jdbc/with-query-results rows#
+             [(str "SELECT * FROM " (jdbc/as-identifier (:name ~table#)))]
+             (doall rows#))))))
