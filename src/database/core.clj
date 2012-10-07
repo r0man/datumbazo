@@ -80,12 +80,12 @@
             (join ", " (map jdbc/as-identifier (:columns table))))
           (as-identifier table)))
 
-(defn select-rows [table & {:keys [page per-page]}]
+(defn select-table [table & {:keys [page per-page]}]
   (jdbc/with-query-results rows
     [(str "SELECT * FROM " (as-identifier table))]
     (doall rows)))
 
-(defn select-rows-by-column [table column-name column-value & {:keys [page per-page]}]
+(defn select-table-by-column [table column-name column-value & {:keys [page per-page]}]
   (jdbc/with-query-results rows
     [(str "SELECT * "
           "  FROM " (as-identifier table)
@@ -116,8 +116,8 @@
 
          (defn ~table-name
            ~(format "Select %s from the database table." table-name)
-           [& ~'opts] (apply select-rows ~symbol# ~'opts))
+           [& ~'opts] (apply select-table ~symbol# ~'opts))
 
          ~@(for [column# (map (comp symbol name) (:columns table#))]
              `(defn ~(symbol (str table-name "-by-" column#)) [~column# & ~'opts]
-                (apply select-rows-by-column ~symbol# ~(keyword column#) ~column# ~'opts))))))
+                (apply select-table-by-column ~symbol# ~(keyword column#) ~column# ~'opts))))))
