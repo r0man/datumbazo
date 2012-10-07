@@ -23,7 +23,6 @@
           scheme (nth matches 2)
           server-name (nth matches 7)
           server-port (parse-integer (nth matches 9))]
-      (prn matches)
       {:db db
        :host (nth matches 7)
        :password (nth matches 5)
@@ -36,5 +35,4 @@
        :uri (nth matches 11)
        :user (nth matches 4)
        :params (parse-params (nth matches 14))
-       :query-string (nth matches 14)})
-    (throw (IllegalArgumentException. (format "Can't parse database url: %s" (str s))))))
+       :query-string (nth matches 14)})))

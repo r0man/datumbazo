@@ -17,8 +17,7 @@
        "a=1&b=2" {:a "1" :b "2"}))
 
 (deftest test-parse-url
-  (doseq [url [nil "" "x"]]
-    (is (thrown? IllegalArgumentException (parse-url nil))))
+  (doseq [url [nil "" "x"]] (is (nil? (parse-url nil))))
   (let [spec (parse-url "postgresql://localhost:5432/lein_test")]
     (is (= "postgresql" (:scheme spec)))
     (is (= "postgresql" (:subprotocol spec)))
