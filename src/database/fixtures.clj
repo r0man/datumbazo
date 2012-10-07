@@ -15,13 +15,13 @@
         filename (.getAbsolutePath (file filename))
         fragments (-> (replace filename (str directory "/") "")
                       (split (re-pattern File/separator)))]
-    (keyword (replace (join "." fragments) #".clj" ""))))
+    (keyword (replace (join "." fragments) #"(?i)\.cljs?$" ""))))
 
 (defn clojure-file?
   "Returns true if `path` is a fixture file, otherwise false."
   [path]
   (and (.isFile (file path))
-       (re-matches #".*\.cljs?$" (str path))))
+       (re-matches #"(?i).*\.cljs?$" (str path))))
 
 (defn find-fixtures
   "Returns tree a seq of fixtures in `directory`."
