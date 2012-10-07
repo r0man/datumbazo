@@ -29,6 +29,12 @@
   "Returns tree a seq of fixture files in `directory` on the classpath."
   [directory] (filter fixture-file? (file-seq (file (resource directory)))))
 
+(defn read-fixtures
+  "Read fixtures from `path`."
+  [path]
+  (binding [*data-readers* (assoc *data-readers* 'inst read-instant-timestamp)]
+    (read-string (slurp path))))
+
 (defn read-table
   "Read `filename` as a seq of rows and insert them into the database `table`."
   [table filename]
