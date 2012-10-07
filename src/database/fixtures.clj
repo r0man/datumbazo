@@ -15,8 +15,7 @@
   [directory filename]
   (let [directory (.getAbsolutePath (file directory))
         filename (.getAbsolutePath (file filename))]
-    (-> (join "." (-> (replace filename (str directory "/") "")
-                      (file-split)))
+    (-> (join "." (file-split (replace filename (str directory "/") "")))
         (replace #"(?i)\.cljs?$" "")
         (keyword))))
 
