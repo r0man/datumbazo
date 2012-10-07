@@ -1,21 +1,24 @@
 (ns database.fixtures
   (:refer-clojure :exclude [replace])
-  (:import java.io.File)
   (:require [clojure.instant :refer [read-instant-timestamp]]
             [clojure.java.io :refer [file resource writer]]
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
-            [clojure.string :refer [join split replace]]))
+            [clojure.string :refer [join split replace]]
+            [database.util :refer [file-split]]))
 
 (def ^:dynamic *readers*
   {'inst read-instant-timestamp})
 
-(defn- resolve-table [directory filename]
+(defn- resolve-table
+  "Resolve the table name form `directory` and `filename`."
+  [directory filename]
   (let [directory (.getAbsolutePath (file directory))
-        filename (.getAbsolutePath (file filename))
-        fragments (-> (replace filename (str directory "/") "")
-                      (split (re-pattern File/separator)))]
-    (keyword (replace (join "." fragments) #"(?i)\.cljs?$" ""))))
+        filename (.getAbsolutePath (file filename))]
+    (-> (join "." (-> (replace filename (str directory "/") "")
+                      (file-split)))
+        (replace #"(?i)\.cljs?$" "")
+        (keyword))))
 
 (defn clojure-file?
   "Returns true if `path` is a fixture file, otherwise false."

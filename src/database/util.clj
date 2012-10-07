@@ -1,5 +1,10 @@
 (ns database.util
+  (:import java.io.File)
   (:require [clojure.string :refer [blank? split]]))
+
+(defn file-split
+  "Split `s` at the file separator."
+  [s] (split (str s) (re-pattern File/separator)))
 
 (defmacro defn-memo
   "Just like defn, but memoizes the function using clojure.core/memoize"

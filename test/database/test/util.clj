@@ -2,6 +2,11 @@
   (:use clojure.test
         database.util))
 
+(deftest test-file-split
+  (is (= [""] (file-split nil)))
+  (is (= [""] (file-split "")))
+  (is (= ["x" "y"] (file-split "x/y"))))
+
 (deftest test-parse-integer
   (is (nil? (parse-integer nil)))
   (is (nil? (parse-integer "")))
