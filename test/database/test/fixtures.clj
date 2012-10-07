@@ -1,5 +1,5 @@
 (ns database.test.fixtures
-  (:require [clojure.java.io :refer [file]])
+  (:require [clojure.java.io :refer [file resource]])
   (:use clojure.test
         database.test
         database.fixtures))
@@ -15,6 +15,12 @@
     (is (= 1 (count fixtures)))
     (let [fixture (first fixtures)]
       (is (= (file fixture-file)
+             (:file fixture)))
+      (is (= :continents (:table fixture)))))
+  (let [fixtures (find-fixtures (resource "db/fixtures/test-db"))]
+    (is (= 1 (count fixtures)))
+    (let [fixture (first fixtures)]
+      (is (= (file (.getAbsolutePath (file fixture-file)))
              (:file fixture)))
       (is (= :continents (:table fixture))))))
 
