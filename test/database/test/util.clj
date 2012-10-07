@@ -20,6 +20,9 @@
   (is (= [""] (file-split "")))
   (is (= ["x" "y"] (file-split "x/y"))))
 
+(deftest test-file-replace
+  (is (= "database" (file-replace "src/database" "src"))))
+
 (deftest test-parse-integer
   (is (nil? (parse-integer nil)))
   (is (nil? (parse-integer "")))

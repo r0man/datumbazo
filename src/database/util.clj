@@ -1,7 +1,8 @@
 (ns database.util
+  (:refer-clojure :exclude [replace])
   (:import java.io.File)
   (:require [clojure.java.io :refer [file]]
-            [clojure.string :refer [blank? split]]))
+            [clojure.string :refer [blank? split replace]]))
 
 (defn absolute-path
   "Returns the absolute path of `path."
@@ -20,6 +21,13 @@
 (defn file-split
   "Split `s` at the file separator."
   [s] (split (str s) (re-pattern File/separator)))
+
+(defn file-replace
+  "Absolute path substitude `match` in `s` with `replacement`."
+  [s match & [replacement]]
+  (replace (absolute-path s)
+           (str (absolute-path match) "/")
+           (or replacement "")))
 
 (defmacro defn-memo
   "Just like defn, but memoizes the function using clojure.core/memoize"

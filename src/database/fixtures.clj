@@ -5,7 +5,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [join replace]]
-            [database.util :refer [absolute-path clojure-file-seq file-split]]))
+            [database.util :refer [absolute-path clojure-file-seq file-split file-replace]]))
 
 (def ^:dynamic *fixture-path* "db/fixtures")
 
@@ -15,11 +15,9 @@
 (defn- resolve-table
   "Resolve the table name form `directory` and `filename`."
   [directory filename]
-  (let [directory (absolute-path directory)
-        filename (absolute-path filename)]
-    (-> (join "." (file-split (replace filename (str directory "/") "")))
-        (replace #"(?i)\.cljs?$" "")
-        (keyword))))
+  (-> (join "." (file-split (file-replace filename directory)))
+      (replace #"(?i)\.cljs?$" "")
+      (keyword)))
 
 (defn fixture-seq
   "Returns tree a seq of fixtures in `directory`."
