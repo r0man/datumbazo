@@ -10,11 +10,6 @@
 (def fixture-file
   (str fixture-dir "/continents.clj"))
 
-(deftest test-clojure-file?
-  (is (not (clojure-file? "NOT-EXISTING")))
-  (is (not (clojure-file? fixture-dir)))
-  (is (clojure-file? fixture-file)))
-
 (deftest test-find-fixtures
   (let [fixtures (find-fixtures fixture-dir)]
     (is (= 1 (count fixtures)))

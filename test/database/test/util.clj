@@ -2,6 +2,11 @@
   (:use clojure.test
         database.util))
 
+(deftest test-clojure-file?
+  (is (not (clojure-file? "NOT-EXISTING")))
+  (is (not (clojure-file? "src")))
+  (is (clojure-file? "project.clj")))
+
 (deftest test-file-split
   (is (= [""] (file-split nil)))
   (is (= [""] (file-split "")))

@@ -5,7 +5,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [join split replace]]
-            [database.util :refer [file-split]]))
+            [database.util :refer [clojure-file? file-split]]))
 
 (def ^:dynamic *readers*
   {'inst read-instant-timestamp})
@@ -19,12 +19,6 @@
                       (file-split)))
         (replace #"(?i)\.cljs?$" "")
         (keyword))))
-
-(defn clojure-file?
-  "Returns true if `path` is a fixture file, otherwise false."
-  [path]
-  (and (.isFile (file path))
-       (re-matches #"(?i).*\.cljs?$" (str path))))
 
 (defn find-fixtures
   "Returns tree a seq of fixtures in `directory`."
