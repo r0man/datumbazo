@@ -4,16 +4,19 @@
         database.test
         database.fixtures))
 
+(def fixture-dir
+  "resources/db/fixtures/test-db")
+
 (def fixture-file
-  "resources/db/fixtures/test-db/continents.clj")
+  (str fixture-dir "/continents.clj"))
 
 (deftest test-clojure-file?
   (is (not (clojure-file? "NOT-EXISTING")))
-  (is (not (clojure-file? "resources/db/fixtures/test-db")))
+  (is (not (clojure-file? fixture-dir)))
   (is (clojure-file? fixture-file)))
 
 (deftest test-find-fixtures
-  (let [fixtures (find-fixtures "resources/db/fixtures/test-db")]
+  (let [fixtures (find-fixtures fixture-dir)]
     (is (= 1 (count fixtures)))
     (let [fixture (first fixtures)]
       (is (= (file fixture-file)
@@ -29,3 +32,7 @@
     (is (= :continents (:table fixture)))
     (is (= fixture-file (:file fixture)))
     (is (= 7 (count (:records fixture))))))
+
+(database-test test-load-fixtures
+  (let [fixtures (load-fixtures fixture-dir)]
+    (is (= 1 (count fixtures)))))

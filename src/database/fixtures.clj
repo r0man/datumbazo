@@ -40,6 +40,10 @@
                      (apply jdbc/insert-records (:table fixture)))]
     (assoc fixture :records records)))
 
+(defn load-fixtures
+  "Load all database fixtures from `directory`."
+  [directory] (doall (map load-fixture (find-fixtures directory))))
+
 ;; (defn write-table
 ;;   "Write the rows of the database `table` to `filename`."
 ;;   [table filename]
