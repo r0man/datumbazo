@@ -14,3 +14,7 @@
 (deftest test-fixtures-on-classpath
   (let [fixtures (fixtures-on-classpath "db/fixtures/test-db")]
     (is (= 1 (count fixtures)))))
+
+(deftest test-slurp-fixtures
+  (let [records (slurp-fixtures "resources/db/fixtures/test-db/continents.clj")]
+    (is (= 7 (count records)))))
