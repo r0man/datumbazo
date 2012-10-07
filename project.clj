@@ -12,9 +12,10 @@
                  [postgresql/postgresql "9.1-901.jdbc4"]
                  [ragtime/ragtime.sql.files "0.3.1"]
                  [slingshot "0.10.3"]]
-  :profiles {:dev {:dependencies [[validation-clj "0.4.0-SNAPSHOT"]]
+  :profiles {:dev {:dependencies [[validation-clj "0.4.0-SNAPSHOT"]
+                                  [org.slf4j/slf4j-log4j12 "1.6.4"]]
                    :resource-paths ["test-resources"]
-                   :env {:test-db "jdbc:postgresql://localhost/test"}}}
+                   :env {:test-db "postgresql://localhost/test"}}}
   :plugins [[environ/environ.lein "0.3.0"]
             [ragtime/ragtime.lein "0.3.1"]]
   :hooks [environ.leiningen.hooks]

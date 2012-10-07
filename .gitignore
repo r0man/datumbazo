@@ -10,3 +10,4 @@
 /.lein-env
 /.lein-plugins/checksum
 /target/stale/dependencies
+/logs/debug.log
