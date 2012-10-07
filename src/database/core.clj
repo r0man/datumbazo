@@ -80,28 +80,44 @@
             (join ", " (map jdbc/as-identifier (:columns table))))
           (as-identifier table)))
 
+(defn select-rows [table & {:keys [page per-page]}]
+  (jdbc/with-query-results rows
+    [(str "SELECT * FROM " (as-identifier table))]
+    (doall rows)))
+
+(defn select-rows-by-column [table column-name column-value & {:keys [page per-page]}]
+  (jdbc/with-query-results rows
+    [(str "SELECT * "
+          "  FROM " (as-identifier table)
+          " WHERE " (jdbc/as-identifier column-name) " = ?")
+     column-value]
+    (doall rows)))
+
 (defmacro deftable
   "Define a database table."
-  [name doc & body]
-  (let [table# (symbol (str name "-table"))]
-    `(do (def ~table#
-           (-> (make-table ~(keyword name) :doc ~doc)
+  [table-name doc & body]
+  (let [table# (eval `(-> (make-table ~(keyword table-name) :doc ~doc) ~@body))
+        symbol# (symbol (str table-name "-table"))]
+    `(do (def ~symbol#
+           (-> (make-table ~(keyword table-name) :doc ~doc)
                ~@body))
-         (defn ~(symbol (str "drop-" name))
-           ~(format "Drop the %s database table." name)
-           [& ~'opts]
-           (apply drop-table ~table# ~'opts))
-         (defn ~(symbol (str "delete-" name))
-           ~(format "Delete all rows in the %s database table." name)
-           [& ~'opts]
-           (apply delete-table ~table# ~'opts))
-         (defn ~(symbol (str "truncate-" name))
-           ~(format "Truncate the %s database table." name)
-           [& ~'opts]
-           (apply truncate-table ~table# ~'opts))
-         (defn ~name
-           ~(format "Select %s from the database table." name)
-           [& {:keys [~'page ~'per-page]}]
-           (jdbc/with-query-results rows#
-             [(str "SELECT * FROM " (jdbc/as-identifier (:name ~table#)))]
-             (doall rows#))))))
+
+         (defn ~(symbol (str "drop-" table-name))
+           ~(format "Drop the %s database table." table-name)
+           [& ~'opts] (apply drop-table ~symbol# ~'opts))
+
+         (defn ~(symbol (str "delete-" table-name))
+           ~(format "Delete all rows in the %s database table." table-name)
+           [& ~'opts] (apply delete-table ~symbol# ~'opts))
+
+         (defn ~(symbol (str "truncate-" table-name))
+           ~(format "Truncate the %s database table." table-name)
+           [& ~'opts] (apply truncate-table ~symbol# ~'opts))
+
+         (defn ~table-name
+           ~(format "Select %s from the database table." table-name)
+           [& ~'opts] (apply select-rows ~symbol# ~'opts))
+
+         ~@(for [column# (map (comp symbol name) (:columns table#))]
+             `(defn ~(symbol (str table-name "-by-" column#)) [~column# & ~'opts]
+                (apply select-rows-by-column ~symbol# ~(keyword column#) ~column# ~'opts))))))
