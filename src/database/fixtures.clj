@@ -4,7 +4,7 @@
             [clojure.java.io :refer [file resource writer]]
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
-            [clojure.string :refer [join split replace]]
+            [clojure.string :refer [join replace]]
             [database.util :refer [absolute-path clojure-file-seq file-split]]))
 
 (def ^:dynamic *readers*
