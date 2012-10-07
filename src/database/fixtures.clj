@@ -22,7 +22,7 @@
         (replace #"(?i)\.cljs?$" "")
         (keyword))))
 
-(defn find-fixtures
+(defn fixture-seq
   "Returns tree a seq of fixtures in `directory`."
   [directory]
   (for [file (clojure-file-seq directory)]
@@ -34,7 +34,7 @@
 
 (defn fixtures
   "Returns the fixtures for `db-name`."
-  [db-name] (find-fixtures (resource (fixture-path db-name))))
+  [db-name] (fixture-seq (resource (fixture-path db-name))))
 
 (defn slurp-rows
   "Slurp a seq of database rows from `filename`."
@@ -63,6 +63,6 @@
   "Load all database fixtures from `directory`."
   [directory]
   (jdbc/transaction
-   (->> (find-fixtures directory)
+   (->> (fixture-seq directory)
         (map #(read-fixture (:table %1) (:file %1)))
         (doall))))

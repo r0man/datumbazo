@@ -14,17 +14,17 @@
   (is (= "db/fixtures/test-db" (fixture-path "test-db"))))
 
 (deftest test-fixtures
-  (is (= (find-fixtures (resource "db/fixtures/test-db"))
+  (is (= (fixture-seq (resource "db/fixtures/test-db"))
          (fixtures "test-db"))))
 
-(deftest test-find-fixtures
-  (let [fixtures (find-fixtures fixture-dir)]
+(deftest test-fixture-seq
+  (let [fixtures (fixture-seq fixture-dir)]
     (is (= 1 (count fixtures)))
     (let [fixture (first fixtures)]
       (is (= (file fixture-file)
              (:file fixture)))
       (is (= :continents (:table fixture)))))
-  (let [fixtures (find-fixtures (resource "db/fixtures/test-db"))]
+  (let [fixtures (fixture-seq (resource "db/fixtures/test-db"))]
     (is (= 1 (count fixtures)))
     (let [fixture (first fixtures)]
       (is (= (file (.getAbsolutePath (file fixture-file)))
