@@ -1,12 +1,11 @@
 (ns database.fixtures
   (:refer-clojure :exclude [replace])
   (:import java.io.File)
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.java.io :refer [file writer]]
-            [clojure.string :refer [join split replace]]
-            [clojure.instant :refer [read-instant-timestamp]]
-            [clojure.java.io :refer [file resource]]
-            [clojure.pprint :refer [pprint]]))
+  (:require [clojure.instant :refer [read-instant-timestamp]]
+            [clojure.java.io :refer [file resource writer]]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.pprint :refer [pprint]]
+            [clojure.string :refer [join split replace]]))
 
 (def ^:dynamic *readers*
   {'inst read-instant-timestamp})
