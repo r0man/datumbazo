@@ -20,4 +20,7 @@
             [ragtime/ragtime.lein "0.3.1"]]
   :hooks [environ.leiningen.hooks]
   :ragtime {:database "jdbc:postgresql://localhost/test"
-            :migrations ragtime.sql.files/migrations})
+            :migrations ragtime.sql.files/migrations}
+  :db [{:name :test-db
+        :fixtures "db/fixtures/test-db"
+        :migrations "db/migrations/test-db"}])
