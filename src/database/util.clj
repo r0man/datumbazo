@@ -18,11 +18,11 @@
   "Returns a tree seq of Clojure files in `directory`."
   [directory] (filter clojure-file? (file-seq (file directory))))
 
-(defn file-split
+(defn path-split
   "Split `s` at the file separator."
   [s] (split (str s) (re-pattern File/separator)))
 
-(defn file-replace
+(defn path-replace
   "Absolute path substitude `match` in `s` with `replacement`."
   [s match & [replacement]]
   (replace (absolute-path s)

@@ -15,13 +15,13 @@
     (is (not (empty? files)))
     (is (every? clojure-file? files))))
 
-(deftest test-file-split
-  (is (= [""] (file-split nil)))
-  (is (= [""] (file-split "")))
-  (is (= ["x" "y"] (file-split "x/y"))))
+(deftest test-path-split
+  (is (= [""] (path-split nil)))
+  (is (= [""] (path-split "")))
+  (is (= ["x" "y"] (path-split "x/y"))))
 
-(deftest test-file-replace
-  (is (= "database" (file-replace "src/database" "src"))))
+(deftest test-path-replace
+  (is (= "database" (path-replace "src/database" "src"))))
 
 (deftest test-parse-integer
   (is (nil? (parse-integer nil)))
