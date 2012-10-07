@@ -5,7 +5,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [join split replace]]
-            [database.util :refer [clojure-file? file-split]]))
+            [database.util :refer [clojure-file-seq file-split]]))
 
 (def ^:dynamic *readers*
   {'inst read-instant-timestamp})
@@ -22,8 +22,7 @@
 (defn find-fixtures
   "Returns tree a seq of fixtures in `directory`."
   [directory]
-  (for [file (file-seq (file directory))
-        :when (clojure-file? file)]
+  (for [file (clojure-file-seq directory)]
     {:file file :table (resolve-table directory file)}))
 
 (defn slurp-rows

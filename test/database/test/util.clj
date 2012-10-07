@@ -7,6 +7,11 @@
   (is (not (clojure-file? "src")))
   (is (clojure-file? "project.clj")))
 
+(deftest test-clojure-file-seq
+  (let [files (clojure-file-seq "src")]
+    (is (not (empty? files)))
+    (is (every? clojure-file? files))))
+
 (deftest test-file-split
   (is (= [""] (file-split nil)))
   (is (= [""] (file-split "")))

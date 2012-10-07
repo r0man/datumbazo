@@ -9,6 +9,10 @@
   (and (.isFile (file path))
        (re-matches #"(?i).*\.cljs?$" (str path))))
 
+(defn clojure-file-seq
+  "Returns a tree seq of Clojure files in `directory`."
+  [directory] (filter clojure-file? (file-seq (file directory))))
+
 (defn file-split
   "Split `s` at the file separator."
   [s] (split (str s) (re-pattern File/separator)))
