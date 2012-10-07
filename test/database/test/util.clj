@@ -2,6 +2,9 @@
   (:use clojure.test
         database.util))
 
+(deftest test-absolute-path
+  (is (string? (absolute-path ""))))
+
 (deftest test-clojure-file?
   (is (not (clojure-file? "NOT-EXISTING")))
   (is (not (clojure-file? "src")))

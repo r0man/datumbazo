@@ -3,6 +3,10 @@
   (:require [clojure.java.io :refer [file]]
             [clojure.string :refer [blank? split]]))
 
+(defn absolute-path
+  "Returns the absolute path of `path."
+  [path] (.getAbsolutePath (file path)))
+
 (defn clojure-file?
   "Returns true if `path` is a fixture file, otherwise false."
   [path]
