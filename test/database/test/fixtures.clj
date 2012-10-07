@@ -2,10 +2,10 @@
   (:use clojure.test
         database.fixtures))
 
-(deftest test-fixture-file?
-  (is (not (fixture-file? "NOT-EXISTING")))
-  (is (not (fixture-file? "resources/db/fixtures/test-db")))
-  (is (fixture-file? "resources/db/fixtures/test-db/continents.clj")))
+(deftest test-clojure-file?
+  (is (not (clojure-file? "NOT-EXISTING")))
+  (is (not (clojure-file? "resources/db/fixtures/test-db")))
+  (is (clojure-file? "resources/db/fixtures/test-db/continents.clj")))
 
 (deftest test-fixtures-in-directory
   (let [fixtures (fixtures-in-directory "resources/db/fixtures/test-db")]
