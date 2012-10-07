@@ -7,8 +7,7 @@
             [clojure.string :refer [join replace]]
             [database.util :refer [absolute-path clojure-file-seq file-split]]))
 
-(def ^:dynamic *fixture-path*
-  "db/fixtures")
+(def ^:dynamic *fixture-path* "db/fixtures")
 
 (def ^:dynamic *readers*
   {'inst read-instant-timestamp})
