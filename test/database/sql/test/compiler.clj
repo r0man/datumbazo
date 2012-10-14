@@ -33,4 +33,6 @@
        :public.continents
        (map->Table {:schema :public :name :continents})
        (map->Table {:schema :public :name :continents})
-       (map->Table {:schema :public :name :continents})))
+       (map->Table {:schema :public :name :continents})
+       (to-table [:continents :as :c])
+       (map->Table {:name :continents :alias :c})))

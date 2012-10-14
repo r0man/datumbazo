@@ -76,6 +76,12 @@
   (to-table [k]
     (to-table (util/qualified-name k))))
 
+(extend-type clojure.lang.PersistentVector
+
+  IMakeTable
+  (to-table [[t as alias]]
+    (assoc (to-table t) :alias alias)))
+
 (extend-type String
 
   ICompileSQL
