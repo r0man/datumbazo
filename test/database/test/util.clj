@@ -37,6 +37,20 @@
        "a=1" {:a "1"}
        "a=1&b=2" {:a "1" :b "2"}))
 
+(deftest test-parse-column
+  (are [table expected]
+       (is (= expected (parse-column table)))
+       :continents.id {:table :continents :name :id}
+       :continents/id {:table :continents :name :id}
+       :public.continents.id {:schema :public :table :continents :name :id}
+       :public.continents/id {:schema :public :table :continents :name :id}))
+
+(deftest test-parse-table
+  (are [table expected]
+       (is (= expected (parse-table table)))
+       :continents {:name :continents}
+       :public.continents {:schema :public :name :continents}))
+
 (deftest test-parse-url
   (doseq [url [nil "" "x"]] (is (nil? (parse-url nil))))
   (let [spec (parse-url "postgresql://localhost:5432/lein_test")]

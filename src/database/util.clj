@@ -18,6 +18,11 @@
   "Returns a tree seq of Clojure files in `directory`."
   [directory] (filter clojure-file? (file-seq (file directory))))
 
+(defn illegal-argument-exception
+  "Throw an IllegalArgumentException with a formatted message."
+  [format-message & format-args]
+  (throw (IllegalArgumentException. (apply format format-message format-args))))
+
 (defn path-split
   "Split `s` at the file separator."
   [s] (split (str s) (re-pattern File/separator)))
@@ -76,3 +81,22 @@
 (defn qualified-name
   "Returns the qualified name of `k`."
   [k] (replace (str k) #"^:" ""))
+
+(defn parse-column
+  "Parse the column `s` and return a map with :schema, :table and :name keys."
+  [s]
+  (let [parts (map keyword (split (qualified-name s) #"\.|/" 3))]
+    (condp = (count parts)
+      1 {:name (first parts)}
+      2 (zipmap [:table :name] parts)
+      3 (zipmap [:schema :table :name] parts)
+      :else (throw (illegal-argument-exception "Can't parse column: %s" s)))))
+
+(defn parse-table
+  "Parse the table `s` and return a map with :schema, :table and :name keys."
+  [s]
+  (let [parts (map keyword (split (qualified-name s) #"\." 2))]
+    (condp = (count parts)
+      1 {:name (first parts)}
+      2 (zipmap [:schema :name] parts)
+      :else (throw (illegal-argument-exception "Can't parse table: %s" s)))))
