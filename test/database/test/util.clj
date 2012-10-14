@@ -37,9 +37,17 @@
        "a=1" {:a "1"}
        "a=1&b=2" {:a "1" :b "2"}))
 
+(deftest test-parse-schema
+  (are [schema expected]
+       (do (is (= expected (parse-schema schema)))
+           (is (= expected (parse-schema (qualified-name schema)))))
+       :public {:name :public}))
+
 (deftest test-parse-column
   (are [table expected]
-       (is (= expected (parse-column table)))
+       (do (is (= expected (parse-column table)))
+           (is (= expected (parse-column table))))
+       :id {:name :id}
        :continents.id {:table :continents :name :id}
        :continents/id {:table :continents :name :id}
        :public.continents.id {:schema :public :table :continents :name :id}
@@ -47,7 +55,8 @@
 
 (deftest test-parse-table
   (are [table expected]
-       (is (= expected (parse-table table)))
+       (do (is (= expected (parse-table table)))
+           (is (= expected (parse-table (qualified-name table)))))
        :continents {:name :continents}
        :public.continents {:schema :public :name :continents}))
 

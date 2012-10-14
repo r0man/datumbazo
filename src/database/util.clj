@@ -82,6 +82,10 @@
   "Returns the qualified name of `k`."
   [k] (replace (str k) #"^:" ""))
 
+(defn parse-schema
+  "Parse the schema `s` and return a map with the :name key."
+  [s] {:name (keyword (qualified-name s))})
+
 (defn parse-column
   "Parse the column `s` and return a map with :schema, :table and :name keys."
   [s]
