@@ -72,3 +72,7 @@
        :user (nth matches 4)
        :params (parse-params (nth matches 14))
        :query-string (nth matches 14)})))
+
+(defn qualified-name
+  "Returns the qualified name of `k`."
+  [k] (replace (str k) #"^:" ""))

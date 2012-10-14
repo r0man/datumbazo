@@ -74,3 +74,12 @@
     (is (= "/lein_test" (:uri spec)))
     (is (= "//localhost/lein_test" (:subname spec)))
     (is (= {} (:params spec)))))
+
+(deftest test-qualified-name
+  (are [arg expected]
+       (is (= expected (qualified-name arg)))
+       nil ""
+       "" ""
+       "continents" "continents"
+       :continents "continents"
+       :public.continents "public.continents"))
