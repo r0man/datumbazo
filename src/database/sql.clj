@@ -29,7 +29,30 @@
   "Add the RESTRICT clause to the SQL statement."
   [table & body]
   (second ((with-monad state-m (m-seq body))
-           (->DropTable table false false false))))
+           (->DropTable (to-table table) false false false))))
+
+(defmacro defstmt [name doc args & body]
+  `(do (defn ~name ~doc
+         [~@args & ~'body]
+         (second ((with-monad state-m (m-seq ~'body))
+                  ~@body)))))
+
+(defstmt drop-table
+  "Add the RESTRICT clause to the SQL statement."
+  [table] (->DropTable (to-table table) false false false))
+
+(defn sql
+  "Compile `statement` into a vector, where the first element is the
+  SQL statement and the rest are the prepared statement arguments."
+  [statement] (compile-sql statement))
+
+;; (sql (drop-table
+;;       :continents
+;;       (if-exists true)
+;;       (restrict true)))
+
+
+;; (sql (drop-table :continents))
 
 (defn table
   "Make a SQL table."
@@ -110,11 +133,6 @@
 ;;     (column :name :citext))
 ;;    (restrict true)
 ;;    (if-exists false))))
-
-;; ;; (jdbc/with-quoted-identifiers \"
-;; ;;   (-> (drop-table :continents)
-;; ;;       (restrict true)
-;; ;;       (compile-sql)))
 
 ;; ;; (compile-sql (drop-table :public.continents :if-exists true))
 ;; ;; (compile-sql (drop-table :public.continents))

@@ -13,6 +13,13 @@
 (defrecord Column [schema table name type not-null? unique? primary-key?])
 
 (defrecord Table [schema name]
+
+  ICompileSQL
+  (compile-sql [t]
+    [(str (if schema
+            (str (jdbc/as-identifier schema) "."))
+          (jdbc/as-identifier name))])
+
   IMakeTable
   (to-table [t] t))
 

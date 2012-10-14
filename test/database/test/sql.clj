@@ -1,6 +1,17 @@
 (ns database.test.sql
+  (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
-        database.sql))
+        database.sql
+        database.sql.compiler))
+
+(deftest test-drop-table
+  (is (= ["DROP TABLE continents"]
+         (sql (drop-table :continents))))
+  (is (= ["DROP TABLE IF EXISTS continents RESTRICT"]
+         (sql (drop-table
+               :continents
+               (if-exists true)
+               (restrict true))))))
 
 (deftest test-table
   (let [t (table :continents)]

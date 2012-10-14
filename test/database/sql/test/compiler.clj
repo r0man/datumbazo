@@ -13,7 +13,9 @@
        "continents" ["continents"]
        "public.continents" ["public.continents"]
        :continents ["continents"]
-       :public.continents ["public.continents"]))
+       :public.continents ["public.continents"]
+       (->Table nil :continents) ["continents"]
+       (->Table :public :continents) ["public.continents"]))
 
 (deftest test-table?
   (is (not (table? nil)))
