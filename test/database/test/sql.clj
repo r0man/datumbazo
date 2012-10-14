@@ -4,6 +4,20 @@
         database.sql
         database.sql.compiler))
 
+(deftest test-expand-sql
+  (are [forms expected]
+       (is (= expected (expand-sql forms)))
+       '(count *)
+       "count(*)"
+       `(count *)
+       "count(*)"
+       '(substr "1234" 3)
+       "substr(\"1234\", 3)"
+       '(ST_AsText (ST_Centroid "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"))
+       "ST_AsText(ST_Centroid(\"MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)\"))"
+       `(ST_AsText (ST_Centroid "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"))
+       "ST_AsText(ST_Centroid(\"MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)\"))"))
+
 (deftest test-column
   (let [t (table
            :public.continents

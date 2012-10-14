@@ -15,6 +15,27 @@
   SQL statement and the rest are the prepared statement arguments."
   [statement] (compile-sql statement))
 
+(declare expand-sql)
+
+(defn- expand-fn [arg]
+  (str (name (first arg)) "("  (join ", " (map expand-sql (rest arg))) ")"))
+
+(defn expand-sql
+  "Expand `arg` into an SQL statement."
+  [arg]
+  (cond
+   (symbol? arg)
+   (name arg)
+   (instance? clojure.lang.Cons arg)
+   (expand-fn arg)
+   (string? arg)
+   (str \" arg \")
+   (keyword? arg)
+   (jdbc/as-identifier arg)
+   (list? arg)
+   (expand-fn arg)
+   :else (.toUpperCase (str arg))))
+
 (defn cascade
   "Add the CASCADE clause to the SQL statement."
   [cascade?]
@@ -139,3 +160,32 @@
 ;;  (column :geonames-id :integer :unique? true)
 ;;  (column :created-at :timestamp-with-time-zone :not-null? true :default "now()")
 ;;  (column :updated-at :timestamp-with-time-zone :not-null? true :default "now()"))
+
+
+(select
+ [:id :name]
+ (from :continents))
+
+;; SELECT max(temp_lo) FROM weather;
+
+(select
+ '(max :temp-lo)
+ (from :weather))
+
+(select
+ '(max 1)
+ (from :weather))
+
+;; (println (expand-sql '(ST_AsText (ST_Centroid "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"))))
+;; (println (expand-sql `(ST_AsText (ST_Centroid "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"))))
+
+;; (prn (expand-sql '(max 1 2 3 :a)))
+;; ST_AsText(ST_Centroid('MULTIPOINT ( -1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6 )'));
+
+;; (jdbc/with-quoted-identifiers \"
+;;   (expand-sql '(:max 1 2 3 :a)))
+
+;; (let [a 1]
+;;   (select
+;;    `(:max ~a)
+;;    (from :weather)))
