@@ -98,14 +98,14 @@
 (defstmt select
   "Select from the database `table`."
   [columns] (->Select
-             (map to-column (if (sequential? columns)
-                              columns [columns]))
+             (if (sequential? columns)
+               columns [columns])
              nil))
 
-(sql
- (select
-  [:id :name]
-  (from :continents)))
+;; (sql
+;;  (select
+;;   [:id :name]
+;;   (from :continents)))
 
 ;; (select
 ;;  [:countries.id :countires.name]

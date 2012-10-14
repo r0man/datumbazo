@@ -66,8 +66,9 @@
     (let [columns (map compile-sql columns)
           from (map compile-sql from)]
       [(str "SELECT " (if (empty? columns)
-                        "*" (join ", " (map first columns))) " "
-                        "FROM " (join ", " (map first from)))])))
+                        "*" (join ", " (map first columns)))
+                        (if-not (empty? from)
+                          (str " FROM " (join ", " (map first from)))))])))
 
 ;; (jdbc/with-quoted-identifiers \"
 ;;   (prn (compile-sql
@@ -127,6 +128,16 @@
   IMakeTable
   (to-table [[t as alias]]
     (assoc (to-table t) :alias alias)))
+
+(extend-type Number
+  ICompileSQL
+  (compile-sql [n]
+    [(str n)]))
+
+(extend-type Object
+  ICompileSQL
+  (compile-sql [o]
+    ["?" o]))
 
 (extend-type String
 

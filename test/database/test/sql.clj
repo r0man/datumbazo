@@ -39,6 +39,8 @@
 (deftest test-select
   (are [stmt expected]
        (is (= expected (sql stmt)))
+       (select 1)
+       ["SELECT 1"]
        (select [] (from :continents))
        ["SELECT * FROM continents"]
        (select [:id :name] (from :continents))
@@ -67,3 +69,5 @@
         (restart-identity true)
         (restrict true))
        ["TRUNCATE TABLE continents RESTART IDENTITY CONTINUE IDENTITY CASCADE RESTRICT"]))
+
+;; (select 1 (from :continents))
