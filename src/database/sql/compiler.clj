@@ -10,7 +10,7 @@
 (defprotocol IMakeTable
   (to-table [arg] "Convert `arg` into a Table."))
 
-(defrecord Column [schema table name])
+(defrecord Column [schema table name type not-null? unique?])
 
 (defrecord Table [schema name]
   IMakeTable
