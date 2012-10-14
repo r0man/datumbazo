@@ -7,11 +7,28 @@
             [database.sql.compiler :refer :all])
   (:import database.sql.compiler.Table))
 
+(defn sql
+  "Compile `statement` into a vector, where the first element is the
+  SQL statement and the rest are the prepared statement arguments."
+  [statement] (compile-sql statement))
+
 (defn cascade
   "Add the CASCADE clause to the SQL statement."
   [cascade?]
   (fn [statement]
     [cascade? (assoc statement :cascade? cascade?)]))
+
+(defn continue-identity
+  "Add the CONTINUE IDENTITY clause to the SQL statement."
+  [continue-identity?]
+  (fn [statement]
+    [continue-identity? (assoc statement :continue-identity? true)]))
+
+(defn restart-identity
+  "Add the RESTART IDENTITY clause to the SQL statement."
+  [restart-identity?]
+  (fn [statement]
+    [restart-identity? (assoc statement :restart-identity? true)]))
 
 (defn if-exists
   "Add the IF EXISTS clause to the SQL statement."
@@ -41,18 +58,9 @@
   "Add the RESTRICT clause to the SQL statement."
   [table] (->DropTable (to-table table) false false false))
 
-(defn sql
-  "Compile `statement` into a vector, where the first element is the
-  SQL statement and the rest are the prepared statement arguments."
-  [statement] (compile-sql statement))
-
-;; (sql (drop-table
-;;       :continents
-;;       (if-exists true)
-;;       (restrict true)))
-
-
-;; (sql (drop-table :continents))
+(defstmt truncate-table
+  "Add the RESTRICT clause to the SQL statement."
+  [table] (->TruncateTable (to-table table) false false false false))
 
 (defn table
   "Make a SQL table."

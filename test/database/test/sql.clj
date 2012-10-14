@@ -4,26 +4,6 @@
         database.sql
         database.sql.compiler))
 
-(deftest test-drop-table
-  (is (= ["DROP TABLE continents"]
-         (sql (drop-table :continents))))
-  (is (= ["DROP TABLE IF EXISTS continents RESTRICT"]
-         (sql (drop-table
-               :continents
-               (if-exists true)
-               (restrict true))))))
-
-(deftest test-table
-  (let [t (table :continents)]
-    (is (nil? (:schema t)))
-    (is (= :continents (:name t)))
-    (is (= t (table "continents")))
-    (is (= t (table t))))
-  (let [t (table :public.continents)]
-    (is (= :public (:schema t)))
-    (is (= :continents (:name t)))
-    (is (= t (table "public.continents")))))
-
 (deftest test-column
   (let [t (table
            :public.continents
@@ -44,3 +24,38 @@
       (is (= :text (:type c)))
       (is (= true (:not-null? c)))
       (is (= true (:unique? c))))))
+
+(deftest test-drop-table
+  (are [stmt expected]
+       (is (= expected (sql stmt)))
+       (drop-table :continents)
+       ["DROP TABLE continents"]
+       (drop-table
+        :continents
+        (if-exists true)
+        (restrict true))
+       ["DROP TABLE IF EXISTS continents RESTRICT"]))
+
+(deftest test-table
+  (let [t (table :continents)]
+    (is (nil? (:schema t)))
+    (is (= :continents (:name t)))
+    (is (= t (table "continents")))
+    (is (= t (table t))))
+  (let [t (table :public.continents)]
+    (is (= :public (:schema t)))
+    (is (= :continents (:name t)))
+    (is (= t (table "public.continents")))))
+
+(deftest test-truncate-table
+  (are [stmt expected]
+       (is (= expected (sql stmt)))
+       (truncate-table :continents)
+       ["TRUNCATE TABLE continents"]
+       (truncate-table
+        :continents
+        (cascade true)
+        (continue-identity true)
+        (restart-identity true)
+        (restrict true))
+       ["TRUNCATE TABLE continents CASCADE CONTINUE IDENTITY RESTART IDENTITY RESTRICT"]))
