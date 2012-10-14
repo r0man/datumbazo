@@ -2,6 +2,10 @@
   (:use clojure.test
         database.sql.compiler))
 
+(deftest test-column?
+  (is (not (column? nil)))
+  (is (column? (map->Column {}))))
+
 (deftest test-compile-sql
   (are [arg expected]
        (is (= expected (compile-sql arg)))
@@ -10,6 +14,10 @@
        "public.continents" ["public.continents"]
        :continents ["continents"]
        :public.continents ["public.continents"]))
+
+(deftest test-table?
+  (is (not (table? nil)))
+  (is (table? (map->Table {}))))
 
 (deftest test-to-table
   (are [arg expected]

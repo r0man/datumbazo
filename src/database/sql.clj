@@ -39,19 +39,46 @@
 
 (defn column
   "Make a SQL table."
-  [name type & {:as opts}]
+  [name type & options]
   (fn [table]
-    (assert (instance? Table table))
-    (let [column (assoc (map->Column opts)
-                   :schema (:schema table)
-                   :table (:name table)
-                   :name name
-                   :type type)]
+    (assert (table? table))
+    (let [column (apply make-column table name type options)]
       [column (assoc-in table [:column name] column)])))
+
+(defmacro deftable
+  "Define a database table."
+  [symbol doc name & body]
+  (let [table# (eval `(-> (table ~name ~@body)))]
+    (prn table#)
+    `(def ^{:doc doc}
+       ~symbol (table ~name ~@body))))
+
+;; (deftable continents
+;;   "The continents database table."
+;;   :continents
+;;   (column :id :serial)
+;;   (column :name :text :not-null? true :unique? true)
+;;   (column :code :varchar :length 2 :not-null? true :unique? true)
+;;   (column :geometry :geometry)
+;;   (column :freebase-guid :text :unique? true)
+;;   (column :geonames-id :integer :unique? true)
+;;   (column :created-at :timestamp-with-time-zone :not-null? true :default "now()")
+;;   (column :updated-at :timestamp-with-time-zone :not-null? true :default "now()"))
+
+;; (table
+;;  :public.continents
+;;  (column :id :serial)
+;;  (column :name :text :not-null? true :unique? true)
+;;  (column :code :varchar :length 2 :not-null? true :unique? true)
+;;  (column :geometry :geometry)
+;;  (column :freebase-guid :text :unique? true)
+;;  (column :geonames-id :integer :unique? true)
+;;  (column :created-at :timestamp-with-time-zone :not-null? true :default "now()")
+;;  (column :updated-at :timestamp-with-time-zone :not-null? true :default "now()"))
 
 ;; (table
 ;;  :continents
-;;  (column :id :serial :primary-key? true))
+;;  (column :id :serial))
 
 ;; (defn column [column & {:as options}]
 ;;   )

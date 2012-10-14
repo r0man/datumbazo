@@ -10,7 +10,7 @@
 (defprotocol IMakeTable
   (to-table [arg] "Convert `arg` into a Table."))
 
-(defrecord Column [schema table name type not-null? unique?])
+(defrecord Column [schema table name type not-null? unique? primary-key?])
 
 (defrecord Table [schema name]
   IMakeTable
@@ -28,6 +28,23 @@
           (first (compile-sql table))
           (if cascade? " CASCADE")
           (if restrict? " RESTRICT"))]))
+
+(defn column?
+  "Returns true if `arg` is a Column, otherwise false."
+  [arg] (instance? Column arg))
+
+(defn table?
+  "Returns true if `arg` is a Table, otherwise false."
+  [arg] (instance? Table arg))
+
+(defn make-column
+  "Make a database column."
+  [table name type & {:as options}]
+  (assoc (map->Column (or options {}))
+    :schema (:schema table)
+    :table (:name table)
+    :name name
+    :type type))
 
 (extend-type nil
   ICompileSQL
