@@ -46,9 +46,9 @@
   "Add the FROM item to the SQL select statement."
   [from-item]
   (fn [statement]
-    (let [from-item (map to-table
-                         (if (sequential? from-item)
-                           from-item [from-item]))]
+    (let [from-item
+          (if (sequential? from-item)
+            from-item [from-item])]
       [from-item (assoc statement :from from-item)])))
 
 (defn table
