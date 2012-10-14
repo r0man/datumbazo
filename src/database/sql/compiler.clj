@@ -42,19 +42,20 @@
   ICompileSQL
   (compile-sql [stmt]))
 
-(defrecord DropTable [table cascade? if-exists? restrict?]
+(defrecord DropTable [tables cascade? if-exists? restrict?]
   ICompileSQL
   (compile-sql [stmt]
     [(str "DROP TABLE "
           (if if-exists? "IF EXISTS ")
-          (first (compile-sql table))
+          (join ", " (map (comp first compile-sql) tables))
           (if cascade? " CASCADE")
           (if restrict? " RESTRICT"))]))
 
-(defrecord TruncateTable [table cascade? continue-identity? restart-identity? restrict?]
+(defrecord TruncateTable [tables cascade? continue-identity? restart-identity? restrict?]
   ICompileSQL
   (compile-sql [stmt]
-    [(str "TRUNCATE TABLE " (first (compile-sql table))
+    [(str "TRUNCATE TABLE "
+          (join ", " (map (comp first compile-sql) tables))
           (if restart-identity? " RESTART IDENTITY")
           (if continue-identity? " CONTINUE IDENTITY")
           (if cascade? " CASCADE")
@@ -67,8 +68,8 @@
           from (map compile-sql from)]
       [(str "SELECT " (if (empty? columns)
                         "*" (join ", " (map first columns)))
-                        (if-not (empty? from)
-                          (str " FROM " (join ", " (map first from)))))])))
+            (if-not (empty? from)
+              (str " FROM " (join ", " (map first from)))))])))
 
 ;; (jdbc/with-quoted-identifiers \"
 ;;   (prn (compile-sql

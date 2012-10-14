@@ -30,6 +30,8 @@
        (is (= expected (sql stmt)))
        (drop-table :continents)
        ["DROP TABLE continents"]
+       (drop-table [:continents :countries])
+       ["DROP TABLE continents, countries"]
        (drop-table
         :continents
         (if-exists true)
@@ -62,6 +64,8 @@
        (is (= expected (sql stmt)))
        (truncate-table :continents)
        ["TRUNCATE TABLE continents"]
+       (truncate-table [:continents :countries])
+       ["TRUNCATE TABLE continents, countries"]
        (truncate-table
         :continents
         (cascade true)

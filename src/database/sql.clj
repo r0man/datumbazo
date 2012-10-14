@@ -7,6 +7,9 @@
             [database.sql.compiler :refer :all])
   (:import database.sql.compiler.Table))
 
+(defn- wrap-sequential [s]
+  (if (sequential? s) s [s]))
+
 (defn sql
   "Compile `statement` into a vector, where the first element is the
   SQL statement and the rest are the prepared statement arguments."
@@ -46,9 +49,7 @@
   "Add the FROM item to the SQL select statement."
   [from-item]
   (fn [statement]
-    (let [from-item
-          (if (sequential? from-item)
-            from-item [from-item])]
+    (let [from-item (wrap-sequential from-item)]
       [from-item (assoc statement :from from-item)])))
 
 (defn table
@@ -89,18 +90,21 @@
 
 (defstmt drop-table
   "Drop the database `table`."
-  [table] (->DropTable (to-table table) false false false))
+  [tables]
+  (->DropTable
+   (map to-table (wrap-sequential tables))
+   false false false))
 
 (defstmt truncate-table
   "Truncate the database `table`."
-  [table] (->TruncateTable (to-table table) false false false false))
+  [tables]
+  (->TruncateTable
+   (map to-table (wrap-sequential tables))
+   false false false false))
 
 (defstmt select
   "Select from the database `table`."
-  [columns] (->Select
-             (if (sequential? columns)
-               columns [columns])
-             nil))
+  [columns] (->Select (wrap-sequential columns) nil))
 
 ;; (sql
 ;;  (select
