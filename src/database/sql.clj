@@ -127,6 +127,11 @@
   "Select from the database `table`."
   [columns] (->Select (wrap-sequential columns) nil))
 
+(defstmt select
+  "Select from the database `table`."
+  [columns]
+  (->Select (map expand-sql (wrap-sequential columns)) nil))
+
 ;; (sql
 ;;  (select
 ;;   [:id :name]
@@ -162,19 +167,20 @@
 ;;  (column :updated-at :timestamp-with-time-zone :not-null? true :default "now()"))
 
 
-(select
- [:id :name]
- (from :continents))
+;; (select
+;;  [:id :name]
+;;  (from :continents))
 
-;; SELECT max(temp_lo) FROM weather;
+;; ;; SELECT max(temp_lo) FROM weather;
 
-(select
- '(max :temp-lo)
- (from :weather))
+;; (select
+;;  ['(max :temp-lo)]
+;;  (from :weather))
 
-(select
- '(max 1)
- (from :weather))
+;; (defn foo [a]
+;;   (select
+;;    `[:a (public.max ~a)]
+;;    (from :weather)))
 
 ;; (println (expand-sql '(ST_AsText (ST_Centroid "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"))))
 ;; (println (expand-sql `(ST_AsText (ST_Centroid "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"))))
