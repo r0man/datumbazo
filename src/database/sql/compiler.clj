@@ -7,10 +7,25 @@
 (defprotocol ICompileSQL
   (compile-sql [arg] "Compile `arg` into an SQL statement."))
 
+(defprotocol IMakeColumn
+  (to-column [arg] "Convert `arg` into a Column."))
+
 (defprotocol IMakeTable
   (to-table [arg] "Convert `arg` into a Table."))
 
-(defrecord Column [schema table name type not-null? unique? primary-key?])
+(defrecord Column [schema table name type not-null? unique? primary-key?]
+
+  ICompileSQL
+  (compile-sql [t]
+    [(str (if schema
+            (str (jdbc/as-identifier schema) "."))
+          (if table
+            (str (jdbc/as-identifier table) "."))
+          (jdbc/as-identifier name))])
+
+  IMakeColumn
+  (to-column [column]
+    column))
 
 (defrecord Table [schema name]
 
@@ -45,6 +60,29 @@
           (if cascade? " CASCADE")
           (if restrict? " RESTRICT"))]))
 
+(defrecord Select [columns from]
+  ICompileSQL
+  (compile-sql [stmt]
+    (let [columns (map compile-sql columns)
+          from (map compile-sql from)]
+      [(str "SELECT " (if (empty? columns)
+                        "*" (join ", " (map first columns))) " "
+                        "FROM " (join ", " (map first from)))])))
+
+;; (jdbc/with-quoted-identifiers \"
+;;   (prn (compile-sql
+;;         (map->Select
+;;          {:columns [(map->Column {:name :id}) (map->Column {:name :name})]
+;;           :from [(map->Table {:name :continents})
+;;                  (map->Table {:name :countries})]}))))
+
+;; (jdbc/with-quoted-identifiers \"
+;;   (prn (compile-sql
+;;         (map->Select
+;;          {:columns []
+;;           :from [(map->Table {:name :continents})
+;;                  (map->Table {:name :countries})]}))))
+
 (defn column?
   "Returns true if `arg` is a Column, otherwise false."
   [arg] (instance? Column arg))
@@ -72,11 +110,19 @@
   (compile-sql [k]
     (compile-sql (util/qualified-name k)))
 
+  IMakeColumn
+  (to-column [k]
+    (to-column (util/qualified-name k)))
+
   IMakeTable
   (to-table [k]
     (to-table (util/qualified-name k))))
 
 (extend-type clojure.lang.PersistentVector
+
+  IMakeColumn
+  (to-column [[t as alias]]
+    (assoc (to-column t) :alias alias))
 
   IMakeTable
   (to-table [[t as alias]]
@@ -89,6 +135,10 @@
     [(->> (split s #"\.|/")
           (map (comp jdbc/as-identifier keyword))
           (join "."))])
+
+  IMakeColumn
+  (to-column [s]
+    (map->Column (util/parse-column s)))
 
   IMakeTable
   (to-table [s]

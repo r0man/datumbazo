@@ -42,25 +42,14 @@
   (fn [statement]
     [restrict? (assoc statement :restrict? restrict?)]))
 
-(defn drop-table
-  "Add the RESTRICT clause to the SQL statement."
-  [table & body]
-  (second ((with-monad state-m (m-seq body))
-           (->DropTable (to-table table) false false false))))
-
-(defmacro defstmt [name doc args & body]
-  `(do (defn ~name ~doc
-         [~@args & ~'body]
-         (second ((with-monad state-m (m-seq ~'body))
-                  ~@body)))))
-
-(defstmt drop-table
-  "Add the RESTRICT clause to the SQL statement."
-  [table] (->DropTable (to-table table) false false false))
-
-(defstmt truncate-table
-  "Add the RESTRICT clause to the SQL statement."
-  [table] (->TruncateTable (to-table table) false false false false))
+(defn from
+  "Add the FROM item to the SQL select statement."
+  [from-item]
+  (fn [statement]
+    (let [from-item (map to-table
+                         (if (sequential? from-item)
+                           from-item [from-item]))]
+      [from-item (assoc statement :from from-item)])))
 
 (defn table
   "Make a SQL table."
@@ -84,6 +73,46 @@
     `(def ^{:doc doc}
        ~symbol (table ~name ~@body))))
 
+(defmacro defstmt
+  "Define a SQL statement."
+  [name doc args & body]
+  `(do (defn ~name ~doc
+         [~@args & ~'body]
+         (second ((with-monad state-m (m-seq ~'body))
+                  ~@body)))))
+
+;; (defn drop-table
+;;   "Add the RESTRICT clause to the SQL statement."
+;;   [table & body]
+;;   (second ((with-monad state-m (m-seq body))
+;;            (->DropTable (to-table table) false false false))))
+
+(defstmt drop-table
+  "Drop the database `table`."
+  [table] (->DropTable (to-table table) false false false))
+
+(defstmt truncate-table
+  "Truncate the database `table`."
+  [table] (->TruncateTable (to-table table) false false false false))
+
+(defstmt select
+  "Select from the database `table`."
+  [columns] (->Select
+             (map to-column (if (sequential? columns)
+                              columns [columns]))
+             nil))
+
+(sql
+ (select
+  [:id :name]
+  (from :continents)))
+
+;; (select
+;;  [:countries.id :countires.name]
+;;  (from :countries)
+;;  (join :continents
+;;        (on (= :continents.id :countires.continent-id))))
+
 ;; (deftable continents
 ;;   "The continents database table."
 ;;   :continents
@@ -106,44 +135,3 @@
 ;;  (column :geonames-id :integer :unique? true)
 ;;  (column :created-at :timestamp-with-time-zone :not-null? true :default "now()")
 ;;  (column :updated-at :timestamp-with-time-zone :not-null? true :default "now()"))
-
-;; (table
-;;  :continents
-;;  (column :id :serial))
-
-;; (defn column [column & {:as options}]
-;;   )
-
-;; (column :public :continents :id)
-;; (column :public.continents/id)
-
-;; (drop-table
-;;  :public.continents
-;;  (restrict true)
-;;  (if-exists false))
-
-;; (defn table [name]
-;;   (cond
-;;    (keyword? name)
-;;    (apply ->SQLTable nil nil)))
-
-;; (table
-;;  :public.continents
-;;  (column :id :serial)
-;;  (column :name :citext))
-
-;; (compile-sql
-;;  (second
-;;   (drop-table
-;;    (table
-;;     :public.continents
-;;     (column :id :serial)
-;;     (column :name :citext))
-;;    (restrict true)
-;;    (if-exists false))))
-
-;; ;; (compile-sql (drop-table :public.continents :if-exists true))
-;; ;; (compile-sql (drop-table :public.continents))
-;; ;; (compile-sql :public.continents)
-
-;; ;; ;; (str :public.continents/id)

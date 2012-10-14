@@ -21,6 +21,24 @@
   (is (not (table? nil)))
   (is (table? (map->Table {}))))
 
+(deftest test-to-column
+  (are [arg expected]
+       (is (= expected (to-column arg)))
+       "id"
+       (map->Column {:name :id})
+       "continents.id"
+       (map->Column {:table :continents :name :id})
+       :continents.id
+       (map->Column {:table :continents :name :id})
+       :public.continents.id
+       (map->Column {:schema :public :table :continents :name :id})
+       :public.continents/id
+       (map->Column {:schema :public :table :continents :name :id})
+       (map->Column {:schema :public :table :continents :name :id})
+       (map->Column {:schema :public :table :continents :name :id})
+       (to-column [:continents.id :as :continent-id])
+       (map->Column {:table :continents :name :id :alias :continent-id})))
+
 (deftest test-to-table
   (are [arg expected]
        (is (= expected (to-table arg)))
