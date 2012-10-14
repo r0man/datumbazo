@@ -40,9 +40,9 @@
   ICompileSQL
   (compile-sql [stmt]
     [(str "TRUNCATE TABLE " (first (compile-sql table))
-          (if cascade? " CASCADE")
-          (if continue-identity? " CONTINUE IDENTITY")
           (if restart-identity? " RESTART IDENTITY")
+          (if continue-identity? " CONTINUE IDENTITY")
+          (if cascade? " CASCADE")
           (if restrict? " RESTRICT"))]))
 
 (defn column?

@@ -58,4 +58,4 @@
         (continue-identity true)
         (restart-identity true)
         (restrict true))
-       ["TRUNCATE TABLE continents CASCADE CONTINUE IDENTITY RESTART IDENTITY RESTRICT"]))
+       ["TRUNCATE TABLE continents RESTART IDENTITY CONTINUE IDENTITY CASCADE RESTRICT"]))
