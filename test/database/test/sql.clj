@@ -88,4 +88,18 @@
         (restrict true))
        ["TRUNCATE TABLE continents RESTART IDENTITY CONTINUE IDENTITY CASCADE RESTRICT"]))
 
-;; (select 1 (from :continents))
+(deftest test-parse-expr
+  (are [expr expected]
+       (is (= expected (parse-expr expr)))
+       1
+       {:op :constant :form 1}
+       1.2
+       {:op :constant :form 1.2}
+       "Europe"
+       {:op :string :form "Europe"}
+       :continents.id
+       {:op :keyword :form :continents.id}
+       '(max :continents.created-at)
+       {:op :fn :form 'max :children [{:op :keyword :form :continents.created-at}]}
+       `(max :continents.created-at)
+       {:op :fn :form `max :children [{:op :keyword :form :continents.created-at}]}))

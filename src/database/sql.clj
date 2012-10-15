@@ -15,6 +15,28 @@
   SQL statement and the rest are the prepared statement arguments."
   [statement] (compile-sql statement))
 
+(defmulti parse-expr class)
+
+(defn parse-fn-expr [expr]
+  {:op :fn
+   :form (first expr)
+   :children (map parse-expr (rest expr))})
+
+(defmethod parse-expr clojure.lang.Cons [expr]
+  (parse-fn-expr expr))
+
+(defmethod parse-expr clojure.lang.PersistentList [expr]
+  (parse-fn-expr expr))
+
+(defmethod parse-expr clojure.lang.Keyword [expr]
+  {:op :keyword :form expr})
+
+(defmethod parse-expr Number [expr]
+  {:op :constant :form expr})
+
+(defmethod parse-expr String [expr]
+  {:op :string :form expr})
+
 (declare expand-sql)
 
 (defn- expand-fn [arg]
@@ -170,6 +192,23 @@
 ;; (select
 ;;  [:id :name]
 ;;  (from :continents))
+
+;; (select
+;;  [:countries.id :countries.name]
+;;  (from [:countries :continents])
+;;  (where `(and (= :countries.contient-id :continents.id)
+;;               (> :countries.spot-count 0))))
+
+;; (parse-expr
+;;  `(and (= :countries.contient-id :continents.id)
+;;        (> :countries.spot-count 0)))
+
+;; (parse-expr `(> :countries.spot-count 0))
+
+;; (parse-expr 1.2)
+
+;; (name (first `(and (= :countries.contient-id :continents.id)
+;;                    (> :countries.spot-count 0))))
 
 ;; ;; SELECT max(temp_lo) FROM weather;
 
