@@ -15,6 +15,26 @@
   SQL statement and the rest are the prepared statement arguments."
   [statement] (compile-sql statement))
 
+;; COMPILE SQL EXPRESSION
+
+(defmulti compile-expr :op)
+
+(defmethod compile-expr :fn [expr]
+  (let [children (map compile-expr (:children expr))
+        sql (join ", " (map first children))]
+    [(str (:form expr) "(" sql ")")]))
+
+(defmethod compile-expr :keyword [expr]
+  [(jdbc/as-identifier (:form expr))])
+
+(defmethod compile-expr :number [expr]
+  [(str (:form expr))])
+
+(defmethod compile-expr :string [expr]
+  ["?" (:form expr)])
+
+;; PARSE SQL EXPRESSION
+
 (defmulti parse-expr class)
 
 (defn parse-fn-expr [expr]
@@ -32,7 +52,7 @@
   {:op :keyword :form expr})
 
 (defmethod parse-expr Number [expr]
-  {:op :constant :form expr})
+  {:op :number :form expr})
 
 (defmethod parse-expr String [expr]
   {:op :string :form expr})
