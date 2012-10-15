@@ -19,23 +19,23 @@
 
 (defmulti compile-expr :op)
 
-(defmethod compile-expr :fn [expr]
-  (let [children (map compile-expr (:children expr))
-        sql (join ", " (map first children))]
-    (concat [(str (:form expr) "(" sql ")")]
-            (apply concat (map rest children)))))
+(defmethod compile-expr :fn [{:keys [children form]}]
+  (let [child-exprs (map compile-expr children)
+        sql (join ", " (map first child-exprs))]
+    (concat [(str form "(" sql ")")]
+            (apply concat (map rest child-exprs)))))
 
-(defmethod compile-expr :nil [expr]
+(defmethod compile-expr :nil [_]
   ["NULL"])
 
-(defmethod compile-expr :keyword [expr]
-  [(jdbc/as-identifier (:form expr))])
+(defmethod compile-expr :keyword [{:keys [form]}]
+  [(jdbc/as-identifier form)])
 
-(defmethod compile-expr :number [expr]
-  [(str (:form expr))])
+(defmethod compile-expr :number [{:keys [form]}]
+  [(str form)])
 
-(defmethod compile-expr :string [expr]
-  ["?" (:form expr)])
+(defmethod compile-expr :string [{:keys [form]}]
+  ["?" form])
 
 ;; PARSE SQL EXPRESSION
 
