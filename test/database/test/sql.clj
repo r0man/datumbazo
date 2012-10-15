@@ -91,6 +91,8 @@
 (deftest test-compile-expr
   (are [expr expected]
        (is (= expected (compile-expr (parse-expr expr))))
+       nil
+       ["NULL"]
        1
        ["1"]
        1.2
@@ -100,11 +102,17 @@
        :continents.id
        ["continents.id"]
        '(greatest 1 2)
-       ["greatest(1, 2)"]))
+       ["greatest(1, 2)"]
+       '(lower "Europe")
+       ["lower(?)" "Europe"]
+       '(upper (lower "Europe"))
+       ["upper(lower(?))" "Europe"]))
 
 (deftest test-parse-expr
   (are [expr expected]
        (is (= expected (parse-expr expr)))
+       nil
+       {:op :nil}
        1
        {:op :number :form 1}
        1.2

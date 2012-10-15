@@ -22,7 +22,11 @@
 (defmethod compile-expr :fn [expr]
   (let [children (map compile-expr (:children expr))
         sql (join ", " (map first children))]
-    [(str (:form expr) "(" sql ")")]))
+    (concat [(str (:form expr) "(" sql ")")]
+            (apply concat (map rest children)))))
+
+(defmethod compile-expr :nil [expr]
+  ["NULL"])
 
 (defmethod compile-expr :keyword [expr]
   [(jdbc/as-identifier (:form expr))])
@@ -41,6 +45,9 @@
   {:op :fn
    :form (first expr)
    :children (map parse-expr (rest expr))})
+
+(defmethod parse-expr nil [expr]
+  {:op :nil})
 
 (defmethod parse-expr clojure.lang.Cons [expr]
   (parse-fn-expr expr))
