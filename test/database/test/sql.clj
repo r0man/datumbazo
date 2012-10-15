@@ -52,30 +52,32 @@
         (restrict true))
        ["DROP TABLE IF EXISTS continents RESTRICT"]))
 
-(deftest test-select
-  (are [stmt expected]
-       (is (= expected (sql stmt)))
-       (select 1)
-       ["SELECT 1"]
-       (select [] (from :continents))
-       ["SELECT * FROM continents"]
-       (select [:id :name] (from :continents))
-       ["SELECT id, name FROM continents"]))
+;; (deftest test-select
+;;   (are [stmt expected]
+;;        (is (= expected (sql stmt)))
+;;        (select 1)
+;;        ["SELECT 1"]
+;;        (select [] (from :continents))
+;;        ["SELECT * FROM continents"]
+;;        (select [:id :name] (from :continents))
+;;        ["SELECT id, name FROM continents"]))
 
 (deftest test-table
   (let [t (table :continents)]
+    (is (= :table (:op t)))
     (is (nil? (:schema t)))
     (is (= :continents (:name t)))
-    (is (= t (table "continents")))
-    (is (= t (table t))))
+    (is (= t (table "continents"))))
   (let [t (table :public.continents)]
+    (is (= :table (:op t)))
     (is (= :public (:schema t)))
+    (is (= :table (:op t)))
     (is (= :continents (:name t)))
     (is (= t (table "public.continents")))))
 
 (deftest test-truncate-table
   (are [stmt expected]
-       (is (= expected (sql stmt)))
+       (is (= expected (compile-expr stmt)))
        (truncate-table :continents)
        ["TRUNCATE TABLE continents"]
        (truncate-table [:continents :countries])

@@ -10,11 +10,6 @@
 (defn- wrap-sequential [s]
   (if (sequential? s) s [s]))
 
-(defn sql
-  "Compile `statement` into a vector, where the first element is the
-  SQL statement and the rest are the prepared statement arguments."
-  [statement] (compile-sql statement))
-
 ;; COMPILE SQL EXPRESSION
 
 (defmulti compile-expr :op)
@@ -36,6 +31,32 @@
 
 (defmethod compile-expr :string [{:keys [form]}]
   ["?" form])
+
+(defmethod compile-expr :table [{:keys [schema name]}]
+  (assert name)
+  [(str (if schema
+          (str (jdbc/as-identifier schema) "."))
+        (jdbc/as-identifier name))])
+
+(defmethod compile-expr :drop-table [{:keys [cascade if-exists restrict children]}]
+  [(str "DROP TABLE "
+        (if if-exists "IF EXISTS ")
+        (join ", " (map (comp first compile-expr) children))
+        (if cascade " CASCADE")
+        (if restrict " RESTRICT"))])
+
+(defmethod compile-expr :truncate-table [{:keys [cascade children continue-identity restart-identity restrict]}]
+  [(str "TRUNCATE TABLE "
+        (join ", " (map (comp first compile-expr) children))
+        (if restart-identity " RESTART IDENTITY")
+        (if continue-identity " CONTINUE IDENTITY")
+        (if cascade " CASCADE")
+        (if restrict " RESTRICT"))])
+
+(defn sql
+  "Compile `statement` into a vector, where the first element is the
+  SQL statement and the rest are the prepared statement arguments."
+  [statement] (compile-expr statement))
 
 ;; PARSE SQL EXPRESSION
 
@@ -87,33 +108,33 @@
 
 (defn cascade
   "Add the CASCADE clause to the SQL statement."
-  [cascade?]
+  [cascade]
   (fn [statement]
-    [cascade? (assoc statement :cascade? cascade?)]))
+    [cascade (assoc statement :cascade cascade)]))
 
 (defn continue-identity
   "Add the CONTINUE IDENTITY clause to the SQL statement."
-  [continue-identity?]
+  [continue-identity]
   (fn [statement]
-    [continue-identity? (assoc statement :continue-identity? true)]))
+    [continue-identity (assoc statement :continue-identity true)]))
 
 (defn restart-identity
   "Add the RESTART IDENTITY clause to the SQL statement."
-  [restart-identity?]
+  [restart-identity]
   (fn [statement]
-    [restart-identity? (assoc statement :restart-identity? true)]))
+    [restart-identity (assoc statement :restart-identity true)]))
 
 (defn if-exists
   "Add the IF EXISTS clause to the SQL statement."
-  [if-exists?]
+  [if-exists]
   (fn [statement]
-    [if-exists? (assoc statement :if-exists? if-exists?)]))
+    [if-exists (assoc statement :if-exists if-exists)]))
 
 (defn restrict
   "Add the RESTRICT clause to the SQL statement."
-  [restrict?]
+  [restrict]
   (fn [statement]
-    [restrict? (assoc statement :restrict? restrict?)]))
+    [restrict (assoc statement :restrict restrict)]))
 
 (defn from
   "Add the FROM item to the SQL select statement."
@@ -126,13 +147,13 @@
   "Make a SQL table."
   [table & body]
   (second ((with-monad state-m (m-seq body))
-           (to-table table))))
+           (assoc (u/parse-table table)
+             :op :table))))
 
 (defn column
   "Make a SQL table."
   [name type & options]
   (fn [table]
-    (assert (table? table))
     (let [column (apply make-column table name type options)]
       [column (assoc-in table [:column name] column)])))
 
@@ -161,16 +182,14 @@
 (defstmt drop-table
   "Drop the database `table`."
   [tables]
-  (->DropTable
-   (map to-table (wrap-sequential tables))
-   false false false))
+  {:op :drop-table
+   :children (map table (wrap-sequential tables))})
 
 (defstmt truncate-table
   "Truncate the database `table`."
   [tables]
-  (->TruncateTable
-   (map to-table (wrap-sequential tables))
-   false false false false))
+  {:op :truncate-table
+   :children (map table (wrap-sequential tables))})
 
 (defstmt select
   "Select from the database `table`."

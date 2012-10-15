@@ -42,24 +42,24 @@
   ICompileSQL
   (compile-sql [stmt]))
 
-(defrecord DropTable [tables cascade? if-exists? restrict?]
+(defrecord DropTable [tables cascade if-exists? restrict]
   ICompileSQL
   (compile-sql [stmt]
     [(str "DROP TABLE "
           (if if-exists? "IF EXISTS ")
           (join ", " (map (comp first compile-sql) tables))
-          (if cascade? " CASCADE")
-          (if restrict? " RESTRICT"))]))
+          (if cascade " CASCADE")
+          (if restrict " RESTRICT"))]))
 
-(defrecord TruncateTable [tables cascade? continue-identity? restart-identity? restrict?]
+(defrecord TruncateTable [tables cascade continue-identity restart-identity restrict]
   ICompileSQL
   (compile-sql [stmt]
     [(str "TRUNCATE TABLE "
           (join ", " (map (comp first compile-sql) tables))
-          (if restart-identity? " RESTART IDENTITY")
-          (if continue-identity? " CONTINUE IDENTITY")
-          (if cascade? " CASCADE")
-          (if restrict? " RESTRICT"))]))
+          (if restart-identity " RESTART IDENTITY")
+          (if continue-identity " CONTINUE IDENTITY")
+          (if cascade " CASCADE")
+          (if restrict " RESTRICT"))]))
 
 (defrecord Select [columns from]
   ICompileSQL
