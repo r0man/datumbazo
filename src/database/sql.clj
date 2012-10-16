@@ -7,7 +7,7 @@
             [database.sql.compiler :refer :all])
   (:import database.sql.compiler.Table))
 
-(defn- wrap-sequential [s]
+(defn- wrap-seq [s]
   (if (sequential? s) s [s]))
 
 ;; COMPILE SQL EXPRESSION
@@ -44,6 +44,15 @@
         (join ", " (map (comp first compile-expr) children))
         (if cascade " CASCADE")
         (if restrict " RESTRICT"))])
+
+(defmethod compile-expr :select [{:keys [expressions from-item]}]
+  (let [expressions (map compile-expr expressions)
+        from-item (map compile-expr from-item)]
+    (concat [(str "SELECT " (if (empty? expressions)
+                              "*" (join ", " (map first expressions)))
+                  (if-not (empty? from-item)
+                    (str " FROM " (join ", " (map first from-item)))))]
+            (apply concat (map rest expressions)))))
 
 (defmethod compile-expr :truncate-table [{:keys [cascade children continue-identity restart-identity restrict]}]
   [(str "TRUNCATE TABLE "
@@ -140,8 +149,13 @@
   "Add the FROM item to the SQL select statement."
   [from-item]
   (fn [statement]
-    (let [from-item (wrap-sequential from-item)]
-      [from-item (assoc statement :from from-item)])))
+    (let [from-item
+          (map #(cond
+                 (keyword? %1)
+                 (assoc (u/parse-table %1)
+                   :op :table))
+               (wrap-seq from-item))]
+      [from-item (assoc statement :from-item from-item)])))
 
 (defn table
   "Make a SQL table."
@@ -183,22 +197,19 @@
   "Drop the database `table`."
   [tables]
   {:op :drop-table
-   :children (map table (wrap-sequential tables))})
+   :children (map table (wrap-seq tables))})
 
 (defstmt truncate-table
   "Truncate the database `table`."
   [tables]
   {:op :truncate-table
-   :children (map table (wrap-sequential tables))})
+   :children (map table (wrap-seq tables))})
 
 (defstmt select
   "Select from the database `table`."
-  [columns] (->Select (wrap-sequential columns) nil))
-
-(defstmt select
-  "Select from the database `table`."
-  [columns]
-  (->Select (map expand-sql (wrap-sequential columns)) nil))
+  [expressions]
+  {:op :select
+   :expressions (map parse-expr (wrap-seq expressions))})
 
 ;; (sql
 ;;  (select
