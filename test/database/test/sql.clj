@@ -57,10 +57,16 @@
        (is (= expected (sql stmt)))
        (select 1)
        ["SELECT 1"]
+       (select [1 2 3])
+       ["SELECT 1, 2, 3"]
        (select [] (from :continents))
        ["SELECT * FROM continents"]
+       (select :id (from :continents))
+       ["SELECT id FROM continents"]
        (select [:id :name] (from :continents))
-       ["SELECT id, name FROM continents"]))
+       ["SELECT id, name FROM continents"]
+       (select ['(greatest 1 2) '(lower "X")])
+       ["SELECT greatest(1, 2), lower(?)" "X"]))
 
 (deftest test-table
   (let [t (table :continents)]
