@@ -1,56 +1,26 @@
 (ns database.sql.test.compiler
   (:use clojure.test
+        database.sql
         database.sql.compiler))
 
-(deftest test-column?
-  (is (not (column? nil)))
-  (is (column? (map->Column {}))))
-
 (deftest test-compile-sql
-  (are [arg expected]
-       (is (= expected (compile-sql arg)))
-       nil ["NULL"]
-       "continents" ["continents"]
-       "public.continents" ["public.continents"]
-       :continents ["continents"]
-       :public.continents ["public.continents"]
-       (->Table nil :continents) ["continents"]
-       (->Table :public :continents) ["public.continents"]))
-
-(deftest test-table?
-  (is (not (table? nil)))
-  (is (table? (map->Table {}))))
-
-(deftest test-to-column
-  (are [arg expected]
-       (is (= expected (to-column arg)))
-       "id"
-       (map->Column {:name :id})
-       "continents.id"
-       (map->Column {:table :continents :name :id})
+  (are [expr expected]
+       (is (= expected (compile-sql (parse-expr expr))))
+       nil
+       ["NULL"]
+       1
+       ["1"]
+       1.2
+       ["1.2"]
+       "Europe"
+       ["?" "Europe"]
        :continents.id
-       (map->Column {:table :continents :name :id})
-       :public.continents.id
-       (map->Column {:schema :public :table :continents :name :id})
-       :public.continents/id
-       (map->Column {:schema :public :table :continents :name :id})
-       (map->Column {:schema :public :table :continents :name :id})
-       (map->Column {:schema :public :table :continents :name :id})
-       (to-column [:continents.id :as :continent-id])
-       (map->Column {:table :continents :name :id :alias :continent-id})))
-
-(deftest test-to-table
-  (are [arg expected]
-       (is (= expected (to-table arg)))
-       "continents"
-       (map->Table {:name :continents})
-       "public.continents"
-       (map->Table {:schema :public :name :continents})
-       :continents
-       (map->Table {:name :continents})
-       :public.continents
-       (map->Table {:schema :public :name :continents})
-       (map->Table {:schema :public :name :continents})
-       (map->Table {:schema :public :name :continents})
-       (to-table [:continents :as :c])
-       (map->Table {:name :continents :alias :c})))
+       ["continents.id"]
+       '(greatest 1 2)
+       ["greatest(1, 2)"]
+       '(lower "Europe")
+       ["lower(?)" "Europe"]
+       '(upper (lower "Europe"))
+       ["upper(lower(?))" "Europe"]
+       '(ST_AsText (ST_Centroid "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"))
+       ["ST_AsText(ST_Centroid(?))" "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"]))
