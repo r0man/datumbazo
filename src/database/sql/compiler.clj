@@ -1,7 +1,7 @@
 (ns database.sql.compiler
   (:refer-clojure :exclude [replace])
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.string :refer [join replace]]))
+            [clojure.string :refer [blank? join replace]]))
 
 (defn- append-sql
   "Returns the SQL string for `stmt` with a space at the front."
@@ -15,6 +15,12 @@
   (apply concat (remove nil? args)))
 
 (defmulti compile-sql :op)
+
+(defn- stmt [& stmts]
+  (let [stmts (map #(if (vector? %1) %1 (compile-sql %1)) stmts)
+        stmts (remove (comp blank? first) stmts)]
+    (cons (join " " (map first stmts))
+          (apply concat (map rest stmts)))))
 
 (defmethod compile-sql nil [_]
   nil)
@@ -63,13 +69,11 @@
         (jdbc/as-identifier name))])
 
 (defmethod compile-sql :drop-table [{:keys [cascade if-exists restrict children]}]
-  (let [cascade (compile-sql cascade)
-        if-exists (compile-sql if-exists)
-        restrict (compile-sql restrict)]
-    [(str "DROP TABLE " (prepend-sql if-exists)
-          (join ", " (map (comp first compile-sql) children))
-          (append-sql cascade)
-          (append-sql restrict))]))
+  (stmt ["DROP TABLE"]
+        if-exists
+        [(join ", " (map (comp first compile-sql) children))]
+        cascade
+        restrict))
 
 (defmethod compile-sql :restart-identity [{:keys [restart-identity]}]
   (if restart-identity ["RESTART IDENTITY"]))
@@ -93,12 +97,8 @@
                        (rest offset)))))
 
 (defmethod compile-sql :truncate-table [{:keys [cascade children continue-identity restart-identity restrict]}]
-  (let [cascade (compile-sql cascade)
-        restrict (compile-sql restrict)
-        continue-identity (compile-sql continue-identity)
-        restart-identity (compile-sql restart-identity)]
-    [(str "TRUNCATE TABLE " (join ", " (map (comp first compile-sql) children))
-          (append-sql restart-identity)
-          (append-sql continue-identity)
-          (append-sql cascade)
-          (append-sql restrict))]))
+  (stmt [(str "TRUNCATE TABLE " (join ", " (map (comp first compile-sql) children)))]
+        restart-identity
+        continue-identity
+        cascade
+        restrict))
