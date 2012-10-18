@@ -83,21 +83,6 @@
 
 (defmethod compile-sql :select [{:keys [expressions from limit offset]}]
   (let [expressions (map compile-sql expressions)
-        from (map compile-sql from)
-        limit (compile-sql limit)
-        offset (compile-sql offset)]
-    (cons (str "SELECT " (if (empty? expressions)
-                           "*" (join ", " (map first expressions)))
-               (if-not (empty? from)
-                 (str " FROM " (join ", " (map first from))))
-               (append-sql limit)
-               (append-sql offset))
-          (concat-args (apply concat (map rest expressions))
-                       (rest limit)
-                       (rest offset)))))
-
-(defmethod compile-sql :select [{:keys [expressions from limit offset]}]
-  (let [expressions (map compile-sql expressions)
         from (map compile-sql from)]
     (stmt ["SELECT"]
           (apply vector
