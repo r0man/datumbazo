@@ -3,6 +3,9 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [join replace]]))
 
+(defn- concat-args [& args]
+  (apply concat (remove nil? args)))
+
 (defmulti compile-sql :op)
 
 (defmethod compile-sql :fn [{:keys [children name]}]
@@ -48,12 +51,18 @@
 
 (defmethod compile-sql :select [{:keys [expressions from-item limit offset]}]
   (let [expressions (map compile-sql expressions)
-        from-item (map compile-sql from-item)]
+        from-item (map compile-sql from-item)
+        limit (if limit (compile-sql limit))
+        offset (if offset (compile-sql offset))]
     (concat [(str "SELECT " (if (empty? expressions)
                               "*" (join ", " (map first expressions)))
                   (if-not (empty? from-item)
-                    (str " FROM " (join ", " (map first from-item)))))]
-            (apply concat (map rest expressions)))))
+                    (str " FROM " (join ", " (map first from-item))))
+                  (if limit (str " " (first limit)))
+                  (if offset (str " " (first offset))))]
+            (concat-args (apply concat (map rest expressions))
+                         (if limit (rest limit))
+                         (if offset (rest offset))))))
 
 (defmethod compile-sql :truncate-table [{:keys [cascade children continue-identity restart-identity restrict]}]
   [(str "TRUNCATE TABLE "
