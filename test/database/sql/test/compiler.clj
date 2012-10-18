@@ -1,26 +1,29 @@
 (ns database.sql.test.compiler
   (:use clojure.test
-        database.sql
         database.sql.compiler))
 
 (deftest test-compile-sql
-  (are [expr expected]
-       (is (= expected (compile-sql (parse-expr expr))))
-       nil
+  (are [ast expected]
+       (is (= expected (compile-sql ast)))
+       {:op :nil}
        ["NULL"]
-       1
+       {:op :number :form 1}
        ["1"]
-       1.2
-       ["1.2"]
-       "Europe"
+       {:op :number :form 3.14}
+       ["3.14"]
+       {:op :string :form "Europe"}
        ["?" "Europe"]
-       :continents.id
+       {:op :keyword :form :continents.id}
        ["continents.id"]
-       '(greatest 1 2)
+       {:op :expr-list :children [{:op :number :form 1}]}
+       ["1"]
+       {:op :expr-list :children [{:op :string :form "x"}]}
+       ["?" "x"]
+       {:op :expr-list :children [{:op :number :form 1} {:op :string :form "x"}]}
+       ["1, ?" "x"]
+       {:op :fn :form 'max :children [{:op :keyword :form :created-at}]}
+       ["max(created-at)"]
+       {:op :fn :form 'greatest :children [{:op :number :form 1} {:op :number :form 2}]}
        ["greatest(1, 2)"]
-       '(lower "Europe")
-       ["lower(?)" "Europe"]
-       '(upper (lower "Europe"))
-       ["upper(lower(?))" "Europe"]
-       '(ST_AsText (ST_Centroid "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"))
+       {:op :fn :form 'ST_AsText :children [{:op :fn :form 'ST_Centroid :children [{:op :string :form "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"}]}]}
        ["ST_AsText(ST_Centroid(?))" "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"]))

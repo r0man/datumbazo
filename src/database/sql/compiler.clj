@@ -6,13 +6,17 @@
 (defmulti compile-sql :op)
 
 (defmethod compile-sql :fn [{:keys [children form]}]
-  (let [child-exprs (map compile-sql children)
-        sql (join ", " (map first child-exprs))]
-    (concat [(str form "(" sql ")")]
-            (apply concat (map rest child-exprs)))))
+  (let [children (map compile-sql children)]
+    (cons (str form "(" (join ", " (map first children)) ")")
+          (apply concat (map rest children)))))
 
 (defmethod compile-sql :nil [_]
   ["NULL"])
+
+(defmethod compile-sql :expr-list [{:keys [children]}]
+  (let [children (map compile-sql children)]
+    (cons (join ", " (map first children))
+          (apply concat (map rest children)))))
 
 (defmethod compile-sql :keyword [{:keys [form]}]
   [(jdbc/as-identifier form)])
