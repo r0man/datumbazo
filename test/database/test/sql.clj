@@ -100,11 +100,12 @@
        ["SELECT name, max(created-at) FROM continents"]
        (select ['(greatest 1 2) '(lower "X")])
        ["SELECT greatest(1, 2), lower(?)" "X"]
-       ;; (select [] (from :continents) (limit 1))
-       ;; ["SELECT * FROM continents LIMIT 1"]
-       ;; (select [] (from :continents) (offset 1))
-       ;; ["SELECT * FROM continents OFFSET 1"]
-       ))
+       (select [] (from :continents) (limit 1))
+       ["SELECT * FROM continents LIMIT 1"]
+       (select [] (from :continents) (offset 1))
+       ["SELECT * FROM continents OFFSET 1"]
+       (select [] (from :continents) (limit 1) (offset 2))
+       ["SELECT * FROM continents LIMIT 1 OFFSET 2"]))
 
 (deftest test-table
   (let [t (table :continents)]
