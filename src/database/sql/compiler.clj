@@ -5,9 +5,9 @@
 
 (defmulti compile-sql :op)
 
-(defmethod compile-sql :fn [{:keys [children form]}]
+(defmethod compile-sql :fn [{:keys [children name]}]
   (let [children (map compile-sql children)]
-    (cons (str form "(" (join ", " (map first children)) ")")
+    (cons (str name "(" (join ", " (map first children)) ")")
           (apply concat (map rest children)))))
 
 (defmethod compile-sql :nil [_]
