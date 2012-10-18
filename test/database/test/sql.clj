@@ -64,8 +64,8 @@
        {:op :number :form 1.2}
        "Europe"
        {:op :string :form "Europe"}
-       :continents.id
-       {:op :keyword :form :continents.id}
+       :continents.created-at
+       {:op :keyword :form :continents.created-at}
        '(greatest 1 2)
        {:op :fn :name 'greatest :children [{:op :number :form 1} {:op :number :form 2}]}
        '(max :continents.created-at)
@@ -84,10 +84,10 @@
        ["SELECT 1, 2, 3"]
        (select [] (from :continents))
        ["SELECT * FROM continents"]
-       (select :id (from :continents))
-       ["SELECT id FROM continents"]
-       (select [:id :name] (from :continents))
-       ["SELECT id, name FROM continents"]
+       (select :created-at (from :continents))
+       ["SELECT created-at FROM continents"]
+       (select [:name :created-at] (from :continents))
+       ["SELECT name, created-at FROM continents"]
        (select ['(greatest 1 2) '(lower "X")])
        ["SELECT greatest(1, 2), lower(?)" "X"]))
 

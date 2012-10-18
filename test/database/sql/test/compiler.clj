@@ -1,4 +1,5 @@
 (ns database.sql.test.compiler
+  (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
         database.sql.compiler))
 
@@ -13,8 +14,8 @@
        ["3.14"]
        {:op :string :form "Europe"}
        ["?" "Europe"]
-       {:op :keyword :form :continents.id}
-       ["continents.id"]
+       {:op :keyword :form :continents.created-at}
+       ["continents.created-at"]
        {:op :expr-list :children [{:op :number :form 1}]}
        ["1"]
        {:op :expr-list :children [{:op :string :form "x"}]}
@@ -26,4 +27,7 @@
        {:op :fn :name 'greatest :children [{:op :number :form 1} {:op :number :form 2}]}
        ["greatest(1, 2)"]
        {:op :fn :name 'ST_AsText :children [{:op :fn :name 'ST_Centroid :children [{:op :string :form "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"}]}]}
-       ["ST_AsText(ST_Centroid(?))" "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"]))
+       ["ST_AsText(ST_Centroid(?))" "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"])
+  (jdbc/with-quoted-identifiers \"
+    (is (= ["\"continents\".\"created-at\""]
+           (compile-sql {:op :keyword :form :continents.created-at})))))
