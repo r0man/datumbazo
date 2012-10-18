@@ -54,13 +54,15 @@
   "Add the CASCADE clause to the SQL statement."
   [cascade]
   (fn [statement]
-    [cascade (assoc statement :cascade cascade)]))
+    (let [node {:op :cascade :cascade cascade}]
+      [node (assoc statement :cascade node)])))
 
 (defn continue-identity
   "Add the CONTINUE IDENTITY clause to the SQL statement."
   [continue-identity]
   (fn [statement]
-    [continue-identity (assoc statement :continue-identity true)]))
+    (let [node {:op :continue-identity :continue-identity continue-identity}]
+      [node (assoc statement :continue-identity node)])))
 
 (defn limit
   "Add the LIMIT clause to the SQL statement."
@@ -73,26 +75,29 @@
   "Add the RESTART IDENTITY clause to the SQL statement."
   [restart-identity]
   (fn [statement]
-    [restart-identity (assoc statement :restart-identity true)]))
+    (let [node {:op :restart-identity :restart-identity restart-identity}]
+      [node (assoc statement :restart-identity node)])))
 
 (defn if-exists
   "Add the IF EXISTS clause to the SQL statement."
   [if-exists]
   (fn [statement]
-    [if-exists (assoc statement :if-exists if-exists)]))
+    (let [node {:op :if-exists :if-exists if-exists}]
+      [node (assoc statement :if-exists node)])))
 
 (defn offset
   "Add the OFFSET clause to the SQL statement."
   [start]
   (fn [statement]
-    (let [offset {:op :offset :start start}]
-      [offset (assoc statement :offset offset)])))
+    (let [node {:op :offset :start start}]
+      [node (assoc statement :offset node)])))
 
 (defn restrict
   "Add the RESTRICT clause to the SQL statement."
   [restrict]
   (fn [statement]
-    [restrict (assoc statement :restrict restrict)]))
+    (let [node {:op :restrict :restrict restrict}]
+      [node (assoc statement :restrict node)])))
 
 (defn from
   "Add the FROM item to the SQL select statement."

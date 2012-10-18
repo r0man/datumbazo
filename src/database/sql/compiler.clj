@@ -8,6 +8,15 @@
 
 (defmulti compile-sql :op)
 
+(defmethod compile-sql nil [_]
+  nil)
+
+(defmethod compile-sql :cascade [{:keys [cascade]}]
+  (if cascade ["CASCADE"]))
+
+(defmethod compile-sql :continue-identity [{:keys [continue-identity]}]
+  (if continue-identity ["CONTINUE IDENTITY"]))
+
 (defmethod compile-sql :fn [{:keys [children name]}]
   (let [children (map compile-sql children)]
     (cons (str name "(" (join ", " (map first children)) ")")
@@ -49,6 +58,12 @@
         (if cascade " CASCADE")
         (if restrict " RESTRICT"))])
 
+(defmethod compile-sql :restart-identity [{:keys [restart-identity]}]
+  (if restart-identity ["RESTART IDENTITY"]))
+
+(defmethod compile-sql :restrict [{:keys [restrict]}]
+  (if restrict ["RESTRICT"]))
+
 (defmethod compile-sql :select [{:keys [expressions from limit offset]}]
   (let [expressions (map compile-sql expressions)
         from (map compile-sql from)
@@ -65,9 +80,13 @@
                        (if offset (rest offset))))))
 
 (defmethod compile-sql :truncate-table [{:keys [cascade children continue-identity restart-identity restrict]}]
-  [(str "TRUNCATE TABLE "
-        (join ", " (map (comp first compile-sql) children))
-        (if restart-identity " RESTART IDENTITY")
-        (if continue-identity " CONTINUE IDENTITY")
-        (if cascade " CASCADE")
-        (if restrict " RESTRICT"))])
+  (let [cascade (compile-sql cascade)
+        restrict (compile-sql restrict)
+        continue-identity (compile-sql continue-identity)
+        restart-identity (compile-sql restart-identity)]
+    [(str "TRUNCATE TABLE "
+          (join ", " (map (comp first compile-sql) children))
+          (if restart-identity (str " " (first restart-identity)))
+          (if continue-identity (str " " (first continue-identity)))
+          (if cascade (str " " (first cascade)))
+          (if restrict (str " " (first restrict))))]))

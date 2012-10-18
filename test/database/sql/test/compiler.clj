@@ -3,6 +3,14 @@
   (:use clojure.test
         database.sql.compiler))
 
+(deftest test-compile-cascade
+  (is (nil? (compile-sql {:op :cascade :cascade false})))
+  (is (= ["CASCADE"] (compile-sql {:op :cascade :cascade true}))))
+
+(deftest test-compile-continue-identity
+  (is (nil? (compile-sql {:op :continue-identity :continue-identity false})))
+  (is (= ["CONTINUE IDENTITY"] (compile-sql {:op :continue-identity :continue-identity true}))))
+
 (deftest test-compile-sql
   (are [ast expected]
        (is (= expected (compile-sql ast)))
@@ -44,6 +52,14 @@
        ["LIMIT 1"]
        {:op :limit :count nil}
        ["LIMIT ALL"]))
+
+(deftest test-compile-restrict
+  (is (nil? (compile-sql {:op :restrict :restrict false})))
+  (is (= ["RESTRICT"] (compile-sql {:op :restrict :restrict true}))))
+
+(deftest test-compile-restart-identity
+  (is (nil? (compile-sql {:op :restart-identity :restart-identity false})))
+  (is (= ["RESTART IDENTITY"] (compile-sql {:op :restart-identity :restart-identity true}))))
 
 (deftest test-compile-select
   (are [ast expected]

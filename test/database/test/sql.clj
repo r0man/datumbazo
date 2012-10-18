@@ -3,6 +3,10 @@
   (:use clojure.test
         database.sql))
 
+(deftest test-cascade
+  (is (= [{:op :cascade :cascade true} {:cascade {:op :cascade :cascade true}}]
+         ((cascade true) {}))))
+
 (deftest test-column
   (let [t (table
            :public.continents
@@ -23,6 +27,10 @@
       (is (= :text (:type c)))
       (is (= true (:not-null? c)))
       (is (= true (:unique? c))))))
+
+(deftest test-continue-identity
+  (is (= [{:op :continue-identity :continue-identity true} {:continue-identity {:op :continue-identity :continue-identity true}}]
+         ((continue-identity true) {}))))
 
 (deftest test-deftable
   (deftable continents
@@ -82,6 +90,14 @@
        {:op :fn :name `max :children [{:op :keyword :form :continents.created-at}]}
        '(ST_AsText (ST_Centroid "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"))
        {:op :fn :name 'ST_AsText :children [{:op :fn :name 'ST_Centroid :children [{:op :string :form "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"}]}]}))
+
+(deftest test-restart-identity
+  (is (= [{:op :restart-identity :restart-identity true} {:restart-identity {:op :restart-identity :restart-identity true}}]
+         ((restart-identity true) {}))))
+
+(deftest test-restrict
+  (is (= [{:op :restrict :restrict true} {:restrict {:op :restrict :restrict true}}]
+         ((restrict true) {}))))
 
 (deftest test-select
   (are [stmt expected]
