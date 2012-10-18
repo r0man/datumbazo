@@ -96,15 +96,15 @@
 
 (defn from
   "Add the FROM item to the SQL select statement."
-  [from-item]
+  [from]
   (fn [statement]
-    (let [from-item
+    (let [from
           (map #(cond
                  (keyword? %1)
                  (assoc (u/parse-table %1)
                    :op :table))
-               (wrap-seq from-item))]
-      [from-item (assoc statement :from-item from-item)])))
+               (wrap-seq from))]
+      [from (assoc statement :from from)])))
 
 (defn table
   "Make a SQL table."

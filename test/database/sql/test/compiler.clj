@@ -48,13 +48,13 @@
 (deftest test-compile-select
   (are [ast expected]
        (is (= expected (compile-sql ast)))
-       {:op :select :expressions [] :from-item [{:op :table :name :continents}]}
+       {:op :select :expressions [] :from [{:op :table :name :continents}]}
        ["SELECT * FROM continents"]
-       {:op :select :expressions [] :from-item [{:op :table :name :continents}] :limit {:op :limit :count 1}}
+       {:op :select :expressions [] :from [{:op :table :name :continents}] :limit {:op :limit :count 1}}
        ["SELECT * FROM continents LIMIT 1"]
-       {:op :select :expressions [] :from-item [{:op :table :name :continents}] :offset {:op :offset :start 1}}
+       {:op :select :expressions [] :from [{:op :table :name :continents}] :offset {:op :offset :start 1}}
        ["SELECT * FROM continents OFFSET 1"]
-       {:op :select :expressions [] :from-item [{:op :table :name :continents}] :limit {:op :limit :count 1} :offset {:op :offset :start 1}}
+       {:op :select :expressions [] :from [{:op :table :name :continents}] :limit {:op :limit :count 1} :offset {:op :offset :start 1}}
        ["SELECT * FROM continents LIMIT 1 OFFSET 1"]))
 
 (deftest test-compile-string

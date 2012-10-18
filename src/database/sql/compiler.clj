@@ -49,15 +49,15 @@
         (if cascade " CASCADE")
         (if restrict " RESTRICT"))])
 
-(defmethod compile-sql :select [{:keys [expressions from-item limit offset]}]
+(defmethod compile-sql :select [{:keys [expressions from limit offset]}]
   (let [expressions (map compile-sql expressions)
-        from-item (map compile-sql from-item)
+        from (map compile-sql from)
         limit (if limit (compile-sql limit))
         offset (if offset (compile-sql offset))]
     (cons (str "SELECT " (if (empty? expressions)
                            "*" (join ", " (map first expressions)))
-               (if-not (empty? from-item)
-                 (str " FROM " (join ", " (map first from-item))))
+               (if-not (empty? from)
+                 (str " FROM " (join ", " (map first from))))
                (if limit (str " " (first limit)))
                (if offset (str " " (first offset))))
           (concat-args (apply concat (map rest expressions))
