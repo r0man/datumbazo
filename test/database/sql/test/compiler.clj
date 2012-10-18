@@ -36,14 +36,30 @@
     (is (= ["\"continents\".\"created-at\""]
            (compile-sql {:op :keyword :form :continents.created-at})))))
 
+(deftest test-compile-drop-table
+  (are [ast expected]
+       (is (= expected (compile-sql ast)))
+       {:op :drop-table :children [{:op :table :name :continents}]}
+       ["DROP TABLE continents"]
+       {:op :drop-table :children [{:op :table :name :continents}] :cascade {:op :cascade :cascade true}}
+       ["DROP TABLE continents CASCADE"]
+       {:op :drop-table :children [{:op :table :name :continents}] :restrict {:op :restrict :restrict true}}
+       ["DROP TABLE continents RESTRICT"]
+       {:op :drop-table :children [{:op :table :name :continents}] :if-exists {:op :if-exists :if-exists true}}
+       ["DROP TABLE IF EXISTS continents"]
+       {:op :drop-table :children [{:op :table :name :continents}]
+        :cascade {:op :cascade :cascade true}
+        :restrict {:op :restrict :restrict true}
+        :if-exists {:op :if-exists :if-exists true}}
+       ["DROP TABLE IF EXISTS continents CASCADE RESTRICT"]))
+
 (deftest test-compile-number
   (are [ast expected]
        (is (= expected (compile-sql ast)))
        {:op :number :form 1}
        ["1"]
        {:op :number :form 3.14}
-       ["3.14"]
-       ))
+       ["3.14"]))
 
 (deftest test-compile-if-exists
   (is (nil? (compile-sql {:op :if-exists :if-exists false})))
