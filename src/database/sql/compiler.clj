@@ -3,6 +3,14 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [join replace]]))
 
+(defn- append-sql
+  "Returns the SQL string for `stmt` with a space at the front."
+  [stmt] (if (first stmt) (str " " (first stmt))))
+
+(defn- prepend-sql
+  "Returns the SQL string for `stmt` with a space at the end"
+  [stmt] (if (first stmt) (str (first stmt) " ")))
+
 (defn- concat-args [& args]
   (apply concat (remove nil? args)))
 
@@ -58,10 +66,10 @@
   (let [cascade (compile-sql cascade)
         if-exists (compile-sql if-exists)
         restrict (compile-sql restrict)]
-    [(str "DROP TABLE " (if if-exists (str (first if-exists) " "))
+    [(str "DROP TABLE " (prepend-sql if-exists)
           (join ", " (map (comp first compile-sql) children))
-          (if cascade (str " " (first cascade)))
-          (if restrict (str " " (first restrict))))]))
+          (append-sql cascade)
+          (append-sql restrict))]))
 
 (defmethod compile-sql :restart-identity [{:keys [restart-identity]}]
   (if restart-identity ["RESTART IDENTITY"]))
@@ -78,8 +86,8 @@
                            "*" (join ", " (map first expressions)))
                (if-not (empty? from)
                  (str " FROM " (join ", " (map first from))))
-               (if limit (str " " (first limit)))
-               (if offset (str " " (first offset))))
+               (append-sql limit)
+               (append-sql offset))
           (concat-args (apply concat (map rest expressions))
                        (if limit (rest limit))
                        (if offset (rest offset))))))
@@ -90,7 +98,7 @@
         continue-identity (compile-sql continue-identity)
         restart-identity (compile-sql restart-identity)]
     [(str "TRUNCATE TABLE " (join ", " (map (comp first compile-sql) children))
-          (if restart-identity (str " " (first restart-identity)))
-          (if continue-identity (str " " (first continue-identity)))
-          (if cascade (str " " (first cascade)))
-          (if restrict (str " " (first restrict))))]))
+          (append-sql restart-identity)
+          (append-sql continue-identity)
+          (append-sql cascade)
+          (append-sql restrict))]))
