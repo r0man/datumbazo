@@ -93,3 +93,23 @@
        ["OFFSET 1"]
        {:op :offset :start nil}
        ["OFFSET 0"]))
+
+(deftest test-compile-truncate-table
+  (are [ast expected]
+       (is (= expected (compile-sql ast)))
+       {:op :truncate-table :children [{:op :table :name :continents}]}
+       ["TRUNCATE TABLE continents"]
+       {:op :truncate-table :children [{:op :table :name :continents}] :cascade {:op :cascade :cascade true}}
+       ["TRUNCATE TABLE continents CASCADE"]
+       {:op :truncate-table :children [{:op :table :name :continents}] :restrict {:op :restrict :restrict true}}
+       ["TRUNCATE TABLE continents RESTRICT"]
+       {:op :truncate-table :children [{:op :table :name :continents}] :restart-identity {:op :restart-identity :restart-identity true}}
+       ["TRUNCATE TABLE continents RESTART IDENTITY"]
+       {:op :truncate-table :children [{:op :table :name :continents}] :continue-identity {:op :continue-identity :continue-identity true}}
+       ["TRUNCATE TABLE continents CONTINUE IDENTITY"]
+       {:op :truncate-table :children [{:op :table :name :continents}]
+        :restart-identity {:op :restart-identity :restart-identity true}
+        :continue-identity {:op :continue-identity :continue-identity true}
+        :cascade {:op :cascade :cascade true}
+        :restrict {:op :restrict :restrict true}}
+       ["TRUNCATE TABLE continents RESTART IDENTITY CONTINUE IDENTITY CASCADE RESTRICT"]))

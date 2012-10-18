@@ -89,8 +89,8 @@
                (append-sql limit)
                (append-sql offset))
           (concat-args (apply concat (map rest expressions))
-                       (if limit (rest limit))
-                       (if offset (rest offset))))))
+                       (rest limit)
+                       (rest offset)))))
 
 (defmethod compile-sql :truncate-table [{:keys [cascade children continue-identity restart-identity restrict]}]
   (let [cascade (compile-sql cascade)
