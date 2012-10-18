@@ -21,8 +21,14 @@
 (defmethod compile-sql :keyword [{:keys [form]}]
   [(jdbc/as-identifier form)])
 
+(defmethod compile-sql :limit [{:keys [count]}]
+  [(str "LIMIT " (if (number? count) count "ALL"))])
+
 (defmethod compile-sql :number [{:keys [form]}]
   [(str form)])
+
+(defmethod compile-sql :offset [{:keys [start]}]
+  [(str "OFFSET " (if (number? start) start 0))])
 
 (defmethod compile-sql :string [{:keys [form]}]
   ["?" form])
@@ -40,7 +46,7 @@
         (if cascade " CASCADE")
         (if restrict " RESTRICT"))])
 
-(defmethod compile-sql :select [{:keys [expressions from-item]}]
+(defmethod compile-sql :select [{:keys [expressions from-item limit offset]}]
   (let [expressions (map compile-sql expressions)
         from-item (map compile-sql from-item)]
     (concat [(str "SELECT " (if (empty? expressions)

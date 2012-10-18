@@ -40,6 +40,10 @@
   (is (nil? (:schema continents)))
   (is (= :continents (:name continents))))
 
+(deftest test-limit
+  (is (= [{:op :limit :count 1} {:limit {:op :limit :count 1}}]
+         ((limit 1) {}))))
+
 (deftest test-drop-table
   (are [stmt expected]
        (is (= expected (sql stmt)))
@@ -52,6 +56,10 @@
         (if-exists true)
         (restrict true))
        ["DROP TABLE IF EXISTS continents RESTRICT"]))
+
+(deftest test-offset
+  (is (= [{:op :offset :start 1} {:offset {:op :offset :start 1}}]
+         ((offset 1) {}))))
 
 (deftest test-parse-expr
   (are [expr expected]
@@ -91,7 +99,12 @@
        (select [:name '(max :created-at)] (from :continents))
        ["SELECT name, max(created-at) FROM continents"]
        (select ['(greatest 1 2) '(lower "X")])
-       ["SELECT greatest(1, 2), lower(?)" "X"]))
+       ["SELECT greatest(1, 2), lower(?)" "X"]
+       ;; (select [] (from :continents) (limit 1))
+       ;; ["SELECT * FROM continents LIMIT 1"]
+       ;; (select [] (from :continents) (offset 1))
+       ;; ["SELECT * FROM continents OFFSET 1"]
+       ))
 
 (deftest test-table
   (let [t (table :continents)]

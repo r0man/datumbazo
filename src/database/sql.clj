@@ -62,6 +62,13 @@
   (fn [statement]
     [continue-identity (assoc statement :continue-identity true)]))
 
+(defn limit
+  "Add the LIMIT clause to the SQL statement."
+  [count]
+  (fn [statement]
+    (let [limit {:op :limit :count count}]
+      [limit (assoc statement :limit limit)])))
+
 (defn restart-identity
   "Add the RESTART IDENTITY clause to the SQL statement."
   [restart-identity]
@@ -73,6 +80,13 @@
   [if-exists]
   (fn [statement]
     [if-exists (assoc statement :if-exists if-exists)]))
+
+(defn offset
+  "Add the OFFSET clause to the SQL statement."
+  [start]
+  (fn [statement]
+    (let [offset {:op :offset :start start}]
+      [offset (assoc statement :offset offset)])))
 
 (defn restrict
   "Add the RESTRICT clause to the SQL statement."
