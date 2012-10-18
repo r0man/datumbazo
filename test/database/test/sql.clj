@@ -123,6 +123,8 @@
        (select [] (from :continents) (limit 1) (offset 2))
        ["SELECT * FROM continents LIMIT 1 OFFSET 2"]))
 
+(sql (select [] (from :continents) (limit 1) (offset 2)))
+
 (deftest test-table
   (let [t (table :continents)]
     (is (= :table (:op t)))

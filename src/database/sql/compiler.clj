@@ -96,6 +96,19 @@
                        (rest limit)
                        (rest offset)))))
 
+(defmethod compile-sql :select [{:keys [expressions from limit offset]}]
+  (let [expressions (map compile-sql expressions)
+        from (map compile-sql from)]
+    (stmt ["SELECT"]
+          (apply vector
+                 (cons (if (empty? expressions)
+                         "*" (join ", " (map first expressions)))
+                       (apply concat (map rest expressions))))
+          [(if-not (empty? from)
+             (str "FROM " (join ", " (map first from))))]
+          limit
+          offset)))
+
 (defmethod compile-sql :truncate-table [{:keys [cascade children continue-identity restart-identity restrict]}]
   (stmt [(str "TRUNCATE TABLE " (join ", " (map (comp first compile-sql) children)))]
         restart-identity
