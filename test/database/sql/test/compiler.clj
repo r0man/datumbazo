@@ -45,6 +45,10 @@
        ["3.14"]
        ))
 
+(deftest test-compile-if-exists
+  (is (nil? (compile-sql {:op :if-exists :if-exists false})))
+  (is (= ["IF EXISTS"] (compile-sql {:op :if-exists :if-exists true}))))
+
 (deftest test-compile-limit
   (are [ast expected]
        (is (= expected (compile-sql ast)))

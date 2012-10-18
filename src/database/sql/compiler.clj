@@ -30,6 +30,9 @@
     (cons (join ", " (map first children))
           (apply concat (map rest children)))))
 
+(defmethod compile-sql :if-exists [{:keys [if-exists]}]
+  (if if-exists ["IF EXISTS"]))
+
 (defmethod compile-sql :keyword [{:keys [form]}]
   [(jdbc/as-identifier form)])
 
@@ -52,11 +55,13 @@
         (jdbc/as-identifier name))])
 
 (defmethod compile-sql :drop-table [{:keys [cascade if-exists restrict children]}]
-  [(str "DROP TABLE "
-        (if if-exists "IF EXISTS ")
-        (join ", " (map (comp first compile-sql) children))
-        (if cascade " CASCADE")
-        (if restrict " RESTRICT"))])
+  (let [cascade (compile-sql cascade)
+        if-exists (compile-sql if-exists)
+        restrict (compile-sql restrict)]
+    [(str "DROP TABLE " (if if-exists (str (first if-exists) " "))
+          (join ", " (map (comp first compile-sql) children))
+          (if cascade (str " " (first cascade)))
+          (if restrict (str " " (first restrict))))]))
 
 (defmethod compile-sql :restart-identity [{:keys [restart-identity]}]
   (if restart-identity ["RESTART IDENTITY"]))
@@ -84,8 +89,7 @@
         restrict (compile-sql restrict)
         continue-identity (compile-sql continue-identity)
         restart-identity (compile-sql restart-identity)]
-    [(str "TRUNCATE TABLE "
-          (join ", " (map (comp first compile-sql) children))
+    [(str "TRUNCATE TABLE " (join ", " (map (comp first compile-sql) children))
           (if restart-identity (str " " (first restart-identity)))
           (if continue-identity (str " " (first continue-identity)))
           (if cascade (str " " (first cascade)))
