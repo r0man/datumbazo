@@ -50,6 +50,9 @@
 (defmethod parse-expr String [expr]
   {:op :string :form expr})
 
+(defn- parse-expr-list [expr-list]
+  {:op :expr-list :children (map parse-expr (wrap-seq expr-list))})
+
 (defn cascade
   "Add the CASCADE clause to the SQL statement."
   [cascade]
@@ -97,7 +100,7 @@
   [expr-list & {:keys [asc desc nulls using]}]
   (fn [statement]
     (let [node {:op :order-by
-                :expr-list {:op :expr-list :children (map parse-expr (wrap-seq expr-list))}
+                :expr-list (parse-expr-list expr-list)
                 :direction (cond
                             asc :asc
                             desc :desc
@@ -168,6 +171,4 @@
 
 (defstmt select
   "Select from the database `table`."
-  [expressions]
-  {:op :select
-   :expressions (map parse-expr (wrap-seq expressions))})
+  [expr-list] {:op :select :expr-list (parse-expr-list expr-list)})

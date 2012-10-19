@@ -41,8 +41,10 @@
 
 (defmethod compile-sql :expr-list [{:keys [children]}]
   (let [children (map compile-sql children)]
-    (cons (join ", " (map first children))
-          (apply concat (map rest children)))))
+    (if (empty? children)
+      ["*"]
+      (cons (join ", " (map first children))
+            (apply concat (map rest children))))))
 
 (defmethod compile-sql :if-exists [{:keys [if-exists]}]
   (if if-exists ["IF EXISTS"]))
@@ -93,14 +95,10 @@
 (defmethod compile-sql :restrict [{:keys [restrict]}]
   (if restrict ["RESTRICT"]))
 
-(defmethod compile-sql :select [{:keys [expressions from limit offset order-by]}]
-  (let [expressions (map compile-sql expressions)
-        from (map compile-sql from)]
+(defmethod compile-sql :select [{:keys [expr-list from limit offset order-by]}]
+  (let [from (map compile-sql from)]
     (stmt ["SELECT"]
-          (apply vector
-                 (cons (if (empty? expressions)
-                         "*" (join ", " (map first expressions)))
-                       (apply concat (map rest expressions))))
+          expr-list
           [(if-not (empty? from)
              (str "FROM " (join ", " (map first from))))]
           order-by
