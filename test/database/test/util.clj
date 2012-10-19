@@ -47,11 +47,16 @@
   (are [table expected]
        (do (is (= expected (parse-column table)))
            (is (= expected (parse-column table))))
-       :id {:name :id}
-       :continents.id {:table :continents :name :id}
-       :continents/id {:table :continents :name :id}
-       :public.continents.id {:schema :public :table :continents :name :id}
-       :public.continents/id {:schema :public :table :continents :name :id}))
+       :id
+       {:op :column, :schema nil, :table nil, :name :id, :alias nil}
+       :continents.id
+       {:op :column, :schema nil, :table :continents, :name :id, :alias nil}
+       :continents.id/i
+       {:op :column, :schema nil, :table :continents, :name :id, :alias :i}
+       :public.continents.id
+       {:op :column, :schema :public, :table :continents, :name :id, :alias nil}
+       :public.continents.id/i
+       {:op :column, :schema :public, :table :continents, :name :id, :alias :i}))
 
 (deftest test-parse-table
   (are [table expected]

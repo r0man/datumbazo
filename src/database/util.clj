@@ -96,6 +96,18 @@
       3 (zipmap [:schema :table :name] parts)
       :else (throw (illegal-argument-exception "Can't parse column: %s" s)))))
 
+(defn parse-column
+  "Parse `s` as a column identifier and return a map
+  with :op, :schema, :name and :alias keys."
+  [s]
+  (if-let [matches (re-matches #"(([^./]+)\.)?(([^./]+)\.)?([^./]+)(/(.+))?" (qualified-name s))]
+    (let [[_ _ schema _ table name _ alias] matches]
+      {:op :column
+       :schema (if (and schema table) (keyword schema))
+       :table (keyword (or table schema))
+       :name (keyword name)
+       :alias (keyword alias)})))
+
 (defn parse-table
   "Parse `s` as a table identifier and return a map
   with :op, :schema, :name and :alias keys."
