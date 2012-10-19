@@ -104,3 +104,12 @@
       1 {:name (first parts)}
       2 (zipmap [:schema :name] parts)
       :else (throw (illegal-argument-exception "Can't parse table: %s" s)))))
+
+(defn parse-table
+  "Parse the table `s` and return a map with :schema, :table and :name keys."
+  [s]
+  (if-let [matches (re-matches #"(([^./]+)\.)?([^./]+)(/(.+))?" (qualified-name s))]
+    {:op :table
+     :schema (keyword (nth matches 2))
+     :name (keyword (nth matches 3))
+     :alias (keyword (nth matches 5))}))

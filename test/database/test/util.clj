@@ -57,8 +57,14 @@
   (are [table expected]
        (do (is (= expected (parse-table table)))
            (is (= expected (parse-table (qualified-name table)))))
-       :continents {:name :continents}
-       :public.continents {:schema :public :name :continents}))
+       :continents
+       {:op :table :schema nil :name :continents :alias nil}
+       :continents/c
+       {:op :table :schema nil :name :continents :alias :c}
+       :public.continents
+       {:op :table :schema :public :name :continents :alias nil}
+       :public.continents/c
+       {:op :table :schema :public :name :continents :alias :c}))
 
 (deftest test-parse-url
   (doseq [url [nil "" "x"]] (is (nil? (parse-url nil))))
