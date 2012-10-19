@@ -97,16 +97,8 @@
       :else (throw (illegal-argument-exception "Can't parse column: %s" s)))))
 
 (defn parse-table
-  "Parse the table `s` and return a map with :schema, :table and :name keys."
-  [s]
-  (let [parts (map keyword (split (qualified-name s) #"\." 2))]
-    (condp = (count parts)
-      1 {:name (first parts)}
-      2 (zipmap [:schema :name] parts)
-      :else (throw (illegal-argument-exception "Can't parse table: %s" s)))))
-
-(defn parse-table
-  "Parse the table `s` and return a map with :schema, :table and :name keys."
+  "Parse `s` as a table identifier and return a map
+  with :op, :schema, :name and :alias keys."
   [s]
   (if-let [matches (re-matches #"(([^./]+)\.)?([^./]+)(/(.+))?" (qualified-name s))]
     {:op :table
