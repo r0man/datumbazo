@@ -75,13 +75,25 @@
         cascade
         restrict))
 
+(defmethod compile-sql :order-by [{:keys [expr-list direction nulls using]}]
+  (stmt ["ORDER BY"]
+        expr-list
+        (if direction
+          (condp = direction
+            :asc ["ASC"]
+            :desc ["DESC"]))
+        (if nulls
+          (condp = nulls
+            :first ["NULLS FIRST"]
+            :last ["NULLS LAST"]))))
+
 (defmethod compile-sql :restart-identity [{:keys [restart-identity]}]
   (if restart-identity ["RESTART IDENTITY"]))
 
 (defmethod compile-sql :restrict [{:keys [restrict]}]
   (if restrict ["RESTRICT"]))
 
-(defmethod compile-sql :select [{:keys [expressions from limit offset]}]
+(defmethod compile-sql :select [{:keys [expressions from limit offset order-by]}]
   (let [expressions (map compile-sql expressions)
         from (map compile-sql from)]
     (stmt ["SELECT"]
@@ -91,6 +103,7 @@
                        (apply concat (map rest expressions))))
           [(if-not (empty? from)
              (str "FROM " (join ", " (map first from))))]
+          order-by
           limit
           offset)))
 

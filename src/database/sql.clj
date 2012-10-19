@@ -92,6 +92,20 @@
     (let [node {:op :offset :start start}]
       [node (assoc statement :offset node)])))
 
+(defn order-by
+  "Add the ORDER BY clause to the SQL statement."
+  [expr-list & {:keys [asc desc nulls using]}]
+  (fn [statement]
+    (let [node {:op :order-by
+                :expr-list {:op :expr-list :children (map parse-expr (wrap-seq expr-list))}
+                :direction (cond
+                            asc :asc
+                            desc :desc
+                            :else nil)
+                :nulls nulls
+                :using using}]
+      [node (assoc statement :order-by node)])))
+
 (defn restrict
   "Add the RESTRICT clause to the SQL statement."
   [restrict]

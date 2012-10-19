@@ -69,6 +69,22 @@
   (is (= [{:op :offset :start 1} {:offset {:op :offset :start 1}}]
          ((offset 1) {}))))
 
+(deftest test-order-by
+  (let [[node ast] ((order-by :created-at) {})]
+    (is (= :order-by (:op node)))
+    (let [node (:expr-list node)]
+      (is (= :expr-list (:op node)))
+      (is (= [{:op :keyword :form :created-at}] (:children node))))
+    (is (= {:order-by node} ast)))
+  (let [[node ast] ((order-by [:name :created-at] :desc true :nulls :first) {})]
+    (is (= :order-by (:op node)))
+    (is (= :desc (:direction node)))
+    (is (= :first (:nulls node)))
+    (let [node (:expr-list node)]
+      (is (= :expr-list (:op node)))
+      (is (= [{:op :keyword :form :name} {:op :keyword :form :created-at}] (:children node))))
+    (is (= {:order-by node} ast))))
+
 (deftest test-parse-expr
   (are [expr expected]
        (is (= expected (parse-expr expr)))
@@ -121,7 +137,19 @@
        (select [] (from :continents) (offset 1))
        ["SELECT * FROM continents OFFSET 1"]
        (select [] (from :continents) (limit 1) (offset 2))
-       ["SELECT * FROM continents LIMIT 1 OFFSET 2"]))
+       ["SELECT * FROM continents LIMIT 1 OFFSET 2"]
+       (select [] (from :continents) (order-by :created-at))
+       ["SELECT * FROM continents ORDER BY created-at"]
+       (select [] (from :continents) (order-by :created-at :asc true))
+       ["SELECT * FROM continents ORDER BY created-at ASC"]
+       (select [] (from :continents) (order-by :created-at :desc true))
+       ["SELECT * FROM continents ORDER BY created-at DESC"]
+       (select [] (from :continents) (order-by :created-at :nulls :first))
+       ["SELECT * FROM continents ORDER BY created-at NULLS FIRST"]
+       (select [] (from :continents) (order-by :created-at :nulls :last))
+       ["SELECT * FROM continents ORDER BY created-at NULLS LAST"]
+       (select [] (from :continents) (order-by [:name :created-at] :asc true))
+       ["SELECT * FROM continents ORDER BY name, created-at ASC"]))
 
 (deftest test-table
   (let [t (table :continents)]

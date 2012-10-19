@@ -36,6 +36,14 @@
     (is (= ["\"continents\".\"created-at\""]
            (compile-sql {:op :keyword :form :continents.created-at})))))
 
+(deftest test-compile-expr-list
+  (are [ast expected]
+       (is (= expected (compile-sql ast)))
+       {:op :expr-list :children [{:op :keyword :form :created-at}]}
+       ["created-at"]
+       {:op :expr-list :children [{:op :keyword :form :name} {:op :keyword :form :created-at}]}
+       ["name, created-at"]))
+
 (deftest test-compile-drop-table
   (are [ast expected]
        (is (= expected (compile-sql ast)))
@@ -99,8 +107,7 @@
        {:op :number :form 1}
        ["1"]
        {:op :number :form 3.14}
-       ["3.14"]
-       ))
+       ["3.14"]))
 
 (deftest test-compile-offset
   (are [ast expected]
