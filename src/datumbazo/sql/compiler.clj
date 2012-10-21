@@ -44,18 +44,12 @@
 (defmethod compile-sql nil [_]
   nil)
 
-(defmethod compile-sql :cascade [{:keys [cascade]}]
-  (if cascade ["CASCADE"]))
-
 (defmethod compile-sql :column [{:keys [alias schema name table]}]
   [(str (join "." (map jdbc/as-identifier (remove nil? [schema table name])))
         (if alias (str " AS " (jdbc/as-identifier alias))))])
 
 (defmethod compile-sql :constant [node]
   (compile-const node))
-
-(defmethod compile-sql :continue-identity [{:keys [continue-identity]}]
-  (if continue-identity ["CONTINUE IDENTITY"]))
 
 (defmethod compile-sql :drop-table [{:keys [cascade if-exists restrict tables]}]
   (let [[sql & args] (apply join-stmt ", " tables)]
@@ -85,9 +79,6 @@
 (defmethod compile-sql :group-by [{:keys [exprs]}]
   (stmt ["GROUP BY"] exprs))
 
-(defmethod compile-sql :if-exists [{:keys [if-exists]}]
-  (if if-exists ["IF EXISTS"]))
-
 (defmethod compile-sql :keyword [{:keys [form]}]
   [(jdbc/as-identifier form)])
 
@@ -114,12 +105,6 @@
 (defmethod compile-sql :table [{:keys [alias schema name]}]
   [(str (join "." (map jdbc/as-identifier (remove nil? [schema name])))
         (if alias (str " AS " (jdbc/as-identifier alias))))])
-
-(defmethod compile-sql :restart-identity [{:keys [restart-identity]}]
-  (if restart-identity ["RESTART IDENTITY"]))
-
-(defmethod compile-sql :restrict [{:keys [restrict]}]
-  (if restrict ["RESTRICT"]))
 
 (defmethod compile-sql :select [{:keys [exprs from group-by limit offset order-by]}]
   (stmt ["SELECT"] exprs from group-by order-by limit offset))

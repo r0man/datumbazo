@@ -3,14 +3,6 @@
   (:use clojure.test
         datumbazo.sql.compiler))
 
-(deftest test-compile-cascade
-  (is (nil? (compile-sql {:op :cascade :cascade false})))
-  (is (= ["CASCADE"] (compile-sql {:op :cascade :cascade true}))))
-
-(deftest test-compile-continue-identity
-  (is (nil? (compile-sql {:op :continue-identity :continue-identity false})))
-  (is (= ["CONTINUE IDENTITY"] (compile-sql {:op :continue-identity :continue-identity true}))))
-
 (deftest test-compile-column
   (are [ast expected]
        (is (= expected (compile-sql ast)))
@@ -84,10 +76,6 @@
        {:op :constant :form 3.14}
        ["3.14"]))
 
-(deftest test-compile-if-exists
-  (is (nil? (compile-sql {:op :if-exists :if-exists false})))
-  (is (= ["IF EXISTS"] (compile-sql {:op :if-exists :if-exists true}))))
-
 (deftest test-compile-limit
   (are [ast expected]
        (is (= expected (compile-sql ast)))
@@ -95,26 +83,6 @@
        ["LIMIT 1"]
        {:op :limit :count nil}
        ["LIMIT ALL"]))
-
-(deftest test-compile-restrict
-  (is (nil? (compile-sql {:op :restrict :restrict false})))
-  (is (= ["RESTRICT"] (compile-sql {:op :restrict :restrict true}))))
-
-(deftest test-compile-restart-identity
-  (is (nil? (compile-sql {:op :restart-identity :restart-identity false})))
-  (is (= ["RESTART IDENTITY"] (compile-sql {:op :restart-identity :restart-identity true}))))
-
-;; (deftest test-compile-select
-;;   (are [ast expected]
-;;        (is (= expected (compile-sql ast)))
-;;        {:op :select :exprs {:op :exprs :children []} :from [{:op :table :name :continents}]}
-;;        ["SELECT * FROM continents"]
-;;        {:op :select :exprs {:op :exprs :children []} :from [{:op :table :name :continents}] :limit {:op :limit :count 1}}
-;;        ["SELECT * FROM continents LIMIT 1"]
-;;        {:op :select :exprs {:op :exprs :children []} :from [{:op :table :name :continents}] :offset {:op :offset :start 1}}
-;;        ["SELECT * FROM continents OFFSET 1"]
-;;        {:op :select :exprs {:op :exprs :children []} :from [{:op :table :name :continents}] :limit {:op :limit :count 1} :offset {:op :offset :start 1}}
-;;        ["SELECT * FROM continents LIMIT 1 OFFSET 1"]))
 
 (deftest test-compile-string
   (are [ast expected]
