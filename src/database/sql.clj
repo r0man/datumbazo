@@ -51,7 +51,8 @@
   {:op :string :form expr})
 
 (defn- parse-expr-list [expr-list]
-  {:op :expr-list :children (map parse-expr (wrap-seq expr-list))})
+  (let [expr-list (if (= * expr-list) [] expr-list)]
+    {:op :expr-list :children (map parse-expr (wrap-seq expr-list))}))
 
 (defn as
   "Add an AS alias to the SQL statement."

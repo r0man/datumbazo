@@ -146,6 +146,8 @@
        ["SELECT 1, 2, 3"]
        (select [] (from :continents))
        ["SELECT * FROM continents"]
+       (select * (from :continents))
+       ["SELECT * FROM continents"]
        (select :created-at (from :continents))
        ["SELECT created-at FROM continents"]
        (select [:name :created-at] (from :continents))
