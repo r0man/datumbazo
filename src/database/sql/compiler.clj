@@ -18,8 +18,7 @@
 (defn- stmt [& stmts]
   (apply join-stmt " " stmts))
 
-(defmethod compile-sql nil [_]
-  nil)
+;; COMPILE FROM CLAUSE
 
 (defmulti compile-from :op)
 
@@ -29,6 +28,11 @@
 
 (defmethod compile-from :table [node]
   (compile-sql node))
+
+;; COMPILE SQL
+
+(defmethod compile-sql nil [_]
+  nil)
 
 (defmethod compile-sql :cascade [{:keys [cascade]}]
   (if cascade ["CASCADE"]))
