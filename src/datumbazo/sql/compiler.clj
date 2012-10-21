@@ -85,22 +85,23 @@
 (defmethod compile-sql :limit [{:keys [count]}]
   [(str "LIMIT " (if (number? count) count "ALL"))])
 
-(defmethod compile-sql :nil [_]
-  ["NULL"])
+(defmethod compile-sql :nil [_] ["NULL"])
 
 (defmethod compile-sql :offset [{:keys [start]}]
   [(str "OFFSET " (if (number? start) start 0))])
 
 (defmethod compile-sql :order-by [{:keys [exprs direction nulls using]}]
-  (stmt ["ORDER BY"] exprs
-        (if direction
-          (condp = direction
-            :asc ["ASC"]
-            :desc ["DESC"]))
-        (if nulls
-          (condp = nulls
-            :first ["NULLS FIRST"]
-            :last ["NULLS LAST"]))))
+  (let [[sql & args] (compile-sql exprs)]
+    (cons (str "ORDER BY " sql
+               (condp = direction
+                 :asc " ASC"
+                 :desc " DESC"
+                 "")
+               (condp = nulls
+                 :first " NULLS FIRST"
+                 :last " NULLS LAST"
+                 ""))
+          args)))
 
 (defmethod compile-sql :table [{:keys [alias schema name]}]
   [(str (join "." (map jdbc/as-identifier (remove nil? [schema name])))
