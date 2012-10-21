@@ -85,11 +85,10 @@
 
 (defmethod compile-sql :from [{:keys [from]}]
   (if (= :select (:op (first from)))
-    (let [form (first from)]
-      (assert (:as form) "Subquery in FROM must have an alias.")
-      (join-stmt "" ["FROM ("] (first from) [(format ") AS %s" (jdbc/as-identifier (:as form)))]))
-    (stmt ["FROM"]
-          (apply join-stmt ", " from))))
+    (let [subquery (first from)]
+      (assert (:as subquery) "Subquery in FROM must have an alias.")
+      (join-stmt "" ["FROM ("] (first from) [(str ") AS " (jdbc/as-identifier (:as subquery)))]))
+    (stmt ["FROM"] (apply join-stmt ", " from))))
 
 (defmethod compile-sql :order-by [{:keys [expr-list direction nulls using]}]
   (stmt ["ORDER BY"]
