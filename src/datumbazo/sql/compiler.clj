@@ -34,7 +34,7 @@
 
 (defmethod compile-from :select [node]
   (let [[sql & args] (compile-sql node)]
-    (cons (str "(" sql ") AS " (jdbc/as-identifier (:as node))) args)))
+    (cons (str "(" sql ") AS " (jdbc/as-identifier (:alias node))) args)))
 
 (defmethod compile-from :table [node]
   (compile-sql node))
@@ -58,8 +58,11 @@
   (if continue-identity ["CONTINUE IDENTITY"]))
 
 (defmethod compile-sql :drop-table [{:keys [cascade if-exists restrict tables]}]
-  (stmt ["DROP TABLE"] if-exists (apply join-stmt ", " tables)
-        cascade restrict))
+  (let [[sql & args] (apply join-stmt ", " tables)]
+    (cons (str "DROP TABLE " (if if-exists "IF EXISTS ") sql
+               (if cascade " CASCADE")
+               (if restrict " RESTRICT"))
+          args)))
 
 (defmethod compile-sql :expr-list [{:keys [children]}]
   (let [children (map compile-sql children)]
@@ -124,3 +127,12 @@
 (defmethod compile-sql :truncate-table [{:keys [cascade tables continue-identity restart-identity restrict]}]
   (stmt ["TRUNCATE TABLE"] (apply join-stmt ", " tables)
         restart-identity continue-identity cascade restrict))
+
+(defmethod compile-sql :truncate-table [{:keys [cascade tables continue-identity restart-identity restrict]}]
+  (let [[sql & args] (apply join-stmt ", " tables)]
+    (cons (str "TRUNCATE TABLE " sql
+               (if restart-identity " RESTART IDENTITY")
+               (if continue-identity " CONTINUE IDENTITY")
+               (if cascade " CASCADE")
+               (if restrict " RESTRICT"))
+          args)))

@@ -50,7 +50,7 @@
   (is (= :continents (:name continents))))
 
 (deftest test-group-by
-  (let [[node ast] ((group-by :name :created-at) {})]
+  (let [node (:group-by (group-by {} :name :created-at))]
     (is (= :group-by (:op node)))
     (let [expr-list (:expr-list node)]
       (let [node (first (:children expr-list))]
@@ -61,8 +61,7 @@
         (is (= :created-at (:name node)))))))
 
 (deftest test-limit
-  (is (= [{:op :limit :count 1} {:limit {:op :limit :count 1}}]
-         ((limit 1) {}))))
+  (is (= {:limit {:op :limit :count 1}} (limit {} 1))))
 
 (deftest test-drop-table
   (are [stmt expected]
@@ -71,19 +70,16 @@
        ["DROP TABLE continents"]
        (drop-table [:continents :countries])
        ["DROP TABLE continents, countries"]
-       (drop-table
-        :continents
-        (if-exists true)
-        (restrict true))
+       (drop-table :continents :if-exists true :restrict true)
        ["DROP TABLE IF EXISTS continents RESTRICT"]))
 
 (deftest test-from
-  (let [[node ast] ((from :continents) {})]
+  (let [node (:from (from {} :continents))]
     (is (= :from (:op node)))
     (let [node (first (:from node))]
       (is (= :table (:op node)))
       (is (= :continents (:name node)))))
-  (let [[node ast] ((from [:continents :countries]) {})]
+  (let [node (:from (from {} :continents :countries))]
     (is (= :from (:op node)))
     (let [node (first (:from node))]
       (is (= :table (:op node)))
@@ -91,34 +87,30 @@
     (let [node (second (:from node))]
       (is (= :table (:op node)))
       (is (= :countries (:name node)))))
-  (let [[node ast] ((from (select [1 2 3])) {})]
-    (is (= :from (:op node)))
-    (is (= (select [1 2 3]) (first (:from node))))))
+  ;; (let [node (:from (from (select 1 2 3)))]
+  ;;   (println node)
+  ;;   (is (= :from (:op node)))
+  ;;   (is (= (select [1 2 3]) (first (:from node)))))
 
-(deftest test-limit
-  (is (= [{:op :limit :count 1} {:limit {:op :limit :count 1}}]
-         ((limit 1) {}))))
+  )
 
 (deftest test-offset
-  (is (= [{:op :offset :start 1} {:offset {:op :offset :start 1}}]
-         ((offset 1) {}))))
+  (is (= {:offset {:op :offset :start 1}} (offset {} 1))))
 
 (deftest test-order-by
-  (let [[node ast] ((order-by :created-at) {})]
+  (let [node (:order-by (order-by {} :created-at))]
     (is (= :order-by (:op node)))
     (let [node (:expr-list node)]
       (is (= :expr-list (:op node)))
-      (is (= [{:op :column :schema nil :table nil :name :created-at :alias nil}] (:children node))))
-    (is (= {:order-by node} ast)))
-  (let [[node ast] ((order-by [:name :created-at] :desc true :nulls :first) {})]
+      (is (= [{:op :column :schema nil :table nil :name :created-at :alias nil}] (:children node)))))
+  (let [node (:order-by (order-by {} [:name :created-at] :direction :desc :nulls :first))]
     (is (= :order-by (:op node)))
     (is (= :desc (:direction node)))
     (is (= :first (:nulls node)))
     (let [node (:expr-list node)]
       (is (= :expr-list (:op node)))
       (is (= [{:op :column :schema nil :table nil :name :name :alias nil}
-              {:op :column :schema nil :table nil :name :created-at :alias nil}] (:children node))))
-    (is (= {:order-by node} ast))))
+              {:op :column :schema nil :table nil :name :created-at :alias nil}] (:children node))))))
 
 (deftest test-parse-expr
   (are [expr expected]
@@ -159,53 +151,55 @@
        ["SELECT 1 AS n"]
        (select (as "s" :s))
        ["SELECT ? AS s" "s"]
-       (select [1 2 3])
+       (select 1 2 3)
        ["SELECT 1, 2, 3"]
-       (select [(as 1 :a) (as 2 :b) (as 3 :c)])
+       (select (as 1 :a) (as 2 :b) (as 3 :c))
        ["SELECT 1 AS a, 2 AS b, 3 AS c"]
-       (select [] (from :continents))
+       (-> (select) (from :continents))
        ["SELECT * FROM continents"]
-       (select * (from :continents))
+       (-> (select *) (from :continents))
        ["SELECT * FROM continents"]
-       (select * (from :continents/c))
+       (-> (select *) (from :continents/c))
        ["SELECT * FROM continents AS c"]
-       (select :created-at (from :continents))
+       (-> (select :created-at) (from :continents))
        ["SELECT created-at FROM continents"]
-       (select :created-at/c (from :continents))
+       (-> (select :created-at/c) (from :continents))
        ["SELECT created-at AS c FROM continents"]
-       (select [:name :created-at] (from :continents))
+       (-> (select :name :created-at) (from :continents))
        ["SELECT name, created-at FROM continents"]
-       (select [:name '(max :created-at)] (from :continents))
+       (-> (select :name '(max :created-at)) (from :continents))
        ["SELECT name, max(created-at) FROM continents"]
-       (select ['(greatest 1 2) '(lower "X")])
+       (select '(greatest 1 2) '(lower "X"))
        ["SELECT greatest(1, 2), lower(?)" "X"]
-       (select [(as '(max :created-at) :m)] (from :continents))
+       (-> (select (as '(max :created-at) :m)) (from :continents))
        ["SELECT max(created-at) AS m FROM continents"]
-       (select * (from :continents) (limit 1))
+       (-> (select *) (from :continents) (limit 1))
        ["SELECT * FROM continents LIMIT 1"]
-       (select * (from :continents) (offset 1))
+       (-> (-> (select *)) (from :continents) (offset 1))
        ["SELECT * FROM continents OFFSET 1"]
-       (select * (from :continents) (limit 1) (offset 2))
+       (-> (-> (select *)) (from :continents) (limit 1) (offset 2))
        ["SELECT * FROM continents LIMIT 1 OFFSET 2"]
-       (select * (from :continents) (order-by :created-at))
+       (-> (select *) (from :continents) (order-by :created-at))
        ["SELECT * FROM continents ORDER BY created-at"]
-       (select * (from :continents) (order-by :created-at :asc true))
+       (-> (select *) (from :continents) (order-by :created-at :direction :asc))
        ["SELECT * FROM continents ORDER BY created-at ASC"]
-       (select * (from :continents) (order-by :created-at :desc true))
+       (-> (select *) (from :continents) (order-by :created-at :direction :desc))
        ["SELECT * FROM continents ORDER BY created-at DESC"]
-       (select * (from :continents) (order-by :created-at :nulls :first))
+       (-> (select *) (from :continents) (order-by :created-at :nulls :first))
        ["SELECT * FROM continents ORDER BY created-at NULLS FIRST"]
-       (select * (from :continents) (order-by :created-at :nulls :last))
+       (-> (select *) (from :continents) (order-by :created-at :nulls :last))
        ["SELECT * FROM continents ORDER BY created-at NULLS LAST"]
-       (select * (from :continents) (order-by [:name :created-at] :asc true))
+       (-> (select *) (from :continents) (order-by [:name :created-at] :direction :asc))
        ["SELECT * FROM continents ORDER BY name, created-at ASC"]
-       (select * (from (select [1 2 3] (as :x))))
+       (-> (select *)
+           (from (as (select 1 2 3) :x)))
        ["SELECT * FROM (SELECT 1, 2, 3) AS x"]
-       (select * (from [(select [1] (as :x)) (select [2] (as :y))]))
+       (-> (select *)
+           (from (as (select 1) :x) (as (select 2) :y)))
        ["SELECT * FROM (SELECT 1) AS x, (SELECT 2) AS y"]
-       (select * (from :continents) (group-by :created-at))
+       (-> (select *) (from :continents) (group-by :created-at))
        ["SELECT * FROM continents GROUP BY created-at"]
-       (select * (from :continents) (group-by :name :created-at))
+       (-> (select *) (from :continents) (group-by :name :created-at))
        ["SELECT * FROM continents GROUP BY name, created-at"]))
 
 (deftest test-table
@@ -240,23 +234,5 @@
        ["TRUNCATE TABLE continents"]
        (truncate-table [:continents :countries])
        ["TRUNCATE TABLE continents, countries"]
-       (truncate-table
-        :continents
-        (cascade true)
-        (continue-identity true)
-        (restart-identity true)
-        (restrict true))
+       (truncate-table :continents :cascade true :continue-identity true :restart-identity true :restrict true)
        ["TRUNCATE TABLE continents RESTART IDENTITY CONTINUE IDENTITY CASCADE RESTRICT"]))
-
-(deftype Relation [ast]
-  Object
-  (toString [self]
-    (str "Relation")))
-
-;; (Relation. nil)
-;; doall
-;; (.toString (conj (conj (Relation. [] []) 1) 2))
-
-;; (.toString (conj (conj (Relation. [] []) 1) 2))
-
-;; (seq (Relation. [1 2] [3 4]))

@@ -58,17 +58,14 @@
 (defmethod parse-expr :default [expr]
   {:op :constant :form expr})
 
-(defn- parse-expr-list [expr-list]
-  (let [expr-list (if (= * expr-list) [] expr-list)]
-    {:op :expr-list :children (map parse-expr (wrap-seq expr-list))}))
+(defn- parse-expressions [expr-list]
+  {:op :expr-list
+   :children (map parse-expr (remove #(= * %1) expr-list))})
 
 (defn as
   "Add an AS alias to the SQL statement."
-  ([alias]
-     (fn [statement]
-       [alias (assoc statement :as alias)]))
-  ([expr alias]
-     (assoc (parse-expr expr) :alias alias)))
+  [statement alias]
+  (assoc (parse-expr statement) :alias alias))
 
 (defn cascade
   "Add the CASCADE clause to the SQL statement."
@@ -86,17 +83,14 @@
 
 (defn group-by
   "Add the GROUP BY clause to the SQL statement."
-  [& expressions]
-  (fn [statement]
-    (let [node {:op :group-by :expr-list (parse-expr-list expressions)}]
-      [node (assoc statement :group-by node)])))
+  [statement & expressions]
+  (assoc statement
+    :group-by {:op :group-by :expr-list (parse-expressions expressions)}))
 
 (defn limit
   "Add the LIMIT clause to the SQL statement."
-  [count]
-  (fn [statement]
-    (let [limit {:op :limit :count count}]
-      [limit (assoc statement :limit limit)])))
+  [statement count]
+  (assoc statement :limit {:op :limit :count count}))
 
 (defn restart-identity
   "Add the RESTART IDENTITY clause to the SQL statement."
@@ -114,24 +108,17 @@
 
 (defn offset
   "Add the OFFSET clause to the SQL statement."
-  [start]
-  (fn [statement]
-    (let [node {:op :offset :start start}]
-      [node (assoc statement :offset node)])))
+  [statement start]
+  (assoc statement :offset {:op :offset :start start}))
 
 (defn order-by
   "Add the ORDER BY clause to the SQL statement."
-  [expr-list & {:keys [asc desc nulls using]}]
-  (fn [statement]
-    (let [node {:op :order-by
-                :expr-list (parse-expr-list expr-list)
-                :direction (cond
-                            asc :asc
-                            desc :desc
-                            :else nil)
-                :nulls nulls
-                :using using}]
-      [node (assoc statement :order-by node)])))
+  [statement expr-list & {:as opts}]
+  (assoc statement
+    :order-by
+    (assoc opts
+      :op :order-by
+      :expr-list (parse-expressions (wrap-seq expr-list)))))
 
 (defn restrict
   "Add the RESTRICT clause to the SQL statement."
@@ -142,10 +129,15 @@
 
 (defn from
   "Add the FROM item to the SQL select statement."
-  [from]
-  (fn [statement]
-    (let [node {:op :from :from (map parse-from (wrap-seq from))}]
-      [node (assoc statement :from node)])))
+  [statement & from]
+  (assoc statement
+    :from {:op :from :from (map parse-from from)}))
+
+(defn from
+  "Add the FROM item to the SQL select statement."
+  [statement & from]
+  (assoc statement
+    :from {:op :from :from (map parse-from from)}))
 
 (defn table
   "Make a SQL table."
@@ -168,26 +160,22 @@
     `(def ^{:doc doc}
        ~symbol (table ~name ~@body))))
 
-(defmacro defstmt
-  "Define a SQL statement."
-  [name doc args & body]
-  `(do (defn ~name ~doc
-         [~@args & ~'body]
-         (second ((with-monad state-m (m-seq ~'body))
-                  ~@body)))))
+(defn drop-table
+  "Drop the database `tables`."
+  [tables & {:as opts}]
+  (assoc opts
+    :op :drop-table
+    :tables (map table (wrap-seq tables))))
 
-(defstmt drop-table
-  "Drop the database `table`."
-  [tables]
-  {:op :drop-table
-   :tables (map table (wrap-seq tables))})
+(defn truncate-table
+  "Truncate the database `tables`."
+  [tables & {:as opts}]
+  (assoc opts
+    :op :truncate-table
+    :tables (map table (wrap-seq tables))))
 
-(defstmt truncate-table
-  "Truncate the database `table`."
-  [tables]
-  {:op :truncate-table
-   :tables (map table (wrap-seq tables))})
-
-(defstmt select
-  "Select from the database `table`."
-  [expr-list] {:op :select :expr-list (parse-expr-list expr-list)})
+(defn select
+  "Select `expressions` from the database."
+  [& expressions]
+  {:op :select
+   :expr-list (parse-expressions expressions)})
