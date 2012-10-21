@@ -33,9 +33,9 @@
   [statement] (compile-sql statement))
 
 (defn as
-  "Add an AS alias to the SQL statement."
-  [statement alias]
-  (assoc (parse-expr statement) :alias alias))
+  "Add an AS clause to the SQL statement."
+  [statement as]
+  (assoc (parse-expr statement) :as as))
 
 (defn drop-table
   "Drop the database `tables`."

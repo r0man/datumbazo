@@ -94,15 +94,15 @@
     (is (= :order-by (:op node)))
     (let [node (:exprs node)]
       (is (= :exprs (:op node)))
-      (is (= [{:op :column :schema nil :table nil :name :created-at :alias nil}] (:children node)))))
+      (is (= [{:op :column :schema nil :table nil :name :created-at :as nil}] (:children node)))))
   (let [node (:order-by (order-by {} [:name :created-at] :direction :desc :nulls :first))]
     (is (= :order-by (:op node)))
     (is (= :desc (:direction node)))
     (is (= :first (:nulls node)))
     (let [node (:exprs node)]
       (is (= :exprs (:op node)))
-      (is (= [{:op :column :schema nil :table nil :name :name :alias nil}
-              {:op :column :schema nil :table nil :name :created-at :alias nil}] (:children node))))))
+      (is (= [{:op :column :schema nil :table nil :name :name :as nil}
+              {:op :column :schema nil :table nil :name :created-at :as nil}] (:children node))))))
 
 (deftest test-select
   (are [stmt expected]

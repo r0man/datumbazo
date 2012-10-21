@@ -12,11 +12,11 @@
        ["continents.created-at"]
        {:op :column :schema :public :table :continents :name :created-at}
        ["public.continents.created-at"]
-       {:op :column :schema :public :table :continents :name :created-at :alias :c}
+       {:op :column :schema :public :table :continents :name :created-at :as :c}
        ["public.continents.created-at AS c"])
   (jdbc/with-quoted-identifiers \"
     (is (= ["\"public\".\"continents\".\"created-at\" AS \"c\""]
-           (compile-sql {:op :column :schema :public :table :continents :name :created-at :alias :c})))))
+           (compile-sql {:op :column :schema :public :table :continents :name :created-at :as :c})))))
 
 (deftest test-compile-constant
   (are [ast expected]
@@ -101,11 +101,11 @@
        ["continents"]
        {:op :table :schema :public :name :continents}
        ["public.continents"]
-       {:op :table :schema :public :name :continents :alias :c}
+       {:op :table :schema :public :name :continents :as :c}
        ["public.continents AS c"])
   (jdbc/with-quoted-identifiers \"
     (is (= ["\"public\".\"continents\" AS \"c\""]
-           (compile-sql {:op :table :schema :public :name :continents :alias :c})))))
+           (compile-sql {:op :table :schema :public :name :continents :as :c})))))
 
 (deftest test-compile-truncate-table
   (are [ast expected]

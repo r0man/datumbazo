@@ -22,11 +22,11 @@
 
 (defmulti compile-const (fn [node] (class (:form node))))
 
-(defmethod compile-const String [{:keys [form alias]}]
-  [(str "?" (if alias (str " AS " (jdbc/as-identifier alias)))) form])
+(defmethod compile-const String [{:keys [form as]}]
+  [(str "?" (if as (str " AS " (jdbc/as-identifier as)))) form])
 
-(defmethod compile-const :default [{:keys [form alias]}]
-  [(str form (if alias (str " AS " (jdbc/as-identifier alias))))])
+(defmethod compile-const :default [{:keys [form as]}]
+  [(str form (if as (str " AS " (jdbc/as-identifier as))))])
 
 ;; COMPILE FROM CLAUSE
 
@@ -34,7 +34,7 @@
 
 (defmethod compile-from :select [node]
   (let [[sql & args] (compile-sql node)]
-    (cons (str "(" sql ") AS " (jdbc/as-identifier (:alias node))) args)))
+    (cons (str "(" sql ") AS " (jdbc/as-identifier (:as node))) args)))
 
 (defmethod compile-from :table [node]
   (compile-sql node))
@@ -44,9 +44,9 @@
 (defmethod compile-sql nil [_]
   nil)
 
-(defmethod compile-sql :column [{:keys [alias schema name table]}]
+(defmethod compile-sql :column [{:keys [as schema name table]}]
   [(str (join "." (map jdbc/as-identifier (remove nil? [schema table name])))
-        (if alias (str " AS " (jdbc/as-identifier alias))))])
+        (if as (str " AS " (jdbc/as-identifier as))))])
 
 (defmethod compile-sql :constant [node]
   (compile-const node))
@@ -65,10 +65,10 @@
       (cons (join ", " (map first children))
             (apply concat (map rest children))))))
 
-(defmethod compile-sql :fn-call [{:keys [alias args name]}]
+(defmethod compile-sql :fn-call [{:keys [as args name]}]
   (let [args (map compile-sql args)]
     (cons (str name "(" (join ", " (map first args)) ")"
-               (if alias (str " AS " (jdbc/as-identifier alias))))
+               (if as (str " AS " (jdbc/as-identifier as))))
           (apply concat (map rest args)))))
 
 (defmethod compile-sql :from [{:keys [from]}]
@@ -103,9 +103,9 @@
                  ""))
           args)))
 
-(defmethod compile-sql :table [{:keys [alias schema name]}]
+(defmethod compile-sql :table [{:keys [as schema name]}]
   [(str (join "." (map jdbc/as-identifier (remove nil? [schema name])))
-        (if alias (str " AS " (jdbc/as-identifier alias))))])
+        (if as (str " AS " (jdbc/as-identifier as))))])
 
 (defmethod compile-sql :select [{:keys [exprs from group-by limit offset order-by]}]
   (stmt ["SELECT"] exprs from group-by order-by limit offset))

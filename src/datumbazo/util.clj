@@ -98,22 +98,22 @@
 
 (defn parse-column
   "Parse `s` as a column identifier and return a map
-  with :op, :schema, :name and :alias keys."
+  with :op, :schema, :name and :as keys."
   [s]
   (if-let [matches (re-matches #"(([^./]+)\.)?(([^./]+)\.)?([^./]+)(/(.+))?" (qualified-name s))]
-    (let [[_ _ schema _ table name _ alias] matches]
+    (let [[_ _ schema _ table name _ as] matches]
       {:op :column
        :schema (if (and schema table) (keyword schema))
        :table (keyword (or table schema))
        :name (keyword name)
-       :alias (keyword alias)})))
+       :as (keyword as)})))
 
 (defn parse-table
   "Parse `s` as a table identifier and return a map
-  with :op, :schema, :name and :alias keys."
+  with :op, :schema, :name and :as keys."
   [s]
   (if-let [matches (re-matches #"(([^./]+)\.)?([^./]+)(/(.+))?" (qualified-name s))]
     {:op :table
      :schema (keyword (nth matches 2))
      :name (keyword (nth matches 3))
-     :alias (keyword (nth matches 5))}))
+     :as (keyword (nth matches 5))}))
