@@ -41,6 +41,9 @@
 (defmethod parse-expr clojure.lang.PersistentList [expr]
   (parse-fn-expr expr))
 
+(defmethod parse-expr clojure.lang.IPersistentMap [expr]
+  expr)
+
 (defmethod parse-expr clojure.lang.Keyword [expr]
   (u/parse-column expr))
 
@@ -56,9 +59,11 @@
 
 (defn as
   "Add an AS alias to the SQL statement."
-  [alias]
-  (fn [statement]
-    [alias (assoc statement :as alias)]))
+  ([alias]
+     (fn [statement]
+       [alias (assoc statement :as alias)]))
+  ([expr alias]
+     (assoc (parse-expr expr) :alias alias)))
 
 (defn cascade
   "Add the CASCADE clause to the SQL statement."

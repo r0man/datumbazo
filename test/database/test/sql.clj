@@ -161,6 +161,8 @@
        ["SELECT name, max(created-at) FROM continents"]
        (select ['(greatest 1 2) '(lower "X")])
        ["SELECT greatest(1, 2), lower(?)" "X"]
+       (select [(as '(max :created-at) :m)] (from :continents))
+       ["SELECT max(created-at) AS m FROM continents"]
        (select * (from :continents) (limit 1))
        ["SELECT * FROM continents LIMIT 1"]
        (select * (from :continents) (offset 1))
