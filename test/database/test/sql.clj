@@ -180,6 +180,8 @@
        (select * (from (select [1 2 3] (as :x))))
        ["SELECT * FROM (SELECT 1, 2, 3) AS x"]))
 
+;; (sql (select ['(+ 1 2)]))
+
 (deftest test-table
   (let [t (table :continents)]
     (is (= :table (:op t)))
