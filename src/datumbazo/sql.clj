@@ -67,13 +67,6 @@
   [statement alias]
   (assoc (parse-expr statement) :alias alias))
 
-(defn continue-identity
-  "Add the CONTINUE IDENTITY clause to the SQL statement."
-  [continue-identity]
-  (fn [statement]
-    (let [node {:op :continue-identity :continue-identity continue-identity}]
-      [node (assoc statement :continue-identity node)])))
-
 (defn group-by
   "Add the GROUP BY clause to the SQL statement."
   [statement & expressions]

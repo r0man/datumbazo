@@ -25,10 +25,6 @@
       (is (= true (:not-null? c)))
       (is (= true (:unique? c))))))
 
-(deftest test-continue-identity
-  (is (= [{:op :continue-identity :continue-identity true} {:continue-identity {:op :continue-identity :continue-identity true}}]
-         ((continue-identity true) {}))))
-
 (deftest test-deftable
   (deftable continents
     "The continents database table."
