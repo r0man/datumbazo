@@ -4,7 +4,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [join replace split]]
             [datumbazo.util :as u]
-            [datumbazo.sql.expr :refer [parse-expr parse-expressions]]
+            [datumbazo.sql.expr :refer [parse-expr parse-exprs]]
             [datumbazo.sql.compiler :refer [compile-sql]]))
 
 (defn make-column
@@ -52,9 +52,9 @@
 
 (defn group-by
   "Add the GROUP BY clause to the SQL statement."
-  [statement & expressions]
+  [statement & exprs]
   (assoc statement
-    :group-by {:op :group-by :expressions (parse-expressions expressions)}))
+    :group-by {:op :group-by :exprs (parse-exprs exprs)}))
 
 (defn limit
   "Add the LIMIT clause to the SQL statement."
@@ -68,12 +68,12 @@
 
 (defn order-by
   "Add the ORDER BY clause to the SQL statement."
-  [statement expressions & {:as opts}]
+  [statement exprs & {:as opts}]
   (assoc statement
     :order-by
     (assoc opts
       :op :order-by
-      :expressions (parse-expressions (wrap-seq expressions)))))
+      :exprs (parse-exprs (wrap-seq exprs)))))
 
 (defn table
   "Make a SQL table."
@@ -97,9 +97,9 @@
        ~symbol (table ~name ~@body))))
 
 (defn select
-  "Select `expressions` from the database."
-  [& expressions]
-  {:op :select :expressions (parse-expressions expressions)})
+  "Select `exprs` from the database."
+  [& exprs]
+  {:op :select :exprs (parse-exprs exprs)})
 
 (defn truncate-table
   "Truncate the database `tables`."

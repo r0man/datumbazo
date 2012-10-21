@@ -26,6 +26,5 @@
 (defmethod parse-expr :default [expr]
   {:op :constant :form expr})
 
-(defn parse-expressions [expressions]
-  {:op :expressions
-   :children (map parse-expr (remove #(= * %1) expressions))})
+(defn parse-exprs [exprs]
+  {:op :exprs :children (map parse-expr (remove #(= * %1) exprs))})

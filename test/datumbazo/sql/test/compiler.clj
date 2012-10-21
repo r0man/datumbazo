@@ -35,11 +35,11 @@
        ["1"]
        {:op :keyword :form :continents.created-at}
        ["continents.created-at"]
-       {:op :expressions :children [{:op :constant :form 1}]}
+       {:op :exprs :children [{:op :constant :form 1}]}
        ["1"]
-       {:op :expressions :children [{:op :constant :form "x"}]}
+       {:op :exprs :children [{:op :constant :form "x"}]}
        ["?" "x"]
-       {:op :expressions :children [{:op :constant :form 1} {:op :constant :form "x"}]}
+       {:op :exprs :children [{:op :constant :form 1} {:op :constant :form "x"}]}
        ["1, ?" "x"]
        {:op :fn-call :name 'max :args [{:op :keyword :form :created-at}]}
        ["max(created-at)"]
@@ -51,12 +51,12 @@
     (is (= ["\"continents\".\"created-at\""]
            (compile-sql {:op :keyword :form :continents.created-at})))))
 
-(deftest test-compile-expressions
+(deftest test-compile-exprs
   (are [ast expected]
        (is (= expected (compile-sql ast)))
-       {:op :expressions :children [{:op :keyword :form :created-at}]}
+       {:op :exprs :children [{:op :keyword :form :created-at}]}
        ["created-at"]
-       {:op :expressions :children [{:op :keyword :form :name} {:op :keyword :form :created-at}]}
+       {:op :exprs :children [{:op :keyword :form :name} {:op :keyword :form :created-at}]}
        ["name, created-at"]))
 
 (deftest test-compile-drop-table
@@ -107,13 +107,13 @@
 ;; (deftest test-compile-select
 ;;   (are [ast expected]
 ;;        (is (= expected (compile-sql ast)))
-;;        {:op :select :expressions {:op :expressions :children []} :from [{:op :table :name :continents}]}
+;;        {:op :select :exprs {:op :exprs :children []} :from [{:op :table :name :continents}]}
 ;;        ["SELECT * FROM continents"]
-;;        {:op :select :expressions {:op :expressions :children []} :from [{:op :table :name :continents}] :limit {:op :limit :count 1}}
+;;        {:op :select :exprs {:op :exprs :children []} :from [{:op :table :name :continents}] :limit {:op :limit :count 1}}
 ;;        ["SELECT * FROM continents LIMIT 1"]
-;;        {:op :select :expressions {:op :expressions :children []} :from [{:op :table :name :continents}] :offset {:op :offset :start 1}}
+;;        {:op :select :exprs {:op :exprs :children []} :from [{:op :table :name :continents}] :offset {:op :offset :start 1}}
 ;;        ["SELECT * FROM continents OFFSET 1"]
-;;        {:op :select :expressions {:op :expressions :children []} :from [{:op :table :name :continents}] :limit {:op :limit :count 1} :offset {:op :offset :start 1}}
+;;        {:op :select :exprs {:op :exprs :children []} :from [{:op :table :name :continents}] :limit {:op :limit :count 1} :offset {:op :offset :start 1}}
 ;;        ["SELECT * FROM continents LIMIT 1 OFFSET 1"]))
 
 (deftest test-compile-string

@@ -44,11 +44,11 @@
 (deftest test-group-by
   (let [node (:group-by (group-by {} :name :created-at))]
     (is (= :group-by (:op node)))
-    (let [expressions (:expressions node)]
-      (let [node (first (:children expressions))]
+    (let [exprs (:exprs node)]
+      (let [node (first (:children exprs))]
         (is (= :column (:op node)))
         (is (= :name (:name node))))
-      (let [node (second (:children expressions))]
+      (let [node (second (:children exprs))]
         (is (= :column (:op node)))
         (is (= :created-at (:name node)))))))
 
@@ -92,15 +92,15 @@
 (deftest test-order-by
   (let [node (:order-by (order-by {} :created-at))]
     (is (= :order-by (:op node)))
-    (let [node (:expressions node)]
-      (is (= :expressions (:op node)))
+    (let [node (:exprs node)]
+      (is (= :exprs (:op node)))
       (is (= [{:op :column :schema nil :table nil :name :created-at :alias nil}] (:children node)))))
   (let [node (:order-by (order-by {} [:name :created-at] :direction :desc :nulls :first))]
     (is (= :order-by (:op node)))
     (is (= :desc (:direction node)))
     (is (= :first (:nulls node)))
-    (let [node (:expressions node)]
-      (is (= :expressions (:op node)))
+    (let [node (:exprs node)]
+      (is (= :exprs (:op node)))
       (is (= [{:op :column :schema nil :table nil :name :name :alias nil}
               {:op :column :schema nil :table nil :name :created-at :alias nil}] (:children node))))))
 
