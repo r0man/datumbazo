@@ -78,13 +78,6 @@
   [statement count]
   (assoc statement :limit {:op :limit :count count}))
 
-(defn if-exists
-  "Add the IF EXISTS clause to the SQL statement."
-  [if-exists]
-  (fn [statement]
-    (let [node {:op :if-exists :if-exists if-exists}]
-      [node (assoc statement :if-exists node)])))
-
 (defn offset
   "Add the OFFSET clause to the SQL statement."
   [statement start]
