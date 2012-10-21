@@ -113,13 +113,6 @@
       :op :order-by
       :expr-list (parse-expressions (wrap-seq expr-list)))))
 
-(defn restrict
-  "Add the RESTRICT clause to the SQL statement."
-  [restrict]
-  (fn [statement]
-    (let [node {:op :restrict :restrict restrict}]
-      [node (assoc statement :restrict node)])))
-
 (defn from
   "Add the FROM item to the SQL select statement."
   [statement & from]

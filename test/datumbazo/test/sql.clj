@@ -134,10 +134,6 @@
   (is (= [{:op :restart-identity :restart-identity true} {:restart-identity {:op :restart-identity :restart-identity true}}]
          ((restart-identity true) {}))))
 
-(deftest test-restrict
-  (is (= [{:op :restrict :restrict true} {:restrict {:op :restrict :restrict true}}]
-         ((restrict true) {}))))
-
 (deftest test-select
   (are [stmt expected]
        (is (= expected (sql stmt)))
