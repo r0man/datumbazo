@@ -86,6 +86,7 @@
 (defmethod compile-sql :from [{:keys [from]}]
   (if (= :select (:op (first from)))
     (let [form (first from)]
+      (assert (:as form) "Subquery in FROM must have an alias.")
       (join-stmt "" ["FROM ("] (first from) [(format ") AS %s" (jdbc/as-identifier (:as form)))]))
     (stmt ["FROM"]
           (apply join-stmt ", " from))))
