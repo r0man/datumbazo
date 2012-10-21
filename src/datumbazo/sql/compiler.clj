@@ -64,7 +64,7 @@
                (if restrict " RESTRICT"))
           args)))
 
-(defmethod compile-sql :expr-list [{:keys [children]}]
+(defmethod compile-sql :expressions [{:keys [children]}]
   (let [children (map compile-sql children)]
     (if (empty? children)
       ["*"]
@@ -82,8 +82,8 @@
     (cons (str "FROM " (join ", " (map first from)))
           (apply concat (map rest from)))))
 
-(defmethod compile-sql :group-by [{:keys [expr-list]}]
-  (stmt ["GROUP BY"] expr-list))
+(defmethod compile-sql :group-by [{:keys [expressions]}]
+  (stmt ["GROUP BY"] expressions))
 
 (defmethod compile-sql :if-exists [{:keys [if-exists]}]
   (if if-exists ["IF EXISTS"]))
@@ -100,8 +100,8 @@
 (defmethod compile-sql :offset [{:keys [start]}]
   [(str "OFFSET " (if (number? start) start 0))])
 
-(defmethod compile-sql :order-by [{:keys [expr-list direction nulls using]}]
-  (stmt ["ORDER BY"] expr-list
+(defmethod compile-sql :order-by [{:keys [expressions direction nulls using]}]
+  (stmt ["ORDER BY"] expressions
         (if direction
           (condp = direction
             :asc ["ASC"]
@@ -121,8 +121,8 @@
 (defmethod compile-sql :restrict [{:keys [restrict]}]
   (if restrict ["RESTRICT"]))
 
-(defmethod compile-sql :select [{:keys [expr-list from group-by limit offset order-by]}]
-  (stmt ["SELECT"] expr-list from group-by order-by limit offset))
+(defmethod compile-sql :select [{:keys [expressions from group-by limit offset order-by]}]
+  (stmt ["SELECT"] expressions from group-by order-by limit offset))
 
 (defmethod compile-sql :truncate-table [{:keys [cascade tables continue-identity restart-identity restrict]}]
   (stmt ["TRUNCATE TABLE"] (apply join-stmt ", " tables)

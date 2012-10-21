@@ -58,9 +58,9 @@
 (defmethod parse-expr :default [expr]
   {:op :constant :form expr})
 
-(defn- parse-expressions [expr-list]
-  {:op :expr-list
-   :children (map parse-expr (remove #(= * %1) expr-list))})
+(defn- parse-expressions [expressions]
+  {:op :expressions
+   :children (map parse-expr (remove #(= * %1) expressions))})
 
 (defn as
   "Add an AS alias to the SQL statement."
@@ -84,7 +84,7 @@
   "Add the GROUP BY clause to the SQL statement."
   [statement & expressions]
   (assoc statement
-    :group-by {:op :group-by :expr-list (parse-expressions expressions)}))
+    :group-by {:op :group-by :expressions (parse-expressions expressions)}))
 
 (defn limit
   "Add the LIMIT clause to the SQL statement."
@@ -98,12 +98,12 @@
 
 (defn order-by
   "Add the ORDER BY clause to the SQL statement."
-  [statement expr-list & {:as opts}]
+  [statement expressions & {:as opts}]
   (assoc statement
     :order-by
     (assoc opts
       :op :order-by
-      :expr-list (parse-expressions (wrap-seq expr-list)))))
+      :expressions (parse-expressions (wrap-seq expressions)))))
 
 (defn table
   "Make a SQL table."
@@ -130,7 +130,7 @@
   "Select `expressions` from the database."
   [& expressions]
   {:op :select
-   :expr-list (parse-expressions expressions)})
+   :expressions (parse-expressions expressions)})
 
 (defn truncate-table
   "Truncate the database `tables`."
