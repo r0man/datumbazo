@@ -116,16 +116,26 @@
     (let [node {:op :restrict :restrict restrict}]
       [node (assoc statement :restrict node)])))
 
+(defn- alias-form? [form]
+  (and (vector? form)
+       (= 3 (count form))
+       (= :as (second form))))
+
+(defn- parse-from [forms]
+  (cond
+   (keyword? forms)
+   (parse-from [forms])
+   (vector? forms)
+   {:op :from :from (map u/parse-table forms)}
+   (and (map? forms)
+        (= :select (:op forms)))
+   {:op :from :from [forms]}))
+
 (defn from
   "Add the FROM item to the SQL select statement."
   [from]
   (fn [statement]
-    (let [from
-          (map #(cond
-                 (keyword? %1)
-                 (assoc (u/parse-table %1)
-                   :op :table))
-               (wrap-seq from))]
+    (let [from (parse-from from)]
       [from (assoc statement :from from)])))
 
 (defn table

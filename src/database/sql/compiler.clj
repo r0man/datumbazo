@@ -19,8 +19,16 @@
 (defn- stmt [& stmts]
   (let [stmts (map #(if (vector? %1) %1 (compile-sql %1)) stmts)
         stmts (remove (comp blank? first) stmts)]
-    (cons (join " " (map first stmts))
-          (apply concat (map rest stmts)))))
+    (->> (cons (join " " (map first stmts))
+               (apply concat (map rest stmts)))
+         (apply vector))))
+
+(defn- join-stmt [& stmts]
+  (let [stmts (map #(if (vector? %1) %1 (compile-sql %1)) stmts)
+        stmts (remove (comp blank? first) stmts)]
+    (->> (cons (join ", " (map first stmts))
+               (apply concat (map rest stmts)))
+         (apply vector))))
 
 (defmethod compile-sql nil [_]
   nil)
@@ -77,6 +85,12 @@
         cascade
         restrict))
 
+(defmethod compile-sql :from [{:keys [from]}]
+  (if (= :select (first from))
+    (stmt ["FROMXXXXXXXXXXXX"])
+    (stmt ["FROM"]
+          (apply join-stmt from))))
+
 (defmethod compile-sql :order-by [{:keys [expr-list direction nulls using]}]
   (stmt ["ORDER BY"]
         expr-list
@@ -96,14 +110,12 @@
   (if restrict ["RESTRICT"]))
 
 (defmethod compile-sql :select [{:keys [expr-list from limit offset order-by]}]
-  (let [from (map compile-sql from)]
-    (stmt ["SELECT"]
-          expr-list
-          [(if-not (empty? from)
-             (str "FROM " (join ", " (map first from))))]
-          order-by
-          limit
-          offset)))
+  (stmt ["SELECT"]
+        expr-list
+        from
+        order-by
+        limit
+        offset))
 
 (defmethod compile-sql :truncate-table [{:keys [cascade children continue-identity restart-identity restrict]}]
   (stmt [(str "TRUNCATE TABLE " (join ", " (map (comp first compile-sql) children)))]

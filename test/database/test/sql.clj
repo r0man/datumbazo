@@ -65,6 +65,28 @@
         (restrict true))
        ["DROP TABLE IF EXISTS continents RESTRICT"]))
 
+(deftest test-from
+  (let [[node ast] ((from :continents) {})]
+    (is (= :from (:op node)))
+    (let [node (first (:from node))]
+      (is (= :table (:op node)))
+      (is (= :continents (:name node)))))
+  (let [[node ast] ((from [:continents :countries]) {})]
+    (is (= :from (:op node)))
+    (let [node (first (:from node))]
+      (is (= :table (:op node)))
+      (is (= :continents (:name node))))
+    (let [node (second (:from node))]
+      (is (= :table (:op node)))
+      (is (= :countries (:name node)))))
+  (let [[node ast] ((from (select [1 2 3])) {})]
+    (is (= :from (:op node)))
+    (is (= (select [1 2 3]) (first (:from node))))))
+
+(deftest test-limit
+  (is (= [{:op :limit :count 1} {:limit {:op :limit :count 1}}]
+         ((limit 1) {}))))
+
 (deftest test-offset
   (is (= [{:op :offset :start 1} {:offset {:op :offset :start 1}}]
          ((offset 1) {}))))
