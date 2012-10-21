@@ -3,9 +3,6 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [blank? join replace]]))
 
-(defn- concat-args [& args]
-  (apply concat (remove nil? args)))
-
 (defmulti compile-sql :op)
 
 (defn- join-stmt [separator & stmts]
