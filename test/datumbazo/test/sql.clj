@@ -126,10 +126,6 @@
        '(ST_AsText (ST_Centroid "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"))
        {:op :fn-call :name 'ST_AsText :args [{:op :fn-call :name 'ST_Centroid :args [{:op :constant :form "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"}]}]}))
 
-(deftest test-restart-identity
-  (is (= [{:op :restart-identity :restart-identity true} {:restart-identity {:op :restart-identity :restart-identity true}}]
-         ((restart-identity true) {}))))
-
 (deftest test-select
   (are [stmt expected]
        (is (= expected (sql stmt)))

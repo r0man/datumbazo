@@ -78,13 +78,6 @@
   [statement count]
   (assoc statement :limit {:op :limit :count count}))
 
-(defn restart-identity
-  "Add the RESTART IDENTITY clause to the SQL statement."
-  [restart-identity]
-  (fn [statement]
-    (let [node {:op :restart-identity :restart-identity restart-identity}]
-      [node (assoc statement :restart-identity node)])))
-
 (defn if-exists
   "Add the IF EXISTS clause to the SQL statement."
   [if-exists]
