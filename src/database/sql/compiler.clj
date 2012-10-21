@@ -42,10 +42,10 @@
       (cons (join ", " (map first children))
             (apply concat (map rest children))))))
 
-(defmethod compile-sql :fn [{:keys [children name]}]
-  (let [children (map compile-sql children)]
-    (cons (str name "(" (join ", " (map first children)) ")")
-          (apply concat (map rest children)))))
+(defmethod compile-sql :fn [{:keys [args name]}]
+  (let [args (map compile-sql args)]
+    (cons (str name "(" (join ", " (map first args)) ")")
+          (apply concat (map rest args)))))
 
 (defmethod compile-sql :from [{:keys [from]}]
   (if (= :select (:op (first from)))

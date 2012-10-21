@@ -30,7 +30,7 @@
 (defn parse-fn-expr [expr]
   {:op :fn
    :name (first expr)
-   :children (map parse-expr (rest expr))})
+   :args (map parse-expr (rest expr))})
 
 (defmethod parse-expr nil [expr]
   {:op :nil})
