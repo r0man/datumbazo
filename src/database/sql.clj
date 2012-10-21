@@ -53,6 +53,12 @@
 (defn- parse-expr-list [expr-list]
   {:op :expr-list :children (map parse-expr (wrap-seq expr-list))})
 
+(defn as
+  "Add an AS alias to the SQL statement."
+  [alias]
+  (fn [statement]
+    [alias (assoc statement :as alias)]))
+
 (defn cascade
   "Add the CASCADE clause to the SQL statement."
   [cascade]

@@ -16,19 +16,15 @@
 
 (defmulti compile-sql :op)
 
-(defn- stmt [& stmts]
+(defn- join-stmt [separator & stmts]
   (let [stmts (map #(if (vector? %1) %1 (compile-sql %1)) stmts)
         stmts (remove (comp blank? first) stmts)]
-    (->> (cons (join " " (map first stmts))
+    (->> (cons (join separator (map first stmts))
                (apply concat (map rest stmts)))
          (apply vector))))
 
-(defn- join-stmt [& stmts]
-  (let [stmts (map #(if (vector? %1) %1 (compile-sql %1)) stmts)
-        stmts (remove (comp blank? first) stmts)]
-    (->> (cons (join ", " (map first stmts))
-               (apply concat (map rest stmts)))
-         (apply vector))))
+(defn- stmt [& stmts]
+  (apply join-stmt " " stmts))
 
 (defmethod compile-sql nil [_]
   nil)
@@ -72,11 +68,13 @@
 (defmethod compile-sql :string [{:keys [form]}]
   ["?" form])
 
-(defmethod compile-sql :table [{:keys [schema name]}]
+(defmethod compile-sql :table [{:keys [alias schema name]}]
   (assert name)
   [(str (if schema
           (str (jdbc/as-identifier schema) "."))
-        (jdbc/as-identifier name))])
+        (jdbc/as-identifier name)
+        (if alias
+          (str "AS " (jdbc/as-identifier alias))))])
 
 (defmethod compile-sql :drop-table [{:keys [cascade if-exists restrict children]}]
   (stmt ["DROP TABLE"]
@@ -86,10 +84,11 @@
         restrict))
 
 (defmethod compile-sql :from [{:keys [from]}]
-  (if (= :select (first from))
-    (stmt ["FROMXXXXXXXXXXXX"])
+  (if (= :select (:op (first from)))
+    (let [form (first from)]
+      (join-stmt "" ["FROM ("] (first from) [(format ") AS %s" (jdbc/as-identifier (:as form)))]))
     (stmt ["FROM"]
-          (apply join-stmt from))))
+          (apply join-stmt ", " from))))
 
 (defmethod compile-sql :order-by [{:keys [expr-list direction nulls using]}]
   (stmt ["ORDER BY"]
