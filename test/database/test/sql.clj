@@ -178,9 +178,9 @@
        (select * (from :continents) (order-by [:name :created-at] :asc true))
        ["SELECT * FROM continents ORDER BY name, created-at ASC"]
        (select * (from (select [1 2 3] (as :x))))
-       ["SELECT * FROM (SELECT 1, 2, 3) AS x"]))
-
-;; (sql (select ['(+ 1 2)]))
+       ["SELECT * FROM (SELECT 1, 2, 3) AS x"]
+       (select * (from [(select [1] (as :x)) (select [2] (as :y))]))
+       ["SELECT * FROM (SELECT 1) AS x, (SELECT 2) AS y"]))
 
 (deftest test-table
   (let [t (table :continents)]

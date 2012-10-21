@@ -131,19 +131,19 @@
 (defn- parse-from [forms]
   (cond
    (keyword? forms)
-   (parse-from [forms])
-   (vector? forms)
-   {:op :from :from (map u/parse-table forms)}
-   (and (map? forms)
-        (= :select (:op forms)))
-   {:op :from :from [forms]}))
+   (u/parse-table forms)
+   (and (map? forms) (= :select (:op forms)))
+   forms
+   :else (throw (IllegalArgumentException. (str "Can't parse FROM form: " forms)))))
+
+(parse-from :continent)
 
 (defn from
   "Add the FROM item to the SQL select statement."
   [from]
   (fn [statement]
-    (let [from (parse-from from)]
-      [from (assoc statement :from from)])))
+    (let [node {:op :from :from (map parse-from (wrap-seq from))}]
+      [node (assoc statement :from node)])))
 
 (defn table
   "Make a SQL table."

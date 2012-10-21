@@ -5,8 +5,11 @@
 
 (defmulti compile-sql :op)
 
+(defn stmt? [arg]
+  (and (sequential? arg) (string? (first arg))))
+
 (defn- join-stmt [separator & stmts]
-  (let [stmts (map #(if (vector? %1) %1 (compile-sql %1)) stmts)
+  (let [stmts (map #(if (stmt? %1) %1 (compile-sql %1)) stmts)
         stmts (remove (comp blank? first) stmts)]
     (->> (cons (join separator (map first stmts))
                (apply concat (map rest stmts)))
@@ -44,11 +47,20 @@
     (cons (str name "(" (join ", " (map first args)) ")")
           (apply concat (map rest args)))))
 
+(defmulti compile-from :op)
+
+(defmethod compile-from :select [node]
+  (let [sql (compile-sql node)]
+    (cons (str "(" (first sql) ") AS " (jdbc/as-identifier (:as node)))
+          (rest sql))))
+
+(defmethod compile-from :default [node]
+  (compile-sql node))
+
 (defmethod compile-sql :from [{:keys [from]}]
-  (if (= :select (:op (first from)))
-    (let [subquery (first from)]
-      (join-stmt "" ["FROM ("] (first from) [(str ") AS " (jdbc/as-identifier (:as subquery)))]))
-    (stmt ["FROM"] (apply join-stmt ", " from))))
+  (let [from (map compile-from from)]
+    (cons (str "FROM " (join ", " (map first from)))
+          (apply concat (map rest from)))))
 
 (defmethod compile-sql :if-exists [{:keys [if-exists]}]
   (if if-exists ["IF EXISTS"]))
