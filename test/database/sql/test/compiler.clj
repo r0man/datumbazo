@@ -11,6 +11,21 @@
   (is (nil? (compile-sql {:op :continue-identity :continue-identity false})))
   (is (= ["CONTINUE IDENTITY"] (compile-sql {:op :continue-identity :continue-identity true}))))
 
+(deftest test-compile-column
+  (are [ast expected]
+       (is (= expected (compile-sql ast)))
+       {:op :column :name :created-at}
+       ["created-at"]
+       {:op :column :table :continents :name :created-at}
+       ["continents.created-at"]
+       {:op :column :schema :public :table :continents :name :created-at}
+       ["public.continents.created-at"]
+       {:op :column :schema :public :table :continents :name :created-at :alias :c}
+       ["public.continents.created-at AS c"])
+  (jdbc/with-quoted-identifiers \"
+    (is (= ["\"public\".\"continents\".\"created-at\" AS \"c\""]
+           (compile-sql {:op :column :schema :public :table :continents :name :created-at :alias :c})))))
+
 (deftest test-compile-sql
   (are [ast expected]
        (is (= expected (compile-sql ast)))
@@ -116,6 +131,19 @@
        ["OFFSET 1"]
        {:op :offset :start nil}
        ["OFFSET 0"]))
+
+(deftest test-compile-table
+  (are [ast expected]
+       (is (= expected (compile-sql ast)))
+       {:op :table :name :continents}
+       ["continents"]
+       {:op :table :schema :public :name :continents}
+       ["public.continents"]
+       {:op :table :schema :public :name :continents :alias :c}
+       ["public.continents AS c"])
+  (jdbc/with-quoted-identifiers \"
+    (is (= ["\"public\".\"continents\" AS \"c\""]
+           (compile-sql {:op :table :schema :public :name :continents :alias :c})))))
 
 (deftest test-compile-truncate-table
   (are [ast expected]
