@@ -67,13 +67,6 @@
   [statement alias]
   (assoc (parse-expr statement) :alias alias))
 
-(defn cascade
-  "Add the CASCADE clause to the SQL statement."
-  [cascade]
-  (fn [statement]
-    (let [node {:op :cascade :cascade cascade}]
-      [node (assoc statement :cascade node)])))
-
 (defn continue-identity
   "Add the CONTINUE IDENTITY clause to the SQL statement."
   [continue-identity]

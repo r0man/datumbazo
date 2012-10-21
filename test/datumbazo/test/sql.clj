@@ -4,10 +4,6 @@
   (:use clojure.test
         datumbazo.sql))
 
-(deftest test-cascade
-  (is (= [{:op :cascade :cascade true} {:cascade {:op :cascade :cascade true}}]
-         ((cascade true) {}))))
-
 (deftest test-column
   (let [t (table
            :public.continents
