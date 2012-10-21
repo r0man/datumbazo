@@ -70,7 +70,8 @@
 
 (defmethod compile-sql :fn-call [{:keys [alias args name]}]
   (let [args (map compile-sql args)]
-    (cons (str name "(" (join ", " (map first args)) ")" (if alias (str " AS " (jdbc/as-identifier alias))))
+    (cons (str name "(" (join ", " (map first args)) ")"
+               (if alias (str " AS " (jdbc/as-identifier alias))))
           (apply concat (map rest args)))))
 
 (defmethod compile-sql :from [{:keys [from]}]
