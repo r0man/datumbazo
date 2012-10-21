@@ -1,4 +1,4 @@
-(ns database.sql.compiler
+(ns datumbazo.sql.compiler
   (:refer-clojure :exclude [replace])
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [blank? join replace]]))
@@ -79,6 +79,9 @@
     (cons (str "FROM " (join ", " (map first from)))
           (apply concat (map rest from)))))
 
+(defmethod compile-sql :group-by [{:keys [expr-list]}]
+  (stmt ["GROUP BY"] expr-list))
+
 (defmethod compile-sql :if-exists [{:keys [if-exists]}]
   (if if-exists ["IF EXISTS"]))
 
@@ -115,8 +118,8 @@
 (defmethod compile-sql :restrict [{:keys [restrict]}]
   (if restrict ["RESTRICT"]))
 
-(defmethod compile-sql :select [{:keys [expr-list from limit offset order-by]}]
-  (stmt ["SELECT"] expr-list from order-by limit offset))
+(defmethod compile-sql :select [{:keys [expr-list from group-by limit offset order-by]}]
+  (stmt ["SELECT"] expr-list from group-by order-by limit offset))
 
 (defmethod compile-sql :truncate-table [{:keys [cascade tables continue-identity restart-identity restrict]}]
   (stmt ["TRUNCATE TABLE"] (apply join-stmt ", " tables)

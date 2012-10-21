@@ -1,10 +1,10 @@
-(ns database.test.connection
+(ns datumbazo.test.connection
   (:import com.mchange.v2.c3p0.ComboPooledDataSource
            com.mchange.v2.c3p0.impl.NewProxyConnection
            java.sql.Connection)
   (:require [clojure.java.jdbc :as jdbc])
-  (:use database.connection
-        database.util
+  (:use datumbazo.connection
+        datumbazo.util
         clojure.test))
 
 (deftest test-connection-url

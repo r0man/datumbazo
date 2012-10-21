@@ -1,8 +1,8 @@
-(ns database.test.examples
+(ns datumbazo.test.examples
   (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
-        database.core
-        database.test))
+        datumbazo.core
+        datumbazo.test))
 
 (deftable continents
   "The continents database table."

@@ -1,8 +1,8 @@
-(ns database.test.fixtures
+(ns datumbazo.test.fixtures
   (:require [clojure.java.io :refer [file resource]])
   (:use clojure.test
-        database.test
-        database.fixtures))
+        datumbazo.test
+        datumbazo.fixtures))
 
 (def fixture-dir
   "resources/db/fixtures/test-db")

@@ -1,4 +1,4 @@
-(defproject database-clj "0.0.5-SNAPSHOT"
+(defproject datumbazo "0.0.5-SNAPSHOT"
   :description "Clojure Database Kung-Foo"
   :min-lein-version "2.0.0"
   :dependencies [[c3p0/c3p0 "0.9.1.2"]

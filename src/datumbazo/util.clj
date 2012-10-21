@@ -1,4 +1,4 @@
-(ns database.util
+(ns datumbazo.util
   (:refer-clojure :exclude [replace])
   (:import java.io.File)
   (:require [clojure.java.io :refer [file]]

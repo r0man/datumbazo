@@ -1,6 +1,6 @@
-(ns database.test.util
+(ns datumbazo.test.util
   (:use clojure.test
-        database.util))
+        datumbazo.util))
 
 (deftest test-absolute-path
   (is (string? (absolute-path ""))))

@@ -1,8 +1,8 @@
-(ns database.connection
+(ns datumbazo.connection
   (:import com.mchange.v2.c3p0.ComboPooledDataSource)
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [blank?]]
-            [database.util :refer [defn-memo parse-url parse-integer]]
+            [datumbazo.util :refer [defn-memo parse-url parse-integer]]
             [environ.core :refer [env]]
             [inflections.core :refer [dasherize underscore]]))
 

@@ -1,4 +1,4 @@
-(ns database.core
+(ns datumbazo.core
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [join]]))
 

@@ -1,8 +1,8 @@
-(ns database.test.core
+(ns datumbazo.test.core
   (:require [clojure.java.jdbc :as jdbc])
-  (:use database.core
-        database.test
-        database.test.examples
+  (:use datumbazo.core
+        datumbazo.test
+        datumbazo.test.examples
         clojure.test))
 
 (deftest test-as-identifier

@@ -1,10 +1,10 @@
-(ns database.sql
-  (:refer-clojure :exclude [replace])
+(ns datumbazo.sql
+  (:refer-clojure :exclude [group-by replace])
   (:require [clojure.algo.monads :refer [m-seq state-m with-monad]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [join replace split]]
-            [database.util :as u]
-            [database.sql.compiler :refer [compile-sql]]))
+            [datumbazo.util :as u]
+            [datumbazo.sql.compiler :refer [compile-sql]]))
 
 (defn make-column
   "Make a database column."
@@ -83,6 +83,13 @@
   (fn [statement]
     (let [node {:op :continue-identity :continue-identity continue-identity}]
       [node (assoc statement :continue-identity node)])))
+
+(defn group-by
+  "Add the GROUP BY clause to the SQL statement."
+  [& expressions]
+  (fn [statement]
+    (let [node {:op :group-by :expr-list (parse-expr-list expressions)}]
+      [node (assoc statement :group-by node)])))
 
 (defn limit
   "Add the LIMIT clause to the SQL statement."

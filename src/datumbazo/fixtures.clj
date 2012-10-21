@@ -1,11 +1,11 @@
-(ns database.fixtures
+(ns datumbazo.fixtures
   (:refer-clojure :exclude [replace])
   (:require [clojure.instant :refer [read-instant-timestamp]]
             [clojure.java.io :refer [file resource writer]]
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [join replace]]
-            [database.util :refer [clojure-file-seq path-split path-replace]]))
+            [datumbazo.util :refer [clojure-file-seq path-split path-replace]]))
 
 (def ^:dynamic *fixture-path* "db/fixtures")
 

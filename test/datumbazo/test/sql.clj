@@ -1,7 +1,8 @@
-(ns database.test.sql
+(ns datumbazo.test.sql
+  (:refer-clojure :exclude [group-by replace])
   (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
-        database.sql))
+        datumbazo.sql))
 
 (deftest test-cascade
   (is (= [{:op :cascade :cascade true} {:cascade {:op :cascade :cascade true}}]
@@ -47,6 +48,17 @@
   (is (= :table (:op continents)))
   (is (nil? (:schema continents)))
   (is (= :continents (:name continents))))
+
+(deftest test-group-by
+  (let [[node ast] ((group-by :name :created-at) {})]
+    (is (= :group-by (:op node)))
+    (let [expr-list (:expr-list node)]
+      (let [node (first (:children expr-list))]
+        (is (= :column (:op node)))
+        (is (= :name (:name node))))
+      (let [node (second (:children expr-list))]
+        (is (= :column (:op node)))
+        (is (= :created-at (:name node)))))))
 
 (deftest test-limit
   (is (= [{:op :limit :count 1} {:limit {:op :limit :count 1}}]
@@ -190,7 +202,11 @@
        (select * (from (select [1 2 3] (as :x))))
        ["SELECT * FROM (SELECT 1, 2, 3) AS x"]
        (select * (from [(select [1] (as :x)) (select [2] (as :y))]))
-       ["SELECT * FROM (SELECT 1) AS x, (SELECT 2) AS y"]))
+       ["SELECT * FROM (SELECT 1) AS x, (SELECT 2) AS y"]
+       (select * (from :continents) (group-by :created-at))
+       ["SELECT * FROM continents GROUP BY created-at"]
+       (select * (from :continents) (group-by :name :created-at))
+       ["SELECT * FROM continents GROUP BY name, created-at"]))
 
 (deftest test-table
   (let [t (table :continents)]
@@ -231,3 +247,16 @@
         (restart-identity true)
         (restrict true))
        ["TRUNCATE TABLE continents RESTART IDENTITY CONTINUE IDENTITY CASCADE RESTRICT"]))
+
+(deftype Relation [ast]
+  Object
+  (toString [self]
+    (str "Relation")))
+
+;; (Relation. nil)
+;; doall
+;; (.toString (conj (conj (Relation. [] []) 1) 2))
+
+;; (.toString (conj (conj (Relation. [] []) 1) 2))
+
+;; (seq (Relation. [1 2] [3 4]))

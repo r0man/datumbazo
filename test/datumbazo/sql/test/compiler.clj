@@ -1,7 +1,7 @@
-(ns database.sql.test.compiler
+(ns datumbazo.sql.test.compiler
   (:require [clojure.java.jdbc :as jdbc])
   (:use clojure.test
-        database.sql.compiler))
+        datumbazo.sql.compiler))
 
 (deftest test-compile-cascade
   (is (nil? (compile-sql {:op :cascade :cascade false})))
