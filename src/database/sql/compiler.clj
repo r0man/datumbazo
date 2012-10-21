@@ -32,7 +32,7 @@
   (if continue-identity ["CONTINUE IDENTITY"]))
 
 (defmethod compile-sql :drop-table [{:keys [cascade if-exists restrict children]}]
-  (stmt ["DROP TABLE"] if-exists [(join ", " (map (comp first compile-sql) children))]
+  (stmt ["DROP TABLE"] if-exists (apply join-stmt ", " children)
         cascade restrict))
 
 (defmethod compile-sql :expr-list [{:keys [children]}]
@@ -102,5 +102,5 @@
   (stmt ["SELECT"] expr-list from order-by limit offset))
 
 (defmethod compile-sql :truncate-table [{:keys [cascade children continue-identity restart-identity restrict]}]
-  (stmt [(str "TRUNCATE TABLE " (join ", " (map (comp first compile-sql) children)))]
+  (stmt ["TRUNCATE TABLE"] (apply join-stmt ", " children)
         restart-identity continue-identity cascade restrict))
