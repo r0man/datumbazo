@@ -4,6 +4,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [join replace split]]
             [datumbazo.util :as u]
+            [datumbazo.sql.expr :refer [parse-expr parse-expressions]]
             [datumbazo.sql.compiler :refer [compile-sql]]))
 
 (defn make-column
@@ -30,37 +31,6 @@
   "Compile `statement` into a vector, where the first element is the
   SQL statement and the rest are the prepared statement arguments."
   [statement] (compile-sql statement))
-
-;; PARSE SQL EXPRESSION
-
-(defmulti parse-expr class)
-
-(defn parse-fn-expr [expr]
-  {:op :fn-call
-   :name (first expr)
-   :args (map parse-expr (rest expr))})
-
-(defmethod parse-expr nil [expr]
-  {:op :nil})
-
-(defmethod parse-expr clojure.lang.Cons [expr]
-  (parse-fn-expr expr))
-
-(defmethod parse-expr clojure.lang.PersistentList [expr]
-  (parse-fn-expr expr))
-
-(defmethod parse-expr clojure.lang.IPersistentMap [expr]
-  expr)
-
-(defmethod parse-expr clojure.lang.Keyword [expr]
-  (u/parse-column expr))
-
-(defmethod parse-expr :default [expr]
-  {:op :constant :form expr})
-
-(defn- parse-expressions [expressions]
-  {:op :expressions
-   :children (map parse-expr (remove #(= * %1) expressions))})
 
 (defn as
   "Add an AS alias to the SQL statement."
