@@ -21,6 +21,15 @@
 (defmethod compile-sql nil [_]
   nil)
 
+(defmulti compile-from :op)
+
+(defmethod compile-from :select [node]
+  (let [[sql & args] (compile-sql node)]
+    (cons (str "(" sql ") AS " (jdbc/as-identifier (:as node))) args)))
+
+(defmethod compile-from :table [node]
+  (compile-sql node))
+
 (defmethod compile-sql :cascade [{:keys [cascade]}]
   (if cascade ["CASCADE"]))
 
@@ -46,15 +55,6 @@
   (let [args (map compile-sql args)]
     (cons (str name "(" (join ", " (map first args)) ")")
           (apply concat (map rest args)))))
-
-(defmulti compile-from :op)
-
-(defmethod compile-from :select [node]
-  (let [[sql & args] (compile-sql node)]
-    (cons (str "(" sql ") AS " (jdbc/as-identifier (:as node))) args)))
-
-(defmethod compile-from :default [node]
-  (compile-sql node))
 
 (defmethod compile-sql :from [{:keys [from]}]
   (let [from (map compile-from from)]
