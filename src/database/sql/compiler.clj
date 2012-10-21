@@ -68,7 +68,7 @@
       (cons (join ", " (map first children))
             (apply concat (map rest children))))))
 
-(defmethod compile-sql :fn [{:keys [alias args name]}]
+(defmethod compile-sql :fn-call [{:keys [alias args name]}]
   (let [args (map compile-sql args)]
     (cons (str name "(" (join ", " (map first args)) ")" (if alias (str " AS " (jdbc/as-identifier alias))))
           (apply concat (map rest args)))))
