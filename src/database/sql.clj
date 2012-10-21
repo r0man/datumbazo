@@ -15,6 +15,14 @@
     :name name
     :type type))
 
+(defn- parse-from [forms]
+  (cond
+   (keyword? forms)
+   (u/parse-table forms)
+   (and (map? forms) (= :select (:op forms)))
+   forms
+   :else (throw (IllegalArgumentException. (str "Can't parse FROM form: " forms)))))
+
 (defn- wrap-seq [s]
   (if (sequential? s) s [s]))
 
@@ -47,11 +55,8 @@
 (defmethod parse-expr clojure.lang.Keyword [expr]
   (u/parse-column expr))
 
-(defmethod parse-expr Number [expr]
-  {:op :number :form expr})
-
-(defmethod parse-expr String [expr]
-  {:op :string :form expr})
+(defmethod parse-expr :default [expr]
+  {:op :constant :form expr})
 
 (defn- parse-expr-list [expr-list]
   (let [expr-list (if (= * expr-list) [] expr-list)]
@@ -127,21 +132,6 @@
   (fn [statement]
     (let [node {:op :restrict :restrict restrict}]
       [node (assoc statement :restrict node)])))
-
-(defn- alias-form? [form]
-  (and (vector? form)
-       (= 3 (count form))
-       (= :as (second form))))
-
-(defn- parse-from [forms]
-  (cond
-   (keyword? forms)
-   (u/parse-table forms)
-   (and (map? forms) (= :select (:op forms)))
-   forms
-   :else (throw (IllegalArgumentException. (str "Can't parse FROM form: " forms)))))
-
-(parse-from :continent)
 
 (defn from
   "Add the FROM item to the SQL select statement."

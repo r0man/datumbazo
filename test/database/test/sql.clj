@@ -114,21 +114,21 @@
        nil
        {:op :nil}
        1
-       {:op :number :form 1}
+       {:op :constant :form 1}
        1.2
-       {:op :number :form 1.2}
+       {:op :constant :form 1.2}
        "Europe"
-       {:op :string :form "Europe"}
+       {:op :constant :form "Europe"}
        :continents.created-at
        {:op :column :schema nil :table :continents :name :created-at :alias nil}
        '(greatest 1 2)
-       {:op :fn :name 'greatest :args [{:op :number :form 1} {:op :number :form 2}]}
+       {:op :fn :name 'greatest :args [{:op :constant :form 1} {:op :constant :form 2}]}
        '(max :continents.created-at)
        {:op :fn :name 'max :args [{:op :column :schema nil :table :continents :name :created-at :alias nil}]}
        `(max :continents.created-at)
        {:op :fn :name `max :args [{:op :column :schema nil :table :continents :name :created-at :alias nil}]}
        '(ST_AsText (ST_Centroid "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"))
-       {:op :fn :name 'ST_AsText :args [{:op :fn :name 'ST_Centroid :args [{:op :string :form "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"}]}]}))
+       {:op :fn :name 'ST_AsText :args [{:op :fn :name 'ST_Centroid :args [{:op :constant :form "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"}]}]}))
 
 (deftest test-restart-identity
   (is (= [{:op :restart-identity :restart-identity true} {:restart-identity {:op :restart-identity :restart-identity true}}]

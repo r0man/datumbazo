@@ -18,6 +18,16 @@
 (defn- stmt [& stmts]
   (apply join-stmt " " stmts))
 
+;; COMPILE CONSTANTS
+
+(defmulti compile-const (fn [node] (class (:form node))))
+
+(defmethod compile-const String [{:keys [form alias]}]
+  [(str "?" (if alias (str " AS " (jdbc/as-identifier alias)))) form])
+
+(defmethod compile-const :default [{:keys [form alias]}]
+  [(str form (if alias (str " AS " (jdbc/as-identifier alias))))])
+
 ;; COMPILE FROM CLAUSE
 
 (defmulti compile-from :op)
@@ -40,6 +50,9 @@
 (defmethod compile-sql :column [{:keys [alias schema name table]}]
   [(str (join "." (map jdbc/as-identifier (remove nil? [schema table name])))
         (if alias (str " AS " (jdbc/as-identifier alias))))])
+
+(defmethod compile-sql :constant [node]
+  (compile-const node))
 
 (defmethod compile-sql :continue-identity [{:keys [continue-identity]}]
   (if continue-identity ["CONTINUE IDENTITY"]))
@@ -77,9 +90,6 @@
 (defmethod compile-sql :nil [_]
   ["NULL"])
 
-(defmethod compile-sql :number [{:keys [form]}]
-  [(str form)])
-
 (defmethod compile-sql :offset [{:keys [start]}]
   [(str "OFFSET " (if (number? start) start 0))])
 
@@ -93,9 +103,6 @@
           (condp = nulls
             :first ["NULLS FIRST"]
             :last ["NULLS LAST"]))))
-
-(defmethod compile-sql :string [{:keys [form]}]
-  ["?" form])
 
 (defmethod compile-sql :table [{:keys [alias schema name]}]
   [(str (join "." (map jdbc/as-identifier (remove nil? [schema name])))
