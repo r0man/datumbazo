@@ -50,9 +50,8 @@
 (defmulti compile-from :op)
 
 (defmethod compile-from :select [node]
-  (let [sql (compile-sql node)]
-    (cons (str "(" (first sql) ") AS " (jdbc/as-identifier (:as node)))
-          (rest sql))))
+  (let [[sql & args] (compile-sql node)]
+    (cons (str "(" sql ") AS " (jdbc/as-identifier (:as node))) args)))
 
 (defmethod compile-from :default [node]
   (compile-sql node))
