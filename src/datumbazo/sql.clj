@@ -67,6 +67,19 @@
   [statement alias]
   (assoc (parse-expr statement) :alias alias))
 
+(defn drop-table
+  "Drop the database `tables`."
+  [tables & {:as opts}]
+  (assoc opts
+    :op :drop-table
+    :tables (map u/parse-table (wrap-seq tables))))
+
+(defn from
+  "Add the FROM item to the SQL select statement."
+  [statement & from]
+  (assoc statement
+    :from {:op :from :from (map parse-from from)}))
+
 (defn group-by
   "Add the GROUP BY clause to the SQL statement."
   [statement & expressions]
@@ -92,18 +105,6 @@
       :op :order-by
       :expr-list (parse-expressions (wrap-seq expr-list)))))
 
-(defn from
-  "Add the FROM item to the SQL select statement."
-  [statement & from]
-  (assoc statement
-    :from {:op :from :from (map parse-from from)}))
-
-(defn from
-  "Add the FROM item to the SQL select statement."
-  [statement & from]
-  (assoc statement
-    :from {:op :from :from (map parse-from from)}))
-
 (defn table
   "Make a SQL table."
   [table & body]
@@ -125,12 +126,11 @@
     `(def ^{:doc doc}
        ~symbol (table ~name ~@body))))
 
-(defn drop-table
-  "Drop the database `tables`."
-  [tables & {:as opts}]
-  (assoc opts
-    :op :drop-table
-    :tables (map table (wrap-seq tables))))
+(defn select
+  "Select `expressions` from the database."
+  [& expressions]
+  {:op :select
+   :expr-list (parse-expressions expressions)})
 
 (defn truncate-table
   "Truncate the database `tables`."
@@ -138,9 +138,3 @@
   (assoc opts
     :op :truncate-table
     :tables (map table (wrap-seq tables))))
-
-(defn select
-  "Select `expressions` from the database."
-  [& expressions]
-  {:op :select
-   :expr-list (parse-expressions expressions)})
