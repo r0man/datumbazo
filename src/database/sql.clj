@@ -178,13 +178,13 @@
   "Drop the database `table`."
   [tables]
   {:op :drop-table
-   :children (map table (wrap-seq tables))})
+   :tables (map table (wrap-seq tables))})
 
 (defstmt truncate-table
   "Truncate the database `table`."
   [tables]
   {:op :truncate-table
-   :children (map table (wrap-seq tables))})
+   :tables (map table (wrap-seq tables))})
 
 (defstmt select
   "Select from the database `table`."

@@ -47,15 +47,15 @@
 (deftest test-compile-drop-table
   (are [ast expected]
        (is (= expected (compile-sql ast)))
-       {:op :drop-table :children [{:op :table :name :continents}]}
+       {:op :drop-table :tables [{:op :table :name :continents}]}
        ["DROP TABLE continents"]
-       {:op :drop-table :children [{:op :table :name :continents}] :cascade {:op :cascade :cascade true}}
+       {:op :drop-table :tables [{:op :table :name :continents}] :cascade {:op :cascade :cascade true}}
        ["DROP TABLE continents CASCADE"]
-       {:op :drop-table :children [{:op :table :name :continents}] :restrict {:op :restrict :restrict true}}
+       {:op :drop-table :tables [{:op :table :name :continents}] :restrict {:op :restrict :restrict true}}
        ["DROP TABLE continents RESTRICT"]
-       {:op :drop-table :children [{:op :table :name :continents}] :if-exists {:op :if-exists :if-exists true}}
+       {:op :drop-table :tables [{:op :table :name :continents}] :if-exists {:op :if-exists :if-exists true}}
        ["DROP TABLE IF EXISTS continents"]
-       {:op :drop-table :children [{:op :table :name :continents}]
+       {:op :drop-table :tables [{:op :table :name :continents}]
         :cascade {:op :cascade :cascade true}
         :restrict {:op :restrict :restrict true}
         :if-exists {:op :if-exists :if-exists true}}
@@ -120,17 +120,17 @@
 (deftest test-compile-truncate-table
   (are [ast expected]
        (is (= expected (compile-sql ast)))
-       {:op :truncate-table :children [{:op :table :name :continents}]}
+       {:op :truncate-table :tables [{:op :table :name :continents}]}
        ["TRUNCATE TABLE continents"]
-       {:op :truncate-table :children [{:op :table :name :continents}] :cascade {:op :cascade :cascade true}}
+       {:op :truncate-table :tables [{:op :table :name :continents}] :cascade {:op :cascade :cascade true}}
        ["TRUNCATE TABLE continents CASCADE"]
-       {:op :truncate-table :children [{:op :table :name :continents}] :restrict {:op :restrict :restrict true}}
+       {:op :truncate-table :tables [{:op :table :name :continents}] :restrict {:op :restrict :restrict true}}
        ["TRUNCATE TABLE continents RESTRICT"]
-       {:op :truncate-table :children [{:op :table :name :continents}] :restart-identity {:op :restart-identity :restart-identity true}}
+       {:op :truncate-table :tables [{:op :table :name :continents}] :restart-identity {:op :restart-identity :restart-identity true}}
        ["TRUNCATE TABLE continents RESTART IDENTITY"]
-       {:op :truncate-table :children [{:op :table :name :continents}] :continue-identity {:op :continue-identity :continue-identity true}}
+       {:op :truncate-table :tables [{:op :table :name :continents}] :continue-identity {:op :continue-identity :continue-identity true}}
        ["TRUNCATE TABLE continents CONTINUE IDENTITY"]
-       {:op :truncate-table :children [{:op :table :name :continents}]
+       {:op :truncate-table :tables [{:op :table :name :continents}]
         :restart-identity {:op :restart-identity :restart-identity true}
         :continue-identity {:op :continue-identity :continue-identity true}
         :cascade {:op :cascade :cascade true}
