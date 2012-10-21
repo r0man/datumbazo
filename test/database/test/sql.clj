@@ -143,8 +143,14 @@
        (is (= expected (sql stmt)))
        (select 1)
        ["SELECT 1"]
+       (select (as 1 :n))
+       ["SELECT 1 AS n"]
+       (select (as "s" :s))
+       ["SELECT ? AS s" "s"]
        (select [1 2 3])
        ["SELECT 1, 2, 3"]
+       (select [(as 1 :a) (as 2 :b) (as 3 :c)])
+       ["SELECT 1 AS a, 2 AS b, 3 AS c"]
        (select [] (from :continents))
        ["SELECT * FROM continents"]
        (select * (from :continents))
