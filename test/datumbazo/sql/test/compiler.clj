@@ -18,6 +18,16 @@
     (is (= ["\"public\".\"continents\".\"created-at\" AS \"c\""]
            (compile-sql {:op :column :schema :public :table :continents :name :created-at :alias :c})))))
 
+(deftest test-compile-constant
+  (are [ast expected]
+       (is (= expected (compile-sql ast)))
+       {:op :constant :form 1}
+       ["1"]
+       {:op :constant :form 3.14}
+       ["3.14"]
+       {:op :constant :form "x"}
+       ["?" "x"]))
+
 (deftest test-compile-sql
   (are [ast expected]
        (is (= expected (compile-sql ast)))
@@ -68,14 +78,6 @@
         :if-exists {:op :if-exists :if-exists true}}
        ["DROP TABLE IF EXISTS continents CASCADE RESTRICT"]))
 
-(deftest test-compile-number
-  (are [ast expected]
-       (is (= expected (compile-sql ast)))
-       {:op :constant :form 1}
-       ["1"]
-       {:op :constant :form 3.14}
-       ["3.14"]))
-
 (deftest test-compile-limit
   (are [ast expected]
        (is (= expected (compile-sql ast)))
@@ -83,14 +85,6 @@
        ["LIMIT 1"]
        {:op :limit :count nil}
        ["LIMIT ALL"]))
-
-(deftest test-compile-string
-  (are [ast expected]
-       (is (= expected (compile-sql ast)))
-       {:op :constant :form 1}
-       ["1"]
-       {:op :constant :form 3.14}
-       ["3.14"]))
 
 (deftest test-compile-offset
   (are [ast expected]
