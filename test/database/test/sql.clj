@@ -156,25 +156,25 @@
        ["SELECT name, max(created-at) FROM continents"]
        (select ['(greatest 1 2) '(lower "X")])
        ["SELECT greatest(1, 2), lower(?)" "X"]
-       (select [] (from :continents) (limit 1))
+       (select * (from :continents) (limit 1))
        ["SELECT * FROM continents LIMIT 1"]
-       (select [] (from :continents) (offset 1))
+       (select * (from :continents) (offset 1))
        ["SELECT * FROM continents OFFSET 1"]
-       (select [] (from :continents) (limit 1) (offset 2))
+       (select * (from :continents) (limit 1) (offset 2))
        ["SELECT * FROM continents LIMIT 1 OFFSET 2"]
-       (select [] (from :continents) (order-by :created-at))
+       (select * (from :continents) (order-by :created-at))
        ["SELECT * FROM continents ORDER BY created-at"]
-       (select [] (from :continents) (order-by :created-at :asc true))
+       (select * (from :continents) (order-by :created-at :asc true))
        ["SELECT * FROM continents ORDER BY created-at ASC"]
-       (select [] (from :continents) (order-by :created-at :desc true))
+       (select * (from :continents) (order-by :created-at :desc true))
        ["SELECT * FROM continents ORDER BY created-at DESC"]
-       (select [] (from :continents) (order-by :created-at :nulls :first))
+       (select * (from :continents) (order-by :created-at :nulls :first))
        ["SELECT * FROM continents ORDER BY created-at NULLS FIRST"]
-       (select [] (from :continents) (order-by :created-at :nulls :last))
+       (select * (from :continents) (order-by :created-at :nulls :last))
        ["SELECT * FROM continents ORDER BY created-at NULLS LAST"]
-       (select [] (from :continents) (order-by [:name :created-at] :asc true))
+       (select * (from :continents) (order-by [:name :created-at] :asc true))
        ["SELECT * FROM continents ORDER BY name, created-at ASC"]
-       (select [] (from (select [1 2 3] (as :x))))
+       (select * (from (select [1 2 3] (as :x))))
        ["SELECT * FROM (SELECT 1, 2, 3) AS x"]))
 
 (deftest test-table
