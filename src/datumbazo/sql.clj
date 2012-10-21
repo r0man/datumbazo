@@ -129,8 +129,7 @@
 (defn select
   "Select `expressions` from the database."
   [& expressions]
-  {:op :select
-   :expressions (parse-expressions expressions)})
+  {:op :select :expressions (parse-expressions expressions)})
 
 (defn truncate-table
   "Truncate the database `tables`."
