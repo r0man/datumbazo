@@ -32,6 +32,13 @@
 (defmethod compile-sql :cascade [{:keys [cascade]}]
   (if cascade ["CASCADE"]))
 
+(defmethod compile-sql :column [{:keys [alias schema name table]}]
+  (assert name "Column must have a name.")
+  [(str (if schema (str (jdbc/as-identifier schema) "."))
+        (if table (str (jdbc/as-identifier table) "."))
+        (jdbc/as-identifier name)
+        (if alias (str " AS " (jdbc/as-identifier alias))))])
+
 (defmethod compile-sql :continue-identity [{:keys [continue-identity]}]
   (if continue-identity ["CONTINUE IDENTITY"]))
 
@@ -69,12 +76,10 @@
   ["?" form])
 
 (defmethod compile-sql :table [{:keys [alias schema name]}]
-  (assert name)
-  [(str (if schema
-          (str (jdbc/as-identifier schema) "."))
+  (assert name "Table must have a name.")
+  [(str (if schema (str (jdbc/as-identifier schema) "."))
         (jdbc/as-identifier name)
-        (if alias
-          (str "AS " (jdbc/as-identifier alias))))])
+        (if alias (str " AS " (jdbc/as-identifier alias))))])
 
 (defmethod compile-sql :drop-table [{:keys [cascade if-exists restrict children]}]
   (stmt ["DROP TABLE"]

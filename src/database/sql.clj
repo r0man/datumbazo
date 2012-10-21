@@ -42,7 +42,7 @@
   (parse-fn-expr expr))
 
 (defmethod parse-expr clojure.lang.Keyword [expr]
-  {:op :keyword :form expr})
+  (u/parse-column expr))
 
 (defmethod parse-expr Number [expr]
   {:op :number :form expr})

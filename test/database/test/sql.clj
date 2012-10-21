@@ -96,7 +96,7 @@
     (is (= :order-by (:op node)))
     (let [node (:expr-list node)]
       (is (= :expr-list (:op node)))
-      (is (= [{:op :keyword :form :created-at}] (:children node))))
+      (is (= [{:op :column :schema nil :table nil :name :created-at :alias nil}] (:children node))))
     (is (= {:order-by node} ast)))
   (let [[node ast] ((order-by [:name :created-at] :desc true :nulls :first) {})]
     (is (= :order-by (:op node)))
@@ -104,7 +104,8 @@
     (is (= :first (:nulls node)))
     (let [node (:expr-list node)]
       (is (= :expr-list (:op node)))
-      (is (= [{:op :keyword :form :name} {:op :keyword :form :created-at}] (:children node))))
+      (is (= [{:op :column :schema nil :table nil :name :name :alias nil}
+              {:op :column :schema nil :table nil :name :created-at :alias nil}] (:children node))))
     (is (= {:order-by node} ast))))
 
 (deftest test-parse-expr
@@ -119,13 +120,13 @@
        "Europe"
        {:op :string :form "Europe"}
        :continents.created-at
-       {:op :keyword :form :continents.created-at}
+       {:op :column :schema nil :table :continents :name :created-at :alias nil}
        '(greatest 1 2)
        {:op :fn :name 'greatest :children [{:op :number :form 1} {:op :number :form 2}]}
        '(max :continents.created-at)
-       {:op :fn :name 'max :children [{:op :keyword :form :continents.created-at}]}
+       {:op :fn :name 'max :children [{:op :column :schema nil :table :continents :name :created-at :alias nil}]}
        `(max :continents.created-at)
-       {:op :fn :name `max :children [{:op :keyword :form :continents.created-at}]}
+       {:op :fn :name `max :children [{:op :column :schema nil :table :continents :name :created-at :alias nil}]}
        '(ST_AsText (ST_Centroid "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"))
        {:op :fn :name 'ST_AsText :children [{:op :fn :name 'ST_Centroid :children [{:op :string :form "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"}]}]}))
 
@@ -150,6 +151,8 @@
        ["SELECT * FROM continents"]
        (select :created-at (from :continents))
        ["SELECT created-at FROM continents"]
+       (select :created-at/c (from :continents))
+       ["SELECT created-at AS c FROM continents"]
        (select [:name :created-at] (from :continents))
        ["SELECT name, created-at FROM continents"]
        (select [:name '(max :created-at)] (from :continents))
