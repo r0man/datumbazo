@@ -65,16 +65,6 @@
                (if as (str " AS " (jdbc/as-identifier as))))
           (apply concat (map rest args)))))
 
-(defmacro register-fns
-  "Define SQL functions in terms of `arity-fn`."
-  [arity-fn & fns]
-  `(do ~@(for [fn# fns]
-           `(defmethod compile-fn ~fn# [~'node]
-              (~arity-fn ~'node)))))
-
-(register-fns compile-2-ary := :< :>)
-(register-fns compile-infix :+ :*)
-
 ;; COMPILE FROM CLAUSE
 
 (defmulti compile-from :op)
@@ -166,3 +156,15 @@
                (if cascade " CASCADE")
                (if restrict " RESTRICT"))
           args)))
+
+;; REGISTER SQL FNS
+
+(defmacro register-fns
+  "Define SQL functions in terms of `arity-fn`."
+  [arity-fn & fns]
+  `(do ~@(for [fn# fns]
+           `(defmethod compile-fn ~fn# [~'node]
+              (~arity-fn ~'node)))))
+
+(register-fns compile-2-ary := :< :>)
+(register-fns compile-infix :+ :*)
