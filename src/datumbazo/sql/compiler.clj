@@ -131,14 +131,8 @@
 (defmethod compile-sql :order-by [{:keys [exprs direction nulls using]}]
   (let [[sql & args] (compile-sql exprs)]
     (cons (str "ORDER BY " sql
-               (condp = direction
-                 :asc " ASC"
-                 :desc " DESC"
-                 "")
-               (condp = nulls
-                 :first " NULLS FIRST"
-                 :last " NULLS LAST"
-                 ""))
+               ({:asc " ASC" :desc " DESC"} direction)
+               ({:first " NULLS FIRST" :last " NULLS LAST"} nulls))
           args)))
 
 (defmethod compile-sql :table [{:keys [as schema name]}]
