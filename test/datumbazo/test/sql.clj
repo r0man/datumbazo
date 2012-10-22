@@ -168,7 +168,13 @@
        (-> (select *) (from :continents) (group-by :name :created-at))
        ["SELECT * FROM continents GROUP BY name, created-at"]
        (-> (select 1) (where '(= 1 1)))
-       ["SELECT 1 WHERE (1 = 1)"]))
+       ["SELECT 1 WHERE (1 = 1)"]
+       (-> (select 1) (where '(= 1 2 3)))
+       ["SELECT 1 WHERE (1 = 2) AND (2 = 3)"]
+       (-> (select 1) (where '(< 1 2)))
+       ["SELECT 1 WHERE (1 < 2)"]
+       (-> (select 1) (where '(< 1 2 3)))
+       ["SELECT 1 WHERE (1 < 2) AND (2 < 3)"]))
 
 (deftest test-table
   (let [t (table :continents)]

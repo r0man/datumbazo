@@ -30,6 +30,19 @@
 
 ;; COMPILE FN CALL
 
+(defn compile-2-ary [{:keys [as args name] :as node}]
+  (cond
+   (> 2 (count args))
+   (throw (IllegalArgumentException. "More than 1 arg needed."))
+   (= 2 (count args))
+   (let [[[s1 & a1] [s2 & a2]] (map compile-sql args)]
+     (cons (str "(" s1 " " name " " s2 ")")
+           (apply concat a1 a2)))
+   :else
+   (apply join-stmt " AND "
+          (map #(compile-2-ary (assoc node :args %1))
+               (partition 2 1 args)))))
+
 (defn compile-infix [{:keys [as args name]}]
   (let [args (map compile-sql args)]
     (cons (str "(" (join (str " " name " ") (map first args)) ")"
@@ -39,17 +52,19 @@
 (defmulti compile-fn
   (fn [node] (keyword (:name node))))
 
-(defmethod compile-fn :+ [node]
-  (compile-infix node))
-
-(defmethod compile-fn := [node]
-  (compile-infix node))
-
 (defmethod compile-fn :default [{:keys [as args name]}]
   (let [args (map compile-sql args)]
     (cons (str name "(" (join ", " (map first args)) ")"
                (if as (str " AS " (jdbc/as-identifier as))))
           (apply concat (map rest args)))))
+
+(defmacro register-fns [arity-fn & fns]
+  `(do ~@(for [fn# fns]
+           `(defmethod compile-fn ~fn# [~'node]
+              (~arity-fn ~'node)))))
+
+(register-fns compile-2-ary := :< :>)
+(register-fns compile-infix :+ :*)
 
 ;; COMPILE FROM CLAUSE
 
