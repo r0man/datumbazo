@@ -7,6 +7,8 @@
        (is (= expected (parse-expr expr)))
        nil
        {:op :nil}
+       *
+       {:op :constant :form '*}
        1
        {:op :constant :form 1}
        1.2

@@ -123,6 +123,8 @@
        ["SELECT * FROM continents"]
        (-> (select *) (from :continents/c))
        ["SELECT * FROM continents AS c"]
+       (-> (select * 1 "x") (from :continents))
+       ["SELECT *, 1, ? FROM continents" "x"]
        (-> (select :created-at) (from :continents))
        ["SELECT created-at FROM continents"]
        (-> (select :created-at/c) (from :continents))

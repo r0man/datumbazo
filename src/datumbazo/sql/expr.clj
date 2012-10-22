@@ -23,8 +23,11 @@
 (defmethod parse-expr clojure.lang.Keyword [expr]
   (u/parse-column expr))
 
+(defmethod parse-expr clojure.core$_STAR_ [expr]
+  {:op :constant :form '*})
+
 (defmethod parse-expr :default [expr]
   {:op :constant :form expr})
 
 (defn parse-exprs [exprs]
-  {:op :exprs :children (map parse-expr (remove #(= * %1) exprs))})
+  {:op :exprs :children (map parse-expr exprs)})
