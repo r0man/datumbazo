@@ -153,12 +153,15 @@
 
 ;; REGISTER SQL FNS
 
-(defmacro register-fns
+(defmacro def-sql-fns
   "Define SQL functions in terms of `arity-fn`."
   [arity-fn & fns]
-  `(do ~@(for [fn# fns]
+  `(do ~@(for [fn# (map keyword fns)]
            `(defmethod compile-fn ~fn# [~'node]
               (~arity-fn ~'node)))))
 
-(register-fns compile-2-ary := :< :>)
-(register-fns compile-infix :+ :*)
+(def-sql-fns compile-2-ary
+  := "/" :!= :<> :< :> :<= :>= "^" "~*" :!~ :!~* :like :ilike)
+
+(def-sql-fns compile-infix
+  :+ :* "%" :& :and :or :union)
