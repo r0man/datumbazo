@@ -151,17 +151,17 @@
                (if restrict " RESTRICT"))
           args)))
 
-;; REGISTER SQL FNS
+;; DEFINE SQL FN ARITY
 
-(defmacro def-sql-fns
+(defmacro defarity
   "Define SQL functions in terms of `arity-fn`."
   [arity-fn & fns]
   `(do ~@(for [fn# (map keyword fns)]
            `(defmethod compile-fn ~fn# [~'node]
               (~arity-fn ~'node)))))
 
-(def-sql-fns compile-2-ary
+(defarity compile-2-ary
   := "/" :!= :<> :< :> :<= :>= "^" "~*" :!~ :!~* :like :ilike)
 
-(def-sql-fns compile-infix
+(defarity compile-infix
   :+ :* "%" :& :and :or :union)
