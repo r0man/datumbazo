@@ -6,18 +6,22 @@ Clojure Database Kung-Foo.
 
 Via Clojars: http://clojars.org/datumbazo
 
-## Usage
+## Examples
 
 ### Select statement
+
+Select an expression from the database.
 
     (sql (select 1))
     ;=> ["SELECT 1"]
 
+Select all rows from the continents table.
 
     (sql (-> (select *)
              (from :continents)))
     ;=> ["SELECT * FROM continents"]
 
+Select only the id and name columns from the rows in the continents table.
 
     (sql (-> (select :id :name)
              (from :continents)))
