@@ -32,7 +32,7 @@
 
 (defn compile-infix [{:keys [as args name]}]
   (let [args (map compile-sql args)]
-    (cons (str "(" (join " + " (map first args)) ")"
+    (cons (str "(" (join (str " " name " ") (map first args)) ")"
                (if as (str " AS " (jdbc/as-identifier as))))
           (apply concat (map rest args)))))
 
@@ -40,6 +40,9 @@
   (fn [node] (keyword (:name node))))
 
 (defmethod compile-fn-call :+ [node]
+  (compile-infix node))
+
+(defmethod compile-fn-call := [node]
   (compile-infix node))
 
 (defmethod compile-fn-call :default [{:keys [as args name]}]
@@ -70,6 +73,10 @@
 
 (defmethod compile-sql :constant [node]
   (compile-const node))
+
+(defmethod compile-sql :condition [{:keys [condition]}]
+  (let [[sql & args] (compile-sql condition)]
+    (cons (str "WHERE " sql) args)))
 
 (defmethod compile-sql :drop-table [{:keys [cascade if-exists restrict tables]}]
   (let [[sql & args] (apply join-stmt ", " tables)]
@@ -124,8 +131,8 @@
   [(str (join "." (map jdbc/as-identifier (remove nil? [schema name])))
         (if as (str " AS " (jdbc/as-identifier as))))])
 
-(defmethod compile-sql :select [{:keys [exprs from group-by limit offset order-by]}]
-  (stmt ["SELECT"] exprs from group-by order-by limit offset))
+(defmethod compile-sql :select [{:keys [exprs from condition group-by limit offset order-by]}]
+  (stmt ["SELECT"] exprs from condition group-by order-by limit offset))
 
 (defmethod compile-sql :truncate-table [{:keys [cascade tables continue-identity restart-identity restrict]}]
   (let [[sql & args] (apply join-stmt ", " tables)]

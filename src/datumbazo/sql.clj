@@ -107,3 +107,11 @@
   (assoc opts
     :op :truncate-table
     :tables (map table (wrap-seq tables))))
+
+(defn where
+  "Add the WHERE clause to the SQL statement."
+  [statement condition]
+  (assoc statement
+    :condition
+    {:op :condition
+     :condition (parse-expr condition)}))

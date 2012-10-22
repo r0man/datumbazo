@@ -166,7 +166,9 @@
        (-> (select *) (from :continents) (group-by :created-at))
        ["SELECT * FROM continents GROUP BY created-at"]
        (-> (select *) (from :continents) (group-by :name :created-at))
-       ["SELECT * FROM continents GROUP BY name, created-at"]))
+       ["SELECT * FROM continents GROUP BY name, created-at"]
+       (-> (select 1) (where '(= 1 1)))
+       ["SELECT 1 WHERE (1 = 1)"]))
 
 (deftest test-table
   (let [t (table :continents)]
