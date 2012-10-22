@@ -1,10 +1,27 @@
-# DATABASE-CLJ
+# Datumbazo
 
 Clojure Database Kung-Foo.
 
 ## Installation
 
-Via Clojars: http://clojars.org/database-clj.
+Via Clojars: http://clojars.org/datumbazo
+
+## Usage
+
+### Select statement
+
+    (sql (select 1))
+    ;=> ["SELECT 1"]
+
+
+    (sql (-> (select *)
+             (from :continents)))
+    ;=> ["SELECT * FROM continents"]
+
+
+    (sql (-> (select :id :name)
+             (from :continents)))
+    ;=> ["SELECT id, name FROM continents"]
 
 ## License
 
