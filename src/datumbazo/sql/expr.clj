@@ -4,7 +4,7 @@
 (defmulti parse-expr class)
 
 (defn parse-fn-expr [expr]
-  {:op :fn-call
+  {:op :fn
    :name (first expr)
    :args (map parse-expr (rest expr))})
 

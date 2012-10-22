@@ -43,11 +43,11 @@
        ["?" "x"]
        {:op :exprs :children [{:op :constant :form 1} {:op :constant :form "x"}]}
        ["1, ?" "x"]
-       {:op :fn-call :name 'max :args [{:op :keyword :form :created-at}]}
+       {:op :fn :name 'max :args [{:op :keyword :form :created-at}]}
        ["max(created-at)"]
-       {:op :fn-call :name 'greatest :args [{:op :constant :form 1} {:op :constant :form 2}]}
+       {:op :fn :name 'greatest :args [{:op :constant :form 1} {:op :constant :form 2}]}
        ["greatest(1, 2)"]
-       {:op :fn-call :name 'ST_AsText :args [{:op :fn-call :name 'ST_Centroid :args [{:op :constant :form "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"}]}]}
+       {:op :fn :name 'ST_AsText :args [{:op :fn :name 'ST_Centroid :args [{:op :constant :form "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"}]}]}
        ["ST_AsText(ST_Centroid(?))" "MULTIPOINT(-1 0, -1 2, -1 3, -1 4, -1 7, 0 1, 0 3, 1 1, 2 0, 6 0, 7 8, 9 8, 10 6)"])
   (jdbc/with-quoted-identifiers \"
     (is (= ["\"continents\".\"created-at\""]
