@@ -20,7 +20,9 @@
 
 ;; COMPILE CONSTANTS
 
-(defmulti compile-const (fn [node] (class (:form node))))
+(defmulti compile-const
+  "Compile a SQL constant into a SQL statement."
+  (fn [node] (class (:form node))))
 
 (defmethod compile-const String [{:keys [form as]}]
   [(str "?" (if as (str " AS " (jdbc/as-identifier as)))) form])
@@ -30,7 +32,9 @@
 
 ;; COMPILE FN CALL
 
-(defn compile-2-ary [{:keys [as args name] :as node}]
+(defn compile-2-ary
+  "Compile a 2-arity SQL function node into a SQL statement."
+  [{:keys [as args name] :as node}]
   (cond
    (> 2 (count args))
    (throw (IllegalArgumentException. "More than 1 arg needed."))
@@ -43,13 +47,16 @@
           (map #(compile-2-ary (assoc node :args %1))
                (partition 2 1 args)))))
 
-(defn compile-infix [{:keys [as args name]}]
+(defn compile-infix
+  "Compile a SQL infix function node into a SQL statement."
+  [{:keys [as args name]}]
   (let [args (map compile-sql args)]
     (cons (str "(" (join (str " " name " ") (map first args)) ")"
                (if as (str " AS " (jdbc/as-identifier as))))
           (apply concat (map rest args)))))
 
 (defmulti compile-fn
+  "Compile a SQL function node into a SQL statement."
   (fn [node] (keyword (:name node))))
 
 (defmethod compile-fn :default [{:keys [as args name]}]
@@ -58,7 +65,9 @@
                (if as (str " AS " (jdbc/as-identifier as))))
           (apply concat (map rest args)))))
 
-(defmacro register-fns [arity-fn & fns]
+(defmacro register-fns
+  "Define SQL functions in terms of `arity-fn`."
+  [arity-fn & fns]
   `(do ~@(for [fn# fns]
            `(defmethod compile-fn ~fn# [~'node]
               (~arity-fn ~'node)))))
