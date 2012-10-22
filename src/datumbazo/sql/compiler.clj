@@ -24,8 +24,8 @@
   "Compile a SQL constant into a SQL statement."
   (fn [node] (class (:form node))))
 
-(defmethod compile-const String [{:keys [form as]}]
-  [(str "?" (if as (str " AS " (jdbc/as-identifier as)))) form])
+(defmethod compile-const String [{:keys [form] :as const}]
+  (conj (compile-const (assoc const :form '?)) form))
 
 (defmethod compile-const :default [{:keys [form as]}]
   [(str form (if as (str " AS " (jdbc/as-identifier as))))])
