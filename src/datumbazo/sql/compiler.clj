@@ -28,6 +28,26 @@
 (defmethod compile-const :default [{:keys [form as]}]
   [(str form (if as (str " AS " (jdbc/as-identifier as))))])
 
+;; COMPILE FN CALL
+
+(defn compile-infix [{:keys [as args name]}]
+  (let [args (map compile-sql args)]
+    (cons (str "(" (join " + " (map first args)) ")"
+               (if as (str " AS " (jdbc/as-identifier as))))
+          (apply concat (map rest args)))))
+
+(defmulti compile-fn-call
+  (fn [node] (keyword (:name node))))
+
+(defmethod compile-fn-call :+ [node]
+  (compile-infix node))
+
+(defmethod compile-fn-call :default [{:keys [as args name]}]
+  (let [args (map compile-sql args)]
+    (cons (str name "(" (join ", " (map first args)) ")"
+               (if as (str " AS " (jdbc/as-identifier as))))
+          (apply concat (map rest args)))))
+
 ;; COMPILE FROM CLAUSE
 
 (defmulti compile-from :op)
@@ -65,11 +85,8 @@
       (cons (join ", " (map first children))
             (apply concat (map rest children))))))
 
-(defmethod compile-sql :fn-call [{:keys [as args name]}]
-  (let [args (map compile-sql args)]
-    (cons (str name "(" (join ", " (map first args)) ")"
-               (if as (str " AS " (jdbc/as-identifier as))))
-          (apply concat (map rest args)))))
+(defmethod compile-sql :fn-call [node]
+  (compile-fn-call node))
 
 (defmethod compile-sql :from [{:keys [from]}]
   (let [from (map compile-from from)]
