@@ -22,3 +22,23 @@
 (deftest test-to-string
   (is (= "[\"SELECT 1\"]"
          (str (Relation. (select 1))))))
+
+
+
+(comment
+
+  (use 'datumbazo.connection)
+  (use 'datumbazo.fixtures)
+
+  (with-connection :test-db
+    (println (seq (Relation. (-> (select *) (from :continents))))))
+
+  (with-connection :test-db
+    (seq (Relation. (-> (select :id :name :created-at)
+                        (from :continents)
+                        (order-by [:id :name])
+                        (limit 1)
+                        (offset 1)))))
+
+  (with-connection :test-db
+    (load-fixtures "resources/db/fixtures/test-db")))
