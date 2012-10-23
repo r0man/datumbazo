@@ -178,7 +178,11 @@
        (select (select 1))
        ["SELECT (SELECT 1)"]
        (select (select 1) (select "x"))
-       ["SELECT (SELECT 1), (SELECT ?)" "x"]))
+       ["SELECT (SELECT 1), (SELECT ?)" "x"]
+       (union (select 1) (select 2))
+       ["SELECT 1 UNION (SELECT 2)"]
+       (union (select 1) (select 2) :all true)
+       ["SELECT 1 UNION ALL (SELECT 2)"]))
 
 (deftest test-table
   (let [t (table :continents)]

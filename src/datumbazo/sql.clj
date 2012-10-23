@@ -108,6 +108,11 @@
     :op :truncate-table
     :tables (map table (wrap-seq tables))))
 
+(defn union
+  "Add the UNION clause to the SQL statement."
+  [stmt-1 stmt-2 & {:keys [all]}]
+  {:op :union :children [stmt-1 stmt-2] :all all})
+
 (defn where
   "Add the WHERE clause to the SQL statement."
   [statement condition]

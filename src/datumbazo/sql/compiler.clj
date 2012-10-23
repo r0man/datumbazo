@@ -164,6 +164,11 @@
                (if restrict " RESTRICT"))
           args)))
 
+(defmethod compile-sql :union [{:keys [children all]}]
+  (let [[[s1 a1] [s2 a2]] (map compile-sql children)]
+    (cons (str s1 " UNION " (if all "ALL ") "(" s2 ")")
+          (concat a1 a2))))
+
 ;; DEFINE SQL FN ARITY
 
 (defmacro defarity
