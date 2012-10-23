@@ -1,14 +1,12 @@
 language: clojure
 
-script: "lein2 test database.test.columns database.test.connection database.test.core database.test.fixtures database.test.serialization database.test.tables"
-
 before_script:
-  - "psql -c 'create database database_test;' -U postgres"
-  - "psql -c \"create user database UNENCRYPTED PASSWORD 'database'\" database_test -U postgres"
+  - "psql -c 'create database test;' -U postgres"
+  - "psql -c \"create user database UNENCRYPTED PASSWORD 'database'\" test -U postgres"
 
 lein: lein2
 
 postgres:
   adapter: postgresql
-  database: database_test
+  database: test
   username: postgres

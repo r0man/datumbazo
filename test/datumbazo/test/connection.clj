@@ -9,7 +9,7 @@
 
 (deftest test-connection-url
   (is (thrown? IllegalArgumentException (connection-url :unknown-db)))
-  (is (= "postgresql://localhost/test" (connection-url :test-db))))
+  (is (= "postgresql://tiger:scotch@localhost/test" (connection-url :test-db))))
 
 (deftest test-connection-spec
   (is (thrown? IllegalArgumentException (connection-spec :unknown-db)))
