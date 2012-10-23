@@ -166,7 +166,7 @@
 (defmethod compile-sql :select [{:keys [exprs from condition group-by limit offset order-by]}]
   (stmt ["SELECT"] exprs from condition group-by order-by limit offset))
 
-(defmethod compile-sql :truncate-table [{:keys [cascade tables continue-identity restart-identity restrict]}]
+(defmethod compile-sql :truncate [{:keys [cascade tables continue-identity restart-identity restrict]}]
   (let [[sql & args] (apply join-stmt ", " tables)]
     (cons (str "TRUNCATE TABLE " sql
                (if restart-identity " RESTART IDENTITY")

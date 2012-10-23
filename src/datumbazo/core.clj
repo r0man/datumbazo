@@ -38,7 +38,7 @@
       (jdbc/do-commands)
       (first)))
 
-(defn truncate-table
+(defn truncate
   "Truncate the database `table`."
   [table & {:keys [cascade continue-identity restart-identity restrict]}]
   (-> (str "TRUNCATE TABLE " (as-identifier table)
@@ -112,7 +112,7 @@
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
-           [& ~'opts] (apply truncate-table ~symbol# ~'opts))
+           [& ~'opts] (apply truncate ~symbol# ~'opts))
 
          (defn ~table-name
            ~(format "Select %s from the database table." table-name)

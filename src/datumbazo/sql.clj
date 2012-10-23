@@ -111,11 +111,11 @@
   [& exprs]
   {:op :select :exprs (parse-exprs exprs)})
 
-(defn truncate-table
+(defn truncate
   "Truncate the database `tables`."
   [tables & {:as opts}]
   (assoc opts
-    :op :truncate-table
+    :op :truncate
     :tables (map table (wrap-seq tables))))
 
 (defn union

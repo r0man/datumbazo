@@ -217,12 +217,12 @@
     (is (= :public (:schema t)))
     (is (= :continents (:name t)))))
 
-(deftest test-truncate-table
+(deftest test-truncate
   (are [stmt expected]
        (is (= expected (sql stmt)))
-       (truncate-table :continents)
+       (truncate :continents)
        ["TRUNCATE TABLE continents"]
-       (truncate-table [:continents :countries])
+       (truncate [:continents :countries])
        ["TRUNCATE TABLE continents, countries"]
-       (truncate-table :continents :cascade true :continue-identity true :restart-identity true :restrict true)
+       (truncate :continents :cascade true :continue-identity true :restart-identity true :restrict true)
        ["TRUNCATE TABLE continents RESTART IDENTITY CONTINUE IDENTITY CASCADE RESTRICT"]))
