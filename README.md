@@ -1,4 +1,4 @@
-# Datumbazo
+# Datumbazo [![Build Status](https://travis-ci.org/r0man/datumbazo.png)](https://travis-ci.org/r0man/datumbazo)
 
 Clojure Database Kung-Foo.
 
