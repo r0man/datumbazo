@@ -108,11 +108,6 @@
     :op :truncate-table
     :tables (map table (wrap-seq tables))))
 
-(defn union
-  "Add the UNION clause to the SQL statement."
-  [stmt-1 stmt-2 & {:keys [all]}]
-  {:op :union :children [stmt-1 stmt-2] :all all})
-
 (defn where
   "Add the WHERE clause to the SQL statement."
   [statement condition]
@@ -120,3 +115,13 @@
     :condition
     {:op :condition
      :condition (parse-expr condition)}))
+
+(defn union
+  "Select the SQL set union between `stmt-1` and `stmt-2`."
+  [stmt-1 stmt-2 & {:keys [all]}]
+  {:op :union :children [stmt-1 stmt-2] :all all})
+
+(defn intersect
+  "Select the SQL set intersection between `stmt-1` and `stmt-2`."
+  [stmt-1 stmt-2 & {:keys [all]}]
+  {:op :intersect :children [stmt-1 stmt-2] :all all})

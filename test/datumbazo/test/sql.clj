@@ -182,7 +182,11 @@
        (union (select 1) (select 2))
        ["SELECT 1 UNION (SELECT 2)"]
        (union (select 1) (select 2) :all true)
-       ["SELECT 1 UNION ALL (SELECT 2)"]))
+       ["SELECT 1 UNION ALL (SELECT 2)"]
+       (intersect (select 1) (select 2))
+       ["SELECT 1 INTERSECT (SELECT 2)"]
+       (intersect (select 1) (select 2) :all true)
+       ["SELECT 1 INTERSECT ALL (SELECT 2)"]))
 
 (deftest test-table
   (let [t (table :continents)]
