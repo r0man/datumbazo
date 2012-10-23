@@ -3,6 +3,10 @@ language: clojure
 before_script:
   - "psql -c 'create database test;' -U postgres"
   - "psql -c \"create user tiger UNENCRYPTED PASSWORD 'scotch'\" test -U postgres"
+  - "psql -U postgres -f migrations/20120930100300-create-postgis-extension.up.sql"
+  - "psql -U postgres -f migrations/20120930100400-create-postgis-topology-extension.up.sql"
+  - "psql -U postgres -f migrations/20120930145553-create-continents-table.up.sql"
+  - "psql -U postgres -f migrations/20120930153020-create-countries-table.up.sql"
 
 lein: lein2
 
