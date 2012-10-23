@@ -2,7 +2,7 @@ language: clojure
 
 before_script:
   - "psql -c 'create database test;' -U postgres"
-  - "psql -c \"create user database UNENCRYPTED PASSWORD 'database'\" test -U postgres"
+  - "psql -c \"create user tiger UNENCRYPTED PASSWORD 'scotch'\" test -U postgres"
 
 lein: lein2
 
