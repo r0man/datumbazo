@@ -16,14 +16,10 @@
                    (Relation. (select 2))))))
 
 (database-test test-seq
-  (is (= [{:?column? 1}]
-         (seq (Relation. (select 1))))))
+  (is (= [{:?column? 1}] (seq (Relation. (select 1))))))
 
 (deftest test-to-string
-  (is (= "[\"SELECT 1\"]"
-         (str (Relation. (select 1))))))
-
-
+  (is (= "[\"SELECT 1\"]" (str (Relation. (select 1))))))
 
 (comment
 
@@ -41,4 +37,8 @@
                         (offset 1)))))
 
   (with-connection :test-db
-    (load-fixtures "resources/db/fixtures/test-db")))
+    (load-fixtures "resources/db/fixtures/test-db"))
+
+  (with-connection :test-db
+    (seq (Relation. (select (select 1) (select "x")))))
+  )
