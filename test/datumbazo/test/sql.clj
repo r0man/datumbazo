@@ -174,7 +174,11 @@
        (-> (select 1) (where '(< 1 2)))
        ["SELECT 1 WHERE (1 < 2)"]
        (-> (select 1) (where '(< 1 2 3)))
-       ["SELECT 1 WHERE (1 < 2) AND (2 < 3)"]))
+       ["SELECT 1 WHERE (1 < 2) AND (2 < 3)"]
+       (select (select 1))
+       ["SELECT (SELECT 1)"]
+       (select (select 1) (select "x"))
+       ["SELECT (SELECT 1), (SELECT ?)" "x"]))
 
 (deftest test-table
   (let [t (table :continents)]

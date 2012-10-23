@@ -30,6 +30,19 @@
 (defmethod compile-const :default [{:keys [form as]}]
   [(str form (if as (str " AS " (jdbc/as-identifier as))))])
 
+;; COMPILE CONSTANTS
+
+(defmulti compile-expr
+  "Compile a SQL expression."
+  :op)
+
+(defmethod compile-expr :select [expr]
+  (let [[sql & args] (compile-sql expr)]
+    (cons (str "(" sql ")") args)))
+
+(defmethod compile-expr :default [node]
+  (compile-sql node))
+
 ;; COMPILE FN CALL
 
 (defn compile-2-ary
@@ -100,7 +113,7 @@
           args)))
 
 (defmethod compile-sql :exprs [{:keys [children]}]
-  (let [children (map compile-sql children)]
+  (let [children (map compile-expr children)]
     (if (empty? children)
       ["*"]
       (cons (join ", " (map first children))
