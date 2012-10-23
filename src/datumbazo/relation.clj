@@ -1,5 +1,4 @@
 (ns datumbazo.relation
-  (:refer-clojure :exclude [group-by])
   (:require [clojure.java.jdbc :as jdbc]
             [datumbazo.sql :refer [sql]]
             [datumbazo.sql.expr :refer [parse-expr]]))
