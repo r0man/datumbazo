@@ -1,7 +1,7 @@
 (ns datumbazo.sql.compiler
   (:refer-clojure :exclude [replace])
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.string :refer [blank? join replace]]))
+            [clojure.string :refer [blank? join replace upper-case]]))
 
 (defmulti compile-sql :op)
 
@@ -17,6 +17,11 @@
 
 (defn- stmt [& stmts]
   (apply join-stmt " " stmts))
+
+(defn- compile-set-op [op {:keys [children all]}]
+  (let [[[s1 a1] [s2 a2]] (map compile-sql children)]
+    (cons (str s1 " " (upper-case (name op)) (if all " ALL") " (" s2 ")")
+          (concat a1 a2))))
 
 ;; COMPILE CONSTANTS
 
@@ -112,6 +117,9 @@
                (if restrict " RESTRICT"))
           args)))
 
+(defmethod compile-sql :except [node]
+  (compile-set-op :except node))
+
 (defmethod compile-sql :exprs [{:keys [children]}]
   (let [children (map compile-expr children)]
     (if (empty? children)
@@ -129,6 +137,9 @@
 
 (defmethod compile-sql :group-by [{:keys [exprs]}]
   (stmt ["GROUP BY"] exprs))
+
+(defmethod compile-sql :intersect [node]
+  (compile-set-op :intersect node))
 
 (defmethod compile-sql :keyword [{:keys [form]}]
   [(jdbc/as-identifier form)])
@@ -164,15 +175,8 @@
                (if restrict " RESTRICT"))
           args)))
 
-(defmethod compile-sql :union [{:keys [children all]}]
-  (let [[[s1 a1] [s2 a2]] (map compile-sql children)]
-    (cons (str s1 " UNION " (if all "ALL ") "(" s2 ")")
-          (concat a1 a2))))
-
-(defmethod compile-sql :intersect [{:keys [children all]}]
-  (let [[[s1 a1] [s2 a2]] (map compile-sql children)]
-    (cons (str s1 " INTERSECT " (if all "ALL ") "(" s2 ")")
-          (concat a1 a2))))
+(defmethod compile-sql :union [node]
+  (compile-set-op :union node))
 
 ;; DEFINE SQL FN ARITY
 
