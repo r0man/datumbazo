@@ -28,14 +28,14 @@
   (if (sequential? s) s [s]))
 
 (defn sql
-  "Compile `statement` into a vector, where the first element is the
-  SQL statement and the rest are the prepared statement arguments."
-  [statement] (compile-sql statement))
+  "Compile `stmt` into a vector, where the first element is the
+  SQL stmt and the rest are the prepared stmt arguments."
+  [stmt] (compile-sql stmt))
 
 (defn as
   "Add an AS clause to the SQL statement."
-  [statement as]
-  (assoc (parse-expr statement) :as as))
+  [stmt as]
+  (assoc (parse-expr stmt) :as as))
 
 (defn except
   "Select the SQL set difference between `stmt-1` and `stmt-2`."
@@ -50,15 +50,15 @@
     :tables (map u/parse-table (wrap-seq tables))))
 
 (defn from
-  "Add the FROM item to the SQL select statement."
-  [statement & from]
-  (assoc statement
+  "Add the FROM item to the SQL statement."
+  [stmt & from]
+  (assoc stmt
     :from {:op :from :from (map parse-from from)}))
 
 (defn group-by
   "Add the GROUP BY clause to the SQL statement."
-  [statement & exprs]
-  (assoc statement
+  [stmt & exprs]
+  (assoc stmt
     :group-by {:op :group-by :exprs (parse-exprs exprs)}))
 
 (defn intersect
@@ -68,18 +68,18 @@
 
 (defn limit
   "Add the LIMIT clause to the SQL statement."
-  [statement count]
-  (assoc statement :limit {:op :limit :count count}))
+  [stmt count]
+  (assoc stmt :limit {:op :limit :count count}))
 
 (defn offset
   "Add the OFFSET clause to the SQL statement."
-  [statement start]
-  (assoc statement :offset {:op :offset :start start}))
+  [stmt start]
+  (assoc stmt :offset {:op :offset :start start}))
 
 (defn order-by
   "Add the ORDER BY clause to the SQL statement."
-  [statement exprs & {:as opts}]
-  (assoc statement
+  [stmt exprs & {:as opts}]
+  (assoc stmt
     :order-by
     (assoc opts
       :op :order-by
@@ -124,9 +124,9 @@
   {:op :union :children [stmt-1 stmt-2] :all all})
 
 (defn where
-  "Add the WHERE clause to the SQL statement."
-  [statement condition]
-  (assoc statement
+  "Add the WHERE `condition` to the SQL statement."
+  [stmt condition]
+  (assoc stmt
     :condition
     {:op :condition
      :condition (parse-expr condition)}))
