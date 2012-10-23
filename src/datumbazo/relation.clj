@@ -1,7 +1,7 @@
 (ns datumbazo.relation
   (:require [clojure.java.jdbc :as jdbc]
-            [datumbazo.sql :refer [sql]]
-            [datumbazo.sql.expr :refer [parse-expr]]))
+            [sqlingvo.core :refer [sql]]
+            [sqlingvo.util :refer [parse-expr]]))
 
 (defn- count-query
   "Transform `query` into a count(*) query."

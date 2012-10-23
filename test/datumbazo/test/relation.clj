@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [group-by])
   (:use clojure.test
         datumbazo.relation
-        datumbazo.sql
+        sqlingvo.core
         datumbazo.test)
   (:import datumbazo.relation.Relation))
 
