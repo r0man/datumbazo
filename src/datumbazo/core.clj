@@ -17,9 +17,9 @@
 (defn count-rows
   "Count all rows in the database `table`."
   [table]
-  (jdbc/with-query-results rows
-    [(str "SELECT count(*) FROM " (as-identifier table))]
-    (:count (first (doall rows)))))
+  (-> (sql/select '(count *))
+      (sql/from table)
+      (sql/run) first :count))
 
 (defn delete-table
   "Delete all rows from the database `table`."

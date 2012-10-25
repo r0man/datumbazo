@@ -16,11 +16,11 @@
            (as-identifier {:schema :public :name :continents})))))
 
 (database-test test-count-rows
-  (is (= 0 (count-rows continents-table))))
+  (is (= 0 (count-rows :continents))))
 
 (database-test test-delete-table
   (is (= 0 (delete-table continents-table)))
-  (is (= 0 (count-rows continents-table))))
+  (is (= 0 (count-rows :continents))))
 
 (database-test test-drop-table
   (is (= 0 (drop-table :countries)))
@@ -34,9 +34,9 @@
 
 (database-test test-truncate
   (is (= 0 (truncate :continents :cascade true)))
-  (is (= 0 (count-rows continents-table)))
+  (is (= 0 (count-rows :continents)))
   (is (= 0 (truncate :countries)))
-  (is (= 0 (count-rows countries-table))))
+  (is (= 0 (count-rows :countries))))
 
 (deftest test-select
   (is (= "SELECT id, name FROM continents"
