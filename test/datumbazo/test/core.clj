@@ -37,9 +37,3 @@
   (is (= 0 (count-all :continents)))
   (is (= 0 (truncate :countries)))
   (is (= 0 (count-all :countries))))
-
-(deftest test-select
-  (is (= "SELECT id, name FROM continents"
-         (select continents-table)))
-  (is (= "SELECT id, continent-id, name FROM countries"
-         (select countries-table))))

@@ -66,13 +66,6 @@
   "Assoc `schema` under the :schema key to `table`."
   [table schema] (assoc table :schema schema))
 
-(defn select [table]
-  (format "SELECT %s FROM %s"
-          (if (empty? (:columns table))
-            "*"
-            (join ", " (map jdbc/as-identifier (:columns table))))
-          (as-identifier table)))
-
 (defn select-table [table & {:keys [page per-page]}]
   (-> (sql/select *)
       (sql/from table)
