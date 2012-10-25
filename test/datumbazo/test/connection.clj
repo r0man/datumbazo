@@ -9,7 +9,7 @@
 
 (deftest test-connection-url
   (is (thrown? IllegalArgumentException (connection-url :unknown-db)))
-  (is (= "postgresql://tiger:scotch@localhost/test" (connection-url :test-db))))
+  (is (= "postgresql://tiger:scotch@localhost/datumbazo" (connection-url :test-db))))
 
 (deftest test-connection-spec
   (is (thrown? IllegalArgumentException (connection-spec :unknown-db)))
@@ -20,7 +20,7 @@
     (is (map? pool))
     (let [datasource (:datasource pool)]
       (is (instance? ComboPooledDataSource datasource))
-      (is (= "jdbc:postgresql://localhost/test" (.getJdbcUrl datasource)))
+      (is (= "jdbc:postgresql://localhost/datumbazo" (.getJdbcUrl datasource)))
       (is (= 15 (.getMaxPoolSize datasource)))
       (is (= 10800 (.getMaxIdleTime datasource)))
       (is (= 1800 (.getMaxIdleTimeExcessConnections datasource))))
@@ -56,7 +56,7 @@
 (deftest test-resolve-connection-pool
   (let [pool (resolve-connection-pool :test-db)]
     (is (map? pool))
-    (is (= "jdbc:postgresql://localhost/test" (.getJdbcUrl (:datasource pool))))
+    (is (= "jdbc:postgresql://localhost/datumbazo" (.getJdbcUrl (:datasource pool))))
     (is (= (:datasource pool) (:datasource (resolve-connection-pool :test-db))))))
 
 (deftest test-with-connection
