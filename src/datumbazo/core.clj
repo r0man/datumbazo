@@ -79,12 +79,10 @@
     (doall rows)))
 
 (defn select-table-by-column [table column-name column-value & {:keys [page per-page]}]
-  (jdbc/with-query-results rows
-    [(str "SELECT * "
-          "  FROM " (as-identifier table)
-          " WHERE " (jdbc/as-identifier column-name) " = ?")
-     column-value]
-    (doall rows)))
+  (-> (sql/select *)
+      (sql/from table)
+      (sql/where `(= ~column-name ~column-value))
+      (sql/run)))
 
 (defmacro deftable
   "Define a database table."
@@ -113,4 +111,4 @@
 
          ~@(for [column# (map (comp symbol name) (:columns table#))]
              `(defn ~(symbol (str table-name "-by-" column#)) [~column# & ~'opts]
-                (apply select-table-by-column ~symbol# ~(keyword column#) ~column# ~'opts))))))
+                (apply select-table-by-column ~(:name table#) ~(keyword column#) ~column# ~'opts))))))
