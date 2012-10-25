@@ -33,9 +33,9 @@
          (make-table "continents"))))
 
 (database-test test-truncate
-  (is (= 0 (truncate continents-table :cascade true)))
+  (is (= 0 (truncate :continents :cascade true)))
   (is (= 0 (count-rows continents-table)))
-  (is (= 0 (truncate countries-table)))
+  (is (= 0 (truncate :countries)))
   (is (= 0 (count-rows countries-table))))
 
 (deftest test-select

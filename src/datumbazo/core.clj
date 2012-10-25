@@ -1,6 +1,7 @@
 (ns datumbazo.core
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.string :refer [join]]))
+            [clojure.string :refer [join]]
+            [sqlingvo.core :as sql]))
 
 (defn as-identifier [table]
   (cond
@@ -39,14 +40,10 @@
       (first)))
 
 (defn truncate
-  "Truncate the database `table`."
-  [table & {:keys [cascade continue-identity restart-identity restrict]}]
-  (-> (str "TRUNCATE TABLE " (as-identifier table)
-           (if cascade " CASCADE")
-           (if continue-identity " CONTINUE IDENTITY")
-           (if restart-identity " RESTART IDENTITY")
-           (if restrict " RESTRICT"))
-      (jdbc/do-commands)
+  "Truncate the database `tables`."
+  [tables & opts]
+  (-> (apply sql/truncate tables opts)
+      (sql/run)
       (first)))
 
 (defn make-table
@@ -112,7 +109,7 @@
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
-           [& ~'opts] (apply truncate ~symbol# ~'opts))
+           [& ~'opts] (apply truncate ~(:name table#) ~'opts))
 
          (defn ~table-name
            ~(format "Select %s from the database table." table-name)
