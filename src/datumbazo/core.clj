@@ -30,19 +30,15 @@
 
 (defn drop-table
   "Drop the database `table`."
-  [table & {:keys [cascade if-exists restrict]}]
-  (-> (str "DROP TABLE "
-           (if if-exists " IF EXISTS")
-           (as-identifier table)
-           (if cascade " CASCADE")
-           (if restrict " RESTRICT"))
-      (jdbc/do-commands)
+  [table & opts]
+  (-> (apply sql/drop-table table opts)
+      (sql/run)
       (first)))
 
 (defn truncate
-  "Truncate the database `tables`."
-  [tables & opts]
-  (-> (apply sql/truncate tables opts)
+  "Truncate the database `table`."
+  [table & opts]
+  (-> (apply sql/truncate table opts)
       (sql/run)
       (first)))
 
@@ -101,7 +97,7 @@
 
          (defn ~(symbol (str "drop-" table-name))
            ~(format "Drop the %s database table." table-name)
-           [& ~'opts] (apply drop-table ~symbol# ~'opts))
+           [& ~'opts] (apply drop-table ~(:name table#) ~'opts))
 
          (defn ~(symbol (str "delete-" table-name))
            ~(format "Delete all rows in the %s database table." table-name)

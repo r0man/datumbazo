@@ -23,8 +23,8 @@
   (is (= 0 (count-rows continents-table))))
 
 (database-test test-drop-table
-  (is (= 0 (drop-table countries-table)))
-  (is (= 0 (drop-table continents-table))))
+  (is (= 0 (drop-table :countries)))
+  (is (= 0 (drop-table :continents))))
 
 (deftest test-make-table
   (let [table (make-table :continents)]
