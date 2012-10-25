@@ -74,9 +74,9 @@
           (as-identifier table)))
 
 (defn select-table [table & {:keys [page per-page]}]
-  (jdbc/with-query-results rows
-    [(str "SELECT * FROM " (as-identifier table))]
-    (doall rows)))
+  (-> (sql/select *)
+      (sql/from table)
+      (sql/run)))
 
 (defn select-table-by-column [table column-name column-value & {:keys [page per-page]}]
   (-> (sql/select *)
@@ -107,7 +107,7 @@
 
          (defn ~table-name
            ~(format "Select %s from the database table." table-name)
-           [& ~'opts] (apply select-table ~symbol# ~'opts))
+           [& ~'opts] (apply select-table ~(:name table#) ~'opts))
 
          ~@(for [column# (map (comp symbol name) (:columns table#))]
              `(defn ~(symbol (str table-name "-by-" column#)) [~column# & ~'opts]
