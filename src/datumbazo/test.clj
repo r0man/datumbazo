@@ -1,13 +1,14 @@
 (ns datumbazo.test
-  (:require [datumbazo.connection :refer [with-connection-pool]]
+  (:require [datumbazo.connection :refer [with-connection]]
             [clojure.java.jdbc :as jdbc]
-            [clojure.test :refer [deftest]]))
+            [clojure.test :refer [deftest]]
+            [environ.core :refer [env]]))
 
 (defmacro database-test
   "Define a database test."
   [name & body]
   `(deftest ~name
-     (with-connection-pool :test-db
+     (with-connection :test-db
        (jdbc/transaction
         (jdbc/set-rollback-only)
         ~@body))))

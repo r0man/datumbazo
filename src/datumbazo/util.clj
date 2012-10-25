@@ -23,6 +23,15 @@
   [format-message & format-args]
   (throw (IllegalArgumentException. (apply format format-message format-args))))
 
+(defn invoke-constructor [clazz & args]
+  (clojure.lang.Reflector/invokeConstructor
+   (Class/forName (str clazz)) (into-array args)))
+
+(defn format-server [url]
+  (str (:server-name url)
+       (if (:server-port url)
+         (str ":" (:server-port url)))))
+
 (defn path-split
   "Split `s` at the file separator."
   [s] (split (str s) (re-pattern File/separator)))
@@ -117,3 +126,33 @@
      :schema (keyword (nth matches 2))
      :name (keyword (nth matches 3))
      :as (keyword (nth matches 5))}))
+
+(defn parse-subprotocol
+  "Parse the JDBC subprotocol from `db-url`."
+  [db-url]
+  (if-let [matches (re-matches #"(([^:]+):)?([^:/]+):.+" (str db-url))]
+    (nth matches 3)
+    (illegal-argument-exception "Can't parse JDBC subprotocol: %s" db-url)))
+
+(defn parse-db-url
+  "Parse the database url `s` and return a Ring compatible map."
+  [s]
+  (if-let [matches (re-matches #"(([^:]+):)?([^:]+)://(([^:]+):([^@]+)@)?(([^:/]+)(:([0-9]+))?((/([^?]*))(\?(.*))?))" (str s))]
+    (let [db (nth matches 13)
+          server-name (nth matches 8)
+          server-port (parse-integer (nth matches 10))
+          query-string (nth matches 15)]
+      {:db db
+       :params (parse-params query-string)
+       :password (nth matches 6)
+       :pool (keyword (or (nth matches 2) :jdbc))
+       :query-string query-string
+       :server-name server-name
+       :server-port server-port
+       :spec {:subname (str "//" server-name (if server-port (str ":" server-port)) "/" db (if-not (blank? query-string) (str "?" query-string)))
+              :subprotocol (nth matches 3)
+              :username (nth matches 5)
+              :password (nth matches 6)}
+       :uri (nth matches 12)
+       :username (nth matches 5)})
+    (illegal-argument-exception "Can't parse database connection url %s:" s)))

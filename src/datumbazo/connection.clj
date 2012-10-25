@@ -1,93 +1,117 @@
 (ns datumbazo.connection
-  (:import com.mchange.v2.c3p0.ComboPooledDataSource)
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.string :refer [blank?]]
-            [datumbazo.util :refer [defn-memo parse-url parse-integer]]
+            [clojure.set :refer [rename-keys]]
+            [clojure.string :refer [split]]
             [environ.core :refer [env]]
-            [inflections.core :refer [dasherize underscore]]))
+            [inflections.core :refer [dasherize underscore]]
+            [datumbazo.util :as util]))
+
+(def ^:dynamic *connection* nil)
 
 (def ^:dynamic *naming-strategy*
   {:entity underscore :keyword dasherize})
 
-(def ^:dynamic *pool-params*
-  {:max-idle-time (* 3 60 60)
-   :max-idle-time-excess-connections (* 30 60)
-   :max-pool-size 15})
-
 (defn connection-url
-  "Lookup the database connection url for `db-name`."
+  "Lookup the JDBC connection url for `db-name` via environ."
   [db-name]
-  (if-let [url (env db-name)]
-    url (throw (IllegalArgumentException. (format "Can't find database url via environ: %s" db-name)))))
+  (or (env db-name)
+      (util/illegal-argument-exception "Can't find connection url: %s" db-name)))
 
-(defn connection-spec
-  "Lookup the database connection url for `db-name` and return the parsed db-spec."
-  [db-name] (parse-url (connection-url db-name)))
+(defmulti connection-spec
+  "Parse `db-url` and return the connection spec."
+  (fn [db-url] (keyword (util/parse-subprotocol db-url))))
 
-(defn make-connection-pool
-  "Make a C3P0 connection pool."
-  [db-spec]
+(defmethod connection-spec :mysql [db-url]
+  (let [url (util/parse-db-url db-url)]
+    (-> (assoc url :classname "com.mysql.jdbc.Driver")
+        (update-in [:spec] #(rename-keys %1 {:username :user})))))
+
+(defmethod connection-spec :oracle [db-url]
+  (let [url (util/parse-db-url db-url)]
+    (assoc url
+      :classname "oracle.jdbc.driver.OracleDriver"
+      :spec {:subprotocol "oracle:thin"
+             :subname (str ":" (:username url) "/" (:password url) "@" (util/format-server url)
+                           ":" (:db url))})))
+
+(defmethod connection-spec :postgresql [db-url]
+  (assoc (util/parse-db-url db-url)
+    :classname "org.postgresql.Driver"))
+
+(defmethod connection-spec :sqlite [db-url]
+  (if-let [matches (re-matches #"(([^:]+):)?([^:]+):([^?]+)(\?(.*))?" (str db-url))]
+    {:classname "org.sqlite.JDBC"
+     :params (util/parse-params (nth matches 5))
+     :pool (keyword (or (nth matches 2) :jdbc))
+     :spec {:subname (nth matches 4)
+            :subprotocol (nth matches 3)}}))
+
+(defmethod connection-spec :sqlserver [db-url]
+  (let [url (util/parse-db-url db-url)]
+    (assoc url
+      :classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+      :spec {:subprotocol "sqlserver"
+             :subname (str "//" (util/format-server url) ";"
+                           "database=" (:db url) ";"
+                           "user=" (:username url) ";"
+                           "password=" (:password url))})))
+
+(defmulti connection-pool
+  "Returns the connection pool for `db-spec`."
+  (fn [db-spec] (:pool db-spec)))
+
+(defmethod connection-pool :bonecp [db-spec]
+  (let [config (util/invoke-constructor "com.jolbox.bonecp.BoneCPConfig")]
+    (.setJdbcUrl config (str "jdbc:" (name (:subprotocol (:spec db-spec))) ":" (:subname (:spec db-spec))))
+    (.setUsername config (:username db-spec))
+    (.setPassword config (:password db-spec))
+    (assoc db-spec :spec {:datasource (util/invoke-constructor "com.jolbox.bonecp.BoneCPDataSource" config)})))
+
+(defmethod connection-pool :c3p0 [db-spec]
+  (let [params (:params db-spec)
+        datasource (util/invoke-constructor "com.mchange.v2.c3p0.ComboPooledDataSource")]
+    (.setJdbcUrl datasource (str "jdbc:" (name (:subprotocol (:spec db-spec))) ":" (:subname (:spec db-spec))))
+    (.setUser datasource (:username db-spec))
+    (.setPassword datasource (:password db-spec))
+    (.setAcquireRetryAttempts datasource (util/parse-integer (or (:acquire-retry-attempts params) 1))) ; TODO: Set back to 30
+    (.setInitialPoolSize datasource (util/parse-integer (or (:initial-pool-size params) 3)))
+    (.setMaxIdleTime datasource (util/parse-integer (or (:max-idle-time params) (* 3 60 60))))
+    (.setMaxIdleTimeExcessConnections datasource (util/parse-integer (or (:max-idle-time-excess-connections params) (* 30 60))))
+    (.setMaxPoolSize datasource (util/parse-integer (or (:max-pool-size params) 15)))
+    (.setMinPoolSize datasource (util/parse-integer (or (:min-pool-size params) 3)))
+    (assoc db-spec :spec {:datasource datasource})))
+
+(defn connection [db-name]
+  "Returns the database connection for `db-name`."
   (cond
-   (keyword? db-spec)
-   (make-connection-pool (connection-url db-spec))
-   (string? db-spec)
-   (make-connection-pool (parse-url db-spec))
-   (map? db-spec)
-   (let [params (merge *pool-params* (:params db-spec))]
-     {:datasource
-      (doto (ComboPooledDataSource.)
-        (.setDriverClass (:classname db-spec))
-        (.setJdbcUrl (str "jdbc:" (:subprotocol db-spec) ":" (:subname db-spec)))
-        (.setUser (:user db-spec))
-        (.setPassword (:password db-spec))
-        (.setMaxIdleTimeExcessConnections (parse-integer (:max-idle-time-excess-connections params)))
-        (.setMaxIdleTime (parse-integer (:max-idle-time params)))
-        (.setMaxPoolSize (parse-integer (:max-pool-size params))))})))
+   (keyword? db-name)
+   (connection (connection-url db-name))
+   (string? db-name)
+   (let [db-spec (connection-spec db-name)]
+     (if (= :jdbc (:pool db-spec))
+       db-spec (connection-pool db-spec)))
+   (symbol? db-name)
+   (let [[ns sym] (map symbol (split (str db-name) #"/"))]
+     (if-let [var (ns-resolve ns sym)]
+       (if (fn? @var)
+         (@var) @var)))
+   :else db-name))
 
-(defn resolve-connection
-  "Resolve the `db-spec` and return a connection map."
-  [db-spec]
-  (cond
-   (nil? db-spec)
-   (throw (IllegalArgumentException. (format "Can't resolve database connection: %s" db-spec)))
-   (keyword? db-spec)
-   (connection-url db-spec)
-   (string? db-spec)
-   db-spec
-   :else db-spec))
-
-(defn-memo resolve-connection-pool
-  "Resolve the database connection pool for `db-spec`."
-  [db-spec] (make-connection-pool db-spec))
+(util/defn-memo cached-connection [db-name]
+  "Returns the cached database connection for `db-name`."
+  (connection db-name))
 
 (defmacro with-connection
-  "Evaluates body in the context of a connection to the database
-  `name`. The connection spec for `name` is looked up via environ."
-  [db-spec & body]
-  `(jdbc/with-naming-strategy *naming-strategy*
-     (jdbc/with-connection (resolve-connection ~db-spec)
-       ~@body)))
-
-(defmacro with-connection-pool
-  "Evaluates body in the context of a connection to the database
-  `name`. The connection spec for `name` is looked up via environ."
-  [db-spec & body]
-  `(jdbc/with-naming-strategy *naming-strategy*
-     (jdbc/with-connection (resolve-connection-pool ~db-spec)
-       ~@body)))
+  "Evaluates `body` with a connection to `db-name`."
+  [db-name & body]
+  `(binding [*connection* (cached-connection ~db-name)]
+     (jdbc/with-naming-strategy *naming-strategy*
+       (jdbc/with-connection (:spec *connection*)
+         ~@body))))
 
 (defn wrap-connection
-  "Returns a Ring handler with an open connection to the `db-spec`
-  database."
-  [handler db-spec]
+  "Wraps a connection to `db-name` around the Ring `handler`"
+  [handler db-name]
   (fn [request]
-    (with-connection db-spec
-      (handler request))))
-
-(defn wrap-connection-pool
-  "Returns a Ring handler with an open connection from a C3P0 pool to
-  the `db-spec` database."
-  [handler db-spec]
-  (fn [request]
-    (with-connection-pool db-spec
+    (with-connection db-name
       (handler request))))
