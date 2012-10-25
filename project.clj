@@ -16,11 +16,11 @@
   :profiles {:dev {:dependencies [[validation-clj "0.4.0-SNAPSHOT"]
                                   [org.slf4j/slf4j-log4j12 "1.6.4"]]
                    :resource-paths ["test-resources"]
-                   :env {:test-db "postgresql://tiger:scotch@localhost/test"}}}
+                   :env {:test-db "postgresql://tiger:scotch@localhost/datumbazo"}}}
   :plugins [[environ/environ.lein "0.3.0"]
             [ragtime/ragtime.lein "0.3.1"]]
   :hooks [environ.leiningen.hooks]
-  :ragtime {:database "jdbc:postgresql://tiger:scotch@localhost/test"
+  :ragtime {:database "jdbc:postgresql://localhost/datumbazo?user=tiger&password=test"
             :migrations ragtime.sql.files/migrations}
   :db [{:name :test-db
         :fixtures "db/fixtures/test-db"
