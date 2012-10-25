@@ -14,7 +14,7 @@
         (map jdbc/as-identifier)
         (join "."))))
 
-(defn count-rows
+(defn count-all
   "Count all rows in the database `table`."
   [table]
   (-> (sql/select '(count *))
