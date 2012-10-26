@@ -5,7 +5,7 @@
             [clojure.string :refer [lower-case]]
             [inflections.core :refer [hyphenize hyphenize-keys]]))
 
-(defn hyphenize-keyword [k]
+(defn- hyphenize-keyword [k]
   (if k (keyword (hyphenize (name k)))))
 
 (defn- resultset-seq [^java.sql.ResultSet rs]
@@ -62,23 +62,6 @@
                :name (hyphenize-keyword (:column-name %1))
                :type (hyphenize-keyword (lower-case (:type-name %1)))))))
 
-(defn tables
-  "Retrieves a description of the database tables matching `catalog`,
-  `schema`, `name` and `types`."
-  [connection & {:keys [catalog schema name types]}]
-  (->> (.getTables
-        (metadata connection)
-        (if catalog (jdbc/as-identifier catalog))
-        (if schema (jdbc/as-identifier schema))
-        (if name (jdbc/as-identifier name))
-        (into-array String (or types ["TABLE"])))
-       (resultset-seq)
-       (map #(assoc %1
-               :catalog (hyphenize-keyword (:table-cat %1))
-               :schema (hyphenize-keyword (:table-schem %1))
-               :name (hyphenize-keyword (:table-name %1))
-               :type (hyphenize-keyword (lower-case (:table-type %1)))))))
-
 (defn primary-keys
   "Retrieves a description of the given table's primary key columns."
   [connection & {:keys [catalog schema table]}]
@@ -100,6 +83,23 @@
   (->> (.getSchemas (metadata connection))
        (resultset-seq)
        (map #(assoc %1 :name (hyphenize-keyword (:table-schem %1))))))
+
+(defn tables
+  "Retrieves a description of the database tables matching `catalog`,
+  `schema`, `name` and `types`."
+  [connection & {:keys [catalog schema name types]}]
+  (->> (.getTables
+        (metadata connection)
+        (if catalog (jdbc/as-identifier catalog))
+        (if schema (jdbc/as-identifier schema))
+        (if name (jdbc/as-identifier name))
+        (into-array String (or types ["TABLE"])))
+       (resultset-seq)
+       (map #(assoc %1
+               :catalog (hyphenize-keyword (:table-cat %1))
+               :schema (hyphenize-keyword (:table-schem %1))
+               :name (hyphenize-keyword (:table-name %1))
+               :type (hyphenize-keyword (lower-case (:table-type %1)))))))
 
 (defn views
   "Retrieves a description of the database views matching `catalog`,
