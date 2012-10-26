@@ -19,7 +19,7 @@
   [table]
   (-> (sql/select '(count *))
       (sql/from table)
-      deref first :count))
+      (sql/run) first :count))
 
 (defn delete-table
   "Delete all rows from the database `table`."
@@ -31,12 +31,12 @@
 (defn drop-table
   "Drop the database `table`."
   [table & opts]
-  (first @(apply sql/drop-table table opts)))
+  (first (sql/run (apply sql/drop-table table opts))))
 
 (defn truncate
   "Truncate the database `table`."
   [table & opts]
-  (first @(apply sql/truncate table opts)))
+  (first (sql/run (apply sql/truncate table opts))))
 
 (defn make-table
   "Make a database table."
@@ -65,13 +65,13 @@
 (defn select-table [table & {:keys [page per-page]}]
   (-> (sql/select *)
       (sql/from table)
-      (deref)))
+      (sql/run)))
 
 (defn select-table-by-column [table column-name column-value & {:keys [page per-page]}]
   (-> (sql/select *)
       (sql/from table)
       (sql/where `(= ~column-name ~column-value))
-      (deref)))
+      (sql/run)))
 
 (defmacro deftable
   "Define a database table."
