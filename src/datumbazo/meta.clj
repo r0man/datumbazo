@@ -62,6 +62,22 @@
                :name (hyphenize-keyword (:column-name %1))
                :type (hyphenize-keyword (lower-case (:type-name %1)))))))
 
+(defn indexes
+  "Retrieves a description of the given table's primary key columns."
+  [connection & {:keys [catalog schema table unique approximate]}]
+  (->> (.getIndexInfo
+        (metadata connection)
+        (if catalog (jdbc/as-identifier catalog))
+        (if schema (jdbc/as-identifier schema))
+        (if table (jdbc/as-identifier table))
+        (= true unique)
+        (= true approximate))
+       (resultset-seq)
+       (map #(assoc %1
+               :catalog (hyphenize-keyword (:table-cat %1))
+               :schema (hyphenize-keyword (:table-schem %1))
+               :table (hyphenize-keyword (:table-name %1))))))
+
 (defn primary-keys
   "Retrieves a description of the given table's primary key columns."
   [connection & {:keys [catalog schema table]}]

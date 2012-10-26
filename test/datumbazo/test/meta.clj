@@ -30,6 +30,10 @@
   (is (thrown? AssertionError (metadata nil)))
   (is (instance? DatabaseMetaData (metadata (jdbc/connection)))))
 
+(database-test test-indexes
+  (let [columns (indexes (jdbc/connection) :table :continents)]
+    (is (not (empty? columns)))))
+
 (database-test test-primary-keys
   (let [columns (primary-keys (jdbc/connection) :table :continents)]
     (is (not (empty? columns)))
