@@ -3,7 +3,6 @@
   (:refer-clojure :exclude [resultset-seq])
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [lower-case]]
-            [datumbazo.util :refer [defn-memo]]
             [inflections.core :refer [hyphenize hyphenize-keys]]))
 
 (defn hyphenize-keyword [k]
@@ -32,20 +31,20 @@
           :transaction DatabaseMetaData/bestRowTransaction
           :session DatabaseMetaData/bestRowSession
           DatabaseMetaData/bestRowTemporary)
-        (nil? nullable))
+        (not (nil? nullable)))
        (resultset-seq)
        (map #(assoc %1
                :name (hyphenize-keyword (:column-name %1))
                :type (hyphenize-keyword (lower-case (:type-name %1)))))))
 
-(defn-memo catalogs
+(defn catalogs
   "Retrieves the catalog names available in this database."
   [connection]
   (->> (.getCatalogs (metadata connection))
        (resultset-seq)
        (map #(assoc %1 :name (hyphenize-keyword (:table-cat %1))))))
 
-(defn-memo columns
+(defn columns
   "Retrieves a description of the database columns matching `catalog`,
   `schema`, `table` and `name`."
   [connection & {:keys [catalog schema table name]}]
@@ -63,7 +62,7 @@
                :name (hyphenize-keyword (:column-name %1))
                :type (hyphenize-keyword (lower-case (:type-name %1)))))))
 
-(defn-memo tables
+(defn tables
   "Retrieves a description of the database tables matching `catalog`,
   `schema`, `name` and `types`."
   [connection & {:keys [catalog schema name types]}]
@@ -95,14 +94,14 @@
                :table (hyphenize-keyword (:table-name %1))
                :name (hyphenize-keyword (:column-name %1))))))
 
-(defn-memo schemas
+(defn schemas
   "Retrieves the catalog names available in this database."
   [connection]
   (->> (.getSchemas (metadata connection))
        (resultset-seq)
        (map #(assoc %1 :name (hyphenize-keyword (:table-schem %1))))))
 
-(defn-memo views
+(defn views
   "Retrieves a description of the database views matching `catalog`,
   `schema` and `name`."
   [connection & {:keys [catalog schema name types]}]
