@@ -37,3 +37,18 @@
   (is (= 0 (count-all :continents)))
   (is (= 0 (truncate :countries)))
   (is (= 0 (count-all :countries))))
+
+(database-test test-insert
+  (let [rows (insert :continents {:name "Europe" :code "eu"})]
+    (let [row (first rows)]
+      (is (number? (:id row)))
+      (is (= "Europe" (:name row)))
+      (is (= "eu" (:code row))))))
+
+(database-test test-update
+  (let [europe (first (insert :continents {:name "Europe" :code "eu"}))
+        rows (update :continents (assoc europe :name "Europa"))]
+    (let [row (first rows)]
+      (is (number? (:id row)))
+      (is (= "Europa" (:name row)))
+      (is (= "eu" (:code row))))))

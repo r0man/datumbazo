@@ -1,6 +1,7 @@
 (ns datumbazo.core
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [join]]
+            [datumbazo.meta :as meta]
             [sqlingvo.core :as sql]))
 
 (defn as-identifier [table]
@@ -72,6 +73,21 @@
       (sql/from table)
       (sql/where `(= ~column-name ~column-value))
       (sql/run)))
+
+(defn insert [table record]
+  (let [columns (meta/columns (jdbc/connection) :table table)]
+    (-> (sql/insert table record)
+        (sql/returning *)
+        (sql/run))))
+
+(defn update [table record]
+  (let [pks (meta/primary-keys (jdbc/connection) :table table)
+        keys (map :name pks)
+        vals (map record keys)]
+    (-> (sql/update table record)
+        (sql/where (list 'and (mapcat #(list '= %1 %2) keys vals)))
+        (sql/returning *)
+        (sql/run))))
 
 (defmacro deftable
   "Define a database table."
