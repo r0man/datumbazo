@@ -43,7 +43,16 @@
     (let [row (first rows)]
       (is (number? (:id row)))
       (is (= "Europe" (:name row)))
-      (is (= "eu" (:code row))))))
+      (is (= "eu" (:code row)))))
+  (let [rows (insert :continents [{:name "North America" :code "na"} {:name "South America" :code "sa"}])]
+    (let [row (first rows)]
+      (is (number? (:id row)))
+      (is (= "North America" (:name row)))
+      (is (= "na" (:code row))))
+    (let [row (second rows)]
+      (is (number? (:id row)))
+      (is (= "South America" (:name row)))
+      (is (= "sa" (:code row))))))
 
 (database-test test-update
   (let [europe (first (insert :continents {:name "Europe" :code "eu"}))
