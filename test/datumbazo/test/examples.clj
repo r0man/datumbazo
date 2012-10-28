@@ -107,7 +107,8 @@
   (is (empty? (countries))))
 
 (database-test test-continents-by-id
-  (is (nil? (continents-by-id 1))))
+  (is (nil? (continents-by-id 1)))
+  (is (nil? (continents-by-id "1"))))
 
 (database-test test-continents-by-name
   (is (nil? (continents-by-name "Europe"))))

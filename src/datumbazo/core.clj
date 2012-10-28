@@ -71,10 +71,12 @@
       (sql/run)))
 
 (defn select-table-by-column [table column-name column-value & {:keys [page per-page]}]
-  (-> (sql/select *)
-      (sql/from table)
-      (sql/where `(= ~column-name ~column-value))
-      (sql/run)))
+  (let [column (first (meta/columns (jdbc/connection) :table table :name column-name))]
+    (assert column)
+    (-> (sql/select *)
+        (sql/from table)
+        (sql/where `(= ~column-name ~(io/encode-column column column-value)))
+        (sql/run))))
 
 (defn insert
   "Insert `row` into the database `table`."

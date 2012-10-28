@@ -20,7 +20,7 @@
   (encode-integer value))
 
 (defmethod encode-column :serial [column value]
-  value)
+  (encode-integer value))
 
 (defmethod encode-column :timestamptz [column value]
   value)
