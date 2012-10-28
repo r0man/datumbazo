@@ -3,6 +3,7 @@
             [clojure.string :refer [join]]
             [datumbazo.meta :as meta]
             [datumbazo.io :as io]
+            [inflections.core :refer [singular]]
             [sqlingvo.core :as sql]))
 
 (defn as-identifier [table]
@@ -116,9 +117,17 @@
            ~(format "Delete all rows in the %s database table." table-name)
            [& ~'opts] (apply delete-table ~symbol# ~'opts))
 
+         (defn ~(symbol (str "insert-" (singular (str table-name))))
+           ~(format "Insert the %s row into the database." (singular (str table-name)))
+           [~'row & ~'opts] (first (apply insert ~(:name table#) ~'row ~'opts)))
+
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
            [& ~'opts] (apply truncate ~(:name table#) ~'opts))
+
+         (defn ~(symbol (str "update-" (singular (str table-name))))
+           ~(format "Update the %s row in the database." (singular (str table-name)))
+           [~'row & ~'opts] (first (apply update ~(:name table#) ~'row ~'opts)))
 
          (defn ~table-name
            ~(format "Select %s from the database table." table-name)

@@ -4,6 +4,12 @@
         datumbazo.core
         datumbazo.test))
 
+(def africa
+  {:name "Africa" :code "af"})
+
+(def europe
+  {:name "Europe" :code "eu"})
+
 (deftable continents
   "The continents database table."
   (column :id :serial)
@@ -56,6 +62,12 @@
   (is (= 0 (delete-countries)))
   (is (= 0 (count-all :countries))))
 
+(database-test test-insert-continent
+  (let [row (insert-continent europe)]
+    (is (number? (:id row)))
+    (is (= "Europe" (:name row)))
+    (is (= "eu" (:code row)))))
+
 (database-test test-truncate-continents
   (is (= "Truncate the continents database table."
          (:doc (meta #'truncate-continents))))
@@ -67,6 +79,13 @@
          (:doc (meta #'truncate-countries))))
   (is (= 0 (truncate-countries)))
   (is (= 0 (count-all :countries))))
+
+(database-test test-update-continent
+  (let [europe (insert-continent europe)
+        row (update-continent (assoc europe :name "Europa"))]
+    (is (number? (:id row)))
+    (is (= "Europa" (:name row)))
+    (is (= "eu" (:code row)))))
 
 (database-test test-continents
   (is (empty? (continents))))
