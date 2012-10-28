@@ -2,6 +2,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [join]]
             [datumbazo.meta :as meta]
+            [datumbazo.io :as io]
             [sqlingvo.core :as sql]))
 
 (defn as-identifier [table]
@@ -77,10 +78,9 @@
 (defn insert
   "Insert `row` into the database `table`."
   [table row]
-  (let [columns (meta/columns (jdbc/connection) :table table)]
-    (-> (sql/insert table row)
-        (sql/returning *)
-        (sql/run))))
+  (-> (sql/insert table (map #(io/encode-row table %1) (if (sequential? row) row [row])))
+      (sql/returning *)
+      (sql/run)))
 
 (defn update
   "Update `row` to the database `table`."
@@ -88,7 +88,7 @@
   (let [pks (meta/primary-keys (jdbc/connection) :table table)
         keys (map :name pks)
         vals (map row keys)]
-    (-> (sql/update table row)
+    (-> (sql/update table (io/encode-row table row))
         (sql/where (list 'and (mapcat #(list '= %1 %2) keys vals)))
         (sql/returning *)
         (sql/run))))
