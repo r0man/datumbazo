@@ -65,12 +65,12 @@
   "Assoc `schema` under the :schema key to `table`."
   [table schema] (assoc table :schema schema))
 
-(defn select-table [table & {:keys [page per-page]}]
+(defn select-rows [table & {:keys [page per-page]}]
   (-> (sql/select *)
       (sql/from table)
       (sql/run)))
 
-(defn select-table-by-column [table column-name column-value & {:keys [page per-page]}]
+(defn select-rows-by-column [table column-name column-value & {:keys [page per-page]}]
   (let [column (first (meta/columns (jdbc/connection) :table table :name column-name))]
     (assert column)
     (-> (sql/select *)
@@ -137,8 +137,8 @@
 
          (defn ~table-name
            ~(format "Select %s from the database table." table-name)
-           [& ~'opts] (apply select-table ~(:name table#) ~'opts))
+           [& ~'opts] (apply select-rows ~(:name table#) ~'opts))
 
          ~@(for [column# (map (comp symbol name) (:columns table#))]
              `(defn ~(symbol (str table-name "-by-" column#)) [~column# & ~'opts]
-                (apply select-table-by-column ~(:name table#) ~(keyword column#) ~column# ~'opts))))))
+                (apply select-rows-by-column ~(:name table#) ~(keyword column#) ~column# ~'opts))))))
