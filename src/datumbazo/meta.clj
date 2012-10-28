@@ -93,6 +93,12 @@
                :table (hyphenize-keyword (:table-name %1))
                :name (hyphenize-keyword (:column-name %1))))))
 
+(defn unique-columns [connection & {:keys [catalog schema table name]}]
+  (let [indexes (indexes connection :catalog catalog :schema schema :table table :name name :unique true)
+        indexes (set (map #(vector (:table-name %1) (:column-name %1)) indexes))]
+    (filter #(contains? indexes [(:table-name %1) (:column-name %1)])
+            (columns connection :catalog catalog :schema schema :table table :name name))))
+
 (defn schemas
   "Retrieves the catalog names available in this database."
   [connection]

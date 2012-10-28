@@ -34,6 +34,11 @@
   (let [columns (indexes (jdbc/connection) :table :continents)]
     (is (not (empty? columns)))))
 
+(database-test test-unique-columns
+  (let [columns (unique-columns (jdbc/connection) :table :continents)]
+    (is (not (empty? columns)))
+    (is (= [:id :name :code :freebase-guid :geonames-id] (map :name columns)))))
+
 (database-test test-primary-keys
   (let [columns (primary-keys (jdbc/connection) :table :continents)]
     (is (not (empty? columns)))
