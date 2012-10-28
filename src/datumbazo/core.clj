@@ -121,6 +121,10 @@
            ~(format "Insert the %s row into the database." (singular (str table-name)))
            [~'row & ~'opts] (first (apply insert ~(:name table#) ~'row ~'opts)))
 
+         (defn ~(symbol (str "save-" (singular (str table-name))))
+           ~(format "Save the %s row to the database." (singular (str table-name)))
+           [~'row & ~'opts] (apply save ~(:name table#) ~'row ~'opts))
+
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
            [& ~'opts] (apply truncate ~(:name table#) ~'opts))

@@ -66,7 +66,15 @@
   (let [row (insert-continent europe)]
     (is (number? (:id row)))
     (is (= "Europe" (:name row)))
-    (is (= "eu" (:code row)))))
+    (is (= "eu" (:code row)))
+    (is (thrown? Exception (insert-continent row)))))
+
+(database-test test-save-continent
+  (let [row (save-continent europe)]
+    (is (number? (:id row)))
+    (is (= "Europe" (:name row)))
+    (is (= "eu" (:code row)))
+    (is (= row (save-continent row)))))
 
 (database-test test-truncate-continents
   (is (= "Truncate the continents database table."
@@ -81,11 +89,16 @@
   (is (= 0 (count-all :countries))))
 
 (database-test test-update-continent
+  (is (nil? (update-continent europe)))
   (let [europe (insert-continent europe)
         row (update-continent (assoc europe :name "Europa"))]
     (is (number? (:id row)))
     (is (= "Europa" (:name row)))
-    (is (= "eu" (:code row)))))
+    (is (= "eu" (:code row)))
+    (let [row (update-continent (assoc row :name "Europe"))]
+      (is (number? (:id row)))
+      (is (= "Europe" (:name row)))
+      (is (= "eu" (:code row))))))
 
 (database-test test-continents
   (is (empty? (continents))))
