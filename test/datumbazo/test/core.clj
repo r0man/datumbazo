@@ -61,3 +61,13 @@
       (is (number? (:id row)))
       (is (= "Europa" (:name row)))
       (is (= "eu" (:code row))))))
+
+(database-test test-save
+  (let [row (save :continents {:name "Europe" :code "eu"})]
+    (is (number? (:id row)))
+    (is (= "Europe" (:name row)))
+    (is (= "eu" (:code row)))
+    (let [row (save :continents (assoc row :name "Europa"))]
+      (is (number? (:id row)))
+      (is (= "Europa" (:name row)))
+      (is (= "eu" (:code row))))))

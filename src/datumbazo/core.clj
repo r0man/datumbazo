@@ -74,20 +74,30 @@
       (sql/where `(= ~column-name ~column-value))
       (sql/run)))
 
-(defn insert [table record]
+(defn insert
+  "Insert `row` into the database `table`."
+  [table row]
   (let [columns (meta/columns (jdbc/connection) :table table)]
-    (-> (sql/insert table record)
+    (-> (sql/insert table row)
         (sql/returning *)
         (sql/run))))
 
-(defn update [table record]
+(defn update
+  "Update `row` to the database `table`."
+  [table row]
   (let [pks (meta/primary-keys (jdbc/connection) :table table)
         keys (map :name pks)
-        vals (map record keys)]
-    (-> (sql/update table record)
+        vals (map row keys)]
+    (-> (sql/update table row)
         (sql/where (list 'and (mapcat #(list '= %1 %2) keys vals)))
         (sql/returning *)
         (sql/run))))
+
+(defn save
+  "Save `row` to the database `table`."
+  [table row]
+  (or (first (update table row))
+      (first (insert table row))))
 
 (defmacro deftable
   "Define a database table."
