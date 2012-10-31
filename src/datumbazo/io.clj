@@ -5,6 +5,8 @@
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]))
 
+;; ENCODE
+
 (defn- encode-integer [integer]
   (cond
    (integer? integer)
@@ -30,6 +32,19 @@
 (defmethod encode-column :default [column value]
   value)
 
+(defn encode-row
+  "Encode the columns of `row` into database types."
+  [table row]
+  (let [columns (meta/columns (jdbc/connection) :table table)]
+    (reduce (fn [row column]
+              (if (contains? row (:name column))
+                (assoc row (:name column) (encode-column column (get row (:name column))))
+                row))
+            (select-keys row (map :name columns))
+            columns)))
+
+;; DECODE
+
 (defmulti decode-pg-object
   (fn [pg-object] (keyword (.getType pg-object))))
 
@@ -44,28 +59,14 @@
 (defmethod decode-column :default [value]
   value)
 
-(defn transform-row
-  "Transform the columns of `row` via `transform-fn`."
-  [table row transform-fn]
-  (let [columns (meta/columns (jdbc/connection) :table table)]
-    (reduce (fn [row column]
-              (if (contains? row (:name column))
-                (assoc row (:name column) (transform-fn column (get row (:name column))))
-                row))
-            (select-keys row (map :name columns))
-            columns)))
-
-(defn encode-row
-  "Encode the columns of `row` into database types."
-  [table row]
-  (transform-row table row encode-column))
-
 (defn decode-row
   "Decode the columns of `row` into Clojure types."
   [row]
   (reduce
    #(update-in %1 [%2] decode-column)
    row (keys row)))
+
+;; PRINT
 
 (defmulti print-method-pg-object
   (fn [^PGobject pg-object ^Writer w]
