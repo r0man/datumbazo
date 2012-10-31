@@ -4,17 +4,16 @@
             [datumbazo.meta :as meta]
             [datumbazo.io :as io]
             [datumbazo.util :refer [immigrate]]
-            [inflections.core :refer [singular]]
-            [sqlingvo.core :as sql]))
+            [inflections.core :refer [singular]]))
 
 (immigrate 'sqlingvo.core)
 
 (defn count-all
   "Count all rows in the database `table`."
   [table]
-  (-> (sql/select '(count *))
-      (sql/from table)
-      (sql/run) first :count))
+  (-> (select '(count *))
+      (from table)
+      (run) first :count))
 
 (defn delete-table
   "Delete all rows from the database `table`."
@@ -26,12 +25,12 @@
 (defn drop-table
   "Drop the database `table`."
   [table & opts]
-  (first (sql/run (apply sql/drop-table table opts))))
+  (first (run (apply sqlingvo.core/drop-table table opts))))
 
 (defn truncate
   "Truncate the database `table`."
   [table & opts]
-  (first (sql/run (apply sql/truncate table opts))))
+  (first (run (apply sqlingvo.core/truncate table opts))))
 
 (defn make-table
   "Make a database table."
@@ -58,24 +57,25 @@
   [table schema] (assoc table :schema schema))
 
 (defn select-rows [table & {:keys [page per-page]}]
-  (-> (sql/select *)
-      (sql/from table)
-      (sql/run)))
+  (-> (select *)
+      (from table)
+      (run)))
 
 (defn select-rows-by-column [table column-name column-value & {:keys [page per-page]}]
   (let [column (first (meta/columns (jdbc/connection) :table table :name column-name))]
     (assert column)
-    (-> (sql/select *)
-        (sql/from table)
-        (sql/where `(= ~column-name ~(io/encode-column column column-value)))
-        (sql/run))))
+    (-> (select *)
+        (from table)
+        (where `(= ~column-name ~(io/encode-column column column-value)))
+        (run))))
 
 (defn insert
   "Insert `row` into the database `table`."
   [table row]
-  (-> (sql/insert table (map #(io/encode-row table %1) (if (sequential? row) row [row])))
-      (sql/returning *)
-      (sql/run)))
+  (let [rows (if (sequential? row) row [row])]
+    (-> (sqlingvo.core/insert table (map #(io/encode-row table %1) rows))
+        (returning *)
+        (run))))
 
 (defn update
   "Update `row` to the database `table`."
@@ -83,10 +83,10 @@
   (let [pks (meta/unique-columns (jdbc/connection) :table table)
         keys (map :name pks)
         vals (map row keys)]
-    (-> (sql/update table (io/encode-row table row))
-        (sql/where (cons 'or (map #(list '= %1 %2) keys vals)))
-        (sql/returning *)
-        (sql/run))))
+    (-> (sqlingvo.core/update table (io/encode-row table row))
+        (where (cons 'or (map #(list '= %1 %2) keys vals)))
+        (returning *)
+        (run))))
 
 (defn save
   "Save `row` to the database `table`."
