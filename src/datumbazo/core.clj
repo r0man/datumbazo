@@ -8,6 +8,13 @@
 
 (immigrate 'sqlingvo.core)
 
+(defn run
+  "Run the SQL statement `stmt`."
+  [stmt]
+  (->> (sqlingvo.core/run stmt)
+       (map io/decode-row)
+       identity))
+
 (defn count-all
   "Count all rows in the database `table`."
   [table]
@@ -25,12 +32,12 @@
 (defn drop-table
   "Drop the database `table`."
   [table & opts]
-  (first (run (apply sqlingvo.core/drop-table table opts))))
+  (:count (first (run (apply sqlingvo.core/drop-table table opts)))))
 
 (defn truncate
   "Truncate the database `table`."
   [table & opts]
-  (first (run (apply sqlingvo.core/truncate table opts))))
+  (:count (first (run (apply sqlingvo.core/truncate table opts)))))
 
 (defn make-table
   "Make a database table."

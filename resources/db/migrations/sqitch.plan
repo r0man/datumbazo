@@ -1,0 +1,8 @@
+%syntax-version=1.0.0-b2
+%project=datumbazo
+%uri=https://github.com/r0man/datumbazo
+
+create-postgis-extension 2012-10-31T20:05:33Z roman <roman@bombaclaat> # Create PostGIS extension
+create-citext-extension 2012-10-31T20:06:57Z roman <roman@bombaclaat> # Create CITEXT extension
+create-continents-table 2012-10-31T20:09:07Z roman <roman@bombaclaat> # Create continents table
+create-countries-table 2012-10-31T20:09:17Z roman <roman@bombaclaat> # Create countries table

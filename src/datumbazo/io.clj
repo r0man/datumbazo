@@ -1,4 +1,6 @@
 (ns datumbazo.io
+  (:import java.io.Writer
+           org.postgresql.util.PGobject)
   (:require [clojure.java.jdbc :as jdbc]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]))
@@ -28,13 +30,18 @@
 (defmethod encode-column :default [column value]
   value)
 
+(defmulti decode-pg-object
+  (fn [pg-object] (keyword (.getType pg-object))))
+
+(defmethod decode-pg-object :default [pg-object]
+  (.getValue pg-object))
+
 (defmulti decode-column class)
 
-(defmethod decode-column :citext [column value]
-  (println "CITEXT")
-  (.getValue value))
+(defmethod decode-column PGobject [value]
+  (decode-pg-object value))
 
-(defmethod decode-column :default [column value]
+(defmethod decode-column :default [value]
   value)
 
 (defn transform-row
@@ -52,3 +59,23 @@
   "Encode the columns of `row` into database types."
   [table row]
   (transform-row table row encode-column))
+
+(defn decode-row
+  "Decode the columns of `row` into Clojure types."
+  [row]
+  (reduce
+   #(update-in %1 [%2] decode-column)
+   row (keys row)))
+
+(defmulti print-method-pg-object
+  (fn [^PGobject pg-object ^Writer w]
+    (keyword (.getType pg-object))))
+
+(defmethod print-method-pg-object :default [^PGobject pg-object ^Writer w]
+  (print-method (.getValue pg-object) w))
+
+(defmethod print-method PGobject [^PGobject pg-object ^Writer w]
+  (print-method-pg-object pg-object w))
+
+(defmethod print-dup PGobject [o w]
+  (print-method o w))

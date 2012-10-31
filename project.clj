@@ -9,7 +9,6 @@
                  [org.clojure/tools.logging "0.2.3"]
                  [org.postgis/postgis-jdbc "1.3.3"]
                  [postgresql/postgresql "9.1-901.jdbc4"]
-                 [ragtime/ragtime.sql.files "0.3.1"]
                  [slingshot "0.10.3"]
                  [sqlingvo "0.1.0-SNAPSHOT"]]
   :profiles {:dev {:dependencies [[validation-clj "0.4.0-SNAPSHOT"]
@@ -18,11 +17,8 @@
                                   [com.jolbox/bonecp "0.7.1.RELEASE"]]
                    :resource-paths ["test-resources"]
                    :env {:test-db "postgresql://tiger:scotch@localhost/datumbazo"}}}
-  :plugins [[environ/environ.lein "0.3.0"]
-            [ragtime/ragtime.lein "0.3.1"]]
+  :plugins [[environ/environ.lein "0.3.0"]]
   :hooks [environ.leiningen.hooks]
-  :ragtime {:database "jdbc:postgresql://localhost/datumbazo?user=tiger&password=test"
-            :migrations ragtime.sql.files/migrations}
   :db [{:name :test-db
         :fixtures "db/fixtures/test-db"
         :migrations "db/migrations/test-db"}])
