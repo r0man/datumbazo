@@ -88,11 +88,11 @@
 (defn update
   "Update `row` to the database `table`."
   [table row]
-  (let [pks (meta/primary-keys (jdbc/connection) :table table)
+  (let [pks (meta/unique-columns (jdbc/connection) :table table)
         keys (map :name pks)
         vals (map row keys)]
     (-> (sql/update table (io/encode-row table row))
-        (sql/where (list 'and (mapcat #(list '= %1 %2) keys vals)))
+        (sql/where (cons 'or (map #(list '= %1 %2) keys vals)))
         (sql/returning *)
         (sql/run))))
 
