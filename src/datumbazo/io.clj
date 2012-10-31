@@ -28,8 +28,11 @@
 (defmethod encode-column :default [column value]
   value)
 
-(defmulti decode-column
-  (fn [column value] (:type column)))
+(defmulti decode-column class)
+
+(defmethod decode-column :citext [column value]
+  (println "CITEXT")
+  (.getValue value))
 
 (defmethod decode-column :default [column value]
   value)
@@ -49,8 +52,3 @@
   "Encode the columns of `row` into database types."
   [table row]
   (transform-row table row encode-column))
-
-(defn decode-row
-  "Decode the columns of `row` into Clojure types."
-  [table row]
-  (transform-row table row decode-column))

@@ -32,6 +32,23 @@
        (if (:server-port url)
          (str ":" (:server-port url)))))
 
+(defn immigrate
+  "Create a public var in this namespace for each public var in the
+namespaces named by ns-names. The created vars have the same name, root
+binding, and metadata as the original except that their :ns metadata
+value is this namespace."
+  [& ns-names]
+  (doseq [ns ns-names]
+    (require ns)
+    (doseq [[sym var] (ns-publics ns)]
+      (let [v (if (.hasRoot var)
+                (var-get var))
+            var-obj (if v (intern *ns* sym v))]
+        (when var-obj
+          (alter-meta! var-obj
+                       (fn [old] (merge (meta var) old)))
+          var-obj)))))
+
 (defn path-split
   "Split `s` at the file separator."
   [s] (split (str s) (re-pattern File/separator)))

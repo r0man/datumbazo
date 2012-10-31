@@ -1,21 +1,13 @@
 (ns datumbazo.core
+  (:refer-clojure :exclude [group-by])
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.string :refer [join]]
             [datumbazo.meta :as meta]
             [datumbazo.io :as io]
+            [datumbazo.util :refer [immigrate]]
             [inflections.core :refer [singular]]
             [sqlingvo.core :as sql]))
 
-(defn as-identifier [table]
-  (cond
-   (keyword? table)
-   (jdbc/as-identifier table)
-   (and (map? table)
-        (:name table))
-   (->> (map table [:schema :name])
-        (remove nil?)
-        (map jdbc/as-identifier)
-        (join "."))))
+(immigrate 'sqlingvo.core)
 
 (defn count-all
   "Count all rows in the database `table`."
@@ -27,7 +19,7 @@
 (defn delete-table
   "Delete all rows from the database `table`."
   [table & {:keys []}]
-  (-> (str "DELETE FROM " (as-identifier table))
+  (-> (str "DELETE FROM " (jdbc/as-identifier table))
       (jdbc/do-commands)
       (first)))
 
@@ -117,7 +109,7 @@
 
          (defn ~(symbol (str "delete-" table-name))
            ~(format "Delete all rows in the %s database table." table-name)
-           [& ~'opts] (apply delete-table ~symbol# ~'opts))
+           [& ~'opts] (apply delete-table ~(:name table#) ~'opts))
 
          (defn ~(symbol (str "insert-" (singular (str table-name))))
            ~(format "Insert the %s row into the database." (singular (str table-name)))
