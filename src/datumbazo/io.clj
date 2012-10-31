@@ -68,15 +68,15 @@
 
 ;; PRINT
 
-(defmulti print-method-pg-object
+(defmulti print-pg-object
   (fn [^PGobject pg-object ^Writer w]
     (keyword (.getType pg-object))))
 
-(defmethod print-method-pg-object :default [^PGobject pg-object ^Writer w]
+(defmethod print-pg-object :default [^PGobject pg-object ^Writer w]
   (print-method (.getValue pg-object) w))
 
 (defmethod print-method PGobject [^PGobject pg-object ^Writer w]
-  (print-method-pg-object pg-object w))
+  (print-pg-object pg-object w))
 
 (defmethod print-dup PGobject [o w]
   (print-method o w))
