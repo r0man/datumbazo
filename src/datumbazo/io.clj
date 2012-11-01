@@ -2,6 +2,7 @@
   (:import java.io.Writer
            org.postgresql.util.PGobject)
   (:require [clojure.java.jdbc :as jdbc]
+            [clj-time.coerce :refer [to-sql-date]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]))
 
@@ -19,6 +20,9 @@
 
 (defmulti encode-column
   (fn [column value] (:type column)))
+
+(defmethod encode-column :date [column value]
+  (to-sql-date value))
 
 (defmethod encode-column :int4 [column value]
   (encode-integer value))
@@ -76,7 +80,8 @@
   (print-method (.getValue pg-object) w))
 
 (defmethod print-method PGobject [^PGobject pg-object ^Writer w]
+  (prn "PRINT METHOD")
   (print-pg-object pg-object w))
 
-(defmethod print-dup PGobject [o w]
-  (print-method o w))
+(defmethod print-dup PGobject [^PGobject pg-object ^Writer w]
+  (print-pg-object pg-object w))

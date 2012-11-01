@@ -5,7 +5,8 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [join replace]]
-            [datumbazo.util :refer [clojure-file-seq path-split path-replace]]))
+            [datumbazo.util :refer [clojure-file-seq path-split path-replace]]
+            [datumbazo.io :refer [decode-row]]))
 
 (def ^:dynamic *fixture-path* "db/fixtures")
 
@@ -53,7 +54,7 @@
   (with-open [writer (writer filename)]
     (jdbc/with-query-results rows
       [(format "SELECT * FROM %s" (jdbc/as-identifier table))]
-      (pprint rows writer)
+      (pprint (map decode-row rows) writer)
       {:file filename :table table :records (count rows)})))
 
 (defn load-fixtures
