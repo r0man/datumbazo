@@ -70,6 +70,17 @@
     (is (= "eu" (:code row)))
     (is (thrown? Exception (insert-continent row)))))
 
+(database-test test-insert-continents
+  (let [rows (insert-continents [africa europe])]
+    (let [row (first rows)]
+      (is (number? (:id row)))
+      (is (= "Africa" (:name row)))
+      (is (= "af" (:code row))))
+    (let [row (second rows)]
+      (is (number? (:id row)))
+      (is (= "Europe" (:name row)))
+      (is (= "eu" (:code row))))))
+
 (database-test test-save-continent
   (let [row (save-continent europe)]
     (is (number? (:id row)))

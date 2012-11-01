@@ -122,6 +122,10 @@
            ~(format "Insert the %s row into the database." (singular (str table-name)))
            [~'row & ~'opts] (first (apply insert ~(:name table#) ~'row ~'opts)))
 
+         (defn ~(symbol (str "insert-" (str table-name)))
+           ~(format "Insert the %s rows into the database." (singular (str table-name)))
+           [~'rows & ~'opts] (apply insert ~(:name table#) ~'rows ~'opts))
+
          (defn ~(symbol (str "save-" (singular (str table-name))))
            ~(format "Save the %s row to the database." (singular (str table-name)))
            [~'row & ~'opts] (apply save ~(:name table#) ~'row ~'opts))
