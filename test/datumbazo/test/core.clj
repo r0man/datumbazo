@@ -15,12 +15,7 @@
   (is (= (make-table :continents)
          (make-table "continents"))))
 
-(database-test test-insert-record
-  (let [rows (run (insert :continents {:name "Europe" :code "eu"}))]
-    (let [row (first rows)]
-      (is (number? (:id row)))
-      (is (= "Europe" (:name row)))
-      (is (= "eu" (:code row)))))
+(database-test test-insert
   (let [rows (run (insert :continents [{:name "North America" :code "na"} {:name "South America" :code "sa"}]))]
     (let [row (first rows)]
       (is (number? (:id row)))
@@ -31,8 +26,8 @@
       (is (= "South America" (:name row)))
       (is (= "sa" (:code row))))))
 
-(database-test test-update-record
-  (let [europe (first (run (insert :continents {:name "Europe" :code "eu"})))
+(database-test test-update
+  (let [europe (first (run (insert :continents [{:name "Europe" :code "eu"}])))
         rows (run (update :continents (assoc europe :name "Europa")))]
     (let [row (first rows)]
       (is (number? (:id row)))

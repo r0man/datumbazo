@@ -49,7 +49,17 @@
   "Insert `row` into the database `table`."
   [table row]
   (let [rows (if (sequential? row) row [row])]
-    (-> (sqlingvo.core/insert table (map #(io/encode-row table %1) rows))
+    (-> (sqlingvo.core/insert
+         table (io/encode-rows table rows))
+        (returning *))))
+
+(defn insert
+  "Insert rows into the database `table`."
+  [table what]
+  (if (sequential? what)
+    (-> (sqlingvo.core/insert table (io/encode-rows table what))
+        (returning *))
+    (-> (sqlingvo.core/insert table what)
         (returning *))))
 
 (defn update
@@ -86,7 +96,7 @@
 
          (defn ~(symbol (str "insert-" (singular (str table-name))))
            ~(format "Insert the %s row into the database." (singular (str table-name)))
-           [~'row & ~'opts] (first (run (apply insert ~(:name table#) ~'row ~'opts))))
+           [~'row & ~'opts] (first (run (apply insert ~(:name table#) [~'row] ~'opts))))
 
          (defn ~(symbol (str "insert-" (str table-name)))
            ~(format "Insert the %s rows into the database." (singular (str table-name)))

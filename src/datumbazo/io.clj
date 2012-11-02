@@ -47,6 +47,18 @@
             (select-keys row (map :name columns))
             columns)))
 
+(defn encode-rows
+  "Encode the columns of `rows` into database types."
+  [table rows]
+  (let [columns (meta/columns (jdbc/connection) :table table)]
+    (map #(reduce (fn [row column]
+                    (if (contains? row (:name column))
+                      (assoc row (:name column) (encode-column column (get row (:name column))))
+                      row))
+                  (select-keys %1 (map :name columns))
+                  columns)
+         rows)))
+
 ;; DECODE
 
 (defmulti decode-pg-object
