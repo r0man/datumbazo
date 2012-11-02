@@ -9,33 +9,19 @@
 (database-test test-count-all
   (is (= 0 (count-all :continents))))
 
-(database-test test-delete-table
-  (is (= 0 (delete-table :continents)))
-  (is (= 0 (count-all :continents))))
-
-(database-test test-drop-table
-  (is (= 0 (drop-table :countries)))
-  (is (= 0 (drop-table :continents))))
-
 (deftest test-make-table
   (let [table (make-table :continents)]
     (is (= :continents (:name table))))
   (is (= (make-table :continents)
          (make-table "continents"))))
 
-(database-test test-truncate
-  (is (= 0 (truncate :continents :cascade true)))
-  (is (= 0 (count-all :continents)))
-  (is (= 0 (truncate :countries)))
-  (is (= 0 (count-all :countries))))
-
-(database-test test-insert
-  (let [rows (insert :continents {:name "Europe" :code "eu"})]
+(database-test test-insert-record
+  (let [rows (run (insert :continents {:name "Europe" :code "eu"}))]
     (let [row (first rows)]
       (is (number? (:id row)))
       (is (= "Europe" (:name row)))
       (is (= "eu" (:code row)))))
-  (let [rows (insert :continents [{:name "North America" :code "na"} {:name "South America" :code "sa"}])]
+  (let [rows (run (insert :continents [{:name "North America" :code "na"} {:name "South America" :code "sa"}]))]
     (let [row (first rows)]
       (is (number? (:id row)))
       (is (= "North America" (:name row)))
@@ -45,20 +31,10 @@
       (is (= "South America" (:name row)))
       (is (= "sa" (:code row))))))
 
-(database-test test-update
-  (let [europe (first (insert :continents {:name "Europe" :code "eu"}))
-        rows (update :continents (assoc europe :name "Europa"))]
+(database-test test-update-record
+  (let [europe (first (run (insert :continents {:name "Europe" :code "eu"})))
+        rows (run (update :continents (assoc europe :name "Europa")))]
     (let [row (first rows)]
-      (is (number? (:id row)))
-      (is (= "Europa" (:name row)))
-      (is (= "eu" (:code row))))))
-
-(database-test test-save
-  (let [row (save :continents {:name "Europe" :code "eu"})]
-    (is (number? (:id row)))
-    (is (= "Europe" (:name row)))
-    (is (= "eu" (:code row)))
-    (let [row (save :continents (assoc row :name "Europa"))]
       (is (number? (:id row)))
       (is (= "Europa" (:name row)))
       (is (= "eu" (:code row))))))

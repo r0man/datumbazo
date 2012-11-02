@@ -49,7 +49,8 @@
   (is (= "Drop the continents database table."
          (:doc (meta #'drop-continents))))
   (drop-countries)
-  (is (= 0 (drop-continents))))
+  (is (= 0 (drop-continents)))
+  (is (= 0 (drop-continents :if-exists true))))
 
 (database-test test-delete-continents
   (is (= "Delete all rows in the continents database table."
@@ -92,6 +93,7 @@
   (is (= "Truncate the continents database table."
          (:doc (meta #'truncate-continents))))
   (is (= 0 (truncate-continents :cascade true)))
+  (is (= 0 (truncate-continents :cascade true :if-exists true)))
   (is (= 0 (count-all :continents))))
 
 (database-test test-truncate-countries
