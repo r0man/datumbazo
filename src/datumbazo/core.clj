@@ -1,7 +1,7 @@
 (ns datumbazo.core
   (:refer-clojure :exclude [group-by])
   (:require [clojure.java.jdbc :as jdbc]
-            [datumbazo.connection]
+            [datumbazo.connection :as connection]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [immigrate]]
@@ -9,8 +9,8 @@
 
 (immigrate 'sqlingvo.core)
 
-(def #^{:macro true} with-connection
-  #'datumbazo.connection/with-connection)
+(defmacro with-connection [db-name & body]
+  `(connection/with-connection ~db-name ~@body))
 
 (defn run
   "Run the SQL statement `stmt`."
