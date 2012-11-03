@@ -2,9 +2,15 @@
   (:import java.io.Writer
            org.postgresql.util.PGobject)
   (:require [clojure.java.jdbc :as jdbc]
-            [clj-time.coerce :refer [to-sql-date]]
+            [clj-time.coerce :refer [to-sql-date to-timestamp]]
             [datumbazo.meta :as meta]
-            [datumbazo.util :refer :all]))
+            [datumbazo.util :refer :all]
+            [sqlingvo.compiler :refer [SQLType]]))
+
+(extend-type org.joda.time.DateTime
+  SQLType
+  (sql-type [date-time]
+    (to-timestamp date-time)))
 
 ;; ENCODE
 
