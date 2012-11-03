@@ -1,18 +1,23 @@
 (ns datumbazo.core
   (:refer-clojure :exclude [group-by])
   (:require [clojure.java.jdbc :as jdbc]
-            [datumbazo.meta :as meta]
+            [datumbazo.connection]
             [datumbazo.io :as io]
+            [datumbazo.meta :as meta]
             [datumbazo.util :refer [immigrate]]
             [inflections.core :refer [singular]]))
 
 (immigrate 'sqlingvo.core)
 
+(def #^{:macro true} with-connection
+  #'datumbazo.connection/with-connection)
+
 (defn run
   "Run the SQL statement `stmt`."
   [stmt]
   (->> (sqlingvo.core/run stmt)
-       (map io/decode-row)))
+       (map io/decode-row)
+       (doall)))
 
 (defn count-all
   "Count all rows in the database `table`."
