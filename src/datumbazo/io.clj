@@ -92,7 +92,6 @@
   (print-method (.getValue pg-object) w))
 
 (defmethod print-method PGobject [^PGobject pg-object ^Writer w]
-  (prn "PRINT METHOD")
   (print-pg-object pg-object w))
 
 (defmethod print-dup PGobject [^PGobject pg-object ^Writer w]
