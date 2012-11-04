@@ -22,6 +22,12 @@
   (column :continent-id :integer :references :continents/id)
   (column :name :text :unique? true))
 
+(defn save-africa []
+  (save-continent africa))
+
+(defn save-europe []
+  (save-continent europe))
+
 (deftest test-continents-table
   (is (= :continents (:name continents-table)))
   (is (= [:id :name] (:columns continents-table)))
@@ -115,18 +121,36 @@
       (is (= "eu" (:code row))))))
 
 (database-test test-continents
-  (is (empty? (continents))))
+  (is (empty? (continents)))
+  (let [africa (save-continent africa)
+        europe (save-continent europe)]
+    (is (= #{africa europe} (set (continents))))))
 
 (database-test test-countries
   (is (empty? (countries))))
 
 (database-test test-continent-by-id
+  (is (nil? (continent-by-id nil)))
   (is (nil? (continent-by-id 1)))
-  (is (nil? (continent-by-id "1"))))
+  (let [europe (save-continent europe)]
+    (is (= europe (continent-by-id (:id europe))))
+    (is (= europe (continent-by-id (str (:id europe)))))))
+
+(database-test test-continents-by-name
+  (is (nil? (continent-by-name nil)))
+  (is (nil? (continent-by-name "Europe")))
+  (let [europe (save-continent europe)]
+    (is (= europe (continent-by-name (:name europe))))))
 
 (database-test test-continents-by-id
   (is (empty? (continents-by-id 1)))
-  (is (empty? (continents-by-id "1"))))
+  (is (empty? (continents-by-id "1")))
+  (let [europe (save-continent europe)]
+    (is (= [europe] (continents-by-id (:id europe))))
+    (is (= [europe] (continents-by-id (str (:id europe)))))))
 
 (database-test test-continents-by-name
-  (is (empty? (continents-by-name "Europe"))))
+  (is (empty? (continents-by-name nil)))
+  (is (empty? (continents-by-name "Europe")))
+  (let [europe (save-continent europe)]
+    (is (= [europe] (continents-by-name (:name europe))))))

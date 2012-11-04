@@ -149,9 +149,5 @@
                             (where `(= ~(:name column#) ~(io/encode-column column# ~'value))))))
                     (defn ~(symbol (str (singular table-name) "-by-" column-name))
                       ~(format "Find the first %s by %s." (singular table-name) column-name)
-                      [~'value & ~'opts]
-                      (let [column# (first (meta/columns (jdbc/connection) :table ~(:name table#) :name ~(:name column)))]
-                        (assert column#)
-                        (-> (select *)
-                            (from ~(:name table#))
-                            (where `(= ~(:name column#) ~(io/encode-column column# ~'value))))))))))))
+                      [& ~'args]
+                      (first (apply ~(symbol (str table-name "-by-" column-name)) ~'args)))))))))
