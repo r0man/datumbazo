@@ -51,14 +51,6 @@
   [table schema] (assoc table :schema schema))
 
 (defn insert
-  "Insert `row` into the database `table`."
-  [table row]
-  (let [rows (if (sequential? row) row [row])]
-    (-> (sqlingvo.core/insert
-         table (io/encode-rows table rows))
-        (returning *))))
-
-(defn insert
   "Insert rows into the database `table`."
   [table what]
   (if (sequential? what)
