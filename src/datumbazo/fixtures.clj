@@ -57,10 +57,26 @@
       (pprint (map decode-row rows) writer)
       {:file filename :table table :records (count rows)})))
 
+(defn deferred-constraints []
+  (jdbc/do-commands "SET CONSTRAINTS ALL DEFERRED"))
+
+(defn enable-triggers
+  "Enable triggers on the database `table`."
+  [table] (jdbc/do-commands (str "ALTER TABLE " (jdbc/as-identifier table) " ENABLE TRIGGER ALL")))
+
+(defn disable-triggers
+  "Disable triggers on the database `table`."
+  [table] (jdbc/do-commands (str "ALTER TABLE " (jdbc/as-identifier table) " DISABLE TRIGGER ALL")))
+
 (defn load-fixtures
   "Load all database fixtures from `directory`."
   [directory]
-  (jdbc/transaction
-   (->> (fixture-seq directory)
-        (map #(read-fixture (:table %1) (:file %1)))
-        (doall))))
+  (let [fixtures (fixture-seq directory)]
+    (jdbc/transaction
+     (deferred-constraints)
+     (doall (map disable-triggers (map :table fixtures)))
+     (let [fixtures (->> fixtures
+                         (map #(read-fixture (:table %1) (:file %1)))
+                         (doall))]
+       (doall (map enable-triggers (map :table fixtures)))
+       fixtures))))

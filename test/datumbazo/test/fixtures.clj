@@ -10,6 +10,12 @@
 (def fixture-file
   (str fixture-dir "/continents.clj"))
 
+(database-test test-enable-triggers
+  (enable-triggers :continents))
+
+(database-test test-disable-triggers
+  (disable-triggers :continents))
+
 (deftest test-fixture-path
   (is (= "db/fixtures/test-db" (fixture-path "test-db"))))
 
