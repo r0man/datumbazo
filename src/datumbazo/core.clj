@@ -77,6 +77,13 @@
         (where (cons 'or (map #(list '= %1 %2) keys vals)))
         (returning *))))
 
+(defmacro defquery [name doc args & body]
+  (let [query-sym (symbol (str name "*"))]
+    `(do (defn ~query-sym ~doc ~args
+           ~@body)
+         (defn ~name ~doc [& ~'args]
+           (run (apply ~query-sym ~'args))))))
+
 (defmacro deftable
   "Define a database table."
   [table-name doc & body]
@@ -123,18 +130,28 @@
            (or (apply ~(symbol (str "update-" (singular (str table-name)))) ~'row ~'opts)
                (apply ~(symbol (str "insert-" (singular (str table-name)))) ~'row ~'opts)))
 
-         (defn ~table-name
+         (defquery ~table-name
            ~(format "Select %s from the database table." table-name)
            [& ~'opts]
            (-> (select *)
-               (from ~(:name table#))
-               (run)))
+               (from ~(:name table#))))
 
-         ~@(for [column# (map (comp symbol name) (:columns table#))]
-             `(defn ~(symbol (str table-name "-by-" column#)) [~'value & ~'opts]
-                (let [column# (first (meta/columns (jdbc/connection) :table ~(:name table#) :name ~(keyword column#)))]
-                  (assert column#)
-                  (-> (select *)
-                      (from ~(:name table#))
-                      (where `(= ~(:name column#) ~(io/encode-column column# ~'value)))
-                      (run))))))))
+         ~@(for [column (vals (:column table#))
+                 :let [column-name (name (:name column))]]
+             (do
+               `(do (defquery ~(symbol (str table-name "-by-" column-name))
+                      ~(format "Find all %s by %s." table-name column-name)
+                      [~'value & ~'opts]
+                      (let [column# (first (meta/columns (jdbc/connection) :table ~(:name table#) :name ~(:name column)))]
+                        (assert column#)
+                        (-> (select *)
+                            (from ~(:name table#))
+                            (where `(= ~(:name column#) ~(io/encode-column column# ~'value))))))
+                    (defn ~(symbol (str (singular table-name) "-by-" column-name))
+                      ~(format "Find the first %s by %s." (singular table-name) column-name)
+                      [~'value & ~'opts]
+                      (let [column# (first (meta/columns (jdbc/connection) :table ~(:name table#) :name ~(:name column)))]
+                        (assert column#)
+                        (-> (select *)
+                            (from ~(:name table#))
+                            (where `(= ~(:name column#) ~(io/encode-column column# ~'value))))))))))))

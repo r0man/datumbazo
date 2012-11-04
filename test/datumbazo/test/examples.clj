@@ -14,13 +14,13 @@
 (deftable continents
   "The continents database table."
   (column :id :serial)
-  (column :name :text))
+  (column :name :text :unique? true))
 
 (deftable countries
   "The countries database table."
   (column :id :serial)
   (column :continent-id :integer :references :continents/id)
-  (column :name :text))
+  (column :name :text :unique? true))
 
 (deftest test-continents-table
   (is (= :continents (:name continents-table)))
@@ -119,6 +119,10 @@
 
 (database-test test-countries
   (is (empty? (countries))))
+
+(database-test test-continent-by-id
+  (is (nil? (continent-by-id 1)))
+  (is (nil? (continent-by-id "1"))))
 
 (database-test test-continents-by-id
   (is (empty? (continents-by-id 1)))
