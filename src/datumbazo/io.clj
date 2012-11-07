@@ -37,7 +37,7 @@
   (encode-integer value))
 
 (defmethod encode-column :timestamptz [column value]
-  value)
+  (to-timestamp value))
 
 (defmethod encode-column :default [column value]
   value)
@@ -105,3 +105,11 @@
 
 (defmethod print-dup PGobject [^PGobject pg-object ^Writer w]
   (print-pg-object pg-object w))
+
+(defmethod print-method org.joda.time.DateTime
+  [^org.joda.time.DateTime d ^Writer w]
+  (print-method (java.util.Date. (.getMillis d)) w))
+
+(defmethod print-dup org.joda.time.DateTime
+  [^org.joda.time.DateTime d ^Writer w]
+  (print-dup (java.util.Date. (.getMillis d)) w))
