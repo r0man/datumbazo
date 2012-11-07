@@ -62,12 +62,14 @@
 (defn update
   "Update `row` to the database `table`."
   [table row]
-  (let [pks (meta/unique-columns (jdbc/connection) :table table)
-        keys (map :name pks)
-        vals (map row keys)]
-    (-> (sqlingvo.core/update table (io/encode-row table row))
-        (where (cons 'or (map #(list '= %1 %2) keys vals)))
-        (returning *))))
+  (if (map? row)
+    (let [pks (meta/unique-columns (jdbc/connection) :table table)
+          keys (map :name pks)
+          vals (map row keys)]
+      (-> (sqlingvo.core/update table (io/encode-row table row))
+          (where (cons 'or (map #(list '= %1 %2) keys vals)))
+          (returning *)))
+    (sqlingvo.core/update table row)))
 
 (defmacro defquery [name doc args & body]
   (let [query-sym (symbol (str name "*"))]
