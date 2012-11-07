@@ -2,7 +2,7 @@
   (:import java.io.Writer
            org.postgresql.util.PGobject)
   (:require [clojure.java.jdbc :as jdbc]
-            [clj-time.coerce :refer [to-sql-date to-timestamp]]
+            [clj-time.coerce :refer [to-date-time to-sql-date to-timestamp]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]
             [sqlingvo.compiler :refer [SQLType]]))
@@ -77,6 +77,9 @@
 
 (defmethod decode-column PGobject [value]
   (decode-pg-object value))
+
+(defmethod decode-column java.util.Date [value]
+  (to-date-time value))
 
 (defmethod decode-column :default [value]
   value)
