@@ -71,12 +71,21 @@
           (returning *)))
     (sqlingvo.core/update table row)))
 
-(defmacro defquery [name doc args & body]
+(defmacro defquery [name doc args body & [map-fn]]
   (let [query-sym (symbol (str name "*"))]
     `(do (defn ~query-sym ~doc ~args
-           ~@body)
+           ~body)
          (defn ~name ~doc [& ~'args]
            (run (apply ~query-sym ~'args))))))
+
+(defmacro defquery1 [name doc args body & [map-fn]]
+  (let [query-sym (symbol (str name "*"))]
+    `(do (defn ~query-sym ~doc ~args
+           ~body)
+         (defn ~name ~doc [& ~'args]
+           (->> (run (apply ~query-sym ~'args))
+                (map (or ~map-fn identity))
+                (first))))))
 
 (defmacro deftable
   "Define a database table."
