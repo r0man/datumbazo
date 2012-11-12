@@ -1,6 +1,7 @@
 (ns datumbazo.core
   (:refer-clojure :exclude [group-by])
   (:require [clojure.java.jdbc :as jdbc]
+            [clojure.string :as str]
             [datumbazo.connection :as connection]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
@@ -50,6 +51,10 @@
   "Assoc `schema` under the :schema key to `table`."
   [table schema] (assoc table :schema schema))
 
+(defn table
+  "Assoc `name` under the :name key to `table`."
+  [table name] (assoc table :name name))
+
 (defn insert
   "Insert rows into the database `table`."
   [table what]
@@ -87,6 +92,23 @@
                 (map (or ~map-fn identity))
                 (first))))))
 
+(defn as-identifier [obj]
+  (->> [(:schema obj)
+        (:table obj)
+        (:name obj)]
+       (map jdbc/as-identifier)
+       (remove str/blank?)
+       (str/join ".")))
+
+(defn as-keyword [obj]
+  (->> [(:schema obj)
+        (:table obj)
+        (:name obj)]
+       (map jdbc/as-identifier)
+       (remove str/blank?)
+       (str/join ".")
+       (keyword)))
+
 (defmacro deftable
   "Define a database table."
   [table-name doc & body]
@@ -99,33 +121,33 @@
          (defn ~(symbol (str "drop-" table-name))
            ~(format "Drop the %s database table." table-name)
            [& ~'opts]
-           (-> (apply drop-table ~(:name table#) ~'opts)
+           (-> (apply drop-table ~(as-keyword table#) ~'opts)
                run first :count))
 
          (defn ~(symbol (str "delete-" table-name))
            ~(format "Delete all rows in the %s database table." table-name)
            [& ~'opts]
-           (-> (str "DELETE FROM " (jdbc/as-identifier ~(:name table#)))
+           (-> (str "DELETE FROM " (jdbc/as-identifier ~(as-keyword table#)))
                (jdbc/do-commands)
                first))
 
          (defn ~(symbol (str "insert-" (singular (str table-name))))
            ~(format "Insert the %s row into the database." (singular (str table-name)))
-           [~'row & ~'opts] (first (run (apply insert ~(:name table#) [~'row] ~'opts))))
+           [~'row & ~'opts] (first (run (apply insert ~(as-keyword table#) [~'row] ~'opts))))
 
          (defn ~(symbol (str "insert-" (str table-name)))
            ~(format "Insert the %s rows into the database." (singular (str table-name)))
-           [~'rows & ~'opts] (run (apply insert ~(:name table#) ~'rows ~'opts)))
+           [~'rows & ~'opts] (run (apply insert ~(as-keyword table#) ~'rows ~'opts)))
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
            [& ~'opts]
-           (-> (apply truncate ~(:name table#) ~'opts)
+           (-> (apply truncate ~(as-keyword table#) ~'opts)
                run first :count))
 
          (defn ~(symbol (str "update-" (singular (str table-name))))
            ~(format "Update the %s row in the database." (singular (str table-name)))
-           [~'row & ~'opts] (first (run (apply update ~(:name table#) ~'row ~'opts))))
+           [~'row & ~'opts] (first (run (apply update ~(as-keyword table#) ~'row ~'opts))))
 
          (defn ~(symbol (str "save-" (singular (str table-name))))
            ~(format "Save the %s row to the database." (singular (str table-name)))
@@ -137,7 +159,7 @@
            ~(format "Select %s from the database table." table-name)
            [& ~'opts]
            (-> (select *)
-               (from ~(:name table#))))
+               (from ~(as-keyword table#))))
 
          ~@(for [column (vals (:column table#))
                  :let [column-name (name (:name column))]]
@@ -145,10 +167,10 @@
                `(do (defquery ~(symbol (str table-name "-by-" column-name))
                       ~(format "Find all %s by %s." table-name column-name)
                       [~'value & ~'opts]
-                      (let [column# (first (meta/columns (jdbc/connection) :table ~(:name table#) :name ~(:name column)))]
+                      (let [column# (first (meta/columns (jdbc/connection) :schema ~(:schema table#) :table ~(:name table#) :name ~(:name column)))]
                         (assert column#)
                         (-> (select *)
-                            (from ~(:name table#))
+                            (from ~(as-keyword table#))
                             (where `(= ~(:name column#) ~(io/encode-column column# ~'value))))))
                     (defn ~(symbol (str (singular table-name) "-by-" column-name))
                       ~(format "Find the first %s by %s." (singular table-name) column-name)
