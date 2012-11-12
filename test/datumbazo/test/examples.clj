@@ -5,12 +5,6 @@
         datumbazo.core
         datumbazo.test))
 
-(def africa
-  {:name "Africa" :code "af"})
-
-(def europe
-  {:name "Europe" :code "eu"})
-
 (deftable continents
   "The continents database table."
   (column :id :serial)
@@ -53,6 +47,12 @@
   (column :text :text :not-null? true)
   (column :created-at :timestamp-with-time-zone :not-null? true :default "now()")
   (column :updated-at :timestamp-with-time-zone :not-null? true :default "now()"))
+
+(def africa
+  {:name "Africa" :code "af"})
+
+(def europe
+  {:name "Europe" :code "eu"})
 
 (defn save-africa []
   (save-continent africa))
