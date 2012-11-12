@@ -22,6 +22,38 @@
   (column :continent-id :integer :references :continents/id)
   (column :name :text :unique? true))
 
+(deftable twitter-users
+  "The Twitter users database table."
+  (schema :twitter)
+  (table :users)
+  (column :id :serial)
+  (column :screen-name :text :not-null? true)
+  (column :name :text :not-null? true)
+  (column :followers-count :integer :not-null? true :default 0)
+  (column :friends-count :integer :not-null? true :default 0)
+  (column :retweet-count :integer :not-null? true :default 0)
+  (column :statuses-count :integer :not-null? true :default 0)
+  (column :verified :boolean :not-null? true :default false)
+  (column :possibly-sensitive :boolean :not-null? true :default false)
+  (column :location :text)
+  (column :time-zone :text)
+  (column :lang :varchar :length 2)
+  (column :url :text)
+  (column :profile-image-url :text)
+  (column :created-at :timestamp-with-time-zone :not-null? true :default "now()")
+  (column :updated-at :timestamp-with-time-zone :not-null? true :default "now()"))
+
+(deftable twitter-tweets
+  "The Twitter tweets database table."
+  (schema :twitter)
+  (table :tweets)
+  (column :id :serial)
+  (column :user-id :integer :references :twitter.users/id)
+  (column :retweeted :boolean :not-null? true :default false)
+  (column :text :text :not-null? true)
+  (column :created-at :timestamp-with-time-zone :not-null? true :default "now()")
+  (column :updated-at :timestamp-with-time-zone :not-null? true :default "now()"))
+
 (defn save-africa []
   (save-continent africa))
 
@@ -154,3 +186,9 @@
   (is (empty? (continents-by-name "Europe")))
   (let [europe (save-continent europe)]
     (is (= [europe] (continents-by-name (:name europe))))))
+
+(database-test test-twitter-users
+  (is (empty? (twitter-users))))
+
+(database-test test-twitter-tweets
+  (is (empty? (twitter-tweets))))

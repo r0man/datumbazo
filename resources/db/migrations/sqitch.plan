@@ -6,3 +6,6 @@ create-postgis-extension 2012-10-31T20:05:33Z roman <roman@bombaclaat> # Create 
 create-citext-extension 2012-10-31T20:06:57Z roman <roman@bombaclaat> # Create CITEXT extension
 create-continents-table 2012-10-31T20:09:07Z roman <roman@bombaclaat> # Create continents table
 create-countries-table 2012-10-31T20:09:17Z roman <roman@bombaclaat> # Create countries table
+create-twitter-schema 2012-11-12T21:15:04Z roman <roman@bombaclaat> # Create twitter schema
+create-twitter-users-table 2012-11-12T21:15:15Z roman <roman@bombaclaat> # Create twitter users table
+create-twitter-tweets-table 2012-11-12T21:15:20Z roman <roman@bombaclaat> # Create twitter tweets table
