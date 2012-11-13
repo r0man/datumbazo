@@ -192,3 +192,23 @@
 
 (database-test test-twitter-tweets
   (is (empty? (twitter-tweets))))
+
+(database-test test-save-twitter-user
+  (let [user {:created-at #inst "2011-02-22T06:29:06.000-00:00"
+              :default-profile-image false
+              :description ""
+              :favourites-count 0
+              :followers-count 1864
+              :friends-count 4
+              :id 255879714
+              :lang "en"
+              :listed-count 61
+              :location ""
+              :name "FinancePress"
+              :profile-image-url "http://a0.twimg.com/profile_images/1251163314/finpress2_normal.png"
+              :screen-name "thefinancepress"
+              :statuses-count 92687
+              :time-zone nil
+              :url nil
+              :verified false}]
+    (is (save-twitter-user (save-twitter-user user)))))

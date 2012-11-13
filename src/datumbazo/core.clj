@@ -5,13 +5,23 @@
             [datumbazo.connection :as connection]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
-            [datumbazo.util :refer [immigrate]]
+            [datumbazo.util :refer [immigrate parse-table]]
             [inflections.core :refer [singular]]))
 
 (immigrate 'sqlingvo.core)
 
-(defmacro with-connection [db-name & body]
-  `(connection/with-connection ~db-name ~@body))
+(defn as-identifier [obj]
+  (->> [(:schema obj) (:table obj) (:name obj)]
+       (map jdbc/as-identifier)
+       (remove str/blank?)
+       (str/join ".")))
+
+(defn as-keyword [obj]
+  (->> [(:schema obj) (:table obj) (:name obj)]
+       (map jdbc/as-identifier)
+       (remove str/blank?)
+       (str/join ".")
+       (keyword)))
 
 (defn run
   "Run the SQL statement `stmt`."
@@ -68,20 +78,22 @@
   "Update `row` to the database `table`."
   [table row]
   (if (map? row)
-    (let [pks (meta/unique-columns (jdbc/connection) :table table)
+    (let [table (parse-table table)
+          pks (meta/unique-columns (jdbc/connection) :schema (:schema table) :table (:name table))
           keys (map :name pks)
           vals (map row keys)]
-      (-> (sqlingvo.core/update table (io/encode-row table row))
+      (-> (sqlingvo.core/update (as-keyword table) (io/encode-row (as-keyword table) row))
           (where (cons 'or (map #(list '= %1 %2) keys vals)))
           (returning *)))
-    (sqlingvo.core/update table row)))
+    (sqlingvo.core/update (as-keyword table) row)))
 
 (defmacro defquery [name doc args body & [map-fn]]
   (let [query-sym (symbol (str name "*"))]
     `(do (defn ~query-sym ~doc ~args
            ~body)
          (defn ~name ~doc [& ~'args]
-           (run (apply ~query-sym ~'args))))))
+           (->> (run (apply ~query-sym ~'args))
+                (map (or ~map-fn identity)))))))
 
 (defmacro defquery1 [name doc args body & [map-fn]]
   (let [query-sym (symbol (str name "*"))]
@@ -91,23 +103,6 @@
            (->> (run (apply ~query-sym ~'args))
                 (map (or ~map-fn identity))
                 (first))))))
-
-(defn as-identifier [obj]
-  (->> [(:schema obj)
-        (:table obj)
-        (:name obj)]
-       (map jdbc/as-identifier)
-       (remove str/blank?)
-       (str/join ".")))
-
-(defn as-keyword [obj]
-  (->> [(:schema obj)
-        (:table obj)
-        (:name obj)]
-       (map jdbc/as-identifier)
-       (remove str/blank?)
-       (str/join ".")
-       (keyword)))
 
 (defmacro deftable
   "Define a database table."
@@ -176,3 +171,7 @@
                       ~(format "Find the first %s by %s." (singular table-name) column-name)
                       [& ~'args]
                       (first (apply ~(symbol (str table-name "-by-" column-name)) ~'args)))))))))
+
+(defmacro with-connection
+  "Evaluates `body` with a connection to `db-name`."
+  [db-name & body] `(connection/with-connection ~db-name ~@body))

@@ -45,7 +45,8 @@
 (defn encode-row
   "Encode the columns of `row` into database types."
   [table row]
-  (let [columns (meta/columns (jdbc/connection) :table table)]
+  (let [table (parse-table table)
+        columns (meta/columns (jdbc/connection) :schema (:schema table) :table (:name table))]
     (reduce (fn [row column]
               (if (contains? row (:name column))
                 (assoc row (:name column) (encode-column column (get row (:name column))))
@@ -56,7 +57,8 @@
 (defn encode-rows
   "Encode the columns of `rows` into database types."
   [table rows]
-  (let [columns (meta/columns (jdbc/connection) :table table)]
+  (let [table (parse-table table)
+        columns (meta/columns (jdbc/connection) :schema (:schema table) :table (:name table))]
     (map #(reduce (fn [row column]
                     (if (contains? row (:name column))
                       (assoc row (:name column) (encode-column column (get row (:name column))))

@@ -6,8 +6,10 @@ CREATE TABLE twitter.users (
   id integer PRIMARY KEY,
   screen_name text NOT NULL,
   name text NOT NULL,
+  description text,
   followers_count integer NOT NULL DEFAULT 0,
   friends_count integer NOT NULL DEFAULT 0,
+  listed_count integer NOT NULL DEFAULT 0,
   retweet_count integer NOT NULL DEFAULT 0,
   statuses_count integer NOT NULL DEFAULT 0,
   verified boolean NOT NULL DEFAULT false,
@@ -17,6 +19,7 @@ CREATE TABLE twitter.users (
   lang varchar(2),
   url text,
   profile_image_url text,
+  default_profile_image boolean NOT NULL DEFAULT true,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now()
 );
