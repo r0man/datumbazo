@@ -38,7 +38,7 @@
     (let [spec (:spec spec)]
       (is (= "postgresql" (:subprotocol spec)))
       (is (= "//localhost:5432/datumbazo?ssl=true" (:subname spec)))
-      (is (= "tiger" (:username spec)))
+      (is (= "tiger" (:user spec)))
       (is (= "scotch" (:password spec)))))
   (let [spec (connection-spec "sqlite://tmp/datumbazo.sqlite")]
     (is (= "org.sqlite.JDBC" (:classname spec)))

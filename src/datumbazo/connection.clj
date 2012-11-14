@@ -35,8 +35,9 @@
                            ":" (:db url))})))
 
 (defmethod connection-spec :postgresql [db-url]
-  (assoc (util/parse-db-url db-url)
-    :classname "org.postgresql.Driver"))
+  (let [url (util/parse-db-url db-url)]
+    (-> (assoc url :classname "org.postgresql.Driver")
+        (assoc-in [:spec :user] (:username url)))))
 
 (defmethod connection-spec :sqlite [db-url]
   (if-let [matches (re-matches #"(([^:]+):)?([^:]+):([^?]+)(\?(.*))?" (str db-url))]
