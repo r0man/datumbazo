@@ -6,22 +6,34 @@
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [immigrate parse-table]]
-            [inflections.core :refer [singular]]))
+            [inflections.core :refer [hyphenize singular]]))
 
 (immigrate 'sqlingvo.core)
 
 (defn as-identifier [obj]
-  (->> [(:schema obj) (:table obj) (:name obj)]
-       (map jdbc/as-identifier)
-       (remove str/blank?)
-       (str/join ".")))
+  (cond
+   (keyword? obj)
+   (jdbc/as-identifier obj)
+   (string? obj)
+   obj
+   (map? obj)
+   (->> [(:schema obj) (:table obj) (:name obj)]
+        (map jdbc/as-identifier)
+        (remove str/blank?)
+        (str/join "."))))
 
 (defn as-keyword [obj]
-  (->> [(:schema obj) (:table obj) (:name obj)]
-       (map jdbc/as-identifier)
-       (remove str/blank?)
-       (str/join ".")
-       (keyword)))
+  (cond
+   (keyword? obj)
+   obj
+   (string? obj)
+   (keyword (hyphenize obj))
+   (map? obj)
+   (->> [(:schema obj) (:table obj) (:name obj)]
+        (map jdbc/as-identifier)
+        (remove str/blank?)
+        (str/join ".")
+        (keyword))))
 
 (defn run
   "Run the SQL statement `stmt`."
