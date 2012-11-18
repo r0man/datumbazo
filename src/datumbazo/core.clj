@@ -93,14 +93,9 @@
     (let [table (parse-table table)
           pks (meta/primary-keys (jdbc/connection) :schema (:schema table) :table (:name table))
           pk-keys (map :name pks)
-          pk-vals (map row pk-keys)
-          uks (meta/unique-columns (jdbc/connection) :schema (:schema table) :table (:name table))
-          uk-keys (map :name uks)
-          uk-vals (map row uk-keys)]
+          pk-vals (map row pk-keys)]
       (-> (sqlingvo.core/update (as-keyword table) (io/encode-row (as-keyword table) row))
-          (where (list 'or
-                       (cons 'and (map #(list '= %1 %2) pk-keys pk-vals))
-                       (cons 'or (map #(list '= %1 %2) uk-keys uk-vals))))
+          (where (cons 'and (map #(list '= %1 %2) pk-keys pk-vals)))
           (returning *)))
     (sqlingvo.core/update (as-keyword table) row)))
 
