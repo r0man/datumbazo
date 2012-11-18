@@ -92,10 +92,15 @@
   (if (map? row)
     (let [table (parse-table table)
           pks (meta/primary-keys (jdbc/connection) :schema (:schema table) :table (:name table))
-          keys (map :name pks)
-          vals (map row keys)]
+          pk-keys (map :name pks)
+          pk-vals (map row pk-keys)
+          uks (meta/unique-columns (jdbc/connection) :schema (:schema table) :table (:name table))
+          uk-keys (map :name uks)
+          uk-vals (map row uk-keys)]
       (-> (sqlingvo.core/update (as-keyword table) (io/encode-row (as-keyword table) row))
-          (where (cons 'and (map #(list '= %1 %2) keys vals)))
+          (where (list 'or
+                       (cons 'and (map #(list '= %1 %2) pk-keys pk-vals))
+                       (cons 'or (map #(list '= %1 %2) uk-keys uk-vals))))
           (returning *)))
     (sqlingvo.core/update (as-keyword table) row)))
 
