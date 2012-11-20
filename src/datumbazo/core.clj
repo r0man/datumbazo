@@ -133,10 +133,7 @@
 
          (defn ~(symbol (str "delete-" table-name))
            ~(format "Delete all rows in the %s database table." table-name)
-           [& ~'opts]
-           (-> (str "DELETE FROM " (jdbc/as-identifier ~(as-keyword table#)))
-               (jdbc/do-commands)
-               first))
+           [& ~'opts] (-> (run (delete ~(as-keyword table#))) first :count))
 
          (defn ~(symbol (str "insert-" (singular (str table-name))))
            ~(format "Insert the %s row into the database." (singular (str table-name)))
