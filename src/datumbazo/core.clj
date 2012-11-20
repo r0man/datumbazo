@@ -127,9 +127,7 @@
 
          (defn ~(symbol (str "drop-" table-name))
            ~(format "Drop the %s database table." table-name)
-           [& ~'opts]
-           (-> (apply drop-table ~(as-keyword table#) ~'opts)
-               run first :count))
+           [& ~'opts] (-> (apply drop-table ~(as-keyword table#) ~'opts) run first :count))
 
          (defn ~(symbol (str "delete-" table-name))
            ~(format "Delete all rows in the %s database table." table-name)
@@ -137,7 +135,7 @@
 
          (defn ~(symbol (str "insert-" (singular (str table-name))))
            ~(format "Insert the %s row into the database." (singular (str table-name)))
-           [~'row & ~'opts] (first (run (apply insert ~(as-keyword table#) [~'row] ~'opts))))
+           [~'row & ~'opts] (-> (apply insert ~(as-keyword table#) [~'row] ~'opts) run first))
 
          (defn ~(symbol (str "insert-" (str table-name)))
            ~(format "Insert the %s rows into the database." (singular (str table-name)))
@@ -145,13 +143,11 @@
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
-           [& ~'opts]
-           (-> (apply truncate ~(as-keyword table#) ~'opts)
-               run first :count))
+           [& ~'opts] (-> (apply truncate ~(as-keyword table#) ~'opts) run first :count))
 
          (defn ~(symbol (str "update-" (singular (str table-name))))
            ~(format "Update the %s row in the database." (singular (str table-name)))
-           [~'row & ~'opts] (first (run (apply update ~(as-keyword table#) ~'row ~'opts))))
+           [~'row & ~'opts] (-> (apply update ~(as-keyword table#) ~'row ~'opts) run first))
 
          (defn ~(symbol (str "save-" (singular (str table-name))))
            ~(format "Save the %s row to the database." (singular (str table-name)))
