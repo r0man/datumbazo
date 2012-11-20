@@ -6,9 +6,12 @@
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [immigrate parse-table]]
-            [inflections.core :refer [hyphenize singular]]))
+            [inflections.core :refer [hyphenize singular]]
+            [inflections.util :refer [parse-integer]]))
 
 (immigrate 'sqlingvo.core)
+
+(def ^:dynamic *per-page* 25)
 
 (defn as-identifier [obj]
   (cond
@@ -68,6 +71,15 @@
   (let [column (apply make-column name type options)]
     (-> (update-in table [:columns] #(concat %1 [(:name column)]))
         (assoc-in [:column (:name column)] column))))
+
+(defn paginate
+  "Add LIMIT and OFFSET clauses to `query` according to
+  `page` (default: 1) and `per-page` (default: `*per-page*`)."
+  [query & {:keys [page per-page]}]
+  (let [page (parse-integer (or page 1))
+        per-page (parse-integer (or per-page *per-page*))]
+    (-> (limit query per-page)
+        (offset (* (dec page) (or per-page *per-page*))))))
 
 (defn schema
   "Assoc `schema` under the :schema key to `table`."
@@ -157,9 +169,12 @@
 
          (defquery ~table-name
            ~(format "Select %s from the database table." table-name)
-           [& ~'opts]
+           [& {:as ~'opts}]
            (-> (select *)
-               (from ~(as-keyword table#))))
+               (from ~(as-keyword table#))
+               (paginate :page (:page ~'opts) :per-page (:per-page ~'opts))
+               (test-> (:order-by ~'opts)
+                       (order-by [(:order-by ~'opts)]))))
 
          ~@(for [column (vals (:column table#))
                  :let [column-name (name (:name column))]]

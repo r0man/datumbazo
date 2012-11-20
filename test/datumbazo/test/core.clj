@@ -48,6 +48,20 @@
       (is (= "South America" (:name row)))
       (is (= "sa" (:code row))))))
 
+(deftest test-paginate
+  (are [query page per-page expected]
+       (is (= expected (sql (paginate query :page page :per-page per-page))))
+       (-> (select *) (from :continents)) nil nil
+       ["SELECT * FROM continents LIMIT 25 OFFSET 0"]
+       (-> (select *) (from :continents)) 1 nil
+       ["SELECT * FROM continents LIMIT 25 OFFSET 0"]
+       (-> (select *) (from :continents)) 2 nil
+       ["SELECT * FROM continents LIMIT 25 OFFSET 25"]
+       (-> (select *) (from :continents)) 1 10
+       ["SELECT * FROM continents LIMIT 10 OFFSET 0"]
+       (-> (select *) (from :continents)) 2 10
+       ["SELECT * FROM continents LIMIT 10 OFFSET 10"]))
+
 (database-test test-update
   (let [europe (first (run (insert :continents [{:name "Europe" :code "eu"}])))
         rows (run (update :continents (assoc europe :name "Europa")))]

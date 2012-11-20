@@ -154,9 +154,11 @@
 
 (database-test test-continents
   (is (empty? (continents)))
-  (let [africa (save-continent africa)
-        europe (save-continent europe)]
-    (is (= #{africa europe} (set (continents))))))
+  (let [europe (save-continent europe)
+        africa (save-continent africa)]
+    (is (= #{africa europe} (set (continents))))
+    (is (= [africa] (continents :page 1 :per-page 1 :order-by :name)))
+    (is (= [europe] (continents :page 2 :per-page 1 :order-by :name)))))
 
 (database-test test-countries
   (is (empty? (countries))))
