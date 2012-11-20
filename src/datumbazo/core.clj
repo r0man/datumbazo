@@ -123,7 +123,7 @@
   (let [query-sym (symbol (str name "*"))]
     `(do (defn ~query-sym ~doc ~args
            ~body)
-         (defn ~name ~doc [& ~'args]
+         (defn ~name ~doc ~args
            (->> (run1 ~body)
                 ((or ~map-fn identity)))))))
 
