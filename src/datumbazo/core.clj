@@ -38,19 +38,41 @@
         (str/join ".")
         (keyword))))
 
-(defn run
-  "Run the SQL statement `stmt`."
-  [stmt]
-  (->> (sqlingvo.core/run stmt)
-       (map io/decode-row)
-       (doall)))
+(defmacro run
+  "Run `stmts` against the current clojure.java.jdbc database
+  connection ans return all rows."
+  [& stmts] `(doall (map io/decode-row (sqlingvo.core/run ~@stmts))))
+
+(defmacro run1
+  "Run `stmts` against the current clojure.java.jdbc database
+  connection and return the first row."
+  [& stmts] `(io/decode-row (sqlingvo.core/run1 ~@stmts)))
+
+(defn insert
+  "Insert rows into the database `table`."
+  [table what]
+  (if (sequential? what)
+    (-> (sqlingvo.core/insert table (io/encode-rows table what))
+        (returning *))
+    (-> (sqlingvo.core/insert table what)
+        (returning *))))
+
+(defn update
+  "Update `row` to the database `table`."
+  [table row]
+  (if (map? row)
+    (let [table (parse-table table)
+          pks (meta/primary-keys (jdbc/connection) :schema (:schema table) :table (:name table))
+          pk-keys (map :name pks)
+          pk-vals (map row pk-keys)]
+      (-> (sqlingvo.core/update (as-keyword table) (io/encode-row (as-keyword table) row))
+          (where (cons 'and (map #(list '= %1 %2) pk-keys pk-vals)))
+          (returning *)))
+    (sqlingvo.core/update (as-keyword table) row)))
 
 (defn count-all
   "Count all rows in the database `table`."
-  [table]
-  (-> (select '(count *))
-      (from table)
-      (run) first :count))
+  [table] (:count (run1 (select '(count *)) (from table))))
 
 (defn make-table
   "Make a database table."
@@ -89,34 +111,12 @@
   "Assoc `name` under the :name key to `table`."
   [table name] (assoc table :name name))
 
-(defn insert
-  "Insert rows into the database `table`."
-  [table what]
-  (if (sequential? what)
-    (-> (sqlingvo.core/insert table (io/encode-rows table what))
-        (returning *))
-    (-> (sqlingvo.core/insert table what)
-        (returning *))))
-
-(defn update
-  "Update `row` to the database `table`."
-  [table row]
-  (if (map? row)
-    (let [table (parse-table table)
-          pks (meta/primary-keys (jdbc/connection) :schema (:schema table) :table (:name table))
-          pk-keys (map :name pks)
-          pk-vals (map row pk-keys)]
-      (-> (sqlingvo.core/update (as-keyword table) (io/encode-row (as-keyword table) row))
-          (where (cons 'and (map #(list '= %1 %2) pk-keys pk-vals)))
-          (returning *)))
-    (sqlingvo.core/update (as-keyword table) row)))
-
 (defmacro defquery [name doc args body & [map-fn]]
   (let [query-sym (symbol (str name "*"))]
     `(do (defn ~query-sym ~doc ~args
            ~body)
-         (defn ~name ~doc [& ~'args]
-           (->> (run (apply ~query-sym ~'args))
+         (defn ~name ~doc ~args
+           (->> (run ~body)
                 (map (or ~map-fn identity)))))))
 
 (defmacro defquery1 [name doc args body & [map-fn]]
@@ -124,9 +124,8 @@
     `(do (defn ~query-sym ~doc ~args
            ~body)
          (defn ~name ~doc [& ~'args]
-           (->> (run (apply ~query-sym ~'args))
-                (map (or ~map-fn identity))
-                (first))))))
+           (->> (run1 ~body)
+                ((or ~map-fn identity)))))))
 
 (defmacro deftable
   "Define a database table."
@@ -139,15 +138,15 @@
 
          (defn ~(symbol (str "drop-" table-name))
            ~(format "Drop the %s database table." table-name)
-           [& ~'opts] (-> (apply drop-table ~(as-keyword table#) ~'opts) run first :count))
+           [& ~'opts] (:count  (run1 (apply drop-table ~(as-keyword table#) ~'opts))))
 
          (defn ~(symbol (str "delete-" table-name))
            ~(format "Delete all rows in the %s database table." table-name)
-           [& ~'opts] (-> (run (delete ~(as-keyword table#))) first :count))
+           [& ~'opts] (:count (run1 (delete ~(as-keyword table#)))))
 
          (defn ~(symbol (str "insert-" (singular (str table-name))))
            ~(format "Insert the %s row into the database." (singular (str table-name)))
-           [~'row & ~'opts] (-> (apply insert ~(as-keyword table#) [~'row] ~'opts) run first))
+           [~'row & ~'opts] (run1 (apply insert ~(as-keyword table#) [~'row] ~'opts)))
 
          (defn ~(symbol (str "insert-" (str table-name)))
            ~(format "Insert the %s rows into the database." (singular (str table-name)))
@@ -155,11 +154,11 @@
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
-           [& ~'opts] (-> (apply truncate ~(as-keyword table#) ~'opts) run first :count))
+           [& ~'opts] (:count (run1 (apply truncate ~(as-keyword table#) ~'opts))))
 
          (defn ~(symbol (str "update-" (singular (str table-name))))
            ~(format "Update the %s row in the database." (singular (str table-name)))
-           [~'row & ~'opts] (-> (apply update ~(as-keyword table#) ~'row ~'opts) run first))
+           [~'row & ~'opts] (run1 (apply update ~(as-keyword table#) ~'row ~'opts)))
 
          (defn ~(symbol (str "save-" (singular (str table-name))))
            ~(format "Save the %s row to the database." (singular (str table-name)))
