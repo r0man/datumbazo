@@ -1,5 +1,6 @@
 (defproject datumbazo "0.0.5-SNAPSHOT"
   :description "Clojure Database Kung-Foo"
+  :url "https://github.com/r0man/datumbazo"
   :min-lein-version "2.0.0"
   :dependencies [[clj-time "0.4.4"]
                  [environ "0.3.0"]
