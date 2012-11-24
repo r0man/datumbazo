@@ -1,6 +1,7 @@
 (ns datumbazo.test.examples
   (:refer-clojure :exclude [group-by])
-  (:require [clojure.java.jdbc :as jdbc])
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.string :refer [upper-case]])
   (:use clojure.test
         datumbazo.core
         datumbazo.test))
@@ -187,7 +188,9 @@
   (is (empty? (continents-by-name nil)))
   (is (empty? (continents-by-name "Europe")))
   (let [europe (save-continent europe)]
-    (is (= [europe] (continents-by-name (:name europe))))))
+    (is (= [europe] (continents-by-name (:name europe))))
+    (is (= (continents-by-name (:name europe))
+           (continents-by-name (upper-case (:name europe)))))))
 
 (database-test test-twitter-users
   (is (empty? (twitter-users))))

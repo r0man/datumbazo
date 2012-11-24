@@ -36,6 +36,11 @@
 (defmethod encode-column :serial [column value]
   (encode-integer value))
 
+(defmethod encode-column :citext [column value]
+  (doto (org.postgresql.util.PGobject.)
+    (.setValue value)
+    (.setType "citext")))
+
 (defmethod encode-column :timestamptz [column value]
   (to-timestamp value))
 
