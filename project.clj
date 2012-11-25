@@ -6,8 +6,9 @@
                  [environ "0.3.0"]
                  [inflections "0.7.3"]
                  [org.clojure/algo.monads "0.1.0"]
-                 [org.clojure/clojure "1.5.0-beta1"]
+                 [org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.3"]
+                 [org.cloudhoist/thread-expr "1.2.0"]
                  [org.postgis/postgis-jdbc "1.3.3"]
                  [postgresql/postgresql "9.1-901.jdbc4"]
                  [slingshot "0.10.3"]
@@ -22,4 +23,5 @@
   :hooks [environ.leiningen.hooks]
   :db [{:name :test-db
         :fixtures "db/fixtures/test-db"
-        :migrations "db/migrations/test-db"}])
+        :migrations "db/migrations/test-db"}]
+  :repositories {"sonatype" "http://oss.sonatype.org/content/repositories/releases"})

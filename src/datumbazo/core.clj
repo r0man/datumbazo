@@ -7,7 +7,8 @@
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [immigrate parse-table]]
             [inflections.core :refer [hyphenize singular]]
-            [inflections.util :refer [parse-integer]]))
+            [inflections.util :refer [parse-integer]]
+            [pallet.thread-expr :refer [when->]]))
 
 (immigrate 'sqlingvo.core)
 
@@ -172,7 +173,7 @@
            (-> (select *)
                (from ~(as-keyword table#))
                (paginate :page (:page ~'opts) :per-page (:per-page ~'opts))
-               (test-> (:order-by ~'opts)
+               (when-> (:order-by ~'opts)
                        (order-by [(:order-by ~'opts)]))))
 
          ~@(for [column (vals (:column table#))
