@@ -71,6 +71,10 @@
     (is (= :name (:name column)))
     (is (= :text (:type column)))))
 
+(deftest test-continents-pagination
+  (is (= (sql (continents* :page 2 :per-page 20))
+         ["SELECT * FROM continents LIMIT 20 OFFSET 20"])))
+
 (deftest test-countries-table
   (is (= :countries (:name countries-table)))
   (is (= [:id :continent-id :name] (:columns countries-table)))
