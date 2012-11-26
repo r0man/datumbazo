@@ -14,8 +14,13 @@
 (defn connection-url
   "Lookup the JDBC connection url for `db-name` via environ."
   [db-name]
-  (or (env db-name)
-      (util/illegal-argument-exception "Can't find connection url: %s" db-name)))
+  (cond
+   ;; TODO: Check url.
+   (string? db-name)
+   db-name
+   (keyword? db-name)
+   (or (env db-name)
+       (util/illegal-argument-exception "Can't find connection url: %s" db-name))))
 
 (defmulti connection-spec
   "Parse `db-url` and return the connection spec."
@@ -82,30 +87,23 @@
     (.setMinPoolSize datasource (util/parse-integer (or (:min-pool-size params) 3)))
     (assoc db-spec :spec {:datasource datasource})))
 
-(defn connection [db-name]
-  "Returns the database connection for `db-name`."
-  (cond
-   (keyword? db-name)
-   (connection (connection-url db-name))
-   (string? db-name)
-   (let [db-spec (connection-spec db-name)]
-     (if (= :jdbc (:pool db-spec))
-       db-spec (connection-pool db-spec)))
-   (symbol? db-name)
-   (let [[ns sym] (map symbol (split (str db-name) #"/"))]
-     (if-let [var (ns-resolve ns sym)]
-       (if (fn? @var)
-         (@var) @var)))
-   :else db-name))
+(defmethod connection-pool :jdbc [db-spec]
+  db-spec)
 
-(util/defn-memo cached-connection [db-name]
-  "Returns the cached database connection for `db-name`."
-  (connection db-name))
+(defn connection [db-url]
+  "Returns the database connection for `db-name`."
+  (if-let [db-spec (connection-spec db-url)]
+    (connection-pool db-spec)
+    (util/illegal-argument-exception "Can't connect to: %s" db-url)))
+
+(util/defn-memo cached-connection [db-url]
+  "Returns the cached database connection for `db-url`."
+  (connection db-url))
 
 (defmacro with-connection
   "Evaluates `body` with a connection to `db-name`."
   [db-name & body]
-  `(binding [*connection* (cached-connection ~db-name)]
+  `(binding [*connection* (cached-connection (connection-url ~db-name))]
      (jdbc/with-naming-strategy *naming-strategy*
        (jdbc/with-connection (:spec *connection*)
          ~@body))))

@@ -9,6 +9,8 @@
         datumbazo.test
         clojure.test))
 
+(def test-url (connection-url :test-db))
+
 (deftest test-connection-spec
   (let [spec (connection-spec "mysql://tiger:scotch@localhost/datumbazo?profileSQL=true")]
     (is (= "com.mysql.jdbc.Driver" (:classname spec)))
@@ -86,14 +88,14 @@
   (is (= "postgresql://tiger:scotch@localhost/datumbazo" (connection-url :test-db))))
 
 (database-test test-connection
-  (let [connection (connection :test-db)]
+  (let [connection (connection test-url)]
     (is (map? (:spec connection)))
-    (is (not (= connection (connection :test-db))))))
+    (is (not (= connection (connection test-url))))))
 
 (database-test test-cached-connection
-  (let [connection (cached-connection :test-db)]
+  (let [connection (cached-connection test-url)]
     (is (map? (:spec connection)))
-    (is (= connection (cached-connection :test-db)))))
+    (is (= connection (cached-connection test-url)))))
 
 (deftest test-with-connection-jdbc
   (with-connection "jdbc:postgresql://tiger:scotch@localhost/datumbazo"
