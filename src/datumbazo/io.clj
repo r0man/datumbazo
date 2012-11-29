@@ -5,6 +5,7 @@
             [clj-time.coerce :refer [to-date-time to-sql-date to-timestamp]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]
+            [inflections.util :refer [parse-double]]
             [sqlingvo.compiler :refer [SQLType]]))
 
 (extend-type org.joda.time.DateTime
@@ -35,6 +36,9 @@
 
 (defmethod encode-column :serial [column value]
   (encode-integer value))
+
+(defmethod encode-column :numeric [column value]
+  (parse-double value))
 
 (defmethod encode-column :citext [column value]
   (doto (org.postgresql.util.PGobject.)
