@@ -22,6 +22,6 @@
   :plugins [[environ/environ.lein "0.3.0"]]
   :hooks [environ.leiningen.hooks]
   :db [{:name :test-db
-        :fixtures "db/fixtures/test-db"
-        :migrations "db/migrations/test-db"}]
+        :fixtures "db/test-db/fixtures"
+        :migrations "db/test-db/migrations"}]
   :repositories {"sonatype" "http://oss.sonatype.org/content/repositories/releases"})

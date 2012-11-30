@@ -37,7 +37,7 @@
                         (offset 1)))))
 
   (with-connection :test-db
-    (load-fixtures "resources/db/fixtures/test-db"))
+    (load-fixtures "resources/db/test-db/fixtures"))
 
   (with-connection :test-db
     (seq (Relation. (select (select 1) (select "x")))))

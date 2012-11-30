@@ -5,7 +5,7 @@
         datumbazo.fixtures))
 
 (def fixture-dir
-  "resources/db/fixtures/test-db")
+  "resources/db/test-db/fixtures")
 
 (def fixture-file
   (str fixture-dir "/continents.clj"))
@@ -24,10 +24,10 @@
   (is (.exists (file "/tmp/test-dump-fixtures/twitter/users.clj"))))
 
 (deftest test-fixture-path
-  (is (= "db/fixtures/test-db" (fixture-path "test-db"))))
+  (is (= "db/test-db/fixtures" (fixture-path "test-db"))))
 
 (deftest test-fixtures
-  (is (= (fixture-seq (resource "db/fixtures/test-db"))
+  (is (= (fixture-seq (resource "db/test-db/fixtures"))
          (fixtures "test-db"))))
 
 (deftest test-fixture-seq
@@ -41,14 +41,14 @@
       (is (= (file fixture-dir "twitter" "users.clj")
              (:file fixture)))
       (is (= :twitter.users (:table fixture)))))
-  (let [fixtures (fixture-seq (resource "db/fixtures/test-db"))]
+  (let [fixtures (fixture-seq (resource "db/test-db/fixtures"))]
     (is (= 2 (count fixtures)))
     (let [fixture (first fixtures)]
-      (is (= (.getAbsoluteFile (file "resources/db/fixtures/test-db/continents.clj"))
+      (is (= (.getAbsoluteFile (file "resources/db/test-db/fixtures/continents.clj"))
              (:file fixture)))
       (is (= :continents (:table fixture))))
     (let [fixture (second fixtures)]
-      (is (= (.getAbsoluteFile (file "resources/db/fixtures/test-db/twitter/users.clj"))
+      (is (= (.getAbsoluteFile (file "resources/db/test-db/fixtures/twitter/users.clj"))
              (:file fixture)))
       (is (= :twitter.users (:table fixture))))))
 

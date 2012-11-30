@@ -8,8 +8,6 @@
             [datumbazo.util :refer [clojure-file-seq path-split path-replace]]
             [datumbazo.io :refer [decode-row]]))
 
-(def ^:dynamic *fixture-path* "db/fixtures")
-
 (def ^:dynamic *readers*
   {'inst read-instant-timestamp})
 
@@ -29,7 +27,7 @@
 
 (defn fixture-path
   "Returns the fixture path for `db-name`."
-  [db-name] (str (file *fixture-path* db-name)))
+  [db-name] (str (file "db" db-name "fixtures")))
 
 (defn fixtures
   "Returns the fixtures for `db-name`."
