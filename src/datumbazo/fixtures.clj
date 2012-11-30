@@ -1,10 +1,10 @@
 (ns datumbazo.fixtures
   (:refer-clojure :exclude [replace])
   (:require [clojure.instant :refer [read-instant-timestamp]]
-            [clojure.java.io :refer [file resource writer]]
+            [clojure.java.io :refer [file make-parents resource writer]]
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
-            [clojure.string :refer [join replace]]
+            [clojure.string :refer [join replace split]]
             [datumbazo.util :refer [clojure-file-seq path-split path-replace]]
             [datumbazo.io :refer [decode-row]]))
 
@@ -52,6 +52,7 @@
 (defn write-fixture
   "Write the rows of the database `table` to `filename`."
   [table filename]
+  (make-parents filename)
   (with-open [writer (writer filename)]
     (jdbc/with-query-results rows
       [(format "SELECT * FROM %s" (jdbc/as-identifier table))]
@@ -68,6 +69,13 @@
 (defn disable-triggers
   "Disable triggers on the database `table`."
   [table] (jdbc/do-commands (str "ALTER TABLE " (jdbc/as-identifier table) " DISABLE TRIGGER ALL")))
+
+(defn dump-fixtures
+  "Write the fixtures for `tables` into `directory`."
+  [directory tables]
+  (doseq [table tables]
+    (->> (str (apply file directory (split (name table) #"\.")) ".clj")
+         (write-fixture table))))
 
 (defn load-fixtures
   "Load all database fixtures from `directory`."

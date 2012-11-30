@@ -1,5 +1,19 @@
-({:updated-at #inst "2012-10-06T18:22:58.640-00:00",
+({:listed-count 0,
+  :default-profile-image true,
+  :time-zone nil,
+  :name "Twitter",
+  :location nil,
+  :profile-image-url nil,
+  :friends-count 0,
+  :followers-count 0,
+  :lang nil,
+  :url nil,
+  :updated-at #inst "2012-10-06T18:22:58.640-00:00",
   :created-at #inst "2012-10-06T18:22:58.640-00:00",
-  :id 9
-  :screen-name "twitter"
-  :name "Twitter"})
+  :screen-name "twitter",
+  :retweet-count 0,
+  :possibly-sensitive false,
+  :statuses-count 0,
+  :verified false,
+  :id 9,
+  :description nil})

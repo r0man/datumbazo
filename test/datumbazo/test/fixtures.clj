@@ -18,6 +18,11 @@
   (disable-triggers :continents)
   (enable-triggers :twitter.users))
 
+(database-test test-dump-fixtures
+  (dump-fixtures "/tmp/test-dump-fixtures" [:continents :twitter.users])
+  (is (.exists (file "/tmp/test-dump-fixtures/continents.clj")))
+  (is (.exists (file "/tmp/test-dump-fixtures/twitter/users.clj"))))
+
 (deftest test-fixture-path
   (is (= "db/fixtures/test-db" (fixture-path "test-db"))))
 
@@ -63,9 +68,15 @@
 
 (database-test test-write-fixture
   (load-fixtures fixture-dir)
-  (let [fixture (write-fixture :continents "/tmp/test-write-fixture")]
+  (let [fixture (write-fixture :continents "/tmp/test-write-fixture/continents.clj")]
     (is (= :continents (:table fixture)))
-    (is (= "/tmp/test-write-fixture" (:file fixture)))
+    (is (= "/tmp/test-write-fixture/continents.clj" (:file fixture)))
     (is (= 7 (:records fixture)))
-    (is (= (slurp fixture-file)
-           (slurp "/tmp/test-write-fixture")))))
+    (is (= (slurp (str fixture-dir "/continents.clj"))
+           (slurp "/tmp/test-write-fixture/continents.clj"))))
+  (let [fixture (write-fixture :twitter.users "/tmp/test-write-fixture/twitter/users.clj")]
+    (is (= :twitter.users (:table fixture)))
+    (is (= "/tmp/test-write-fixture/twitter/users.clj" (:file fixture)))
+    (is (= 1 (:records fixture)))
+    (is (= (slurp (str fixture-dir "/twitter/users.clj"))
+           (slurp "/tmp/test-write-fixture/twitter/users.clj")))))
