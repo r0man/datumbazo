@@ -11,10 +11,12 @@
   (str fixture-dir "/continents.clj"))
 
 (database-test test-enable-triggers
-  (enable-triggers :continents))
+  (enable-triggers :continents)
+  (enable-triggers :twitter.users))
 
 (database-test test-disable-triggers
-  (disable-triggers :continents))
+  (disable-triggers :continents)
+  (enable-triggers :twitter.users))
 
 (deftest test-fixture-path
   (is (= "db/fixtures/test-db" (fixture-path "test-db"))))
@@ -25,21 +27,29 @@
 
 (deftest test-fixture-seq
   (let [fixtures (fixture-seq fixture-dir)]
-    (is (= 1 (count fixtures)))
+    (is (= 2 (count fixtures)))
     (let [fixture (first fixtures)]
-      (is (= (file fixture-file)
+      (is (= (file fixture-dir "continents.clj")
              (:file fixture)))
-      (is (= :continents (:table fixture)))))
+      (is (= :continents (:table fixture))))
+    (let [fixture (second fixtures)]
+      (is (= (file fixture-dir "twitter" "users.clj")
+             (:file fixture)))
+      (is (= :twitter.users (:table fixture)))))
   (let [fixtures (fixture-seq (resource "db/fixtures/test-db"))]
-    (is (= 1 (count fixtures)))
+    (is (= 2 (count fixtures)))
     (let [fixture (first fixtures)]
-      (is (= (file (.getAbsolutePath (file fixture-file)))
+      (is (= (.getAbsoluteFile (file "resources/db/fixtures/test-db/continents.clj"))
              (:file fixture)))
-      (is (= :continents (:table fixture))))))
+      (is (= :continents (:table fixture))))
+    (let [fixture (second fixtures)]
+      (is (= (.getAbsoluteFile (file "resources/db/fixtures/test-db/twitter/users.clj"))
+             (:file fixture)))
+      (is (= :twitter.users (:table fixture))))))
 
 (database-test test-load-fixtures
   (let [fixtures (load-fixtures fixture-dir)]
-    (is (= 1 (count fixtures)))))
+    (is (= 2 (count fixtures)))))
 
 (database-test test-read-fixture
   (let [fixture (read-fixture :continents fixture-file)]

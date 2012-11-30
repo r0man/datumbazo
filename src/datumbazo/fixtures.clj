@@ -23,8 +23,9 @@
 (defn fixture-seq
   "Returns tree a seq of fixtures in `directory`."
   [directory]
-  (for [file (clojure-file-seq directory)]
-    {:file file :table (resolve-table directory file)}))
+  (->> (for [file (clojure-file-seq directory)]
+         {:file file :table (resolve-table directory file)})
+       (sort-by #(:table %1))))
 
 (defn fixture-path
   "Returns the fixture path for `db-name`."
