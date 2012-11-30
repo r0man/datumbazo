@@ -14,7 +14,7 @@
   {'inst read-instant-timestamp})
 
 (defn- resolve-table
-  "Resolve the table name form `directory` and `filename`."
+  "Resolve the table name from `directory` and `filename`."
   [directory filename]
   (-> (join "." (path-split (path-replace filename directory)))
       (replace #"(?i)\.cljs?$" "")
