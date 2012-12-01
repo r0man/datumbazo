@@ -8,7 +8,8 @@
             [datumbazo.util :refer [immigrate parse-table]]
             [inflections.core :refer [hyphenize singular]]
             [inflections.util :refer [parse-integer]]
-            [pallet.thread-expr :refer [when->]]))
+            [pallet.thread-expr :refer [when->]]
+            sqlingvo.core))
 
 (immigrate 'sqlingvo.core)
 
