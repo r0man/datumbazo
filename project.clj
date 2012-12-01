@@ -2,6 +2,8 @@
   :description "Clojure Database Kung-Foo"
   :url "https://github.com/r0man/datumbazo"
   :min-lein-version "2.0.0"
+  :license {:name "Eclipse Public License"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[clj-time "0.4.4"]
                  [environ "0.3.0"]
                  [inflections "0.7.3"]
