@@ -4,7 +4,7 @@
             [clojure.java.io :refer [file make-parents resource writer]]
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
-            [clojure.string :refer [join replace split]]
+            [clojure.string :refer [blank? join replace split]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [clojure-file-seq path-split path-replace]]
             [datumbazo.io :refer [decode-row]]
@@ -41,14 +41,19 @@
   (binding [*data-readers* (merge *data-readers* *readers*)]
     (read-string (slurp filename))))
 
-(defn- serial-seq-name [column]
-  (format "%s-%s-seq" (name (:table column)) (name (:name column))))
+(defn serial-seq [column]
+  (-> (->> (map column [:schema :table :name])
+           (remove #(= :public %1))
+           (remove nil?)
+           (map name)
+           (join "-"))
+      (str "-seq")
+      (keyword)))
 
 (defn reset-serials [table]
   (doseq [column (meta/columns (jdbc/connection) :schema (:schema table) :table (:name table))
-          :when (contains? #{:bigserial :serial} (:type column))
-          :let [name (serial-seq-name column)]]
-    (run1 (select `(setval ~(jdbc/as-identifier (keyword name))
+          :when (contains? #{:bigserial :serial} (:type column))]
+    (run1 (select `(setval ~(jdbc/as-identifier (serial-seq column))
                            ~(-> (select `(max ~(:name column)))
                                 (from (:table column))))))))
 

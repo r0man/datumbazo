@@ -80,3 +80,13 @@
     (is (= 1 (:records fixture)))
     (is (= (slurp (str fixture-dir "/twitter/users.clj"))
            (slurp "/tmp/test-write-fixture/twitter/users.clj")))))
+
+(deftest test-serial-seq
+  (are [column expected]
+       (is (= expected (serial-seq column)))
+       {:table :continents :name :id}
+       :continents-id-seq
+       {:schema :public :table :continents :name :id}
+       :continents-id-seq
+       {:schema :twitter :table :users :name :id}
+       :twitter-users-id-seq))
