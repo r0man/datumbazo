@@ -6,7 +6,7 @@
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [blank? join replace split]]
             [datumbazo.meta :as meta]
-            [datumbazo.util :refer [clojure-file-seq path-split path-replace]]
+            [datumbazo.util :refer [clojure-file-seq path-split path-replace parse-table]]
             [datumbazo.io :refer [decode-row]]
             [datumbazo.core :refer [sql select from run1]]))
 
@@ -51,11 +51,12 @@
       (keyword)))
 
 (defn reset-serials [table]
-  (doseq [column (meta/columns (jdbc/connection) :schema (:schema table) :table (:name table))
-          :when (contains? #{:bigserial :serial} (:type column))]
-    (run1 (select `(setval ~(jdbc/as-identifier (serial-seq column))
-                           ~(-> (select `(max ~(:name column)))
-                                (from (:table column))))))))
+  (let [table (parse-table table)]
+    (doseq [column (meta/columns (jdbc/connection) :schema (:schema table) :table (:name table))
+            :when (contains? #{:bigserial :serial} (:type column))]
+      (run1 (select `(setval ~(jdbc/as-identifier (serial-seq column))
+                             ~(-> (select `(max ~(:name column)))
+                                  (from (:table column)))))))))
 
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
