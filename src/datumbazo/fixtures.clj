@@ -5,8 +5,10 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [join replace split]]
+            [datumbazo.meta :as meta]
             [datumbazo.util :refer [clojure-file-seq path-split path-replace]]
-            [datumbazo.io :refer [decode-row]]))
+            [datumbazo.io :refer [decode-row]]
+            [datumbazo.core :refer [sql select from run1]]))
 
 (def ^:dynamic *readers*
   {'inst read-instant-timestamp})
@@ -39,13 +41,26 @@
   (binding [*data-readers* (merge *data-readers* *readers*)]
     (read-string (slurp filename))))
 
+(defn- serial-seq-name [column]
+  (format "%s-%s-seq" (name (:table column)) (name (:name column))))
+
+(defn reset-serials [table]
+  (doseq [column (meta/columns (jdbc/connection) :schema (:schema table) :table (:name table))
+          :when (contains? #{:bigserial :serial} (:type column))
+          :let [name (serial-seq-name column)]]
+    (run1 (select `(setval ~(jdbc/as-identifier (keyword name))
+                           ~(-> (select `(max ~(:name column)))
+                                (from (:table column))))))))
+
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
   [table filename]
-  (assoc {:table table :file filename}
-    :records (->> (slurp-rows filename)
-                  (apply jdbc/insert-records table)
-                  (count))))
+  (let [result (assoc {:table table :file filename}
+                 :records (->> (slurp-rows filename)
+                               (apply jdbc/insert-records table)
+                               (count)))]
+    (reset-serials table)
+    result))
 
 (defn write-fixture
   "Write the rows of the database `table` to `filename`."
