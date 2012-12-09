@@ -2,8 +2,8 @@
   (:refer-clojure :exclude [replace])
   (:require [clojure.string :refer [blank? join split replace]]
             [clojure.tools.logging :refer [logp]]
-            [pallet.common.shell :refer :all]
-            [pallet.stevedore :refer :all]
+            [pallet.common.shell :refer [bash]]
+            [pallet.stevedore :refer [checked-script with-script-language]]
             [pallet.stevedore.bash :refer :all]
             [slingshot.slingshot :refer [throw+]]))
 
@@ -33,10 +33,6 @@
 (defn log-lines [level lines]
   (doseq [line (split lines #"\n")] (logp level line)))
 
-(defmacro with-bash [& body]
-  `(with-script-language :pallet.stevedore.bash/bash
-     ~@body))
-
 (defn exec-checked-script* [script]
   (let [result (bash script)]
     (if (pos? (:exit result))
@@ -45,8 +41,8 @@
     result))
 
 (defmacro exec-checked-script
-  "Execute a bash script, throwing if any element of the script fails."
+  "Execute a bash script, throwing an exception if any element of the
+  script fails."
   [name & script]
-  `(with-bash
-     (exec-checked-script*
-      (checked-script ~name ~@script))))
+  `(with-script-language :pallet.stevedore.bash/bash
+     (exec-checked-script* (checked-script ~name ~@script))))
