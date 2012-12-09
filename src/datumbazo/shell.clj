@@ -1,12 +1,11 @@
 (ns datumbazo.shell
   (:refer-clojure :exclude [replace])
-  (:require pallet.stevedore.bash)
-  (:use [clojure.string :only (blank? join split replace)]
-        [clojure.tools.logging :only (logp)]
-        [slingshot.slingshot :only [throw+]]
-        pallet.stevedore
-        pallet.stevedore.bash
-        pallet.common.shell))
+  (:require [clojure.string :refer [blank? join split replace]]
+            [clojure.tools.logging :refer [logp]]
+            [pallet.common.shell :refer :all]
+            [pallet.stevedore :refer :all]
+            [pallet.stevedore.bash :refer :all]
+            [slingshot.slingshot :refer [throw+]]))
 
 (defn basename
   "Returns the basename of `s`."
