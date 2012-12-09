@@ -10,6 +10,7 @@
                  [org.clojure/algo.monads "0.1.0"]
                  [org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.3"]
+                 [org.cloudhoist/stevedore "0.7.2"]
                  [org.cloudhoist/thread-expr "1.2.0"]
                  [org.postgis/postgis-jdbc "1.3.3"]
                  [postgresql/postgresql "9.1-901.jdbc4"]
