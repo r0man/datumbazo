@@ -57,11 +57,15 @@
      (export ~(format "PGPASS=\"%s\"" (:password opts)))
      (psql
       ~(if-let [command (:command opts)]
-         (format "--command \"%s\"" command))
+         (format "--command \"%s\"" command) "")
+      ~(if-let [db (:db opts)]
+         (format "--dbname %s" db) "")
       ~(if-let [file (:file opts)]
-         (format "--file \"%s\"" file))
-      --dbname ~(:db opts)
-      --host ~(:server-name opts)
-      --port ~(or (:server-port opts) 5432)
-      --quiet
-      --username ~(or (:username opts) (System/getenv "USER"))))))
+         (format "--file %s" file) "")
+      ~(if-let [host (:server-name opts)]
+         (format "--host %s" host) "")
+      ~(if-let [port (:server-port opts)]
+         (format "--port %s" port) "")
+      ~(if-let [username (:username opts)]
+         (format "--username %s" username) "")
+      --quiet))))
