@@ -32,11 +32,9 @@
     (is (= "x\n" out))
     (is (= "" err))))
 
-;; (deftest test-exec-checked-script
-;;   (prn (exec-checked-script "echo \"x\"" (echo "x")))
-;;   ;; (let [{:keys [err exit out] :as result}
-;;   ;;       (exec-checked-script "echo \"x\"" (echo "x"))]
-;;   ;;   (is (= 0 exit))
-;;   ;;   (is (= "echo x...\nx\n...done\n" out))
-;;   ;;   (is (= "" err)))
-;;   )
+(deftest test-exec-checked-script
+  (let [{:keys [err exit out] :as result}
+        (exec-checked-script "echo \"x\"" (echo "x"))]
+    (is (= 0 exit))
+    (is (= "echo x...\nx\n...done\n" out))
+    (is (= "" err))))
