@@ -55,3 +55,13 @@
                    script))
             {:exit 0})]
     (psql :command "SELECT 1;")))
+
+(database-test test-shp2pgsql
+  (is (= 0 (:exit (shp2pgsql :natural-earth.ports "test-resources/ne_10m_ports/ne_10m_ports.dbf" "/tmp/test-shp2pgsql.sql"))))
+  (with-redefs
+    [bash (fn [script]
+            (is (= (str "echo \"Running shp2pgsql...\"\n{ shp2pgsql -c test-resources/ne_10m_ports/ne_10m_ports.dbf natural_earth.ports"
+                        " > /tmp/test-shp2pgsql.sql; } || { echo \"Running shp2pgsql\" failed; exit 1; } >&2 \necho \"...done\"\n")
+                   script))
+            {:exit 0})]
+    (shp2pgsql :natural-earth.ports "test-resources/ne_10m_ports/ne_10m_ports.dbf" "/tmp/test-shp2pgsql.sql")))

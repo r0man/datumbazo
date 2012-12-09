@@ -1,6 +1,7 @@
 (ns datumbazo.shell
   (:refer-clojure :exclude [replace])
-  (:require [clojure.string :refer [blank? join split replace]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.string :refer [blank? join split replace]]
             [clojure.tools.logging :refer [logp]]
             [datumbazo.connection :refer [*connection*]]
             [pallet.common.shell :refer [bash]]
@@ -69,3 +70,23 @@
       ~(if-let [username (:username opts)]
          (format "--username %s" username) "")
       --quiet))))
+
+(defn shp2pgsql
+  "Run the shp2pgsql command."
+  [table shape-file sql-file & {:as opts}]
+  (exec-checked-script
+   "Running shp2pgsql"
+   (shp2pgsql
+    ~(case (:mode opts)
+       :append "-a"
+       :create "-c"
+       :drop "-d"
+       :prepare "-p"
+       nil "-c")
+    ~(if (:create-index opts)
+       "-I" "")
+    ~(if-let [srid (:srid opts)]
+       (format "-s %s" srid) "")
+    ~(if-let [encoding (:encoding opts)]
+       (format "-W %s" encoding) "")
+    ~shape-file ~(jdbc/as-identifier table) > ~sql-file)))
