@@ -1,5 +1,7 @@
 (ns datumbazo.test.shell
+  (:require [pallet.common.shell :refer [bash]])
   (:use datumbazo.shell
+        datumbazo.test
         clojure.test))
 
 (deftest test-basename
@@ -38,3 +40,15 @@
     (is (= 0 exit))
     (is (= "echo x...\nx\n...done\n" out))
     (is (= "" err))))
+
+(database-test test-psql
+  (is (= 0 (:exit (psql))))
+  (is (= 0 (:exit (psql :command "SELECT 1;"))))
+  (spit "/tmp/test-psql.sql" "SELECT 1;" )
+  (is (= 0 (:exit (psql :file "/tmp/test-psql.sql"))))
+  (with-redefs
+    [bash (fn [script]
+            ;; (println  script)
+            (is (string? script))
+            {:exit 0})]
+    (psql :command "SELECT 1;")))

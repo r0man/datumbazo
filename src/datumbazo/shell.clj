@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [replace])
   (:require [clojure.string :refer [blank? join split replace]]
             [clojure.tools.logging :refer [logp]]
+            [datumbazo.connection :refer [*connection*]]
             [pallet.common.shell :refer [bash]]
             [pallet.stevedore :refer [checked-script with-script-language]]
             [pallet.stevedore.bash :refer :all]
@@ -37,7 +38,7 @@
   (let [result (bash script)]
     (if (pos? (:exit result))
       (throw+ (assoc result :type :exec-checked-script)))
-    (doall (map (partial log-lines :debug) (map result [:out :err])))
+    (doall (map (partial log-lines :debug) (remove nil? (map result [:out :err]))))
     result))
 
 (defmacro exec-checked-script
@@ -46,3 +47,21 @@
   [name & script]
   `(with-script-language :pallet.stevedore.bash/bash
      (exec-checked-script* (checked-script ~name ~@script))))
+
+(defn psql
+  "Run the psql command."
+  [& {:as opts}]
+  (let [opts (merge *connection* opts)]
+    (exec-checked-script
+     "Running psql"
+     (export ~(format "PGPASS=\"%s\"" (:password opts)))
+     (psql
+      ~(if-let [command (:command opts)]
+         (format "--command \"%s\"" command))
+      ~(if-let [file (:file opts)]
+         (format "--file \"%s\"" file))
+      --dbname ~(:db opts)
+      --host ~(:server-name opts)
+      --port ~(or (:server-port opts) 5432)
+      --quiet
+      --username ~(or (:username opts) (System/getenv "USER"))))))
