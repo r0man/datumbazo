@@ -1,5 +1,5 @@
 (ns datumbazo.test.core
-  (:refer-clojure :exclude [group-by])
+  (:refer-clojure :exclude [distinct group-by])
   (:require [clojure.java.jdbc :as jdbc])
   (:use datumbazo.core
         datumbazo.test

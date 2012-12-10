@@ -1,5 +1,5 @@
 (ns datumbazo.test.relation
-  (:refer-clojure :exclude [group-by])
+  (:refer-clojure :exclude [distinct group-by])
   (:use clojure.test
         datumbazo.relation
         sqlingvo.core

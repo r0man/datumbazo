@@ -83,7 +83,7 @@
        :drop "-d"
        :prepare "-p"
        nil "-c")
-    ~(if (:create-index opts)
+    ~(if (:index opts)
        "-I" "")
     ~(if-let [srid (:srid opts)]
        (format "-s %s" srid) "")

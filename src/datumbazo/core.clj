@@ -1,5 +1,5 @@
 (ns datumbazo.core
-  (:refer-clojure :exclude [group-by])
+  (:refer-clojure :exclude [distinct group-by])
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [datumbazo.connection :as connection]
@@ -52,12 +52,16 @@
 
 (defn insert
   "Insert rows into the database `table`."
-  [table what]
-  (if (sequential? what)
-    (-> (sqlingvo.core/insert table (io/encode-rows table what))
-        (returning *))
-    (-> (sqlingvo.core/insert table what)
-        (returning *))))
+  ([table]
+     (insert table []))
+  ([table what]
+     (insert table nil what))
+  ([table columns what]
+     (if (sequential? what)
+       (-> (sqlingvo.core/insert table columns (io/encode-rows table what))
+           (returning *))
+       (-> (sqlingvo.core/insert table columns what)
+           (returning *)))))
 
 (defn update
   "Update `row` to the database `table`."
