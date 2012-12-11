@@ -52,7 +52,7 @@
 
 (defn reset-serials [table]
   (let [table (parse-table table)]
-    (doseq [column (meta/columns (jdbc/connection) :schema (:schema table) :table (:name table))
+    (doseq [column (meta/columns (jdbc/connection) :schema (or (:schema table) :public) :table (:name table))
             :when (contains? #{:bigserial :serial} (:type column))]
       (run1 (select `(setval ~(jdbc/as-identifier (serial-seq column))
                              ~(-> (select `(max ~(:name column)))
