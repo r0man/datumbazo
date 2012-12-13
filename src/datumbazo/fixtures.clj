@@ -8,7 +8,7 @@
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [clojure-file-seq path-split path-replace parse-table]]
             [datumbazo.io :refer [decode-row]]
-            [datumbazo.core :refer [sql select from run1]]))
+            [datumbazo.core :refer [as-keyword sql select from run1]]))
 
 (def ^:dynamic *readers*
   {'inst read-instant-timestamp})
@@ -50,13 +50,15 @@
       (str "-seq")
       (keyword)))
 
-(defn reset-serials [table]
+(defn reset-serials
+  "Reset the serial counters of all columns in `table`."
+  [table]
   (let [table (parse-table table)]
     (doseq [column (meta/columns (jdbc/connection) :schema (:schema table) :table (:name table))
             :when (contains? #{:bigserial :serial} (:type column))]
       (run1 (select `(setval ~(jdbc/as-identifier (serial-seq column))
                              ~(-> (select `(max ~(:name column)))
-                                  (from (:table column)))))))))
+                                  (from (as-keyword table)))))))))
 
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
