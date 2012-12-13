@@ -78,7 +78,7 @@
        {:schema :public :table :continents :name :id}
        :continents-id-seq
        {:schema :twitter :table :users :name :id}
-       :twitter-users-id-seq))
+       :twitter.users-id-seq))
 
 (database-test test-write-fixture
   (load-fixtures fixture-dir)

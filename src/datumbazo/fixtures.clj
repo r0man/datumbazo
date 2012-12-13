@@ -50,6 +50,14 @@
       (str "-seq")
       (keyword)))
 
+(defn serial-seq
+  "Returns the default serial name of column."
+  [column]
+  (keyword (str (if (and (:schema column)
+                         (not (contains? #{:public} (:schema column))))
+                  (str (name (:schema column)) "."))
+                (name (:table column)) "-" (name (:name column)) "-seq")))
+
 (defn reset-serials
   "Reset the serial counters of all columns in `table`."
   [table]
