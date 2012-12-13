@@ -1,5 +1,8 @@
 (ns datumbazo.io
   (:import java.io.Writer
+           org.joda.time.DateTime
+           org.postgis.Geometry
+           org.postgis.PGgeometry
            org.postgresql.util.PGobject)
   (:require [clojure.java.jdbc :as jdbc]
             [clj-time.coerce :refer [to-date-time to-sql-date to-timestamp]]
@@ -8,7 +11,7 @@
             [inflections.util :refer [parse-double]]
             [sqlingvo.compiler :refer [SQLType]]))
 
-(extend-type org.joda.time.DateTime
+(extend-type DateTime
   SQLType
   (sql-type [date-time]
     (to-timestamp date-time)))
@@ -111,16 +114,45 @@
 (defmethod print-pg-object :default [^PGobject pg-object ^Writer w]
   (print-method (.getValue pg-object) w))
 
-(defmethod print-method PGobject [^PGobject pg-object ^Writer w]
-  (print-pg-object pg-object w))
+(defn- print-wkt
+  "Print a org.postgis.PGgeometry in WKT format."
+  [^PGgeometry g ^java.io.Writer w]
+  (.write w "#wkt \"")
+  (.write w (str g))
+  (.write w "\""))
 
-(defmethod print-dup PGobject [^PGobject pg-object ^Writer w]
-  (print-pg-object pg-object w))
-
-(defmethod print-method org.joda.time.DateTime
-  [^org.joda.time.DateTime d ^Writer w]
+(defmethod print-method DateTime
+  [^DateTime d ^Writer w]
   (print-method (java.util.Date. (.getMillis d)) w))
 
-(defmethod print-dup org.joda.time.DateTime
-  [^org.joda.time.DateTime d ^Writer w]
+(defmethod print-dup DateTime
+  [^DateTime d ^Writer w]
   (print-dup (java.util.Date. (.getMillis d)) w))
+
+(defmethod print-method Geometry
+  [^Geometry g ^java.io.Writer w]
+  (print-wkt g w))
+
+(defmethod print-dup Geometry
+  [^Geometry g ^java.io.Writer w]
+  (print-wkt g w))
+
+(defmethod print-method PGgeometry
+  [^PGgeometry g ^java.io.Writer w]
+  (print-wkt g w))
+
+(defmethod print-dup PGgeometry
+  [^PGgeometry g ^java.io.Writer w]
+  (print-wkt g w))
+
+(defmethod print-method PGobject [^PGobject o ^Writer w]
+  (print-pg-object o w))
+
+(defmethod print-dup PGobject [^PGobject o ^Writer w]
+  (print-pg-object o w))
+
+;; READ
+
+(defn read-wkt
+  "Read a geometry from `s` in WKT format."
+  [s] (PGgeometry/geomFromString s))
