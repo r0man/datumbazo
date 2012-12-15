@@ -6,7 +6,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[clj-time "0.4.4"]
                  [environ "0.3.0"]
-                 [inflections "0.7.3"]
+                 [inflections "0.7.4-SNAPSHOT"]
                  [org.clojure/algo.monads "0.1.0"]
                  [org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.3"]

@@ -31,12 +31,6 @@
 (deftest test-path-replace
   (is (= "database" (path-replace "src/database" "src"))))
 
-(deftest test-parse-integer
-  (is (nil? (parse-integer nil)))
-  (is (nil? (parse-integer "")))
-  (is (= 1 (parse-integer 1)))
-  (is (= 1 (parse-integer "1"))))
-
 (deftest test-parse-params
   (are [params expected]
        (is (= expected (parse-params params)))

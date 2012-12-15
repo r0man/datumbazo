@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [replace])
   (:import java.io.File)
   (:require [clojure.java.io :refer [file]]
-            [clojure.string :refer [blank? split replace]]))
+            [clojure.string :refer [blank? split replace]]
+            [inflections.util :refer [parse-integer]]))
 
 (defn absolute-path
   "Returns the absolute path of `path."
@@ -67,12 +68,6 @@ value is this namespace."
      (defn ~fn-name ~@defn-stuff)
      (alter-var-root (var ~fn-name) memoize)
      (var ~fn-name)))
-
-(defn parse-integer
-  "Parse `s` as an integer."
-  [s]
-  (try (Integer/parseInt (str s))
-       (catch NumberFormatException _ nil)))
 
 (defn parse-params
   "Parse `s` as a query string and return a hash map."

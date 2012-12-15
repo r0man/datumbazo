@@ -173,7 +173,8 @@
   (is (nil? (continent-by-id 1)))
   (let [europe (save-continent europe)]
     (is (= europe (continent-by-id (:id europe))))
-    (is (= europe (continent-by-id (str (:id europe)))))))
+    (is (= europe (continent-by-id (str (:id europe)))))
+    (is (= europe (continent-by-id (str (:id europe) "-europe"))))))
 
 (database-test test-continents-by-name
   (is (nil? (continent-by-name nil)))

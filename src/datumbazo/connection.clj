@@ -4,6 +4,7 @@
             [clojure.string :refer [split]]
             [environ.core :refer [env]]
             [inflections.core :refer [dasherize underscore]]
+            [inflections.util :refer [parse-integer]]
             [datumbazo.util :as util]))
 
 (def ^:dynamic *connection* nil)
@@ -79,12 +80,12 @@
     (.setJdbcUrl datasource (str "jdbc:" (name (:subprotocol (:spec db-spec))) ":" (:subname (:spec db-spec))))
     (.setUser datasource (:username db-spec))
     (.setPassword datasource (:password db-spec))
-    (.setAcquireRetryAttempts datasource (util/parse-integer (or (:acquire-retry-attempts params) 1))) ; TODO: Set back to 30
-    (.setInitialPoolSize datasource (util/parse-integer (or (:initial-pool-size params) 3)))
-    (.setMaxIdleTime datasource (util/parse-integer (or (:max-idle-time params) (* 3 60 60))))
-    (.setMaxIdleTimeExcessConnections datasource (util/parse-integer (or (:max-idle-time-excess-connections params) (* 30 60))))
-    (.setMaxPoolSize datasource (util/parse-integer (or (:max-pool-size params) 15)))
-    (.setMinPoolSize datasource (util/parse-integer (or (:min-pool-size params) 3)))
+    (.setAcquireRetryAttempts datasource (parse-integer (or (:acquire-retry-attempts params) 1))) ; TODO: Set back to 30
+    (.setInitialPoolSize datasource (parse-integer (or (:initial-pool-size params) 3)))
+    (.setMaxIdleTime datasource (parse-integer (or (:max-idle-time params) (* 3 60 60))))
+    (.setMaxIdleTimeExcessConnections datasource (parse-integer (or (:max-idle-time-excess-connections params) (* 30 60))))
+    (.setMaxPoolSize datasource (parse-integer (or (:max-pool-size params) 15)))
+    (.setMinPoolSize datasource (parse-integer (or (:min-pool-size params) 3)))
     (assoc db-spec :spec {:datasource datasource})))
 
 (defmethod connection-pool :jdbc [db-spec]

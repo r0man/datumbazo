@@ -8,7 +8,7 @@
             [clj-time.coerce :refer [to-date-time to-sql-date to-timestamp]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]
-            [inflections.util :refer [parse-double]]
+            [inflections.util :refer [parse-double parse-integer]]
             [sqlingvo.compiler :refer [SQLType]]))
 
 (extend-type DateTime
@@ -18,16 +18,6 @@
 
 ;; ENCODE
 
-(defn- encode-integer [integer]
-  (cond
-   (integer? integer)
-   integer
-   (string? integer)
-   (Integer/parseInt integer)
-   (nil? integer)
-   nil
-   :else (illegal-argument-exception "Can't encode integer: %s" integer)))
-
 (defmulti encode-column
   (fn [column value] (:type column)))
 
@@ -35,16 +25,16 @@
   (to-sql-date value))
 
 (defmethod encode-column :int4 [column value]
-  (encode-integer value))
+  (parse-integer value))
 
 (defmethod encode-column :serial [column value]
-  (encode-integer value))
+  (parse-integer value))
 
 (defmethod encode-column :numeric [column value]
   (parse-double value))
 
 (defmethod encode-column :citext [column value]
-  (doto (org.postgresql.util.PGobject.)
+  (doto (PGobject.)
     (.setValue value)
     (.setType "citext")))
 
