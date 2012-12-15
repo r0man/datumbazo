@@ -97,11 +97,7 @@
 
 ;; PRINT
 
-(defmulti print-pg-object
-  (fn [^PGobject pg-object ^Writer w]
-    (keyword (.getType pg-object))))
-
-(defmethod print-pg-object :default [^PGobject pg-object ^Writer w]
+(defn- print-pg-object [^PGobject pg-object ^Writer w]
   (print-method (.getValue pg-object) w))
 
 (defn- print-wkt
@@ -111,19 +107,30 @@
   (.write w (str g))
   (.write w "\""))
 
-(defmethod print-method DateTime
-  [^DateTime d ^Writer w]
-  (print-method (java.util.Date. (.getMillis d)) w))
+;; PRINT-DUP
 
 (defmethod print-dup DateTime
   [^DateTime d ^Writer w]
   (print-dup (java.util.Date. (.getMillis d)) w))
 
-(defmethod print-method Geometry
+(defmethod print-dup Geometry
   [^Geometry g ^java.io.Writer w]
   (print-wkt g w))
 
-(defmethod print-dup Geometry
+(defmethod print-dup PGgeometry
+  [^PGgeometry g ^java.io.Writer w]
+  (print-wkt g w))
+
+(defmethod print-dup PGobject [^PGobject o ^Writer w]
+  (print-pg-object o w))
+
+;; PRINT-METHOD
+
+(defmethod print-method DateTime
+  [^DateTime d ^Writer w]
+  (print-method (java.util.Date. (.getMillis d)) w))
+
+(defmethod print-method Geometry
   [^Geometry g ^java.io.Writer w]
   (print-wkt g w))
 
@@ -131,14 +138,7 @@
   [^PGgeometry g ^java.io.Writer w]
   (print-wkt g w))
 
-(defmethod print-dup PGgeometry
-  [^PGgeometry g ^java.io.Writer w]
-  (print-wkt g w))
-
 (defmethod print-method PGobject [^PGobject o ^Writer w]
-  (print-pg-object o w))
-
-(defmethod print-dup PGobject [^PGobject o ^Writer w]
   (print-pg-object o w))
 
 ;; READ
