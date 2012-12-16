@@ -126,7 +126,7 @@
 
          (defn ~(symbol (str "delete-" table-name))
            ~(format "Delete all rows in the %s database table." table-name)
-           [& ~'opts] (:count (run1 (delete ~(as-keyword table#)))))
+           [& ~'opts] (:count (run1 (apply delete ~symbol# ~'opts))))
 
          (defn ~(symbol (str "insert-" (singular (str table-name))))
            ~(format "Insert the %s row into the database." (singular (str table-name)))
