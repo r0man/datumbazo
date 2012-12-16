@@ -61,6 +61,7 @@
   "Make a database table."
   [name & {:as options}]
   (assoc options
+    :op :table
     :name (keyword name)))
 
 (defn make-column
@@ -129,11 +130,11 @@
 
          (defn ~(symbol (str "insert-" (singular (str table-name))))
            ~(format "Insert the %s row into the database." (singular (str table-name)))
-           [~'row & ~'opts] (run1 (apply insert ~(as-keyword table#) [~'row] ~'opts)))
+           [~'row & ~'opts] (run1 (apply insert ~symbol# [~'row] ~'opts)))
 
          (defn ~(symbol (str "insert-" (str table-name)))
            ~(format "Insert the %s rows into the database." (singular (str table-name)))
-           [~'rows & ~'opts] (run (apply insert ~(as-keyword table#) ~'rows ~'opts)))
+           [~'rows & ~'opts] (run (apply insert ~symbol# ~'rows ~'opts)))
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
