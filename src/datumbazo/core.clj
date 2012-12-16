@@ -89,11 +89,11 @@
 
 (defn schema
   "Assoc `schema` under the :schema key to `table`."
-  [table schema] (assoc table :schema schema))
+  [table schema] (assoc table :schema (as-keyword schema)))
 
 (defn table
   "Assoc `name` under the :name key to `table`."
-  [table name] (assoc table :name name))
+  [table name] (assoc table :name (as-keyword name)))
 
 (defmacro defquery [name doc args body & [map-fn]]
   (let [query-sym (symbol (str name "*"))]
