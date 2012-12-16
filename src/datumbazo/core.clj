@@ -122,7 +122,7 @@
 
          (defn ~(symbol (str "drop-" table-name))
            ~(format "Drop the %s database table." table-name)
-           [& ~'opts] (:count  (run1 (apply drop-table ~(as-keyword table#) ~'opts))))
+           [& ~'opts] (:count  (run1 (apply drop-table ~symbol# ~'opts))))
 
          (defn ~(symbol (str "delete-" table-name))
            ~(format "Delete all rows in the %s database table." table-name)
