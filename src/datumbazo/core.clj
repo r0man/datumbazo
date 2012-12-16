@@ -142,7 +142,7 @@
 
          (defn ~(symbol (str "update-" (singular (str table-name))))
            ~(format "Update the %s row in the database." (singular (str table-name)))
-           [~'row & ~'opts] (run1 (apply update ~(as-keyword table#) ~'row ~'opts)))
+           [~'row & ~'opts] (run1 (apply update ~symbol# ~'row ~'opts)))
 
          (defn ~(symbol (str "save-" (singular (str table-name))))
            ~(format "Save the %s row to the database." (singular (str table-name)))
