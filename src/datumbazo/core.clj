@@ -48,10 +48,10 @@
           pks (meta/primary-keys (jdbc/connection) :schema (:schema table) :table (:name table))
           pk-keys (map :name pks)
           pk-vals (map row pk-keys)]
-      (-> (sqlingvo.core/update (as-keyword table) (io/encode-row (as-keyword table) row))
+      (-> (sqlingvo.core/update table (io/encode-row table row))
           (where (cons 'and (map #(list '= %1 %2) pk-keys pk-vals)))
           (returning *)))
-    (sqlingvo.core/update (as-keyword table) row)))
+    (sqlingvo.core/update table row)))
 
 (defn count-all
   "Count all rows in the database `table`."
