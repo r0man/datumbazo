@@ -154,7 +154,7 @@
            ~(format "Select %s from the database table." table-name)
            [& {:as ~'opts}]
            (-> (select *)
-               (from ~(as-keyword table#))
+               (from ~symbol#)
                (paginate :page (:page ~'opts) :per-page (:per-page ~'opts))
                (when-> (:order-by ~'opts)
                        (order-by [(:order-by ~'opts)]))))
@@ -168,7 +168,7 @@
                       (let [column# (first (meta/columns (jdbc/connection) :schema ~(:schema table#) :table ~(:name table#) :name ~(:name column)))]
                         (assert column#)
                         (-> (select *)
-                            (from ~(as-keyword table#))
+                            (from ~symbol#)
                             (where `(= ~(:name column#) ~(io/encode-column column# ~'value))))))
                     (defn ~(symbol (str (singular table-name) "-by-" column-name))
                       ~(format "Find the first %s by %s." (singular table-name) column-name)
