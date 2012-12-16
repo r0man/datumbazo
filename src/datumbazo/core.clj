@@ -115,6 +115,7 @@
   "Define a database table."
   [table-name doc & body]
   (let [table# (eval `(-> (make-table ~(keyword table-name) :doc ~doc) ~@body))
+        singular# (singular (str table-name))
         symbol# (symbol (str table-name "-table"))]
     `(do (def ~symbol#
            (-> (make-table ~(keyword table-name) :doc ~doc)
@@ -128,27 +129,27 @@
            ~(format "Delete all rows in the %s database table." table-name)
            [& ~'opts] (:count (run1 (apply delete ~symbol# ~'opts))))
 
-         (defn ~(symbol (str "insert-" (singular (str table-name))))
-           ~(format "Insert the %s row into the database." (singular (str table-name)))
+         (defn ~(symbol (str "insert-" singular#))
+           ~(format "Insert the %s row into the database." singular#)
            [~'row & ~'opts] (run1 (apply insert ~symbol# [~'row] ~'opts)))
 
          (defn ~(symbol (str "insert-" (str table-name)))
-           ~(format "Insert the %s rows into the database." (singular (str table-name)))
+           ~(format "Insert the %s rows into the database." singular#)
            [~'rows & ~'opts] (run (apply insert ~symbol# ~'rows ~'opts)))
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
            [& ~'opts] (:count (run1 (apply truncate ~symbol# ~'opts))))
 
-         (defn ~(symbol (str "update-" (singular (str table-name))))
-           ~(format "Update the %s row in the database." (singular (str table-name)))
+         (defn ~(symbol (str "update-" singular#))
+           ~(format "Update the %s row in the database." singular#)
            [~'row & ~'opts] (run1 (apply update ~symbol# ~'row ~'opts)))
 
-         (defn ~(symbol (str "save-" (singular (str table-name))))
-           ~(format "Save the %s row to the database." (singular (str table-name)))
+         (defn ~(symbol (str "save-" singular#))
+           ~(format "Save the %s row to the database." singular#)
            [~'row & ~'opts]
-           (or (apply ~(symbol (str "update-" (singular (str table-name)))) ~'row ~'opts)
-               (apply ~(symbol (str "insert-" (singular (str table-name)))) ~'row ~'opts)))
+           (or (apply ~(symbol (str "update-" singular#)) ~'row ~'opts)
+               (apply ~(symbol (str "insert-" singular#)) ~'row ~'opts)))
 
          (defquery ~table-name
            ~(format "Select %s from the database table." table-name)
@@ -159,16 +160,14 @@
                (when-> (:order-by ~'opts)
                        (order-by [(:order-by ~'opts)]))))
 
-         ~@(for [column (vals (:column table#))
-                 :let [column-name (name (:name column))]]
+         ~@(for [column (vals (:column table#)) :let [column-name (name (:name column))]]
              (do
                `(do (defquery ~(symbol (str table-name "-by-" column-name))
                       ~(format "Find all %s by %s." table-name column-name)
                       [~'value & ~'opts]
                       (let [column# (first (meta/columns (jdbc/connection) :schema ~(:schema table#) :table ~(:name table#) :name ~(:name column)))]
                         (assert column#)
-                        (-> (select *)
-                            (from ~symbol#)
+                        (-> (~(symbol (str table-name "*")))
                             (where `(= ~(:name column#) ~(io/encode-column column# ~'value))))))
                     (defn ~(symbol (str (singular table-name) "-by-" column-name))
                       ~(format "Find the first %s by %s." (singular table-name) column-name)
