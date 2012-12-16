@@ -138,7 +138,7 @@
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
-           [& ~'opts] (:count (run1 (apply truncate ~(as-keyword table#) ~'opts))))
+           [& ~'opts] (:count (run1 (apply truncate ~symbol# ~'opts))))
 
          (defn ~(symbol (str "update-" (singular (str table-name))))
            ~(format "Update the %s row in the database." (singular (str table-name)))
