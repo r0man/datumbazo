@@ -6,9 +6,10 @@
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [blank? join replace split]]
             [datumbazo.meta :as meta]
-            [datumbazo.util :refer [clojure-file-seq path-split path-replace parse-table]]
+            [datumbazo.util :refer [clojure-file-seq path-split path-replace]]
             [datumbazo.io :refer [decode-row read-wkt]]
-            [datumbazo.core :refer [as-keyword sql select from run1]]))
+            [datumbazo.core :refer [as-keyword sql select from run1]]
+            [sqlingvo.util :refer [parse-table]]))
 
 (def ^:dynamic *readers*
   {'inst read-instant-timestamp

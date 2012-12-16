@@ -5,10 +5,11 @@
             [datumbazo.connection :as connection]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
-            [datumbazo.util :refer [immigrate parse-table]]
+            [datumbazo.util :refer [immigrate]]
             [inflections.core :refer [hyphenize singular]]
             [inflections.util :refer [parse-integer]]
             [pallet.thread-expr :refer [when->]]
+            [sqlingvo.util :refer [parse-table]]
             datumbazo.json
             sqlingvo.core))
 

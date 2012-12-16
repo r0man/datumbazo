@@ -117,28 +117,6 @@ value is this namespace."
       3 (zipmap [:schema :table :name] parts)
       :else (throw (illegal-argument-exception "Can't parse column: %s" s)))))
 
-(defn parse-column
-  "Parse `s` as a column identifier and return a map
-  with :op, :schema, :name and :as keys."
-  [s]
-  (if-let [matches (re-matches #"(([^./]+)\.)?(([^./]+)\.)?([^./]+)(/(.+))?" (qualified-name s))]
-    (let [[_ _ schema _ table name _ as] matches]
-      {:op :column
-       :schema (if (and schema table) (keyword schema))
-       :table (keyword (or table schema))
-       :name (keyword name)
-       :as (keyword as)})))
-
-(defn parse-table
-  "Parse `s` as a table identifier and return a map
-  with :op, :schema, :name and :as keys."
-  [s]
-  (if-let [matches (re-matches #"(([^./]+)\.)?([^./]+)(/(.+))?" (qualified-name s))]
-    {:op :table
-     :schema (keyword (nth matches 2))
-     :name (keyword (nth matches 3))
-     :as (keyword (nth matches 5))}))
-
 (defn parse-subprotocol
   "Parse the JDBC subprotocol from `db-url`."
   [db-url]

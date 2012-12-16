@@ -9,7 +9,8 @@
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]
             [inflections.util :refer [parse-double parse-integer]]
-            [sqlingvo.compiler :refer [SQLType]]))
+            [sqlingvo.compiler :refer [SQLType]]
+            [sqlingvo.util :refer [parse-table]]))
 
 (extend-type DateTime
   SQLType
