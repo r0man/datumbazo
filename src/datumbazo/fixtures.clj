@@ -103,7 +103,7 @@
   "Write the fixtures for `tables` into `directory`."
   [directory tables]
   (doseq [table tables]
-    (->> (str (apply file directory (split (name table) #"\.")) ".clj")
+    (->> (str (apply file directory (split (replace (name table) #"-" "_") #"\.")) ".clj")
          (write-fixture table))))
 
 (defn load-fixtures
