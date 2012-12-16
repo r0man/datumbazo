@@ -9,38 +9,13 @@
             [inflections.core :refer [hyphenize singular]]
             [inflections.util :refer [parse-integer]]
             [pallet.thread-expr :refer [when->]]
-            [sqlingvo.util :refer [parse-table]]
+            [sqlingvo.util :refer [as-identifier as-keyword parse-table]]
             datumbazo.json
             sqlingvo.core))
 
 (immigrate 'sqlingvo.core)
 
 (def ^:dynamic *per-page* 25)
-
-(defn as-identifier [obj]
-  (cond
-   (keyword? obj)
-   (jdbc/as-identifier obj)
-   (string? obj)
-   obj
-   (map? obj)
-   (->> [(:schema obj) (:table obj) (:name obj)]
-        (map jdbc/as-identifier)
-        (remove str/blank?)
-        (str/join "."))))
-
-(defn as-keyword [obj]
-  (cond
-   (keyword? obj)
-   obj
-   (string? obj)
-   (keyword (hyphenize obj))
-   (map? obj)
-   (->> [(:schema obj) (:table obj) (:name obj)]
-        (map jdbc/as-identifier)
-        (remove str/blank?)
-        (str/join ".")
-        (keyword))))
 
 (defmacro run
   "Run `stmts` against the current clojure.java.jdbc database

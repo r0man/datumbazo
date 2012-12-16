@@ -8,8 +8,8 @@
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [clojure-file-seq path-split path-replace]]
             [datumbazo.io :refer [decode-row read-wkt]]
-            [datumbazo.core :refer [as-keyword sql select from run1]]
-            [sqlingvo.util :refer [parse-table]]))
+            [datumbazo.core :refer [sql select from run1]]
+            [sqlingvo.util :refer [as-keyword parse-table]]))
 
 (def ^:dynamic *readers*
   {'inst read-instant-timestamp
