@@ -58,11 +58,12 @@
   ([table what]
      (insert table nil what))
   ([table columns what]
-     (if (sequential? what)
-       (-> (sqlingvo.core/insert table columns (io/encode-rows table what))
-           (returning *))
-       (-> (sqlingvo.core/insert table columns what)
-           (returning *)))))
+     (let [table (parse-table table)]
+       (if (sequential? what)
+         (-> (sqlingvo.core/insert (as-keyword table) columns (io/encode-rows (as-keyword table) what))
+             (returning *))
+         (-> (sqlingvo.core/insert (as-keyword table) columns what)
+             (returning *))))))
 
 (defn update
   "Update `row` to the database `table`."
