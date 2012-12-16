@@ -9,6 +9,7 @@
             [inflections.core :refer [hyphenize singular]]
             [inflections.util :refer [parse-integer]]
             [pallet.thread-expr :refer [when->]]
+            datumbazo.json
             sqlingvo.core))
 
 (immigrate 'sqlingvo.core)
