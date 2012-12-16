@@ -8,7 +8,7 @@
 (deftest test-read-wkt
   (are [s expected]
        (is (= expected (read-wkt s)))
-       "POINT(1 2)" (Point. 1 2)))
+       "POINT(1 2)" (PGgeometry. (Point. 1 2))))
 
 (deftest test-pr-str
   (are [s expected]
