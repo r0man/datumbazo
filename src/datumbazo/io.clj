@@ -74,8 +74,11 @@
 (defmulti decode-pg-object
   (fn [pg-object] (keyword (.getType pg-object))))
 
-(defmethod decode-pg-object :default [pg-object]
+(defmethod decode-pg-object :citext [pg-object]
   (.getValue pg-object))
+
+(defmethod decode-pg-object :default [pg-object]
+  pg-object)
 
 (defmulti decode-column class)
 
@@ -96,9 +99,6 @@
    row (keys row)))
 
 ;; PRINT
-
-(defn- print-pg-object [^PGobject pg-object ^Writer w]
-  (print-method (.getValue pg-object) w))
 
 (defn- print-wkt
   "Print a org.postgis.PGgeometry in WKT format."
@@ -121,9 +121,6 @@
   [^PGgeometry g ^java.io.Writer w]
   (print-wkt g w))
 
-(defmethod print-dup PGobject [^PGobject o ^Writer w]
-  (print-pg-object o w))
-
 ;; PRINT-METHOD
 
 (defmethod print-method DateTime
@@ -138,11 +135,8 @@
   [^PGgeometry g ^java.io.Writer w]
   (print-wkt g w))
 
-(defmethod print-method PGobject [^PGobject o ^Writer w]
-  (print-pg-object o w))
-
 ;; READ
 
 (defn read-wkt
   "Read a geometry from `s` in WKT format."
-  [s] (PGgeometry/geomFromString s))
+  [s] (PGgeometry. (PGgeometry/geomFromString s)))

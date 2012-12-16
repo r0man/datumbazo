@@ -7,11 +7,12 @@
             [clojure.string :refer [blank? join replace split]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [clojure-file-seq path-split path-replace parse-table]]
-            [datumbazo.io :refer [decode-row]]
+            [datumbazo.io :refer [decode-row read-wkt]]
             [datumbazo.core :refer [as-keyword sql select from run1]]))
 
 (def ^:dynamic *readers*
-  {'inst read-instant-timestamp})
+  {'inst read-instant-timestamp
+   'wkt read-wkt})
 
 (defn- resolve-table
   "Resolve the table name from `directory` and `filename`."
