@@ -17,45 +17,19 @@
 
 (def ^:dynamic *per-page* 25)
 
-(defmacro run
-  "Run `stmts` against the current clojure.java.jdbc database
-  connection ans return all rows."
-  [& stmts] `(doall (map io/decode-row (sqlingvo.core/run ~@stmts))))
+(defn run
+  "Compile and run `stmt` against the current clojure.java.jdbc
+  database connection."
+  [stmt] (map io/decode-row (sqlingvo.core/run stmt)))
 
-(defmacro run1
-  "Run `stmts` against the current clojure.java.jdbc database
+(defn run1
+  "Run `stmt` against the current clojure.java.jdbc database
   connection and return the first row."
-  [& stmts] `(io/decode-row (sqlingvo.core/run1 ~@stmts)))
-
-(defn insert
-  "Insert rows into the database `table`."
-  ([table]
-     (insert table []))
-  ([table what]
-     (insert table nil what))
-  ([table columns what]
-     (if (sequential? what)
-       (-> (sqlingvo.core/insert table columns (io/encode-rows table what))
-           (returning *))
-       (-> (sqlingvo.core/insert table columns what)
-           (returning *)))))
-
-(defn update
-  "Update `row` to the database `table`."
-  [table row]
-  (if (map? row)
-    (let [table (parse-table table)
-          pks (meta/primary-keys (jdbc/connection) :schema (:schema table) :table (:name table))
-          pk-keys (map :name pks)
-          pk-vals (map row pk-keys)]
-      (-> (sqlingvo.core/update table (io/encode-row table row))
-          (where (cons 'and (map #(list '= %1 %2) pk-keys pk-vals)))
-          (returning *)))
-    (sqlingvo.core/update table row)))
+  [stmt] (first (run stmt)))
 
 (defn count-all
   "Count all rows in the database `table`."
-  [table] (:count (run1 (select '(count *)) (from table))))
+  [table] (:count (run1 (select ['(count *)] (from table)))))
 
 (defn make-table
   "Make a database table."
@@ -81,11 +55,14 @@
 (defn paginate
   "Add LIMIT and OFFSET clauses to `query` according to
   `page` (default: 1) and `per-page` (default: `*per-page*`)."
-  [query & {:keys [page per-page]}]
+  [page & [per-page]]
   (let [page (parse-integer (or page 1))
         per-page (parse-integer (or per-page *per-page*))]
-    (-> (limit query per-page)
-        (offset (* (dec page) (or per-page *per-page*))))))
+    (fn [stmt]
+      ((chain-state
+        [(limit per-page)
+         (offset (* (dec page) (or per-page *per-page*)))])
+       stmt) )))
 
 (defn schema
   "Assoc `schema` under the :schema key to `table`."
@@ -123,27 +100,39 @@
 
          (defn ~(symbol (str "drop-" table-name))
            ~(format "Drop the %s database table." table-name)
-           [& ~'opts] (:count  (run1 (apply drop-table ~symbol# ~'opts))))
+           [& ~'body] (:count (run1 (apply drop-table [~symbol#] ~'body))))
 
          (defn ~(symbol (str "delete-" table-name))
            ~(format "Delete all rows in the %s database table." table-name)
-           [& ~'opts] (:count (run1 (apply delete ~symbol# ~'opts))))
+           [& ~'body] (:count (run1 (apply delete ~symbol# ~'body))))
 
          (defn ~(symbol (str "insert-" singular#))
            ~(format "Insert the %s row into the database." singular#)
-           [~'row & ~'opts] (run1 (apply insert ~symbol# [~'row] ~'opts)))
+           [~'row & ~'opts]
+           (run1 (sqlingvo.core/insert ~symbol# []
+                   (values (io/encode-row ~symbol# ~'row))
+                   (returning *))))
 
          (defn ~(symbol (str "insert-" (str table-name)))
            ~(format "Insert the %s rows into the database." singular#)
-           [~'rows & ~'opts] (run (apply insert ~symbol# ~'rows ~'opts)))
+           [~'rows & ~'opts]
+           (run (sqlingvo.core/insert ~symbol# []
+                  (values (io/encode-rows ~symbol# ~'rows))
+                  (returning *))))
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
-           [& ~'opts] (:count (run1 (apply truncate ~symbol# ~'opts))))
+           [& ~'body] (:count (run1 (apply truncate [~symbol#] ~'body))))
 
          (defn ~(symbol (str "update-" singular#))
            ~(format "Update the %s row in the database." singular#)
-           [~'row & ~'opts] (run1 (apply update ~symbol# ~'row ~'opts)))
+           [~'row & ~'opts]
+           (let [pks# (meta/primary-keys (jdbc/connection) :schema (:schema ~symbol#) :table (:name ~symbol#))
+                 pk-keys# (map :name pks#)
+                 pk-vals# (map ~'row pk-keys#)]
+             (run1 (sqlingvo.core/update ~symbol# (io/encode-row ~symbol# ~'row)
+                     (where (cons 'and (map #(list '= %1 %2) pk-keys# pk-vals#)))
+                     (returning *)))))
 
          (defn ~(symbol (str "save-" singular#))
            ~(format "Save the %s row to the database." singular#)
@@ -154,11 +143,10 @@
          (defquery ~table-name
            ~(format "Select %s from the database table." table-name)
            [& {:as ~'opts}]
-           (-> (select *)
-               (from ~symbol#)
-               (paginate :page (:page ~'opts) :per-page (:per-page ~'opts))
-               (when-> (:order-by ~'opts)
-                       (order-by [(:order-by ~'opts)]))))
+           (select [*]
+             (from ~symbol#)
+             (paginate (:page ~'opts) (:per-page ~'opts))
+             (order-by (:order-by ~'opts))))
 
          ~@(for [column (vals (:column table#)) :let [column-name (name (:name column))]]
              (do
@@ -166,9 +154,9 @@
                       ~(format "Find all %s by %s." table-name column-name)
                       [~'value & ~'opts]
                       (let [column# (first (meta/columns (jdbc/connection) :schema ~(:schema table#) :table ~(:name table#) :name ~(:name column)))]
-                        (assert column#)
-                        (-> (~(symbol (str table-name "*")))
-                            (where `(= ~(:name column#) ~(io/encode-column column# ~'value))))))
+                        (select [*]
+                          (from ~symbol#)
+                          (where `(= ~(:name column#) ~(io/encode-column column# ~'value))))))
                     (defn ~(symbol (str (singular table-name) "-by-" column-name))
                       ~(format "Find the first %s by %s." (singular table-name) column-name)
                       [& ~'args]

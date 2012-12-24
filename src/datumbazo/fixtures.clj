@@ -8,7 +8,7 @@
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [clojure-file-seq path-split path-replace]]
             [datumbazo.io :refer [decode-row read-wkt]]
-            [datumbazo.core :refer [sql select from run1]]
+            [datumbazo.core :refer [select from run1]]
             [sqlingvo.util :refer [as-keyword parse-table]]))
 
 (def ^:dynamic *readers*
@@ -66,9 +66,9 @@
   (let [table (parse-table table)]
     (doseq [column (meta/columns (jdbc/connection) :schema (or (:schema table) :public) :table (:name table))
             :when (contains? #{:bigserial :serial} (:type column))]
-      (run1 (select `(setval ~(jdbc/as-identifier (serial-seq column))
-                             ~(-> (select `(max ~(:name column)))
-                                  (from (as-keyword table)))))))))
+      (run1 (select [`(setval ~(jdbc/as-identifier (serial-seq column))
+                              ~(select [`(max ~(:name column))]
+                                 (from (as-keyword table))))])))))
 
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
