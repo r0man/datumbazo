@@ -9,7 +9,7 @@
             [inflections.core :refer [hyphenize singular]]
             [inflections.util :refer [parse-integer]]
             [pallet.thread-expr :refer [when->]]
-            [sqlingvo.util :refer [as-identifier as-keyword parse-table]]
+            [sqlingvo.util :refer [as-identifier as-keyword parse-table parse-expr concat-in]]
             datumbazo.json
             sqlingvo.core))
 
@@ -26,6 +26,31 @@
   "Run `stmt` against the current clojure.java.jdbc database
   connection and return the first row."
   [stmt] (first (run stmt)))
+
+(defn update
+  "Returns a fn that builds a UPDATE statement."
+  [table row & body]
+  (let [table (parse-table table)]
+    (fn [stmt]
+      (let [[_ update]
+            ((chain-state body)
+             {:op :update
+              :table table
+              :exprs (if (sequential? row) (map parse-expr row))
+              :row (if (map? row) (io/encode-row table row))})]
+        [update (assoc stmt (:op update) update)]))))
+
+;; (defn values
+;;   "Returns a fn that adds a VALUES clause to an SQL statement."
+;;   [values]
+;;   (fn [stmt]
+;;     [nil (case values
+;;            :default (assoc stmt :default-values true)
+;;            (concat-in
+;;             stmt [:values]
+;;             (io/encode-rows
+;;              (:table stmt)
+;;              (if (sequential? values) values [values]))))]))
 
 (defn count-all
   "Count all rows in the database `table`."
