@@ -35,9 +35,10 @@
   (parse-double value))
 
 (defmethod encode-column :citext [column value]
-  (doto (PGobject.)
-    (.setValue value)
-    (.setType "citext")))
+  (if value
+    (doto (PGobject.)
+      (.setValue (str value))
+      (.setType "citext"))))
 
 (defmethod encode-column :timestamptz [column value]
   (to-timestamp value))

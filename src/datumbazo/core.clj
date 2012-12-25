@@ -40,17 +40,17 @@
               :row (if (map? row) (io/encode-row table row))})]
         [update (assoc stmt (:op update) update)]))))
 
-;; (defn values
-;;   "Returns a fn that adds a VALUES clause to an SQL statement."
-;;   [values]
-;;   (fn [stmt]
-;;     [nil (case values
-;;            :default (assoc stmt :default-values true)
-;;            (concat-in
-;;             stmt [:values]
-;;             (io/encode-rows
-;;              (:table stmt)
-;;              (if (sequential? values) values [values]))))]))
+(defn values
+  "Returns a fn that adds a VALUES clause to an SQL statement."
+  [values]
+  (fn [stmt]
+    [nil (case values
+           :default (assoc stmt :default-values true)
+           (concat-in
+            stmt [:values]
+            (io/encode-rows
+             (:table stmt)
+             (if (sequential? values) values [values]))))]))
 
 (defn count-all
   "Count all rows in the database `table`."
