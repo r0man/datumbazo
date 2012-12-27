@@ -50,9 +50,8 @@
 (defn table
   "Make a new table."
   [name & body]
-  (let [[_ table] ((chain-state body) (parse-table name))]
-    (fn [_]
-      [nil table])))
+  (fn [table]
+    [nil (merge table (second ((chain-state body) (parse-table name))))]))
 
 (defn transform
   "Add the transformation fn `f` to `table`."
