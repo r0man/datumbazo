@@ -154,6 +154,7 @@
     (is (number? (:id continent)))
     (is (= "Europa" (:name continent)))
     (is (= "eu" (:code continent)))
+    (is (= continent (update-continent continent)))
     (let [continent (update-continent (assoc continent :name "Europe"))]
       (is (number? (:id continent)))
       (is (= "Europe" (:name continent)))
@@ -224,7 +225,8 @@
                :time-zone nil
                :url nil
                :verified false})]
-    (is (= user (save-twitter-user user)))))
+    (is (= (dissoc user :updated-at)
+           (dissoc (save-twitter-user user) :updated-at)))))
 
 (database-test test-count-all
   (is (= 0 (count-all :continents))))

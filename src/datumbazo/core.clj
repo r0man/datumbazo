@@ -18,15 +18,47 @@
 
 (def ^:dynamic *per-page* 25)
 
+(defn column
+  "Add a database column to `table`."
+  [name type & {:as options}]
+  (let [column (assoc options :op :column :name name :type type)]
+    (fn [table]
+      [nil (-> (update-in table [:columns] #(concat %1 [(:name column)]))
+               (assoc-in [:column (:name column)] column))])))
+
+(defn description
+  "Add `text` as description to to `table`."
+  [text]
+  (fn [table]
+    [text (assoc table :doc text)]))
+
 (defn run
   "Compile and run `stmt` against the current clojure.java.jdbc
   database connection."
-  [stmt] (map io/decode-row (sqlingvo.core/run stmt)))
+  [stmt]
+  (let [ast (ast stmt)]
+    (if-let [transform (reverse (concat (:transform (:table ast))
+                                        (mapcat :transform (:from ast))))]
+      (map (apply comp transform) (sqlingvo.core/run stmt))
+      (sqlingvo.core/run stmt))))
 
 (defn run1
   "Run `stmt` against the current clojure.java.jdbc database
   connection and return the first row."
   [stmt] (first (run stmt)))
+
+(defn table
+  "Make a new table."
+  [name & body]
+  (let [[_ table] ((chain-state body) (parse-table name))]
+    (fn [_]
+      [nil table])))
+
+(defn transform
+  "Add the transformation fn `f` to `table`."
+  [f]
+  (fn [table]
+    [nil (update-in table [:transform] concat [f])]))
 
 (defn update
   "Returns a fn that builds a UPDATE statement."
@@ -69,27 +101,6 @@
          (offset (* (dec page) (or per-page *per-page*)))])
        stmt) )))
 
-(defn table
-  "Make a new table."
-  [name & body]
-  (let [[_ table] ((chain-state body) (parse-table name))]
-    (fn [_]
-      [nil table])))
-
-(defn column
-  "Add a database column to `table`."
-  [name type & {:as options}]
-  (let [column (assoc options :op :column :name name :type type)]
-    (fn [table]
-      [nil (-> (update-in table [:columns] #(concat %1 [(:name column)]))
-               (assoc-in [:column (:name column)] column))])))
-
-(defn description
-  "Add `text` as description to to `table`."
-  [text]
-  (fn [table]
-    [text (assoc table :doc text)]))
-
 (defmacro defquery [name doc args body & [map-fn]]
   (let [query-sym (symbol (str name "*"))]
     `(do (defn ~query-sym ~doc ~args
@@ -109,11 +120,15 @@
 (defmacro deftable
   "Define a database table."
   [table-name doc & body]
-  (let [table# (eval `(second ((table ~(keyword table-name) ~@body) {})))
+  (let [table# (eval `(second ((table ~(keyword table-name)
+                                      (transform io/decode-row)
+                                      ~@body) {})))
         singular# (singular (str table-name))
         symbol# (symbol (str table-name "-table"))]
     `(do (def ~symbol#
-           (second ((table ~(keyword table-name) ~@body) {})))
+           (second ((table ~(keyword table-name)
+                           (transform io/decode-row)
+                           ~@body) {})))
 
          (defn ~(symbol (str "drop-" table-name))
            ~(format "Drop the %s database table." table-name)
