@@ -19,8 +19,7 @@
 
 (deftable twitter-users
   "The Twitter users database table."
-  (schema :twitter)
-  (table :users)
+  (table :twitter.users)
   (column :id :serial)
   (column :screen-name :text :not-null? true)
   (column :name :text :not-null? true)
@@ -40,8 +39,7 @@
 
 (deftable twitter-tweets
   "The Twitter tweets database table."
-  (schema :twitter)
-  (table :tweets)
+  (table :twitter.tweets)
   (column :id :serial)
   (column :user-id :integer :references :twitter.users/id)
   (column :retweeted :boolean :not-null? true :default false)
@@ -230,9 +228,3 @@
 
 (database-test test-count-all
   (is (= 0 (count-all :continents))))
-
-(deftest test-make-table
-  (let [table (make-table :continents)]
-    (is (= :continents (:name table))))
-  (is (= (make-table :continents)
-         (make-table "continents"))))

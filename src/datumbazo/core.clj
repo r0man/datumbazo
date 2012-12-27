@@ -1,6 +1,7 @@
 (ns datumbazo.core
   (:refer-clojure :exclude [distinct group-by])
-  (:require [clojure.java.jdbc :as jdbc]
+  (:require [clojure.algo.monads :refer [state-m m-seq with-monad]]
+            [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [datumbazo.connection :as connection]
             [datumbazo.io :as io]
@@ -56,27 +57,6 @@
   "Count all rows in the database `table`."
   [table] (:count (run1 (select ['(count *)] (from table)))))
 
-(defn make-table
-  "Make a database table."
-  [name & {:as options}]
-  (assoc options
-    :op :table
-    :name (keyword name)))
-
-(defn make-column
-  "Make a database column."
-  [name type & {:as options}]
-  (assoc options
-    :name (keyword name)
-    :type type))
-
-(defn column
-  "Add a database column to `table`."
-  [table name type & options]
-  (let [column (apply make-column name type options)]
-    (-> (update-in table [:columns] #(concat %1 [(:name column)]))
-        (assoc-in [:column (:name column)] column))))
-
 (defn paginate
   "Add LIMIT and OFFSET clauses to `query` according to
   `page` (default: 1) and `per-page` (default: `*per-page*`)."
@@ -89,13 +69,26 @@
          (offset (* (dec page) (or per-page *per-page*)))])
        stmt) )))
 
-(defn schema
-  "Assoc `schema` under the :schema key to `table`."
-  [table schema] (assoc table :schema (as-keyword schema)))
-
 (defn table
-  "Assoc `name` under the :name key to `table`."
-  [table name] (assoc table :name (as-keyword name)))
+  "Make a new table."
+  [name & body]
+  (let [[_ table] ((chain-state body) (parse-table name))]
+    (fn [_]
+      [nil table])))
+
+(defn column
+  "Add a database column to `table`."
+  [name type & {:as options}]
+  (let [column (assoc options :op :column :name name :type type)]
+    (fn [table]
+      [nil (-> (update-in table [:columns] #(concat %1 [(:name column)]))
+               (assoc-in [:column (:name column)] column))])))
+
+(defn description
+  "Add `text` as description to to `table`."
+  [text]
+  (fn [table]
+    [text (assoc table :doc text)]))
 
 (defmacro defquery [name doc args body & [map-fn]]
   (let [query-sym (symbol (str name "*"))]
@@ -116,12 +109,11 @@
 (defmacro deftable
   "Define a database table."
   [table-name doc & body]
-  (let [table# (eval `(-> (make-table ~(keyword table-name) :doc ~doc) ~@body))
+  (let [table# (eval `(second ((table ~(keyword table-name) ~@body) {})))
         singular# (singular (str table-name))
         symbol# (symbol (str table-name "-table"))]
     `(do (def ~symbol#
-           (-> (make-table ~(keyword table-name) :doc ~doc)
-               ~@body))
+           (second ((table ~(keyword table-name) ~@body) {})))
 
          (defn ~(symbol (str "drop-" table-name))
            ~(format "Drop the %s database table." table-name)

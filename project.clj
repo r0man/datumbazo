@@ -7,6 +7,7 @@
   :dependencies [[clj-time "0.4.4"]
                  [environ "0.3.0"]
                  [org.clojure/clojure "1.4.0"]
+                 [org.clojure/algo.monads "0.1.0"]
                  [org.clojure/data.json "0.2.0"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.cloudhoist/stevedore "0.7.2"]
