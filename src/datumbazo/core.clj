@@ -37,10 +37,10 @@
   database connection."
   [stmt]
   (let [ast (ast stmt)]
-    (if-let [transform (reverse (concat (:transform (:table ast))
-                                        (mapcat :transform (:from ast))))]
-      (map (apply comp transform) (sqlingvo.core/run stmt))
-      (sqlingvo.core/run stmt))))
+    (map (apply comp (reverse (concat [io/decode-row]
+                                      (:transform (:table ast))
+                                      (mapcat :transform (:from ast)))))
+         (sqlingvo.core/run stmt))))
 
 (defn run1
   "Run `stmt` against the current clojure.java.jdbc database
@@ -119,15 +119,11 @@
 (defmacro deftable
   "Define a database table."
   [table-name doc & body]
-  (let [table# (eval `(second ((table ~(keyword table-name)
-                                      (transform io/decode-row)
-                                      ~@body) {})))
+  (let [table# (eval `(second ((table ~(keyword table-name) ~@body) {})))
         singular# (singular (str table-name))
         symbol# (symbol (str table-name "-table"))]
     `(do (def ~symbol#
-           (second ((table ~(keyword table-name)
-                           (transform io/decode-row)
-                           ~@body) {})))
+           (second ((table ~(keyword table-name) ~@body) {})))
 
          (defn ~(symbol (str "drop-" table-name))
            ~(format "Drop the %s database table." table-name)
