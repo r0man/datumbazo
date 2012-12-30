@@ -4,7 +4,8 @@
            org.postgis.Geometry
            org.postgis.PGgeometry
            org.postgresql.util.PGobject)
-  (:require [clojure.java.jdbc :as jdbc]
+  (:require [clojure.instant :as i]
+            [clojure.java.jdbc :as jdbc]
             [clj-time.coerce :refer [to-date-time to-sql-date to-timestamp]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]
@@ -113,7 +114,7 @@
 
 (defmethod print-dup DateTime
   [^DateTime d ^Writer w]
-  (print-dup (java.util.Date. (.getMillis d)) w))
+  (print-dup (.toDate d) w))
 
 (defmethod print-dup Geometry
   [^Geometry g ^java.io.Writer w]
@@ -127,7 +128,7 @@
 
 (defmethod print-method DateTime
   [^DateTime d ^Writer w]
-  (print-method (java.util.Date. (.getMillis d)) w))
+  (print-method  (.toDate d) w))
 
 (defmethod print-method Geometry
   [^Geometry g ^java.io.Writer w]
@@ -139,6 +140,18 @@
 
 ;; READ
 
+(defn- construct-date-time [years months days hours minutes seconds nanoseconds offset-sign offset-hours offset-minutes]
+  (DateTime. (.getTimeInMillis
+              (#'i/construct-calendar
+               years months days
+               hours minutes seconds 0
+               offset-sign offset-hours offset-minutes))))
+
 (defn read-wkt
   "Read a geometry from `s` in WKT format."
   [s] (PGgeometry. (PGgeometry/geomFromString s)))
+
+(def read-instant-date-time
+  "To read an instant as an DateTime, bind *data-readers* to a map
+with this var as the value for the 'inst key."
+  (partial i/parse-timestamp (i/validated construct-date-time)))
