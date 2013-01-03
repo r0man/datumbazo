@@ -43,15 +43,6 @@
   (binding [*data-readers* (merge *data-readers* *readers*)]
     (read-string (slurp filename))))
 
-(defn serial-seq [column]
-  (-> (->> (map column [:schema :table :name])
-           (remove #(= :public %1))
-           (remove nil?)
-           (map name)
-           (join "-"))
-      (str "-seq")
-      (keyword)))
-
 (defn serial-seq
   "Returns the default serial name of column."
   [column]
