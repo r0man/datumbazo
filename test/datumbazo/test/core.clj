@@ -59,6 +59,12 @@
 (defn save-europe []
   (save-continent europe))
 
+(deftest test-columns
+  (let [columns (columns twitter-tweets-table)]
+    (is (= 6 (count columns)))
+    (is (= [:id :user-id :retweeted :text :created-at :updated-at]
+           (map :name columns)))))
+
 (deftest test-continents-table
   (is (= :continents (:name continents-table)))
   (is (= [:id :name] (:columns continents-table)))

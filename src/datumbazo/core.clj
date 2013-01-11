@@ -26,6 +26,10 @@
       [nil (-> (update-in table [:columns] #(concat %1 [(:name column)]))
                (assoc-in [:column (:name column)] column))])))
 
+(defn columns
+  "Returns the columns of `table`."
+  [table] (map (:column table) (:columns table)))
+
 (defn description
   "Add `text` as description to to `table`."
   [text]
