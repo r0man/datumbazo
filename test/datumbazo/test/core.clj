@@ -66,31 +66,35 @@
            (map :name columns)))))
 
 (deftest test-continents-table
-  (is (= :continents (:name continents-table)))
-  (is (= [:id :name] (:columns continents-table)))
-  (let [column (:id (:column continents-table))]
-    (is (= :id (:name column)))
-    (is (= :serial (:type column))))
-  (let [column (:name (:column continents-table))]
-    (is (= :name (:name column)))
-    (is (= :text (:type column)))))
+  (let [table continents-table]
+    (is (nil? (:schema table)))
+    (is (= :continents (:name table)))
+    (is (= [:id :name] (:columns table)))
+    (let [column (:id (:column table))]
+      (is (= :id (:name column)))
+      (is (= :serial (:type column))))
+    (let [column (:name (:column table))]
+      (is (= :name (:name column)))
+      (is (= :text (:type column))))))
 
 (deftest test-continents-pagination
   (is (= (sql (continents* :page 2 :per-page 20))
          ["SELECT * FROM continents LIMIT 20 OFFSET 20"])))
 
 (deftest test-countries-table
-  (is (= :countries (:name countries-table)))
-  (is (= [:id :continent-id :name] (:columns countries-table)))
-  (let [column (:id (:column countries-table))]
-    (is (= :id (:name column)))
-    (is (= :serial (:type column))))
-  (let [column (:continent-id (:column countries-table))]
-    (is (= :continent-id (:name column)))
-    (is (= :integer (:type column))))
-  (let [column (:name (:column countries-table))]
-    (is (= :name (:name column)))
-    (is (= :text (:type column)))))
+  (let [table countries-table]
+    (is (nil? (:schema table)))
+    (is (= :countries (:name table)))
+    (is (= [:id :continent-id :name] (:columns table)))
+    (let [column (:id (:column table))]
+      (is (= :id (:name column)))
+      (is (= :serial (:type column))))
+    (let [column (:continent-id (:column table))]
+      (is (= :continent-id (:name column)))
+      (is (= :integer (:type column))))
+    (let [column (:name (:column table))]
+      (is (= :name (:name column)))
+      (is (= :text (:type column))))))
 
 (database-test test-drop-continents
   (is (= "Drop the continents database table."
@@ -211,6 +215,27 @@
 
 (database-test test-twitter-tweets
   (is (empty? (twitter-tweets))))
+
+(deftest test-twitter-users-table
+  (let [table twitter-users-table]
+    (is (= :twitter (:schema table)))
+    (is (= :users (:name table)))
+    (is (= [:id :screen-name :name :followers-count :friends-count :retweet-count
+            :statuses-count :verified :possibly-sensitive :location :time-zone
+            :lang :url :profile-image-url :created-at :updated-at]
+           (:columns table)))
+    (let [column (:id (:column table))]
+      (is (= :id (:name column)))
+      (is (= :serial (:type column))))))
+
+(deftest test-twitter-tweets-table
+  (let [table twitter-tweets-table]
+    (is (= :twitter (:schema table)))
+    (is (= :tweets (:name table)))
+    (is (= [:id :user-id :retweeted :text :created-at :updated-at] (:columns table)))
+    (let [column (:id (:column table))]
+      (is (= :id (:name column)))
+      (is (= :serial (:type column))))))
 
 (database-test test-save-twitter-user
   (let [user (save-twitter-user
