@@ -24,7 +24,10 @@
   (let [column (assoc options :op :column :name name :type type)]
     (fn [table]
       [nil (-> (update-in table [:columns] #(concat %1 [(:name column)]))
-               (assoc-in [:column (:name column)] column))])))
+               (assoc-in [:column (:name column)]
+                         (assoc column
+                           :schema (:schema table)
+                           :table (:name table))))])))
 
 (defn columns
   "Returns the columns of `table`."

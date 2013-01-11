@@ -71,9 +71,13 @@
     (is (= :continents (:name table)))
     (is (= [:id :name] (:columns table)))
     (let [column (:id (:column table))]
+      (is (nil? (:schema column)))
+      (is (= :continents (:table column)))
       (is (= :id (:name column)))
       (is (= :serial (:type column))))
     (let [column (:name (:column table))]
+      (is (nil? (:schema column)))
+      (is (= :continents (:table column)))
       (is (= :name (:name column)))
       (is (= :text (:type column))))))
 
@@ -87,12 +91,18 @@
     (is (= :countries (:name table)))
     (is (= [:id :continent-id :name] (:columns table)))
     (let [column (:id (:column table))]
+      (is (nil? (:schema column)))
+      (is (= :countries (:table column)))
       (is (= :id (:name column)))
       (is (= :serial (:type column))))
     (let [column (:continent-id (:column table))]
+      (is (nil? (:schema column)))
+      (is (= :countries (:table column)))
       (is (= :continent-id (:name column)))
       (is (= :integer (:type column))))
     (let [column (:name (:column table))]
+      (is (nil? (:schema column)))
+      (is (= :countries (:table column)))
       (is (= :name (:name column)))
       (is (= :text (:type column))))))
 
@@ -225,6 +235,8 @@
             :lang :url :profile-image-url :created-at :updated-at]
            (:columns table)))
     (let [column (:id (:column table))]
+      (is (= :twitter (:schema column)))
+      (is (= :users (:table column)))
       (is (= :id (:name column)))
       (is (= :serial (:type column))))))
 
@@ -234,6 +246,8 @@
     (is (= :tweets (:name table)))
     (is (= [:id :user-id :retweeted :text :created-at :updated-at] (:columns table)))
     (let [column (:id (:column table))]
+      (is (= :twitter (:schema column)))
+      (is (= :tweets (:table column)))
       (is (= :id (:name column)))
       (is (= :serial (:type column))))))
 
