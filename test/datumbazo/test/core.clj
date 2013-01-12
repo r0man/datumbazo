@@ -9,13 +9,16 @@
 (deftable continents
   "The continents database table."
   (column :id :serial)
-  (column :name :text :unique? true))
+  (column :name :text :unique? true)
+  (column :code :text :unique? true)
+  (column :geometry :geometry :hidden? true))
 
 (deftable countries
   "The countries database table."
   (column :id :serial)
   (column :continent-id :integer :references :continents/id)
-  (column :name :text :unique? true))
+  (column :name :text :unique? true)
+  (column :geometry :geometry :hidden? true))
 
 (deftable twitter-users
   "The Twitter users database table."
@@ -69,7 +72,7 @@
   (let [table continents-table]
     (is (nil? (:schema table)))
     (is (= :continents (:name table)))
-    (is (= [:id :name] (:columns table)))
+    (is (= [:id :name :code :geometry] (:columns table)))
     (let [column (:id (:column table))]
       (is (nil? (:schema column)))
       (is (= :continents (:table column)))
@@ -79,17 +82,23 @@
       (is (nil? (:schema column)))
       (is (= :continents (:table column)))
       (is (= :name (:name column)))
-      (is (= :text (:type column))))))
+      (is (= :text (:type column))))
+    (let [column (:geometry (:column table))]
+      (is (nil? (:schema column)))
+      (is (= :continents (:table column)))
+      (is (= :geometry (:name column)))
+      (is (= :geometry (:type column)))
+      (is (= true (:hidden? column))))))
 
 (deftest test-continents-pagination
   (is (= (sql (continents* :page 2 :per-page 20))
-         ["SELECT * FROM continents LIMIT 20 OFFSET 20"])))
+         ["SELECT continents.id, continents.name, continents.code FROM continents LIMIT 20 OFFSET 20"])))
 
 (deftest test-countries-table
   (let [table countries-table]
     (is (nil? (:schema table)))
     (is (= :countries (:name table)))
-    (is (= [:id :continent-id :name] (:columns table)))
+    (is (= [:id :continent-id :name :geometry] (:columns table)))
     (let [column (:id (:column table))]
       (is (nil? (:schema column)))
       (is (= :countries (:table column)))

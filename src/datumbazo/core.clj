@@ -145,14 +145,14 @@
            [~'row & ~'opts]
            (run1 (sqlingvo.core/insert ~symbol# []
                    (values (io/encode-row ~symbol# ~'row))
-                   (returning *))))
+                   (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#))))))
 
          (defn ~(symbol (str "insert-" (str table-name)))
            ~(format "Insert the %s rows into the database." singular#)
            [~'rows & ~'opts]
            (run (sqlingvo.core/insert ~symbol# []
                   (values (io/encode-rows ~symbol# ~'rows))
-                  (returning *))))
+                  (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#))))))
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
@@ -166,7 +166,7 @@
                  pk-vals# (map ~'row pk-keys#)]
              (run1 (sqlingvo.core/update ~symbol# (io/encode-row ~symbol# ~'row)
                      (where (cons 'and (map #(list '= %1 %2) pk-keys# pk-vals#)))
-                     (returning *)))))
+                     (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))))))
 
          (defn ~(symbol (str "save-" singular#))
            ~(format "Save the %s row to the database." singular#)
@@ -177,7 +177,7 @@
          (defquery ~table-name
            ~(format "Select %s from the database table." table-name)
            [& {:as ~'opts}]
-           (select [*]
+           (select (remove #(= true (:hidden? %1)) (columns ~symbol#))
              (from ~symbol#)
              (paginate (:page ~'opts) (:per-page ~'opts))
              (order-by (:order-by ~'opts))))
@@ -188,7 +188,7 @@
                       ~(format "Find all %s by %s." table-name column-name)
                       [~'value & {:as ~'opts}]
                       (let [column# (first (meta/columns (jdbc/connection) :schema ~(:schema table#) :table ~(:name table#) :name ~(:name column)))]
-                        (select [*]
+                        (select (remove #(= true (:hidden? %1)) (columns ~symbol#))
                           (from ~symbol#)
                           (where `(= ~(:name column#) ~(io/encode-column column# ~'value)))
                           (paginate (:page ~'opts) (:per-page ~'opts)))))
