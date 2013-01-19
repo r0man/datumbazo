@@ -45,6 +45,7 @@
   [stmt]
   (let [ast (ast stmt)]
     (map (apply comp (reverse (concat [io/decode-row]
+                                      (:transform ast)
                                       (:transform (:table ast))
                                       (mapcat :transform (:from ast)))))
          (sqlingvo.core/run stmt))))
