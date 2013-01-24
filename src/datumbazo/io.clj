@@ -10,7 +10,7 @@
             [clj-time.coerce :refer [to-date-time to-sql-date to-timestamp]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]
-            [inflections.util :refer [parse-double parse-integer]]
+            [inflections.util :refer [parse-double parse-integer parse-long]]
             [sqlingvo.compiler :refer [SQLType]]
             [sqlingvo.util :refer [parse-table]]))
 
@@ -29,6 +29,9 @@
 
 (defmethod encode-column :int4 [column value]
   (parse-integer value))
+
+(defmethod encode-column :int8 [column value]
+  (parse-long value))
 
 (defmethod encode-column :serial [column value]
   (parse-integer value))

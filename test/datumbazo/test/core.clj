@@ -23,7 +23,7 @@
 (deftable twitter-users
   "The Twitter users database table."
   (table :twitter.users)
-  (column :id :serial)
+  (column :id :bigint)
   (column :screen-name :text :not-null? true)
   (column :name :text :not-null? true)
   (column :followers-count :integer :not-null? true :default 0)
@@ -43,7 +43,7 @@
 (deftable twitter-tweets
   "The Twitter tweets database table."
   (table :twitter.tweets)
-  (column :id :serial)
+  (column :id :bigint)
   (column :user-id :integer :references :twitter.users/id)
   (column :retweeted :boolean :not-null? true :default false)
   (column :text :text :not-null? true)
@@ -247,7 +247,7 @@
       (is (= :twitter (:schema column)))
       (is (= :users (:table column)))
       (is (= :id (:name column)))
-      (is (= :serial (:type column))))))
+      (is (= :bigint (:type column))))))
 
 (deftest test-twitter-tweets-table
   (let [table twitter-tweets-table]
@@ -258,7 +258,7 @@
       (is (= :twitter (:schema column)))
       (is (= :tweets (:table column)))
       (is (= :id (:name column)))
-      (is (= :serial (:type column))))))
+      (is (= :bigint (:type column))))))
 
 (database-test test-save-twitter-user
   (let [user (save-twitter-user
@@ -284,3 +284,26 @@
 
 (database-test test-count-all
   (is (= 0 (count-all :continents))))
+
+(database-test test-insert-twitter-user
+  (let [user (insert-twitter-user
+              {:listed-count 0,
+               :default-profile-image true,
+               :time-zone nil,
+               :name "Twitter",
+               :location nil,
+               :profile-image-url nil,
+               :friends-count 0,
+               :followers-count 0,
+               :lang nil,
+               :url nil,
+               :updated-at #inst "2012-10-06T18:22:58.640-00:00",
+               :created-at #inst "2012-10-06T18:22:58.640-00:00",
+               :screen-name "twitter 2",
+               :retweet-count 0,
+               :possibly-sensitive false,
+               :statuses-count 0,
+               :verified false,
+               :id "9"
+               :description nil})]
+    (is (= 9 (:id user)))))

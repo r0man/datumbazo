@@ -3,7 +3,7 @@
 BEGIN;
 
 CREATE TABLE twitter.users (
-  id integer PRIMARY KEY,
+  id bigint PRIMARY KEY,
   screen_name text NOT NULL,
   name text NOT NULL,
   description text,
