@@ -71,13 +71,12 @@
   [table row & body]
   (let [table (parse-table table)]
     (fn [stmt]
-      (let [[_ update]
-            ((chain-state body)
-             {:op :update
-              :table table
-              :exprs (if (sequential? row) (map parse-expr row))
-              :row (if (map? row) (io/encode-row table row))})]
-        [update (assoc stmt (:op update) update)]))))
+      (with-monad state-m
+        ((chain-state body)
+         {:op :update
+          :table table
+          :exprs (if (sequential? row) (map parse-expr row))
+          :row (if (map? row) (io/encode-row table row))})))))
 
 (defn values
   "Returns a fn that adds a VALUES clause to an SQL statement."
