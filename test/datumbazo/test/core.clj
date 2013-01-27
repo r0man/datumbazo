@@ -1,17 +1,27 @@
 (ns datumbazo.test.core
   (:refer-clojure :exclude [distinct group-by])
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.string :refer [upper-case]])
+            [clojure.string :refer [upper-case]]
+            [validation.core :refer :all]
+            [slingshot.slingshot :refer [try+]])
   (:use clojure.test
         datumbazo.core
         datumbazo.test))
+
+(defvalidate continent
+  (presence-of :name)
+  (uniqueness-of :continents :name :if new-record?)
+  (presence-of :code)
+  (exact-length-of :code 2)
+  (uniqueness-of :continents :code :if new-record?))
 
 (deftable continents
   "The continents database table."
   (column :id :serial)
   (column :name :text :unique? true)
   (column :code :text :unique? true)
-  (column :geometry :geometry :hidden? true))
+  (column :geometry :geometry :hidden? true)
+  (prepare validate-continent!))
 
 (deftable countries
   "The countries database table."
@@ -307,3 +317,18 @@
                :id "9"
                :description nil})]
     (is (= 9 (:id user)))))
+
+(database-test test-validation
+  (let [continent {}]
+    (try+
+     (insert-continent continent)
+     (is false)
+     (catch [:type :validation.core/error] {:keys [errors record]}
+       (is (= continent record))
+       (is (= errors (:errors (meta record))))))
+    (try+
+     (update-continent continent)
+     (is false)
+     (catch [:type :validation.core/error] {:keys [errors record]}
+       (is (= continent record))
+       (is (= errors (:errors (meta record))))))))

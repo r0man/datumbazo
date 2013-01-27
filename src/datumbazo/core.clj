@@ -39,6 +39,12 @@
   (fn [table]
     [text (assoc table :doc text)]))
 
+(defn prepare
+  "Add the preparation fn `f` to `table`."
+  [f]
+  (fn [table]
+    [nil (update-in table [:prepare] concat [f])]))
+
 (defn run
   "Compile and run `stmt` against the current clojure.java.jdbc
   database connection."
@@ -63,7 +69,18 @@
 
 (defn transform
   "Add the transformation fn `f` to `table`."
-  [f] (with-monad state-m (concat-in :transfrom [f])))
+  [f]
+  (fn [table]
+    [nil (update-in table [:transform] concat [f])]))
+
+(defn- apply-preparation [stmt row]
+  ;; (clojure.pprint/pprint stmt)
+  ;; (prn row)
+  (let [prepare (concat (:prepare stmt)
+                        (:prepare (:table stmt)))]
+    (if-not (empty? prepare)
+      ((apply comp prepare) row)
+      row)))
 
 (defn update
   "Returns a fn that builds a UPDATE statement."
@@ -75,7 +92,8 @@
          {:op :update
           :table table
           :exprs (if (sequential? row) (map parse-expr row))
-          :row (if (map? row) (io/encode-row table row))})))))
+          :row (if (map? row)
+                 (apply-preparation table (io/encode-row table row)))})))))
 
 (defn values
   "Returns a fn that adds a VALUES clause to an SQL statement."
@@ -85,9 +103,10 @@
            :default (assoc stmt :default-values true)
            (concat-in
             stmt [:values]
-            (io/encode-rows
-             (:table stmt)
-             (if (sequential? values) values [values]))))]))
+            (map (partial apply-preparation stmt)
+                 (io/encode-rows
+                  (:table stmt)
+                  (if (sequential? values) values [values])))))]))
 
 (defn count-all
   "Count all rows in the database `table`."
@@ -164,7 +183,7 @@
            (let [pks# (meta/primary-keys (jdbc/connection) :schema (:schema ~symbol#) :table (:name ~symbol#))
                  pk-keys# (map :name pks#)
                  pk-vals# (map ~'row pk-keys#)]
-             (run1 (sqlingvo.core/update ~symbol# (io/encode-row ~symbol# ~'row)
+             (run1 (update ~symbol# (io/encode-row ~symbol# ~'row)
                      (where (cons 'and (map #(list '= %1 %2) pk-keys# pk-vals#)))
                      (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))))))
 
