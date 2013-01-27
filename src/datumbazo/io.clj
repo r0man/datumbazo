@@ -24,6 +24,12 @@
 (defmulti encode-column
   (fn [column value] (:type column)))
 
+(defmethod encode-column :citext [column value]
+  (if value
+    (doto (PGobject.)
+      (.setValue (str value))
+      (.setType "citext"))))
+
 (defmethod encode-column :date [column value]
   (to-sql-date value))
 
@@ -39,11 +45,8 @@
 (defmethod encode-column :numeric [column value]
   (parse-double value))
 
-(defmethod encode-column :citext [column value]
-  (if value
-    (doto (PGobject.)
-      (.setValue (str value))
-      (.setType "citext"))))
+(defmethod encode-column :text [column value]
+  (if value (str value)))
 
 (defmethod encode-column :timestamptz [column value]
   (to-timestamp value))
