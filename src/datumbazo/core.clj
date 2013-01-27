@@ -63,9 +63,7 @@
 
 (defn transform
   "Add the transformation fn `f` to `table`."
-  [f]
-  (fn [table]
-    [nil (update-in table [:transform] concat [f])]))
+  [f] (with-monad state-m (concat-in :transfrom [f])))
 
 (defn update
   "Returns a fn that builds a UPDATE statement."
