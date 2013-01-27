@@ -15,6 +15,7 @@
 
 (immigrate 'sqlingvo.core)
 
+(def ^:dynamic *page* nil)
 (def ^:dynamic *per-page* 25)
 
 (defn column
@@ -95,16 +96,18 @@
   [table] (:count (run1 (select ['(count *)] (from table)))))
 
 (defn paginate
-  "Add LIMIT and OFFSET clauses to `query` according to
-  `page` (default: 1) and `per-page` (default: `*per-page*`)."
-  [page & [per-page]]
-  (let [page (parse-integer (or page 1))
-        per-page (parse-integer (or per-page *per-page*))]
+  "Add LIMIT and OFFSET clauses to `query` calculated from `page` and
+  `per-page.`"
+  [page & [limit per-page]]
+  (let [page (parse-integer (or page *page*))
+        per-page (parse-integer (or limit per-page *per-page*))]
     (fn [stmt]
-      ((chain-state
-        [(limit per-page)
-         (offset (* (dec page) (or per-page *per-page*)))])
-       stmt) )))
+      (if page
+        ((chain-state
+          [(sqlingvo.core/limit per-page)
+           (offset (* (dec page) (or per-page *per-page*)))])
+         stmt)
+        [nil stmt]))))
 
 (defmacro defquery [name doc args body & [map-fn]]
   (let [query-sym (symbol (str name "*"))]
