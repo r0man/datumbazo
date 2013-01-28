@@ -205,12 +205,11 @@
              (do
                `(do (defquery ~(symbol (str table-name "-by-" column-name))
                       ~(format "Find all %s by %s." table-name column-name)
-                      [~'value & {:as ~'opts}]
+                      [~'value & ~'opts]
                       (let [column# (first (meta/columns (jdbc/connection) :schema ~(:schema table#) :table ~(:name table#) :name ~(:name column)))]
-                        (select (remove #(= true (:hidden? %1)) (columns ~symbol#))
-                          (from ~symbol#)
-                          (where `(= ~(:name column#) ~(io/encode-column column# ~'value)))
-                          (paginate (:page ~'opts) (:per-page ~'opts)))))
+                        (fn [stmt#]
+                          ((chain-state [(where `(= ~(:name column#) ~(io/encode-column column# ~'value)))])
+                           (ast (apply ~(symbol (str table-name "*")) ~'opts))))))
                     (defn ~(symbol (str (singular table-name) "-by-" column-name))
                       ~(format "Find the first %s by %s." (singular table-name) column-name)
                       [& ~'args]
