@@ -170,7 +170,7 @@
            ~(format "Insert the %s rows into the database." singular#)
            [~'rows & ~'opts]
            (run (sqlingvo.core/insert ~symbol# []
-                  (values (io/encode-rows ~symbol# ~'rows))
+                  (values ~'rows)
                   (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#))))))
 
          (defn ~(symbol (str "truncate-" table-name))
@@ -183,7 +183,7 @@
            (let [pks# (meta/primary-keys (jdbc/connection) :schema (:schema ~symbol#) :table (:name ~symbol#))
                  pk-keys# (map :name pks#)
                  pk-vals# (map ~'row pk-keys#)]
-             (run1 (update ~symbol# (io/encode-row ~symbol# ~'row)
+             (run1 (update ~symbol# ~'row
                      (where (cons 'and (map #(list '= %1 %2) pk-keys# pk-vals#)))
                      (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))))))
 
