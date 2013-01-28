@@ -96,6 +96,15 @@
                  (->> (apply-preparation table row)
                       (io/encode-row table)))})))))
 
+(defn update
+  "Returns a fn that builds a UPDATE statement."
+  [table row & body]
+  (let [row (if (map? row)
+              (->> (apply-preparation table row)
+                   (io/encode-row table))
+              row)]
+    (apply sqlingvo.core/update table row body)))
+
 (defn values
   "Returns a fn that adds a VALUES clause to an SQL statement."
   [values]
