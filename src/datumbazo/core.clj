@@ -93,7 +93,7 @@
           :table table
           :exprs (if (sequential? row) (map parse-expr row))
           :row (if (map? row)
-                 (apply-preparation table (io/encode-row table row)))})))))
+                 (io/encode-row table (apply-preparation table row)))})))))
 
 (defn values
   "Returns a fn that adds a VALUES clause to an SQL statement."
@@ -103,9 +103,9 @@
            :default (assoc stmt :default-values true)
            (concat-in
             stmt [:values]
-            (map (partial apply-preparation stmt)
-                 (io/encode-rows
-                  (:table stmt)
+            (io/encode-rows
+             (:table stmt)
+             (map (partial apply-preparation stmt)
                   (if (sequential? values) values [values])))))]))
 
 (defn count-all
