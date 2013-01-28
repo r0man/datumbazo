@@ -146,6 +146,12 @@
   (is (= 0 (count-all :countries))))
 
 (database-test test-insert-continent
+  (try+
+   (insert-continent {})
+   (catch [:type :validation.core/error] {:keys [errors record]}
+     (is (= {} record))
+     (is (= ["can't be blank."] (:name errors)))
+     (is (= ["has the wrong length (should be 2 characters)." "can't be blank."] (:code errors)))))
   (let [row (insert-continent europe)]
     (is (number? (:id row)))
     (is (= "Europe" (:name row)))
@@ -187,6 +193,12 @@
   (is (= 0 (count-all :countries))))
 
 (database-test test-update-continent
+  (try+
+   (update-continent {})
+   (catch [:type :validation.core/error] {:keys [errors record]}
+     (is (= {} record))
+     (is (= ["can't be blank."] (:name errors)))
+     (is (= ["has the wrong length (should be 2 characters)." "can't be blank."] (:code errors)))))
   (is (nil? (update-continent europe)))
   (let [europe (insert-continent europe)
         continent (update-continent (assoc europe :name "Europa"))]
