@@ -161,13 +161,14 @@
 
 ;; READ
 
-(defn- construct-date-time [years months days hours minutes seconds nanoseconds offset-sign offset-hours offset-minutes]
-  (.withZone (DateTime. (.getTimeInMillis
-                         (#'i/construct-calendar
-                          years months days
-                          hours minutes seconds 0
-                          offset-sign offset-hours offset-minutes)))
-             DateTimeZone/UTC))
+(defn- construct-date-time
+  [years months days hours minutes seconds nanoseconds offset-sign offset-hours offset-minutes]
+  (-> (.getTimeInMillis
+       (#'i/construct-calendar
+        years months days
+        hours minutes seconds nanoseconds
+        offset-sign offset-hours offset-minutes))
+      (DateTime.) (.withZone DateTimeZone/UTC)))
 
 (defn read-wkt
   "Read a geometry from `s` in WKT format."
