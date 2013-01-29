@@ -110,6 +110,12 @@
 
 ;; PRINT
 
+(defmulti print-pgobject
+  (fn [^PGobject o ^Writer w] (keyword (.getType o))))
+
+(defmethod print-pgobject :default [^PGobject o ^Writer w]
+  (print-method (str o) w))
+
 (defn- print-wkt
   "Print a org.postgis.PGgeometry in WKT format."
   [^PGgeometry g ^java.io.Writer w]
@@ -131,6 +137,10 @@
   [^PGgeometry g ^java.io.Writer w]
   (print-wkt g w))
 
+(defmethod print-dup PGobject
+  [^PGobject o ^java.io.Writer w]
+  (print-pgobject (str o) w))
+
 ;; PRINT-METHOD
 
 (defmethod print-method DateTime
@@ -144,6 +154,10 @@
 (defmethod print-method PGgeometry
   [^PGgeometry g ^java.io.Writer w]
   (print-wkt g w))
+
+(defmethod print-method PGobject
+  [^PGobject o ^java.io.Writer w]
+  (print-pgobject o w))
 
 ;; READ
 
