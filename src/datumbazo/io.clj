@@ -81,19 +81,19 @@
 
 ;; DECODE
 
-(defmulti decode-pg-object
-  (fn [pg-object] (keyword (.getType pg-object))))
+(defmulti decode-pgobject
+  (fn [pgobject] (keyword (.getType pgobject))))
 
-(defmethod decode-pg-object :citext [pg-object]
-  (.getValue pg-object))
+(defmethod decode-pgobject :citext [pgobject]
+  (.getValue pgobject))
 
-(defmethod decode-pg-object :default [pg-object]
-  pg-object)
+(defmethod decode-pgobject :default [pgobject]
+  pgobject)
 
 (defmulti decode-column class)
 
 (defmethod decode-column PGobject [value]
-  (decode-pg-object value))
+  (decode-pgobject value))
 
 (defmethod decode-column java.util.Date [value]
   (to-date-time value))
