@@ -8,7 +8,6 @@
                  [environ "0.3.0"]
                  [org.clojure/clojure "1.4.0"]
                  [org.clojure/algo.monads "0.1.0"]
-                 [org.clojure/data.json "0.2.1"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.cloudhoist/stevedore "0.7.3"]
                  [org.postgis/postgis-jdbc "1.3.3"]

@@ -10,7 +10,6 @@
             [inflections.core :refer [hyphenize singular]]
             [inflections.util :refer [parse-integer]]
             [sqlingvo.util :refer [as-identifier as-keyword parse-table parse-expr concat-in]]
-            datumbazo.json
             sqlingvo.core))
 
 (immigrate 'sqlingvo.core)
