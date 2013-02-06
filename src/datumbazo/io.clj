@@ -54,30 +54,34 @@
 (defmethod encode-column :default [column value]
   value)
 
+(defn- encode-columns
+  "Encode the columns of `row` into database types."
+  [columns row]
+  (reduce (fn [row column]
+            (cond
+             ;; TODO: Howto insert/update raster?
+             (= :raster (:type column))
+             (dissoc row (:name column))
+             (contains? row (:name column))
+             (assoc row (:name column) (encode-column column (get row (:name column))))
+             :else row))
+          (select-keys row (map :name columns))
+          columns))
+
 (defn encode-row
   "Encode the columns of `row` into database types."
   [table row]
-  (let [table (parse-table table)
-        columns (meta/columns (jdbc/connection) :schema (:schema table) :table (:name table))]
-    (reduce (fn [row column]
-              (if (contains? row (:name column))
-                (assoc row (:name column) (encode-column column (get row (:name column))))
-                row))
-            (select-keys row (map :name columns))
-            columns)))
+  (let [table (parse-table table)]
+    (encode-columns
+     (meta/columns (jdbc/connection) :schema (:schema table) :table (:name table))
+     row)))
 
 (defn encode-rows
   "Encode the columns of `rows` into database types."
   [table rows]
   (let [table (parse-table table)
         columns (meta/columns (jdbc/connection) :schema (:schema table) :table (:name table))]
-    (map #(reduce (fn [row column]
-                    (if (contains? row (:name column))
-                      (assoc row (:name column) (encode-column column (get row (:name column))))
-                      row))
-                  (select-keys %1 (map :name columns))
-                  columns)
-         rows)))
+    (map (partial encode-columns columns) rows)))
 
 ;; DECODE
 
