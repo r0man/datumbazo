@@ -65,3 +65,12 @@
                    script))
             {:exit 0})]
     (shp2pgsql :natural-earth.ports "test-resources/ne_10m_ports/ne_10m_ports.dbf" "/tmp/test-shp2pgsql.sql")))
+
+(database-test test-raster2pgsql
+  (with-redefs
+    [bash (fn [script]
+            (is (= (str "echo \"Running shp2pgsql...\"\n{ raster2pgsql -c INPUT weather.nww3_dirpwsfc_2013_02_10 > OUTPUT; } "
+                        "|| { echo \"Running shp2pgsql\" failed; exit 1; } >&2 \necho \"...done\"\n")
+                   script))
+            {:exit 0})]
+    (raster2pgsql :weather.nww3-dirpwsfc-2013-02-10 "INPUT" "OUTPUT")))

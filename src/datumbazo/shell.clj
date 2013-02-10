@@ -90,3 +90,30 @@
     ~(if-let [encoding (:encoding opts)]
        (format "-W %s" encoding) "")
     ~shape-file ~(jdbc/as-identifier table) > ~sql-file)))
+
+(defn raster2pgsql
+  "Run the raster2pgsql command."
+  [table input output & {:as opts}]
+  (exec-checked-script
+   "Running shp2pgsql"
+   (raster2pgsql
+    ~(if-let [srid (:srid opts)]
+       (format "-s %s" srid) "")
+    ~(if-let [band (:band opts)]
+       (format "-b %s" band) "")
+    ~(case (:mode opts)
+       :append "-a"
+       :create "-c"
+       :drop "-d"
+       :prepare "-p"
+       nil "-c")
+    ~(if-let [column (:column opts)]
+       (format "-f %s" column) "")
+    ~(if (:index opts)
+       "-I" "")
+    ~(if (:out-of-band opts)
+       "-R" "")
+    ~(if (sequential? input)
+       (join " " input)
+       input)
+    ~(jdbc/as-identifier table) > ~output)))
