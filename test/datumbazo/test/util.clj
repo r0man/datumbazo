@@ -1,6 +1,8 @@
 (ns datumbazo.test.util
+  (:refer-clojure :exclude [distinct group-by])
   (:use clojure.test
         datumbazo.util
+        datumbazo.core
         datumbazo.test))
 
 (deftest test-absolute-path
@@ -144,7 +146,8 @@
   (let [stmts (slurp-sql "test-resources/stmts-simple.sql")]
     (is (= ["DROP TABLE x" "DROP TABLE y"] stmts)))
   (let [stmts (slurp-sql "test-resources/stmts-raster.sql")]
-    (is (= 4 (count stmts)))))
+    (is (= 2 (count stmts)))))
 
 (database-test test-exec-sql-file
+  (run (drop-table [:akw-dirpwsfc-2013-02-10t06]))
   (exec-sql-file "test-resources/stmts-raster.sql"))

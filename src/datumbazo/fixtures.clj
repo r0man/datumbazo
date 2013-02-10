@@ -9,7 +9,7 @@
             [datumbazo.util :refer [clojure-file-seq path-split path-replace]]
             [datumbazo.io :refer [decode-row read-wkt]]
             [datumbazo.core :refer [select from run1]]
-            [sqlingvo.util :refer [as-keyword parse-table]]))
+            [sqlingvo.util :refer [as-identifier as-keyword parse-table]]))
 
 (def ^:dynamic *readers*
   {'inst read-instant-timestamp
@@ -57,7 +57,7 @@
   (let [table (parse-table table)]
     (doseq [column (meta/columns (jdbc/connection) :schema (or (:schema table) :public) :table (:name table))
             :when (contains? #{:bigserial :serial} (:type column))]
-      (run1 (select [`(setval ~(jdbc/as-identifier (serial-seq column))
+      (run1 (select [`(setval ~(as-identifier (serial-seq column))
                               ~(select [`(max ~(:name column))]
                                  (from (as-keyword table))))])))))
 
@@ -77,7 +77,7 @@
   (make-parents filename)
   (with-open [writer (writer filename)]
     (jdbc/with-query-results rows
-      [(format "SELECT * FROM %s" (jdbc/as-identifier table))]
+      [(format "SELECT * FROM %s" (as-identifier table))]
       (pprint (map decode-row rows) writer)
       {:file filename :table table :records (count rows)})))
 
@@ -86,11 +86,11 @@
 
 (defn enable-triggers
   "Enable triggers on the database `table`."
-  [table] (jdbc/do-commands (str "ALTER TABLE " (jdbc/as-identifier table) " ENABLE TRIGGER ALL")))
+  [table] (jdbc/do-commands (str "ALTER TABLE " (as-identifier table) " ENABLE TRIGGER ALL")))
 
 (defn disable-triggers
   "Disable triggers on the database `table`."
-  [table] (jdbc/do-commands (str "ALTER TABLE " (jdbc/as-identifier table) " DISABLE TRIGGER ALL")))
+  [table] (jdbc/do-commands (str "ALTER TABLE " (as-identifier table) " DISABLE TRIGGER ALL")))
 
 (defn dump-fixtures
   "Write the fixtures for `tables` into `directory`."

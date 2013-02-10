@@ -1,9 +1,9 @@
 (ns datumbazo.meta
   (:import java.sql.DatabaseMetaData)
   (:refer-clojure :exclude [resultset-seq])
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.string :refer [lower-case]]
-            [inflections.core :refer [hyphenize hyphenize-keys]]))
+  (:require [clojure.string :refer [lower-case]]
+            [inflections.core :refer [hyphenize hyphenize-keys]]
+            [sqlingvo.util :refer [as-identifier]]))
 
 (defn- hyphenize-keyword [k]
   (if k (keyword (hyphenize (name k)))))
@@ -23,9 +23,9 @@
   [connection & {:keys [catalog schema table scope nullable]}]
   (->> (.getBestRowIdentifier
         (metadata connection)
-        (if catalog (jdbc/as-identifier catalog))
-        (if schema (jdbc/as-identifier schema))
-        (if table (jdbc/as-identifier table))
+        (if catalog (as-identifier catalog))
+        (if schema (as-identifier schema))
+        (if table (as-identifier table))
         (condp = scope
           :temporary DatabaseMetaData/bestRowTemporary
           :transaction DatabaseMetaData/bestRowTransaction
@@ -50,10 +50,10 @@
   [connection & {:keys [catalog schema table name]}]
   (->> (.getColumns
         (metadata connection)
-        (if catalog (jdbc/as-identifier catalog))
-        (if schema (jdbc/as-identifier schema))
-        (if table (jdbc/as-identifier table))
-        (if name (jdbc/as-identifier name)))
+        (if catalog (as-identifier catalog))
+        (if schema (as-identifier schema))
+        (if table (as-identifier table))
+        (if name (as-identifier name)))
        (resultset-seq)
        (map #(assoc %1
                :catalog (hyphenize-keyword (:table-cat %1))
@@ -67,9 +67,9 @@
   [connection & {:keys [catalog schema table unique approximate]}]
   (->> (.getIndexInfo
         (metadata connection)
-        (if catalog (jdbc/as-identifier catalog))
-        (if schema (jdbc/as-identifier schema))
-        (if table (jdbc/as-identifier table))
+        (if catalog (as-identifier catalog))
+        (if schema (as-identifier schema))
+        (if table (as-identifier table))
         (= true unique)
         (= true approximate))
        (resultset-seq)
@@ -83,9 +83,9 @@
   [connection & {:keys [catalog schema table]}]
   (->> (.getPrimaryKeys
         (metadata connection)
-        (if catalog (jdbc/as-identifier catalog))
-        (if schema (jdbc/as-identifier schema))
-        (if table (jdbc/as-identifier table)))
+        (if catalog (as-identifier catalog))
+        (if schema (as-identifier schema))
+        (if table (as-identifier table)))
        (resultset-seq)
        (map #(assoc %1
                :catalog (hyphenize-keyword (:table-cat %1))
@@ -112,9 +112,9 @@
   [connection & {:keys [catalog schema name types]}]
   (->> (.getTables
         (metadata connection)
-        (if catalog (jdbc/as-identifier catalog))
-        (if schema (jdbc/as-identifier schema))
-        (if name (jdbc/as-identifier name))
+        (if catalog (as-identifier catalog))
+        (if schema (as-identifier schema))
+        (if name (as-identifier name))
         (into-array String (or types ["TABLE"])))
        (resultset-seq)
        (map #(assoc %1

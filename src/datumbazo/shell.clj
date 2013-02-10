@@ -1,13 +1,13 @@
 (ns datumbazo.shell
   (:refer-clojure :exclude [replace])
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.string :refer [blank? join split replace]]
+  (:require [clojure.string :refer [blank? join split replace]]
             [clojure.tools.logging :refer [logp]]
             [datumbazo.connection :refer [*connection*]]
             [pallet.common.shell :refer [bash]]
             [pallet.stevedore :refer [checked-script with-script-language]]
             [pallet.stevedore.bash :refer :all]
-            [slingshot.slingshot :refer [throw+]]))
+            [slingshot.slingshot :refer [throw+]]
+            [sqlingvo.util :refer [as-identifier]]))
 
 (defn basename
   "Returns the basename of `s`."
@@ -89,7 +89,7 @@
        (format "-s %s" srid) "")
     ~(if-let [encoding (:encoding opts)]
        (format "-W %s" encoding) "")
-    ~shape-file ~(jdbc/as-identifier table) > ~sql-file)))
+    ~shape-file ~(as-identifier table) > ~sql-file)))
 
 (defn raster2pgsql
   "Run the raster2pgsql command."
@@ -116,4 +116,6 @@
     ~(if (sequential? input)
        (join " " input)
        input)
-    ~(jdbc/as-identifier table) > ~output)))
+    ~(if-not (:transaction opts)
+       "-e" "")
+    ~(as-identifier table) > ~output)))

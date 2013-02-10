@@ -69,8 +69,7 @@
 (database-test test-raster2pgsql
   (with-redefs
     [bash (fn [script]
-            (is (= (str "echo \"Running shp2pgsql...\"\n{ raster2pgsql -c INPUT weather.nww3_dirpwsfc_2013_02_10 > OUTPUT; } "
-                        "|| { echo \"Running shp2pgsql\" failed; exit 1; } >&2 \necho \"...done\"\n")
+            (is (= (str "echo \"Running shp2pgsql...\"\n{ raster2pgsql -c INPUT -e weather.nww3_dirpwsfc_2013_02_10 > OUTPUT; } || { echo \"Running shp2pgsql\" failed; exit 1; } >&2 \necho \"...done\"\n")
                    script))
             {:exit 0})]
     (raster2pgsql :weather.nww3-dirpwsfc-2013-02-10 "INPUT" "OUTPUT")))
