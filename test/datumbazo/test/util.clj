@@ -1,6 +1,7 @@
 (ns datumbazo.test.util
   (:use clojure.test
-        datumbazo.util))
+        datumbazo.util
+        datumbazo.test))
 
 (deftest test-absolute-path
   (is (string? (absolute-path ""))))
@@ -138,3 +139,12 @@
     (let [spec (:spec url)]
       (is (= "//localhost/korma" (:subname spec)))
       (is (= "postgresql" (:subprotocol spec))))))
+
+(deftest test-slurp-sql
+  (let [stmts (slurp-sql "test-resources/stmts-simple.sql")]
+    (is (= ["DROP TABLE x" "DROP TABLE y"] stmts)))
+  (let [stmts (slurp-sql "test-resources/stmts-raster.sql")]
+    (is (= 4 (count stmts)))))
+
+(database-test test-exec-sql-file
+  (exec-sql-file "test-resources/stmts-raster.sql"))

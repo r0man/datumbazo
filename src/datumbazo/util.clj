@@ -1,8 +1,9 @@
 (ns datumbazo.util
   (:refer-clojure :exclude [replace])
   (:import java.io.File)
-  (:require [clojure.java.io :refer [file]]
-            [clojure.string :refer [blank? split replace]]
+  (:require [clojure.java.io :refer [file reader]]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.string :refer [blank? split replace trim]]
             [inflections.util :refer [parse-integer]]))
 
 (defn absolute-path
@@ -146,3 +147,15 @@ value is this namespace."
        :uri (nth matches 12)
        :username (nth matches 5)})
     (illegal-argument-exception "Can't parse database connection url %s:" s)))
+
+(defn slurp-sql
+  [file]
+  (with-open [reader (reader file)]
+    (->> (line-seq reader)
+         (map #(replace %1 #";$" ""))
+         (doall))))
+
+(defn exec-sql-file [file]
+  (jdbc/transaction
+   (doseq [statement (slurp-sql file)]
+     (jdbc/do-commands statement))))
