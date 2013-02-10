@@ -156,6 +156,5 @@ value is this namespace."
          (doall))))
 
 (defn exec-sql-file [file]
-  (jdbc/transaction
-   (doseq [statement (slurp-sql file)]
-     (jdbc/do-commands statement))))
+  (doseq [statement (slurp-sql file)]
+    (jdbc/do-commands statement)))
