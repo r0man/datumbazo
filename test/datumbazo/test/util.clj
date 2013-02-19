@@ -149,5 +149,6 @@
     (is (= 2 (count stmts)))))
 
 (database-test test-exec-sql-file
-  (run (drop-table [:akw-dirpwsfc-2013-02-10t06]))
+  (run (drop-table [:akw-dirpwsfc-2013-02-10t06]
+         (if-exists true)))
   (exec-sql-file "test-resources/stmts-raster.sql"))
