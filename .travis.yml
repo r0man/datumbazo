@@ -1,7 +1,10 @@
 language: clojure
 
 before_script:
-  - "sudo apt-get install postgis"
+  - "echo 'yes' | sudo apt-add-repository ppa:ubuntugis/ubuntugis-unstable"
+  - "sudo apt-get update"
+  - "sudo apt-get install -qq libgeos-dev libproj-dev postgresql-9.1-postgis"
+  - "sudo apt-get install -qq libgeos++-dev"
   - "psql -c \"CREATE DATABASE datumbazo;\" -U postgres"
   - "psql -c \"CREATE USER tiger SUPERUSER UNENCRYPTED PASSWORD 'scotch';\" -U postgres"
   - "psql -U postgres datumbazo < resources/db/test-db/migrations/deploy/create-postgis-extension.sql"
