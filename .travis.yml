@@ -1,9 +1,18 @@
 language: clojure
 
 before_script:
-  - "psql -c \"create database datumbazo;\" -U postgres"
-  - "psql -c \"create user tiger UNENCRYPTED PASSWORD 'scotch';\" -U postgres"
-  - "mysql -e \"create database datumbazo;\""
-  - "mysql -e \"create user 'tiger'@'%' identified by 'scotch';\""
+  - "psql -c \"CREATE DATABASE datumbazo;\" -U postgres"
+  - "psql -c \"CREATE USER tiger SUPERUSER UNENCRYPTED PASSWORD 'scotch';\" -U postgres"
+  - "psql -U postgres datumbazo < resources/db/test-db/migrations/deploy/create-postgis-extension.sql"
+  - "psql -U postgres datumbazo < resources/db/test-db/migrations/deploy/create-citext-extension.sql"
+  - "psql -U postgres datumbazo < resources/db/test-db/migrations/deploy/create-continents-table.sql"
+  - "psql -U postgres datumbazo < resources/db/test-db/migrations/deploy/create-countries-table.sql"
+  - "psql -U postgres datumbazo < resources/db/test-db/migrations/deploy/create-twitter-schema.sql"
+  - "psql -U postgres datumbazo < resources/db/test-db/migrations/deploy/create-twitter-users-table.sql"
+  - "psql -U postgres datumbazo < resources/db/test-db/migrations/deploy/create-twitter-tweets-table.sql"
+  - "mysql -e \"CREATE DATABASE datumbazo;\""
+  - "mysql -e \"CREATE USER 'tiger'@'%' IDENTIFIED BY 'scotch';\""
+  - "mysql -e \"GRANT ALL ON *.* TO 'tiger'@'%' IDENTIFIED BY 'scotch';\""
+  - "mysql -e \"FLUSH PRIVILEGES;\""
 
 lein: lein2
