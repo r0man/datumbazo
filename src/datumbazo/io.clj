@@ -102,6 +102,9 @@
 (defmethod decode-column java.util.Date [value]
   (to-date-time value))
 
+(defmethod decode-column org.postgresql.jdbc2.AbstractJdbc2Array [array]
+  (map decode-column (.getArray array)))
+
 (defmethod decode-column :default [value]
   value)
 

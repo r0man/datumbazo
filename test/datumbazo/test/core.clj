@@ -344,3 +344,11 @@
      (catch [:type :validation.core/error] {:keys [errors record]}
        (is (= continent record))
        (is (= errors (:errors (meta record))))))))
+
+(database-test test-array
+  (is (= [{:array [1 2]}]
+         (run (select [[1 2]])))))
+
+(database-test test-array-concat
+  (is (= [{:?column? [1 2 3 4 5 6]}]
+         (run (select ['(|| [1 2] [3 4] [5 6])])))))
