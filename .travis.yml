@@ -15,7 +15,6 @@ before_script:
   - "psql -U postgres datumbazo < resources/db/test-db/migrations/deploy/create-twitter-tweets-table.sql"
   - "mysql -e \"CREATE DATABASE datumbazo;\""
   - "mysql -e \"CREATE USER 'tiger'@'%' IDENTIFIED BY 'scotch';\""
-  - "mysql -e \"GRANT ALL ON *.* TO 'tiger'@'%' IDENTIFIED BY 'scotch';\""
   - "mysql -e \"FLUSH PRIVILEGES;\""
 
 lein: lein2
