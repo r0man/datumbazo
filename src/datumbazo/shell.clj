@@ -109,6 +109,8 @@
        nil "-c")
     ~(if-let [column (:column opts)]
        (format "-f %s" column) "")
+    ~(if-let [no-data (:no-data opts)]
+       (format "-N %s" no-data) "")
     ~(if (:no-transaction opts)
        "-e" "")
     ~(if (:regular-blocking opts)
