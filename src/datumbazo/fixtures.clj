@@ -5,15 +5,15 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [blank? join replace split]]
+            [datumbazo.io :refer [decode-row]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [clojure-file-seq path-split path-replace]]
-            [datumbazo.io :refer [decode-row read-wkt]]
             [datumbazo.core :refer [select from run1]]
+            [geo.postgis :as geo]
             [sqlingvo.util :refer [as-identifier as-keyword parse-table]]))
 
 (def ^:dynamic *readers*
-  {'inst read-instant-timestamp
-   'wkt read-wkt})
+  (assoc geo/*readers* 'inst read-instant-timestamp))
 
 (defn- resolve-table
   "Resolve the table name from `directory` and `filename`."

@@ -1,24 +1,11 @@
 (ns datumbazo.test.io
   (:import java.util.Date
-           org.postgis.Point
-           org.postgis.PGgeometry
            org.joda.time.DateTime
            org.joda.time.DateTimeZone)
   (:require [clojure.java.jdbc :as jdbc]
             [clj-time.core :refer [date-time]])
   (:use datumbazo.io
         clojure.test))
-
-(deftest test-read-wkt
-  (are [s expected]
-       (is (= expected (read-wkt s)))
-       "POINT(1 2)" (PGgeometry. (Point. 1 2))))
-
-(deftest test-pr-str
-  (are [s expected]
-       (is (= expected (pr-str s)))
-       (Point. 1 2) "#wkt \"POINT(1 2)\""
-       (PGgeometry. (Point. 1 2)) "#wkt \"POINT(1 2)\""))
 
 (deftest test-read-instant-date-time
   (let [date (Date. 0)

@@ -6,11 +6,11 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[clj-time "0.4.4"]
                  [environ "0.3.0"]
+                 [geo-clj "0.1.1-SNAPSHOT"]
                  [org.clojure/clojure "1.4.0"]
                  [org.clojure/algo.monads "0.1.0"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.cloudhoist/stevedore "0.7.3"]
-                 [org.postgis/postgis-jdbc "1.3.3"]
                  [postgresql/postgresql "9.1-901.jdbc4"]
                  [slingshot "0.10.3"]
                  [sqlingvo "0.2.1-SNAPSHOT"]]

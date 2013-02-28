@@ -2,8 +2,6 @@
   (:import java.io.Writer
            org.joda.time.DateTime
            org.joda.time.DateTimeZone
-           org.postgis.Geometry
-           org.postgis.PGgeometry
            org.postgresql.util.PGobject)
   (:require [clojure.instant :as i]
             [clojure.java.jdbc :as jdbc]
@@ -12,7 +10,8 @@
             [datumbazo.util :refer :all]
             [inflections.util :refer [parse-double parse-integer parse-long]]
             [sqlingvo.compiler :refer [SQLType]]
-            [sqlingvo.util :refer [parse-table]]))
+            [sqlingvo.util :refer [parse-table]]
+            geo.postgis))
 
 (extend-type DateTime
   SQLType
@@ -123,48 +122,17 @@
 (defmethod print-pgobject :default [^PGobject o ^Writer w]
   (print-method (str o) w))
 
-(defn- print-wkt
-  "Print a org.postgis.PGgeometry in WKT format."
-  [^PGgeometry g ^java.io.Writer w]
-  (.write w "#wkt \"")
-  (.write w (str g))
-  (.write w "\""))
-
 ;; PRINT-DUP
 
 (defmethod print-dup DateTime
   [^DateTime d ^Writer w]
   (print-dup (.toDate d) w))
 
-(defmethod print-dup Geometry
-  [^Geometry g ^java.io.Writer w]
-  (print-wkt g w))
-
-(defmethod print-dup PGgeometry
-  [^PGgeometry g ^java.io.Writer w]
-  (print-wkt g w))
-
-(defmethod print-dup PGobject
-  [^PGobject o ^java.io.Writer w]
-  (print-pgobject (str o) w))
-
 ;; PRINT-METHOD
 
 (defmethod print-method DateTime
   [^DateTime d ^Writer w]
   (print-method  (.toDate d) w))
-
-(defmethod print-method Geometry
-  [^Geometry g ^java.io.Writer w]
-  (print-wkt g w))
-
-(defmethod print-method PGgeometry
-  [^PGgeometry g ^java.io.Writer w]
-  (print-wkt g w))
-
-(defmethod print-method PGobject
-  [^PGobject o ^java.io.Writer w]
-  (print-pgobject o w))
 
 ;; READ
 
@@ -176,10 +144,6 @@
         hours minutes seconds nanoseconds
         offset-sign offset-hours offset-minutes))
       (DateTime.) (.withZone DateTimeZone/UTC)))
-
-(defn read-wkt
-  "Read a geometry from `s` in WKT format."
-  [s] (PGgeometry. (PGgeometry/geomFromString s)))
 
 (def read-instant-date-time
   "To read an instant as an DateTime, bind *data-readers* to a map
