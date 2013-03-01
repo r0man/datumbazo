@@ -8,15 +8,15 @@
 (deftest test-absolute-path
   (is (string? (absolute-path ""))))
 
-(deftest test-clojure-file?
-  (is (not (clojure-file? "NOT-EXISTING")))
-  (is (not (clojure-file? "src")))
-  (is (clojure-file? "project.clj")))
+(deftest test-edn-file?
+  (is (not (edn-file? "NOT-EXISTING")))
+  (is (not (edn-file? "src")))
+  (is (edn-file? "test-resources/db/test-db/fixtures/continents.edn")))
 
-(deftest test-clojure-file-seq
-  (let [files (clojure-file-seq "src")]
+(deftest test-edn-file-seq
+  (let [files (edn-file-seq "test-resources/db/test-db/fixtures")]
     (is (not (empty? files)))
-    (is (every? clojure-file? files))))
+    (is (every? edn-file? files))))
 
 (deftest test-format-server
   (are [server expected]

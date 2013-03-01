@@ -10,15 +10,15 @@
   "Returns the absolute path of `path."
   [path] (.getAbsolutePath (file path)))
 
-(defn clojure-file?
-  "Returns true if `path` is a fixture file, otherwise false."
+(defn edn-file?
+  "Returns true if `path` is a EDN file, otherwise false."
   [path]
   (and (.isFile (file path))
-       (re-matches #"(?i).*\.cljs?$" (str path))))
+       (re-matches #"(?i).*\.edn$" (str path))))
 
-(defn clojure-file-seq
+(defn edn-file-seq
   "Returns a tree seq of Clojure files in `directory`."
-  [directory] (filter clojure-file? (file-seq (file directory))))
+  [directory] (filter edn-file? (file-seq (file directory))))
 
 (defn illegal-argument-exception
   "Throw an IllegalArgumentException with a formatted message."

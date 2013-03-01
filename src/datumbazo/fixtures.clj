@@ -7,7 +7,7 @@
             [clojure.string :refer [blank? join replace split]]
             [datumbazo.io :refer [encode-rows decode-row]]
             [datumbazo.meta :as meta]
-            [datumbazo.util :refer [clojure-file-seq path-split path-replace]]
+            [datumbazo.util :refer [edn-file-seq path-split path-replace]]
             [datumbazo.core :refer [select from run1]]
             [geo.postgis :as geo]
             [sqlingvo.util :refer [as-identifier as-keyword parse-table]]))
@@ -19,13 +19,13 @@
   "Resolve the table name from `directory` and `filename`."
   [directory filename]
   (-> (join "." (path-split (path-replace filename directory)))
-      (replace #"(?i)\.cljs?$" "")
+      (replace #"(?i)\.edn$" "")
       (keyword)))
 
 (defn fixture-seq
   "Returns tree a seq of fixtures in `directory`."
   [directory]
-  (->> (for [file (clojure-file-seq directory)]
+  (->> (for [file (edn-file-seq directory)]
          {:file file :table (resolve-table directory file)})
        (sort-by #(:table %1))))
 
@@ -97,7 +97,7 @@
   "Write the fixtures for `tables` into `directory`."
   [directory tables]
   (doseq [table tables]
-    (->> (str (apply file directory (split (replace (name table) #"-" "_") #"\.")) ".clj")
+    (->> (str (apply file directory (split (replace (name table) #"-" "_") #"\.")) ".edn")
          (write-fixture table))))
 
 (defn load-fixtures
