@@ -5,7 +5,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [blank? join replace split]]
-            [datumbazo.io :refer [decode-row]]
+            [datumbazo.io :refer [encode-rows decode-row]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [clojure-file-seq path-split path-replace]]
             [datumbazo.core :refer [select from run1]]
@@ -66,6 +66,7 @@
   [table filename]
   (let [result (assoc {:table table :file filename}
                  :records (->> (slurp-rows filename)
+                               (encode-rows table)
                                (apply jdbc/insert-records table)
                                (count)))]
     (reset-serials table)

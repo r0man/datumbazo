@@ -2,7 +2,8 @@
   (:import java.io.Writer
            org.joda.time.DateTime
            org.joda.time.DateTimeZone
-           org.postgresql.util.PGobject)
+           org.postgresql.util.PGobject
+           org.postgis.PGgeometry)
   (:require [clojure.instant :as i]
             [clojure.java.jdbc :as jdbc]
             [clj-time.coerce :refer [to-date-time to-sql-date to-timestamp]]
@@ -31,6 +32,9 @@
 
 (defmethod encode-column :date [column value]
   (to-sql-date value))
+
+(defmethod encode-column :geometry [column value]
+  (if value (PGgeometry. value)))
 
 (defmethod encode-column :int4 [column value]
   (parse-integer value))
@@ -94,6 +98,9 @@
   pgobject)
 
 (defmulti decode-column class)
+
+(defmethod decode-column PGgeometry [value]
+  (.getGeometry value))
 
 (defmethod decode-column PGobject [value]
   (decode-pgobject value))
