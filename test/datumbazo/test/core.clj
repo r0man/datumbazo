@@ -139,6 +139,13 @@
   (is (= 0 (delete-continents)))
   (is (= 0 (count-all :continents))))
 
+(database-test test-delete-continent
+  (is (= "Delete the continent from the database table."
+         (:doc (meta #'delete-continent))))
+  (is (= 0 (delete-continent europe)))
+  (let [europe (insert-continent europe)]
+    (is (= 1 (delete-continent europe)))))
+
 (database-test test-delete-countries
   (is (= "Delete all rows in the countries database table."
          (:doc (meta #'delete-countries))))

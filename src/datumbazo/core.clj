@@ -167,6 +167,12 @@
            ~(format "Delete all rows in the %s database table." table-name)
            [& ~'body] (:count (run1 (apply delete ~symbol# ~'body))))
 
+         (defn ~(symbol (str "delete-" singular#))
+           ~(format "Delete the %s from the database table." singular#)
+           [~'row] (:count (run1 (delete ~symbol#
+                                   (from ~(keyword table-name))
+                                   (where `(= :id ~(:id ~'row)))))))
+
          (defn ~(symbol (str "insert-" singular#))
            ~(format "Insert the %s row into the database." singular#)
            [~'row & ~'opts]
