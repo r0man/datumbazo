@@ -14,7 +14,7 @@
 
 (immigrate 'sqlingvo.core)
 
-(def ^:dynamic *page* 1)
+(def ^:dynamic *page* nil)
 (def ^:dynamic *per-page* 25)
 
 (defn column
