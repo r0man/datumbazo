@@ -101,7 +101,7 @@
       (is (= true (:hidden? column))))))
 
 (deftest test-continents-pagination
-  (is (= (sql (continents* :page 2 :per-page 20))
+  (is (= (sql (continents* {:page 2 :per-page 20}))
          ["SELECT continents.id, continents.name, continents.code FROM continents LIMIT 20 OFFSET 20"])))
 
 (deftest test-countries-table
@@ -223,8 +223,8 @@
   (let [europe (save-continent europe)
         africa (save-continent africa)]
     (is (= #{africa europe} (set (continents))))
-    (is (= [africa] (continents :page 1 :per-page 1 :order-by :name)))
-    (is (= [europe] (continents :page 2 :per-page 1 :order-by :name)))))
+    (is (= [africa] (continents {:page 1 :per-page 1 :order-by :name})))
+    (is (= [europe] (continents {:page 2 :per-page 1 :order-by :name})))))
 
 (database-test test-countries
   (is (empty? (countries))))
