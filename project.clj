@@ -1,4 +1,4 @@
-(defproject datumbazo "0.3.0"
+(defproject datumbazo "0.3.1"
   :description "Clojure Database Kung-Foo"
   :url "https://github.com/r0man/datumbazo"
   :min-lein-version "2.0.0"
