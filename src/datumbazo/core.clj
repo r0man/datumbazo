@@ -183,7 +183,7 @@
          (defn ~(symbol (str "update-" singular#))
            ~(format "Update the %s row in the database." singular#)
            [~'row & ~'opts]
-           (let [pks# (meta/primary-keys (jdbc/connection) :schema (:schema ~symbol#) :table (:name ~symbol#))
+           (let [pks# (meta/primary-keys (jdbc/connection) :schema (or (:schema ~symbol#) :public) :table (:name ~symbol#))
                  pk-keys# (map :name pks#)
                  pk-vals# (map ~'row pk-keys#)]
              (run1 (update ~symbol# ~'row
@@ -209,7 +209,7 @@
                `(do (defquery ~(symbol (str table-name "-by-" column-name))
                       ~(format "Find all %s by %s." table-name column-name)
                       [~'value & [~'opts]]
-                      (let [column# (first (meta/columns (jdbc/connection) :schema ~(:schema table#) :table ~(:name table#) :name ~(:name column)))]
+                      (let [column# (first (meta/columns (jdbc/connection) :schema (or ~(:schema table#) :public) :table ~(:name table#) :name ~(:name column)))]
                         (fn [stmt#]
                           ((chain-state [(where `(= ~(:name column#) ~(io/encode-column column# ~'value)))])
                            (ast (~(symbol (str table-name "*")) ~'opts))))))
