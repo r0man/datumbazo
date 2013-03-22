@@ -13,7 +13,7 @@
                  [org.cloudhoist/stevedore "0.7.3"]
                  [postgresql/postgresql "9.1-901.jdbc4"]
                  [slingshot "0.10.3"]
-                 [sqlingvo "0.3.0"]]
+                 [sqlingvo "0.3.1-SNAPSHOT"]]
   :profiles {:dev {:dependencies [[validation-clj "0.5.1-SNAPSHOT"]
                                   [org.slf4j/slf4j-log4j12 "1.6.6"]
                                   [c3p0/c3p0 "0.9.1.2"]
