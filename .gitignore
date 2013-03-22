@@ -11,3 +11,4 @@
 /.lein-plugins/checksum
 /target
 /logs/debug.log
+/pom.xml.asc
