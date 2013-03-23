@@ -19,16 +19,19 @@
   (sql-type [date-time]
     (to-timestamp date-time)))
 
+(defn citext [s]
+  (if s
+    (doto (PGobject.)
+      (.setValue (str s))
+      (.setType "citext"))))
+
 ;; ENCODE
 
 (defmulti encode-column
   (fn [column value] (:type column)))
 
 (defmethod encode-column :citext [column value]
-  (if value
-    (doto (PGobject.)
-      (.setValue (str value))
-      (.setType "citext"))))
+  (citext value))
 
 (defmethod encode-column :date [column value]
   (to-sql-date value))

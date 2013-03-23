@@ -211,7 +211,8 @@
                       [~'value & [~'opts]]
                       (let [column# (first (meta/columns (jdbc/connection) :schema (or ~(:schema table#) :public) :table ~(:name table#) :name ~(:name column)))]
                         (fn [stmt#]
-                          ((chain-state [(where `(= ~(:name column#) ~(io/encode-column column# ~'value)))])
+                          ((chain-state [(where `(= ~(keyword (str (name (:table column#)) "." (name (:name column#))))
+                                                    ~(io/encode-column column# ~'value)))])
                            (ast (~(symbol (str table-name "*")) ~'opts))))))
                     (defn ~(symbol (str (singular table-name) "-by-" column-name))
                       ~(format "Find the first %s by %s." (singular table-name) column-name)

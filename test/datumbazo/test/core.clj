@@ -6,6 +6,7 @@
             [slingshot.slingshot :refer [try+]])
   (:use clojure.test
         datumbazo.core
+        datumbazo.io
         datumbazo.test))
 
 (defvalidate continent
@@ -237,7 +238,7 @@
     (is (= europe (continent-by-id (str (:id europe)))))
     (is (= europe (continent-by-id (str (:id europe) "-europe"))))))
 
-(database-test test-continents-by-name
+(database-test test-continent-by-name
   (is (nil? (continent-by-name nil)))
   (is (nil? (continent-by-name "Europe")))
   (let [europe (save-continent europe)]
@@ -246,6 +247,8 @@
 (database-test test-continents-by-id
   (is (empty? (continents-by-id 1)))
   (is (empty? (continents-by-id "1")))
+  (is (= ["SELECT continents.id, continents.name, continents.code FROM continents WHERE (continents.id = ?)" 1]
+         (sql (continents-by-id* 1))))
   (let [europe (save-continent europe)]
     (is (= [europe] (continents-by-id (:id europe))))
     (is (= [europe] (continents-by-id (str (:id europe)))))))
@@ -253,6 +256,8 @@
 (database-test test-continents-by-name
   (is (empty? (continents-by-name nil)))
   (is (empty? (continents-by-name "Europe")))
+  (is (= ["SELECT continents.id, continents.name, continents.code FROM continents WHERE (continents.name = ?)" (citext "Europe")]
+         (sql (continents-by-name* "Europe"))))
   (let [europe (save-continent europe)]
     (is (= [europe] (continents-by-name (:name europe))))
     (is (= (continents-by-name (:name europe))

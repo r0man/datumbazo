@@ -1,11 +1,24 @@
 (ns datumbazo.test.io
   (:import java.util.Date
            org.joda.time.DateTime
-           org.joda.time.DateTimeZone)
+           org.joda.time.DateTimeZone
+           org.postgresql.util.PGobject)
   (:require [clojure.java.jdbc :as jdbc]
             [clj-time.core :refer [date-time]])
   (:use datumbazo.io
         clojure.test))
+
+(deftest test-citext
+  (is (nil? (citext nil)))
+  (is (= (citext "x") (citext (citext "x"))))
+  (let [text (citext "")]
+    (is (instance? PGobject text))
+    (is (= "citext" (.getType text)))
+    (is (= "" (.getValue text))))
+  (let [text (citext "Abc")]
+    (is (instance? PGobject text))
+    (is (= "citext" (.getType text)))
+    (is (= "Abc" (.getValue text)))))
 
 (deftest test-read-instant-date-time
   (let [date (Date. 0)
