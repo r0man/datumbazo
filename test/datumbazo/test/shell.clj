@@ -36,9 +36,9 @@
 
 (deftest test-exec-checked-script
   (let [{:keys [err exit out] :as result}
-        (exec-checked-script "echo \"x\"" (echo "x"))]
+        (exec-checked-script "echo \"x\"" ("echo" "x"))]
     (is (= 0 exit))
-    (is (= "echo x...\nx\n...done\n" out))
+    (is (= "echo \"x\"...\nx\n#> echo \"x\" : SUCCESS\n" out))
     (is (= "" err))))
 
 (database-test test-psql
@@ -48,10 +48,9 @@
   (is (= 0 (:exit (psql :file "/tmp/test-psql.sql"))))
   (with-redefs
     [bash (fn [script]
-            (is (= (str "echo \"Running psql...\"\n{ export PGPASS=\"scotch\" && "
-                        "psql --command \"SELECT 1;\" --dbname datumbazo --host localhost "
-                        "--username tiger --quiet; } || { echo \"Running psql\" failed; exit 1; } "
-                        ">&2 \necho \"...done\"\n")
+            (is (= (str "echo 'Running psql...';\n{\n# shell.clj:58\nexport PGPASS=\"scotch\" && "
+                        "\\\n# shell.clj:59\npsql --command \"SELECT 1;\" --dbname datumbazo --host localhost --username tiger --quiet\n } || "
+                        "{ echo '#> Running psql : FAIL'; exit 1;} >&2 \necho '#> Running psql : SUCCESS'\n")
                    script))
             {:exit 0})]
     (psql :command "SELECT 1;")))
@@ -60,8 +59,8 @@
   (is (= 0 (:exit (shp2pgsql :natural-earth.ports "test-resources/ne_10m_ports/ne_10m_ports.dbf" "/tmp/test-shp2pgsql.sql"))))
   (with-redefs
     [bash (fn [script]
-            (is (= (str "echo \"Running shp2pgsql...\"\n{ shp2pgsql -c test-resources/ne_10m_ports/ne_10m_ports.dbf natural_earth.ports"
-                        " > /tmp/test-shp2pgsql.sql; } || { echo \"Running shp2pgsql\" failed; exit 1; } >&2 \necho \"...done\"\n")
+            (is (= (str "echo 'Running shp2pgsql...';\n{\n    # shell.clj:79\nshp2pgsql -c test-resources/ne_10m_ports/ne_10m_ports.dbf natural_earth.ports > "
+                        "/tmp/test-shp2pgsql.sql\n } || { echo '#> Running shp2pgsql : FAIL'; exit 1;} >&2 \necho '#> Running shp2pgsql : SUCCESS'\n")
                    script))
             {:exit 0})]
     (shp2pgsql :natural-earth.ports "test-resources/ne_10m_ports/ne_10m_ports.dbf" "/tmp/test-shp2pgsql.sql")))
@@ -69,7 +68,8 @@
 (database-test test-raster2pgsql
   (with-redefs
     [bash (fn [script]
-            (is (= (str "echo \"Running shp2pgsql...\"\n{ raster2pgsql -c INPUT weather.nww3_dirpwsfc_2013_02_10 > OUTPUT; } || { echo \"Running shp2pgsql\" failed; exit 1; } >&2 \necho \"...done\"\n")
+            (is (= (str "echo 'Running shp2pgsql...';\n{\n    # shell.clj:99\nraster2pgsql -c INPUT weather.nww3_dirpwsfc_2013_02_10 > "
+                        "OUTPUT\n } || { echo '#> Running shp2pgsql : FAIL'; exit 1;} >&2 \necho '#> Running shp2pgsql : SUCCESS'\n")
                    script))
             {:exit 0})]
     (raster2pgsql :weather.nww3-dirpwsfc-2013-02-10 "INPUT" "OUTPUT")))

@@ -10,7 +10,7 @@
                  [org.clojure/clojure "1.5.0"]
                  [org.clojure/algo.monads "0.1.0"]
                  [org.clojure/tools.logging "0.2.3"]
-                 [org.cloudhoist/stevedore "0.7.3"]
+                 [com.palletops/stevedore "0.8.0-beta.2"]
                  [postgresql/postgresql "9.1-901.jdbc4"]
                  [slingshot "0.10.3"]
                  [sqlingvo "0.3.1-SNAPSHOT"]]
@@ -24,5 +24,4 @@
   :hooks [environ.leiningen.hooks]
   :db [{:name :test-db
         :fixtures "db/test-db/fixtures"
-        :migrations "db/test-db/migrations"}]
-  :repositories {"sonatype" "http://oss.sonatype.org/content/repositories/releases"})
+        :migrations "db/test-db/migrations"}])

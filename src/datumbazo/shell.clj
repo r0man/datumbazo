@@ -55,8 +55,8 @@
   (let [opts (merge *connection* opts)]
     (exec-checked-script
      "Running psql"
-     (export ~(format "PGPASS=\"%s\"" (:password opts)))
-     (psql
+     ("export" ~(format "PGPASS=\"%s\"" (:password opts)))
+     ("psql"
       ~(if-let [command (:command opts)]
          (format "--command \"%s\"" command) "")
       ~(if-let [db (:db opts)]
@@ -69,14 +69,14 @@
          (format "--port %s" port) "")
       ~(if-let [username (:username opts)]
          (format "--username %s" username) "")
-      --quiet))))
+      "--quiet"))))
 
 (defn shp2pgsql
   "Run the shp2pgsql command."
   [table shape-file sql-file & {:as opts}]
   (exec-checked-script
    "Running shp2pgsql"
-   (shp2pgsql
+   ("shp2pgsql"
     ~(case (:mode opts)
        :append "-a"
        :create "-c"
@@ -96,7 +96,7 @@
   [table input output & {:as opts}]
   (exec-checked-script
    "Running shp2pgsql"
-   (raster2pgsql
+   ("raster2pgsql"
     ~(if-let [srid (:srid opts)]
        (format "-s %s" srid) "")
     ~(if-let [band (:band opts)]
