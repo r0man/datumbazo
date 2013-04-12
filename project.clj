@@ -1,4 +1,4 @@
-(defproject datumbazo "0.3.2-SNAPSHOT"
+(defproject datumbazo "0.3.2"
   :description "Clojure Database Kung-Foo"
   :url "https://github.com/r0man/datumbazo"
   :min-lein-version "2.0.0"
@@ -13,7 +13,7 @@
                  [com.palletops/stevedore "0.8.0-beta.2"]
                  [postgresql/postgresql "9.1-901.jdbc4"]
                  [slingshot "0.10.3"]
-                 [sqlingvo "0.3.1-SNAPSHOT"]]
+                 [sqlingvo "0.3.1"]]
   :profiles {:dev {:dependencies [[validation-clj "0.5.1-SNAPSHOT"]
                                   [org.slf4j/slf4j-log4j12 "1.6.6"]
                                   [c3p0/c3p0 "0.9.1.2"]
