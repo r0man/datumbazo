@@ -69,10 +69,13 @@
   "Read the fixtures form `filename` and insert them into the database `table`."
   [db table filename & {:keys [entities]}]
   (let [entities (or entities underscore)
-        rows (run db (insert table []
-                       (values (encode-rows db table (slurp-rows filename)))
-                       (returning *))
-                  :entities entities)
+        rows (slurp-rows filename)
+        rows (if-not (empty? rows)
+               (run db (insert table []
+                         (values (encode-rows db table rows))
+                         (returning *))
+                    :entities entities)
+               [])
         result (assoc {:table table :file filename} :records rows)]
     (reset-serials db table :entities entities)
     result))

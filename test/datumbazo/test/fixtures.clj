@@ -32,29 +32,29 @@
 
 (deftest test-fixture-seq
   (let [fixtures (fixture-seq fixture-dir)]
-    (is (= 2 (count fixtures)))
+    (is (= 3 (count fixtures)))
     (let [fixture (first fixtures)]
       (is (= (file fixture-dir "continents.edn")
              (:file fixture)))
       (is (= :continents (:table fixture))))
-    (let [fixture (second fixtures)]
+    (let [fixture (nth fixtures 2)]
       (is (= (file fixture-dir "twitter" "users.edn")
              (:file fixture)))
       (is (= :twitter.users (:table fixture)))))
   (let [fixtures (fixture-seq (resource "db/test-db/fixtures"))]
-    (is (= 2 (count fixtures)))
+    (is (= 3 (count fixtures)))
     (let [fixture (first fixtures)]
       (is (= (.getAbsoluteFile (file "test-resources/db/test-db/fixtures/continents.edn"))
              (:file fixture)))
       (is (= :continents (:table fixture))))
-    (let [fixture (second fixtures)]
+    (let [fixture (nth fixtures 2)]
       (is (= (.getAbsoluteFile (file "test-resources/db/test-db/fixtures/twitter/users.edn"))
              (:file fixture)))
       (is (= :twitter.users (:table fixture))))))
 
 (database-test test-load-fixtures
   (let [fixtures (load-fixtures $db fixture-dir)]
-    (is (= 2 (count fixtures)))))
+    (is (= 3 (count fixtures)))))
 
 (database-test test-read-fixture
   (let [fixture (read-fixture $db :continents fixture-file)]
