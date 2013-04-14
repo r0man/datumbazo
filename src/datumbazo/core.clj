@@ -123,17 +123,21 @@
   (let [query-sym (symbol (str name "*"))]
     `(do (defn ~query-sym ~doc ~args
            ~body)
-         (defn ~name ~doc [~'db ~@args]
-           (->> (run ~'db ~body)
-                (map (or ~map-fn identity)))))))
+         (defn ~name ~doc [& ~'args]
+           (let [db# (first ~'args)
+                 query# (apply ~query-sym ~'args)]
+             (->> (run db# query#)
+                  (map (or ~map-fn identity))))))))
 
 (defmacro defquery1 [name doc args body & [map-fn]]
   (let [query-sym (symbol (str name "*"))]
     `(do (defn ~query-sym ~doc ~args
            ~body)
-         (defn ~name ~doc [~'db ~@args]
-           (->> (run1 ~'db ~body)
-                ((or ~map-fn identity)))))))
+         (defn ~name ~doc [& ~'args]
+           (let [db# (first ~'args)
+                 query# (apply ~query-sym ~'args)]
+             (->> (run1 db# query#)
+                  (map (or ~map-fn identity))))))))
 
 (defmacro deftable
   "Define a database table."
@@ -194,7 +198,7 @@
 
          (defquery ~table-name
            ~(format "Select %s from the database table." table-name)
-           [& [~'opts]]
+           [~'db & [~'opts]]
            (select (remove #(= true (:hidden? %1)) (columns ~symbol#))
              (from ~symbol#)
              (paginate (:page ~'opts) (:per-page ~'opts))
@@ -204,7 +208,7 @@
              (do
                `(do (defquery ~(symbol (str table-name "-by-" column-name))
                       ~(format "Find all %s by %s." table-name column-name)
-                      [~'value & [~'opts]]
+                      [~'db ~'value & [~'opts]]
                       (let [column# (first (meta/columns ~'db :schema (or ~(:schema table#) :public) :table ~(:name table#) :name ~(:name column)))]
                         (fn [stmt#]
                           ((chain-state [(where `(= ~(keyword (str (name (:table column#)) "." (name (:name column#))))

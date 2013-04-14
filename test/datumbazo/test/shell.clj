@@ -42,10 +42,10 @@
     (is (= "" err))))
 
 (deftest test-psql
-  (is (= 0 (:exit (psql db))))
-  (is (= 0 (:exit (psql db :command "SELECT 1;"))))
+  (is (= 0 (:exit (psql $db))))
+  (is (= 0 (:exit (psql $db :command "SELECT 1;"))))
   (spit "/tmp/test-psql.sql" "SELECT 1;" )
-  (is (= 0 (:exit (psql db :file "/tmp/test-psql.sql"))))
+  (is (= 0 (:exit (psql $db :file "/tmp/test-psql.sql"))))
   (with-redefs
     [bash (fn [script]
             (is (= (str "echo 'Running psql...';\n{\n# shell.clj:60\nexport PGPASS=\"scotch\" && "
@@ -53,7 +53,7 @@
                         "{ echo '#> Running psql : FAIL'; exit 1;} >&2 \necho '#> Running psql : SUCCESS'\n")
                    script))
             {:exit 0})]
-    (psql db :command "SELECT 1;")))
+    (psql $db :command "SELECT 1;")))
 
 (database-test test-shp2pgsql
   (is (= 0 (:exit (shp2pgsql :natural-earth.ports "test-resources/ne_10m_ports/ne_10m_ports.dbf" "/tmp/test-shp2pgsql.sql"))))

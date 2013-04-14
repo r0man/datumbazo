@@ -86,8 +86,7 @@
                     :entities entities
                     :identifiers identifiers)]
       (pprint rows writer)
-      {:file filename :table table :records (count rows)})
-    ))
+      {:file filename :table table :records (count rows)})))
 
 (defn deferred-constraints [db]
   (jdbc/execute! db ["SET CONSTRAINTS ALL DEFERRED"]))

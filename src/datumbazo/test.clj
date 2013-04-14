@@ -4,20 +4,19 @@
             [clojure.test :refer [deftest]]
             [environ.core :refer [env]]))
 
-(def db (env :test-db))
+(def $db (env :test-db))
 
-;; (def db
+;; (def $db
 ;;   (-> (env :test-db)
 ;;       (connection-spec)
-;;       (assoc :pool :bonecp)
 ;;       (connection-pool)
-;;       (:spec)))
+;;       :spec))
 
 (defmacro database-test
   "Define a database test."
   [name & body]
   `(deftest ~name
      (jdbc/db-transaction
-      [~'db ~db]
-      (jdbc/db-set-rollback-only! ~'db)
+      [~'$db ~$db]
+      (jdbc/db-set-rollback-only! ~'$db)
       ~@body)))
