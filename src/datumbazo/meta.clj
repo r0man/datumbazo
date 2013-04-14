@@ -1,7 +1,8 @@
 (ns datumbazo.meta
   (:import java.sql.DatabaseMetaData)
   (:refer-clojure :exclude [resultset-seq])
-  (:require [clojure.string :refer [lower-case]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.string :refer [lower-case]]
             [inflections.core :refer [hyphenize hyphenize-keys]]
             [sqlingvo.util :refer [as-identifier]]))
 
@@ -13,16 +14,16 @@
        (map #(hyphenize-keys (merge {} %1)))))
 
 (defn metadata
-  "Returns the DatabaseMetaData object for `connection`."
-  [connection]
-  (assert connection (format "Can't get database meta data: %s" connection))
-  (.getMetaData connection))
+  "Returns the DatabaseMetaData object for `db`."
+  [db]
+  (assert db (format "Can't get database meta data: %s" db))
+  (.getMetaData (jdbc/get-connection db)))
 
 (defn best-row-identifiers
   "Retrieves a description of a table's optimal set of columns that uniquely identifies a row."
-  [connection & {:keys [catalog schema table scope nullable]}]
+  [db & {:keys [catalog schema table scope nullable]}]
   (->> (.getBestRowIdentifier
-        (metadata connection)
+        (metadata db)
         (if catalog (as-identifier catalog))
         (if schema (as-identifier schema))
         (if table (as-identifier table))
@@ -39,17 +40,17 @@
 
 (defn catalogs
   "Retrieves the catalog names available in this database."
-  [connection]
-  (->> (.getCatalogs (metadata connection))
+  [db]
+  (->> (.getCatalogs (metadata db))
        (resultset-seq)
        (map #(assoc %1 :name (hyphenize-keyword (:table-cat %1))))))
 
 (defn columns
   "Retrieves a description of the database columns matching `catalog`,
   `schema`, `table` and `name`."
-  [connection & {:keys [catalog schema table name]}]
+  [db & {:keys [catalog schema table name]}]
   (->> (.getColumns
-        (metadata connection)
+        (metadata db)
         (if catalog (as-identifier catalog))
         (if schema (as-identifier schema))
         (if table (as-identifier table))
@@ -64,9 +65,9 @@
 
 (defn indexes
   "Retrieves a description of the given table's primary key columns."
-  [connection & {:keys [catalog schema table unique approximate]}]
+  [db & {:keys [catalog schema table unique approximate]}]
   (->> (.getIndexInfo
-        (metadata connection)
+        (metadata db)
         (if catalog (as-identifier catalog))
         (if schema (as-identifier schema))
         (if table (as-identifier table))
@@ -80,9 +81,9 @@
 
 (defn primary-keys
   "Retrieves a description of the given table's primary key columns."
-  [connection & {:keys [catalog schema table]}]
+  [db & {:keys [catalog schema table]}]
   (->> (.getPrimaryKeys
-        (metadata connection)
+        (metadata db)
         (if catalog (as-identifier catalog))
         (if schema (as-identifier schema))
         (if table (as-identifier table)))
@@ -93,25 +94,25 @@
                :table (hyphenize-keyword (:table-name %1))
                :name (hyphenize-keyword (:column-name %1))))))
 
-(defn unique-columns [connection & {:keys [catalog schema table name]}]
-  (let [indexes (indexes connection :catalog catalog :schema schema :table table :name name :unique true)
+(defn unique-columns [db & {:keys [catalog schema table name]}]
+  (let [indexes (indexes db :catalog catalog :schema schema :table table :name name :unique true)
         indexes (set (map #(vector (:table-name %1) (:column-name %1)) indexes))]
     (filter #(contains? indexes [(:table-name %1) (:column-name %1)])
-            (columns connection :catalog catalog :schema schema :table table :name name))))
+            (columns db :catalog catalog :schema schema :table table :name name))))
 
 (defn schemas
   "Retrieves the catalog names available in this database."
-  [connection]
-  (->> (.getSchemas (metadata connection))
+  [db]
+  (->> (.getSchemas (metadata db))
        (resultset-seq)
        (map #(assoc %1 :name (hyphenize-keyword (:table-schem %1))))))
 
 (defn tables
   "Retrieves a description of the database tables matching `catalog`,
   `schema`, `name` and `types`."
-  [connection & {:keys [catalog schema name types]}]
+  [db & {:keys [catalog schema name types]}]
   (->> (.getTables
-        (metadata connection)
+        (metadata db)
         (if catalog (as-identifier catalog))
         (if schema (as-identifier schema))
         (if name (as-identifier name))
@@ -126,5 +127,5 @@
 (defn views
   "Retrieves a description of the database views matching `catalog`,
   `schema` and `name`."
-  [connection & {:keys [catalog schema name types]}]
-  (tables connection :catalog catalog :schema schema :name name :types ["VIEW"]))
+  [db & {:keys [catalog schema name types]}]
+  (tables db :catalog catalog :schema schema :name name :types ["VIEW"]))

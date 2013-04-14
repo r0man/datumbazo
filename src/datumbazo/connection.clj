@@ -115,3 +115,6 @@
   (fn [request]
     (with-connection db-name
       (handler request))))
+
+
+(connection-pool (connection-spec (connection-url :test-db)))

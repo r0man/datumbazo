@@ -1,8 +1,10 @@
 (ns datumbazo.shell
   (:refer-clojure :exclude [replace])
-  (:require [clojure.string :refer [blank? join split replace]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.string :refer [blank? join split replace]]
             [clojure.tools.logging :refer [logp]]
-            [datumbazo.connection :refer [*connection*]]
+            [datumbazo.util :refer [parse-url]]
+            [inflections.core :refer [underscore]]
             [pallet.common.shell :refer [bash]]
             [pallet.stevedore :refer [checked-script with-script-language]]
             [pallet.stevedore.bash :refer :all]
@@ -51,8 +53,8 @@
 
 (defn psql
   "Run the psql command."
-  [& {:as opts}]
-  (let [opts (merge *connection* opts)]
+  [db & {:as opts}]
+  (let [opts (merge (parse-url db) opts)]
     (exec-checked-script
      "Running psql"
      ("export" ~(format "PGPASS=\"%s\"" (:password opts)))
@@ -67,65 +69,67 @@
          (format "--host %s" host) "")
       ~(if-let [port (:server-port opts)]
          (format "--port %s" port) "")
-      ~(if-let [username (:username opts)]
+      ~(if-let [username (:user opts)]
          (format "--username %s" username) "")
       "--quiet"))))
 
 (defn shp2pgsql
   "Run the shp2pgsql command."
   [table shape-file sql-file & {:as opts}]
-  (exec-checked-script
-   "Running shp2pgsql"
-   ("shp2pgsql"
-    ~(case (:mode opts)
-       :append "-a"
-       :create "-c"
-       :drop "-d"
-       :prepare "-p"
-       nil "-c")
-    ~(if (:index opts)
-       "-I" "")
-    ~(if-let [srid (:srid opts)]
-       (format "-s %s" srid) "")
-    ~(if-let [encoding (:encoding opts)]
-       (format "-W %s" encoding) "")
-    ~shape-file ~(as-identifier table) > ~sql-file)))
+  (jdbc/with-naming-strategy {:entity (or (:entities opts) underscore)}
+    (exec-checked-script
+     "Running shp2pgsql"
+     ("shp2pgsql"
+      ~(case (:mode opts)
+         :append "-a"
+         :create "-c"
+         :drop "-d"
+         :prepare "-p"
+         nil "-c")
+      ~(if (:index opts)
+         "-I" "")
+      ~(if-let [srid (:srid opts)]
+         (format "-s %s" srid) "")
+      ~(if-let [encoding (:encoding opts)]
+         (format "-W %s" encoding) "")
+      ~shape-file ~(as-identifier table) > ~sql-file))))
 
 (defn raster2pgsql
   "Run the raster2pgsql command."
   [table input output & {:as opts}]
-  (exec-checked-script
-   "Running shp2pgsql"
-   ("raster2pgsql"
-    ~(if-let [srid (:srid opts)]
-       (format "-s %s" srid) "")
-    ~(if-let [band (:band opts)]
-       (format "-b %s" band) "")
-    ~(case (:mode opts)
-       :append "-a"
-       :create "-c"
-       :drop "-d"
-       :prepare "-p"
-       nil "-c")
-    ~(if-let [column (:column opts)]
-       (format "-f %s" column) "")
-    ~(if-let [no-data (:no-data opts)]
-       (format "-N %s" no-data) "")
-    ~(if (:no-transaction opts)
-       "-e" "")
-    ~(if (:regular-blocking opts)
-       "-r" "")
-    ~(if (:disable-max-extend opts)
-       "-x" "")
-    ~(if (:constraints opts)
-       "-C" "")
-    ~(if (:index opts)
-       "-I" "")
-    ~(if (:analyze opts)
-       "-M" "")
-    ~(if (:register opts)
-       "-R" "")
-    ~(if (sequential? input)
-       (join " " input)
-       input)
-    ~(as-identifier table) > ~output)))
+  (jdbc/with-naming-strategy {:entity (or (:entities opts) underscore)}
+    (exec-checked-script
+     "Running shp2pgsql"
+     ("raster2pgsql"
+      ~(if-let [srid (:srid opts)]
+         (format "-s %s" srid) "")
+      ~(if-let [band (:band opts)]
+         (format "-b %s" band) "")
+      ~(case (:mode opts)
+         :append "-a"
+         :create "-c"
+         :drop "-d"
+         :prepare "-p"
+         nil "-c")
+      ~(if-let [column (:column opts)]
+         (format "-f %s" column) "")
+      ~(if-let [no-data (:no-data opts)]
+         (format "-N %s" no-data) "")
+      ~(if (:no-transaction opts)
+         "-e" "")
+      ~(if (:regular-blocking opts)
+         "-r" "")
+      ~(if (:disable-max-extend opts)
+         "-x" "")
+      ~(if (:constraints opts)
+         "-C" "")
+      ~(if (:index opts)
+         "-I" "")
+      ~(if (:analyze opts)
+         "-M" "")
+      ~(if (:register opts)
+         "-R" "")
+      ~(if (sequential? input)
+         (join " " input)
+         input)
+      ~(as-identifier table) > ~output))))

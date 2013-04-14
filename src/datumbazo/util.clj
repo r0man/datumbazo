@@ -155,6 +155,8 @@ value is this namespace."
          (map #(replace %1 #";$" ""))
          (doall))))
 
-(defn exec-sql-file [file]
-  (doseq [statement (slurp-sql file)]
-    (jdbc/do-commands statement)))
+(defn exec-sql-file [db file]
+  (jdbc/db-transaction
+   [db db]
+   (doseq [statement (slurp-sql file)]
+     (jdbc/db-do-commands db false statement))))

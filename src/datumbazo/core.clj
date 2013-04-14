@@ -27,6 +27,14 @@
   (fn [table]
     [text (assoc table :doc text)]))
 
+(defn- apply-preparation [ast]
+  (let [prepare (concat (:prepare ast) (:prepare (:table ast)))
+        prepare (if (empty? prepare) identity (apply comp prepare))]
+    (case (:op ast)
+      :insert (update-in ast [:values] #(map prepare %1))
+      :update (update-in ast [:row] prepare)
+      ast)))
+
 (defn prepare
   "Add the preparation fn `f` to `table`."
   [f]
@@ -36,18 +44,24 @@
 (defn run
   "Compile and run `stmt` against the current clojure.java.jdbc
   database connection."
-  [stmt]
+  [db stmt & opts]
   (let [ast (ast stmt)]
     (map (apply comp (reverse (concat [io/decode-row]
                                       (:transform ast)
                                       (:transform (:table ast))
                                       (mapcat :transform (:from ast)))))
-         (sqlingvo.core/run stmt))))
+         (apply sqlingvo.core/run
+                db (case (:op ast)
+                     :insert (apply-preparation ast)
+                     :update (apply-preparation ast)
+                     stmt)
+                opts))))
 
 (defn run1
   "Run `stmt` against the current clojure.java.jdbc database
   connection and return the first row."
-  [stmt] (first (run stmt)))
+  [db stmt & opts]
+  (first (apply run db stmt opts)))
 
 (defn table
   "Make a new table."
@@ -61,53 +75,35 @@
   (fn [table]
     [nil (update-in table [:transform] concat [f])]))
 
-(defn- apply-preparation [stmt row]
-  ;; (clojure.pprint/pprint stmt)
-  ;; (prn row)
-  (let [prepare (concat (:prepare stmt)
-                        (:prepare (:table stmt)))]
-    (if-not (empty? prepare)
-      ((apply comp prepare) row)
-      row)))
+;; (defn update
+;;   "Returns a fn that builds a UPDATE statement."
+;;   [table row & body]
+;;   (let [row (if (map? row)
+;;               (->> (apply-preparation table row)
+;;                    (io/encode-row table))
+;;               row)]
+;;     (apply sqlingvo.core/update table row body)))
 
-(defn update
-  "Returns a fn that builds a UPDATE statement."
-  [table row & body]
-  (let [table (parse-table table)]
-    (fn [stmt]
-      (with-monad state-m
-        ((chain-state body)
-         {:op :update
-          :table table
-          :exprs (if (sequential? row) (map parse-expr row))
-          :row (if (map? row)
-                 (->> (apply-preparation table row)
-                      (io/encode-row table)))})))))
+;; (defn update
+;;   "Returns a fn that builds a UPDATE statement."
+;;   [table row & body]
+;;   (apply sqlingvo.core/update table row body))
 
-(defn update
-  "Returns a fn that builds a UPDATE statement."
-  [table row & body]
-  (let [row (if (map? row)
-              (->> (apply-preparation table row)
-                   (io/encode-row table))
-              row)]
-    (apply sqlingvo.core/update table row body)))
-
-(defn values
-  "Returns a fn that adds a VALUES clause to an SQL statement."
-  [values]
-  (fn [stmt]
-    [nil (case values
-           :default (assoc stmt :default-values true)
-           (concat-in
-            stmt [:values]
-            (->> (map (partial apply-preparation stmt)
-                      (if (sequential? values) values [values]))
-                 (io/encode-rows (:table stmt)))))]))
+;; (defn values
+;;   "Returns a fn that adds a VALUES clause to an SQL statement."
+;;   [values]
+;;   (fn [stmt]
+;;     [nil (case values
+;;            :default (assoc stmt :default-values true)
+;;            (concat-in
+;;             stmt [:values]
+;;             (->> (map (partial apply-preparation stmt)
+;;                       (if (sequential? values) values [values]))
+;;                  (io/encode-rows (:table stmt)))))]))
 
 (defn count-all
   "Count all rows in the database `table`."
-  [table] (:count (run1 (select ['(count *)] (from table)))))
+  [db table] (:count (run1 db (select ['(count *)] (from table)))))
 
 (defn paginate
   "Add LIMIT and OFFSET clauses to `query` calculated from `page` and
@@ -127,16 +123,16 @@
   (let [query-sym (symbol (str name "*"))]
     `(do (defn ~query-sym ~doc ~args
            ~body)
-         (defn ~name ~doc ~args
-           (->> (run ~body)
+         (defn ~name ~doc [~'db ~@args]
+           (->> (run ~'db ~body)
                 (map (or ~map-fn identity)))))))
 
 (defmacro defquery1 [name doc args body & [map-fn]]
   (let [query-sym (symbol (str name "*"))]
     `(do (defn ~query-sym ~doc ~args
            ~body)
-         (defn ~name ~doc ~args
-           (->> (run1 ~body)
+         (defn ~name ~doc [~'db ~@args]
+           (->> (run1 ~'db ~body)
                 ((or ~map-fn identity)))))))
 
 (defmacro deftable
@@ -150,51 +146,51 @@
 
          (defn ~(symbol (str "drop-" table-name))
            ~(format "Drop the %s database table." table-name)
-           [& ~'body] (:count (run1 (apply drop-table [~symbol#] ~'body))))
+           [~'db & ~'body] (:count (run1 ~'db (apply drop-table [~symbol#] ~'body))))
 
          (defn ~(symbol (str "delete-" table-name))
            ~(format "Delete all rows in the %s database table." table-name)
-           [& ~'body] (:count (run1 (apply delete ~symbol# ~'body))))
+           [~'db & ~'body] (:count (run1 ~'db (apply delete ~symbol# ~'body))))
 
          (defn ~(symbol (str "delete-" singular#))
            ~(format "Delete the %s from the database table." singular#)
-           [~'row] (:count (run1 (delete ~symbol#
-                                   (from ~(keyword table-name))
-                                   (where `(= :id ~(:id ~'row)))))))
+           [~'db ~'row] (:count (run1 ~'db (delete ~symbol#
+                                             (from ~(keyword table-name))
+                                             (where `(= :id ~(:id ~'row)))))))
 
          (defn ~(symbol (str "insert-" singular#))
            ~(format "Insert the %s row into the database." singular#)
-           [~'row & ~'opts]
-           (run1 (sqlingvo.core/insert ~symbol# []
-                   (values (io/encode-row ~symbol# ~'row))
-                   (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#))))))
+           [~'db ~'row & ~'opts]
+           (run1 ~'db (sqlingvo.core/insert ~symbol# []
+                        (values (io/encode-row ~'db ~symbol# ~'row))
+                        (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#))))))
 
          (defn ~(symbol (str "insert-" (str table-name)))
            ~(format "Insert the %s rows into the database." singular#)
-           [~'rows & ~'opts]
-           (run (sqlingvo.core/insert ~symbol# []
-                  (values ~'rows)
-                  (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#))))))
+           [~'db ~'rows & ~'opts]
+           (run ~'db (sqlingvo.core/insert ~symbol# []
+                       (values ~'rows)
+                       (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#))))))
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
-           [& ~'body] (:count (run1 (apply truncate [~symbol#] ~'body))))
+           [~'db & ~'body] (:count (run1 ~'db (apply truncate [~symbol#] ~'body))))
 
          (defn ~(symbol (str "update-" singular#))
            ~(format "Update the %s row in the database." singular#)
-           [~'row & ~'opts]
-           (let [pks# (meta/primary-keys (jdbc/connection) :schema (or (:schema ~symbol#) :public) :table (:name ~symbol#))
+           [~'db ~'row & ~'opts]
+           (let [pks# (meta/primary-keys ~'db :schema (or (:schema ~symbol#) :public) :table (:name ~symbol#))
                  pk-keys# (map :name pks#)
                  pk-vals# (map ~'row pk-keys#)]
-             (run1 (update ~symbol# ~'row
-                     (where (cons 'and (map #(list '= %1 %2) pk-keys# pk-vals#)))
-                     (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))))))
+             (run1 ~'db (update ~symbol# (io/encode-row ~'db ~symbol# ~'row)
+                          (where (cons 'and (map #(list '= %1 %2) pk-keys# pk-vals#)))
+                          (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))))))
 
          (defn ~(symbol (str "save-" singular#))
            ~(format "Save the %s row to the database." singular#)
-           [~'row & ~'opts]
-           (or (apply ~(symbol (str "update-" singular#)) ~'row ~'opts)
-               (apply ~(symbol (str "insert-" singular#)) ~'row ~'opts)))
+           [~'db ~'row & ~'opts]
+           (or (apply ~(symbol (str "update-" singular#)) ~'db ~'row ~'opts)
+               (apply ~(symbol (str "insert-" singular#)) ~'db ~'row ~'opts)))
 
          (defquery ~table-name
            ~(format "Select %s from the database table." table-name)
@@ -209,15 +205,15 @@
                `(do (defquery ~(symbol (str table-name "-by-" column-name))
                       ~(format "Find all %s by %s." table-name column-name)
                       [~'value & [~'opts]]
-                      (let [column# (first (meta/columns (jdbc/connection) :schema (or ~(:schema table#) :public) :table ~(:name table#) :name ~(:name column)))]
+                      (let [column# (first (meta/columns ~'db :schema (or ~(:schema table#) :public) :table ~(:name table#) :name ~(:name column)))]
                         (fn [stmt#]
                           ((chain-state [(where `(= ~(keyword (str (name (:table column#)) "." (name (:name column#))))
                                                     ~(io/encode-column column# ~'value)))])
                            (ast (~(symbol (str table-name "*")) ~'opts))))))
                     (defn ~(symbol (str (singular table-name) "-by-" column-name))
                       ~(format "Find the first %s by %s." (singular table-name) column-name)
-                      [& ~'args]
-                      (first (apply ~(symbol (str table-name "-by-" column-name)) ~'args)))))))))
+                      [~'db & ~'args]
+                      (first (apply ~(symbol (str table-name "-by-" column-name)) ~'db ~'args)))))))))
 
 (defmacro with-connection
   "Evaluates `body` with a connection to `db-name`."

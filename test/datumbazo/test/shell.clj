@@ -41,25 +41,25 @@
     (is (= "echo \"x\"...\nx\n#> echo \"x\" : SUCCESS\n" out))
     (is (= "" err))))
 
-(database-test test-psql
-  (is (= 0 (:exit (psql))))
-  (is (= 0 (:exit (psql :command "SELECT 1;"))))
+(deftest test-psql
+  (is (= 0 (:exit (psql db))))
+  (is (= 0 (:exit (psql db :command "SELECT 1;"))))
   (spit "/tmp/test-psql.sql" "SELECT 1;" )
-  (is (= 0 (:exit (psql :file "/tmp/test-psql.sql"))))
+  (is (= 0 (:exit (psql db :file "/tmp/test-psql.sql"))))
   (with-redefs
     [bash (fn [script]
-            (is (= (str "echo 'Running psql...';\n{\n# shell.clj:58\nexport PGPASS=\"scotch\" && "
-                        "\\\n# shell.clj:59\npsql --command \"SELECT 1;\" --dbname datumbazo --host localhost --username tiger --quiet\n } || "
+            (is (= (str "echo 'Running psql...';\n{\n# shell.clj:60\nexport PGPASS=\"scotch\" && "
+                        "\\\n# shell.clj:61\npsql --command \"SELECT 1;\" --dbname datumbazo --host localhost --username tiger --quiet\n } || "
                         "{ echo '#> Running psql : FAIL'; exit 1;} >&2 \necho '#> Running psql : SUCCESS'\n")
                    script))
             {:exit 0})]
-    (psql :command "SELECT 1;")))
+    (psql db :command "SELECT 1;")))
 
 (database-test test-shp2pgsql
   (is (= 0 (:exit (shp2pgsql :natural-earth.ports "test-resources/ne_10m_ports/ne_10m_ports.dbf" "/tmp/test-shp2pgsql.sql"))))
   (with-redefs
     [bash (fn [script]
-            (is (= (str "echo 'Running shp2pgsql...';\n{\n    # shell.clj:79\nshp2pgsql -c test-resources/ne_10m_ports/ne_10m_ports.dbf natural_earth.ports > "
+            (is (= (str "echo 'Running shp2pgsql...';\n{\n    # shell.clj:82\nshp2pgsql -c test-resources/ne_10m_ports/ne_10m_ports.dbf natural_earth.ports > "
                         "/tmp/test-shp2pgsql.sql\n } || { echo '#> Running shp2pgsql : FAIL'; exit 1;} >&2 \necho '#> Running shp2pgsql : SUCCESS'\n")
                    script))
             {:exit 0})]
@@ -68,7 +68,7 @@
 (database-test test-raster2pgsql
   (with-redefs
     [bash (fn [script]
-            (is (= (str "echo 'Running shp2pgsql...';\n{\n    # shell.clj:99\nraster2pgsql -c INPUT weather.nww3_dirpwsfc_2013_02_10 > "
+            (is (= (str "echo 'Running shp2pgsql...';\n{\n    # shell.clj:103\nraster2pgsql -c INPUT weather.nww3_dirpwsfc_2013_02_10 > "
                         "OUTPUT\n } || { echo '#> Running shp2pgsql : FAIL'; exit 1;} >&2 \necho '#> Running shp2pgsql : SUCCESS'\n")
                    script))
             {:exit 0})]

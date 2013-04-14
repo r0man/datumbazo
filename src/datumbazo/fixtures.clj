@@ -1,15 +1,17 @@
 (ns datumbazo.fixtures
-  (:refer-clojure :exclude [replace])
+  (:refer-clojure :exclude [distinct group-by replace])
   (:require [clojure.instant :refer [read-instant-timestamp]]
             [clojure.java.io :refer [file make-parents resource writer]]
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [blank? join replace split]]
+            [datumbazo.core :refer :all :exclude [join]]
             [datumbazo.io :refer [encode-rows decode-row]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [edn-file-seq path-split path-replace]]
             [datumbazo.core :refer [select from run1]]
             [geo.postgis :as geo]
+            [inflections.core :refer [hyphenize underscore]]
             [sqlingvo.util :refer [as-identifier as-keyword parse-table]]))
 
 (def ^:dynamic *readers*
@@ -53,62 +55,74 @@
 
 (defn reset-serials
   "Reset the serial counters of all columns in `table`."
-  [table]
-  (let [table (parse-table table)]
-    (doseq [column (meta/columns (jdbc/connection) :schema (or (:schema table) :public) :table (:name table))
-            :when (contains? #{:bigserial :serial} (:type column))]
-      (run1 (select [`(setval ~(as-identifier (serial-seq column))
-                              ~(select [`(max ~(:name column))]
-                                 (from (as-keyword table))))])))))
+  [db table & {:keys [entities]}]
+  (jdbc/with-naming-strategy
+    {:entity (or entities underscore)}
+    (let [table (parse-table table)]
+      (doseq [column (meta/columns db :schema (or (:schema table) :public) :table (:name table))
+              :when (contains? #{:bigserial :serial} (:type column))]
+        (run1 db (select [`(setval ~(as-identifier (serial-seq column))
+                                   ~(select [`(max ~(:name column))]
+                                      (from (as-keyword table))))]))))))
 
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
-  [table filename]
-  (let [result (assoc {:table table :file filename}
-                 :records (->> (slurp-rows filename)
-                               (encode-rows table)
-                               (apply jdbc/insert-records table)
-                               (count)))]
-    (reset-serials table)
+  [db table filename & {:keys [entities]}]
+  (let [entities (or entities underscore)
+        rows (run db (insert table []
+                       (values (slurp-rows filename))
+                       (returning *))
+                  :entities entities)
+        result (assoc {:table table :file filename} :records rows)]
+    (reset-serials db table :entities entities)
     result))
 
 (defn write-fixture
   "Write the rows of the database `table` to `filename`."
-  [table filename]
+  [db table filename & {:keys [entities identifiers]}]
   (make-parents filename)
   (with-open [writer (writer filename)]
-    (jdbc/with-query-results rows
-      [(format "SELECT * FROM %s" (as-identifier table))]
-      (pprint (map decode-row rows) writer)
-      {:file filename :table table :records (count rows)})))
+    (let [rows (run db (select [*] (from table))
+                    :entities entities
+                    :identifiers identifiers)]
+      (pprint rows writer)
+      {:file filename :table table :records (count rows)})
+    ))
 
-(defn deferred-constraints []
-  (jdbc/do-commands "SET CONSTRAINTS ALL DEFERRED"))
+(defn deferred-constraints [db]
+  (jdbc/execute! db ["SET CONSTRAINTS ALL DEFERRED"]))
 
 (defn enable-triggers
   "Enable triggers on the database `table`."
-  [table] (jdbc/do-commands (str "ALTER TABLE " (as-identifier table) " ENABLE TRIGGER ALL")))
+  [db table & {:keys [entities]}]
+  (jdbc/with-naming-strategy
+    {:entity (or entities underscore)}
+    (jdbc/execute! db [(str "ALTER TABLE " (as-identifier table) " ENABLE TRIGGER ALL")])))
 
 (defn disable-triggers
   "Disable triggers on the database `table`."
-  [table] (jdbc/do-commands (str "ALTER TABLE " (as-identifier table) " DISABLE TRIGGER ALL")))
+  [db table & {:keys [entities]}]
+  (jdbc/with-naming-strategy
+    {:entity (or entities underscore)}
+    (jdbc/execute! db [(str "ALTER TABLE " (as-identifier table) " DISABLE TRIGGER ALL")])))
 
 (defn dump-fixtures
   "Write the fixtures for `tables` into `directory`."
-  [directory tables]
-  (doseq [table tables]
-    (->> (str (apply file directory (split (replace (name table) #"-" "_") #"\.")) ".edn")
-         (write-fixture table))))
+  [db directory tables & opts]
+  (doseq [table tables
+          :let [filename (str (apply file directory (split (replace (name table) #"-" "_") #"\.")) ".edn")]]
+    (apply write-fixture db table filename opts)))
 
 (defn load-fixtures
   "Load all database fixtures from `directory`."
-  [directory]
+  [db directory & opts]
   (let [fixtures (fixture-seq directory)]
-    (jdbc/transaction
-     (deferred-constraints)
-     (doall (map disable-triggers (map :table fixtures)))
+    (jdbc/db-transaction
+     [db db]
+     (apply deferred-constraints db opts)
+     (doall (map #(apply disable-triggers db %1 opts) (map :table fixtures)))
      (let [fixtures (->> fixtures
-                         (map #(read-fixture (:table %1) (:file %1)))
+                         (map #(apply read-fixture db (:table %1) (:file %1) opts))
                          (doall))]
-       (doall (map enable-triggers (map :table fixtures)))
+       (doall (map #(apply enable-triggers db %1 opts) (map :table fixtures)))
        fixtures))))
