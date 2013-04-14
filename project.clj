@@ -21,7 +21,6 @@
                    :resource-paths ["test-resources"]
                    :env {:test-db "postgresql://tiger:scotch@localhost/datumbazo"}}}
   :plugins [[lein-environ "0.4.0"]]
-  :hooks [environ.leiningen.hooks]
   :db [{:name :test-db
         :fixtures "db/test-db/fixtures"
         :migrations "db/test-db/migrations"}])
