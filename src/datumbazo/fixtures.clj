@@ -70,7 +70,7 @@
   [db table filename & {:keys [entities]}]
   (let [entities (or entities underscore)
         rows (run db (insert table []
-                       (values (slurp-rows filename))
+                       (values (encode-rows db table (slurp-rows filename)))
                        (returning *))
                   :entities entities)
         result (assoc {:table table :file filename} :records rows)]
