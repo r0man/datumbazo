@@ -1,6 +1,7 @@
 (ns datumbazo.test.meta
   (:import java.sql.DatabaseMetaData)
-  (:require [clojure.java.jdbc :as jdbc])
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.set :refer [subset?]])
   (:use clojure.test
         datumbazo.meta
         datumbazo.test))
@@ -54,8 +55,8 @@
   (let [schemas (schemas db)]
     (is (not (empty? schemas)))
     (is (every? #(keyword (:name %1)) schemas))
-    (is (= [:information-schema :pg-catalog :public :sqitch :twitter]
-           (map :name schemas)))))
+    (is (is (subset? (set [:information-schema :pg-catalog :public :sqitch :twitter])
+                     (set (map :name schemas)))))))
 
 (database-test test-tables
   (let [tables (tables db)]
@@ -63,8 +64,8 @@
     (is (every? #(and (keyword? (:schema %1))
                       (keyword? (:name %1))
                       (= :table (:type %1))) tables))
-    (is (= [:continents :countries :spatial-ref-sys :changes :dependencies :events :projects :tags :tweets :users]
-           (map :name tables)))))
+    (is (subset? (set (map :name tables))
+                 (set [:continents :countries :spatial-ref-sys :changes :dependencies :events :projects :tags :tweets :users])))))
 
 (database-test test-views
   (let [views (views db)]
