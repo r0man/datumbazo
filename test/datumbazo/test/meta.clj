@@ -55,7 +55,7 @@
   (let [schemas (schemas db)]
     (is (not (empty? schemas)))
     (is (every? #(keyword (:name %1)) schemas))
-    (is (is (subset? (set [:information-schema :pg-catalog :public :sqitch :twitter])
+    (is (is (subset? (set [:information-schema :pg-catalog :public :twitter])
                      (set (map :name schemas)))))))
 
 (database-test test-tables
