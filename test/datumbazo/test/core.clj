@@ -227,6 +227,9 @@
 (database-test test-countries
   (is (empty? (countries $db))))
 
+(database-test test-countries-by-continent-id
+  (is (empty? (countries-by-continent-id $db 1))))
+
 (database-test test-continent-by-id
   (is (nil? (continent-by-id $db nil)))
   (is (nil? (continent-by-id $db 1)))

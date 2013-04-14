@@ -209,7 +209,7 @@
                `(do (defquery ~(symbol (str table-name "-by-" column-name))
                       ~(format "Find all %s by %s." table-name column-name)
                       [~'db ~'value & [~'opts]]
-                      (let [column# (first (meta/columns ~'db :schema (or ~(:schema table#) :public) :table ~(:name table#) :name ~(:name column)))]
+                      (let [column# (first (meta/columns ~'db :schema (or ~(:schema table#) :public) :table ~(:name table#) :name ~(:name column) :entities (:entities ~'opts)))]
                         (fn [stmt#]
                           ((chain-state [(where `(= ~(keyword (str (name (:table column#)) "." (name (:name column#))))
                                                     ~(io/encode-column column# ~'value)))])

@@ -27,7 +27,15 @@
                       (keyword? (:type %1)))
                 columns))
     (is (= [:id :name :code :geometry :freebase-guid :geonames-id :created-at :updated-at]
-           (map :name columns)))))
+           (map :name columns))))
+  (let [columns (columns $db :table :countries :name :continent-id)]
+    (is (not (empty? columns)))
+    (is (every? #(and (keyword? (:schema %1))
+                      (keyword? (:table %1))
+                      (keyword? (:name %1))
+                      (keyword? (:type %1)))
+                columns))
+    (is (= [:continent-id] (map :name columns)))))
 
 (database-test test-metadata
   (is (thrown? AssertionError (metadata nil)))
