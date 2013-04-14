@@ -136,8 +136,8 @@
          (defn ~name ~doc [& ~'args]
            (let [db# (first ~'args)
                  query# (apply ~query-sym ~'args)]
-             (->> (run1 db# query#)
-                  (map (or ~map-fn identity))))))))
+             ((or ~map-fn identity)
+              (run1 db# query#)))))))
 
 (defmacro deftable
   "Define a database table."
