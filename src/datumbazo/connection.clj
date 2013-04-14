@@ -29,21 +29,19 @@
 
 (defmethod connection-spec :mysql [db-url]
   (let [url (util/parse-db-url db-url)]
-    (-> (assoc url :classname "com.mysql.jdbc.Driver")
-        (update-in [:spec] #(rename-keys %1 {:username :user})))))
+    (assoc url :classname "com.mysql.jdbc.Driver")))
 
 (defmethod connection-spec :oracle [db-url]
   (let [url (util/parse-db-url db-url)]
     (assoc url
       :classname "oracle.jdbc.driver.OracleDriver"
       :spec {:subprotocol "oracle:thin"
-             :subname (str ":" (:username url) "/" (:password url) "@" (util/format-server url)
+             :subname (str ":" (:user url) "/" (:password url) "@" (util/format-server url)
                            ":" (:db url))})))
 
 (defmethod connection-spec :postgresql [db-url]
   (let [url (util/parse-db-url db-url)]
-    (-> (assoc url :classname "org.postgresql.Driver")
-        (assoc-in [:spec :user] (:username url)))))
+    (assoc url :classname "org.postgresql.Driver")))
 
 (defmethod connection-spec :sqlite [db-url]
   (if-let [matches (re-matches #"(([^:]+):)?([^:]+):([^?]+)(\?(.*))?" (str db-url))]
@@ -60,7 +58,7 @@
       :spec {:subprotocol "sqlserver"
              :subname (str "//" (util/format-server url) ";"
                            "database=" (:db url) ";"
-                           "user=" (:username url) ";"
+                           "user=" (:user url) ";"
                            "password=" (:password url))})))
 
 (defmulti connection-pool
@@ -70,7 +68,7 @@
 (defmethod connection-pool :bonecp [db-spec]
   (let [config (util/invoke-constructor "com.jolbox.bonecp.BoneCPConfig")]
     (.setJdbcUrl config (str "jdbc:" (name (:subprotocol (:spec db-spec))) ":" (:subname (:spec db-spec))))
-    (.setUsername config (:username db-spec))
+    (.setUsername config (:user db-spec))
     (.setPassword config (:password db-spec))
     (assoc db-spec :spec {:datasource (util/invoke-constructor "com.jolbox.bonecp.BoneCPDataSource" config)})))
 
@@ -78,7 +76,7 @@
   (let [params (:params db-spec)
         datasource (util/invoke-constructor "com.mchange.v2.c3p0.ComboPooledDataSource")]
     (.setJdbcUrl datasource (str "jdbc:" (name (:subprotocol (:spec db-spec))) ":" (:subname (:spec db-spec))))
-    (.setUser datasource (:username db-spec))
+    (.setUser datasource (:user db-spec))
     (.setPassword datasource (:password db-spec))
     (.setAcquireRetryAttempts datasource (parse-integer (or (:acquire-retry-attempts params) 1))) ; TODO: Set back to 30
     (.setInitialPoolSize datasource (parse-integer (or (:initial-pool-size params) 3)))
