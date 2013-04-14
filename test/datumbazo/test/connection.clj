@@ -96,36 +96,3 @@
   (let [connection (cached-connection test-url)]
     (is (map? (:spec connection)))
     (is (= connection (cached-connection test-url)))))
-
-(deftest test-with-connection-jdbc
-  (with-connection "jdbc:postgresql://tiger:scotch@localhost/datumbazo"
-    (is *connection*)
-    (is (instance? Connection (jdbc/connection)))))
-
-(deftest test-with-connection-bonecp
-  (with-connection "bonecp:postgresql://tiger:scotch@localhost/datumbazo"
-    (is *connection*)
-    (is (instance? ConnectionHandle (jdbc/connection)))))
-
-(deftest test-with-connection-c3p0
-  (with-connection "c3p0:postgresql://tiger:scotch@localhost/datumbazo"
-    (is *connection*)
-    (is (instance? NewProxyConnection (jdbc/connection)))))
-
-(comment
-  (database-test test-with-connection
-    (doseq [pool [:bonecp :c3p0 :jdbc]]
-      (with-connection (clojure.string/replace (:url *database*) #"^([^:]+)" (name pool))
-        (is *connection*)
-        (is (instance?
-             (condp = pool
-               :bonecp ConnectionHandle
-               :c3p0 NewProxyConnection
-               :jdbc Connection)
-             (jdbc/connection)))))))
-
-(database-test test-wrap-connection
-  ((wrap-connection
-    (fn [request]
-      (is (instance? Connection (jdbc/connection))))
-    :test-db) {}))

@@ -100,21 +100,3 @@
 (util/defn-memo cached-connection [db-url]
   "Returns the cached database connection for `db-url`."
   (connection db-url))
-
-(defmacro with-connection
-  "Evaluates `body` with a connection to `db-name`."
-  [db-name & body]
-  `(binding [*connection* (cached-connection (connection-url ~db-name))]
-     (jdbc/with-naming-strategy *naming-strategy*
-       (jdbc/with-connection (:spec *connection*)
-         ~@body))))
-
-(defn wrap-connection
-  "Wraps a connection to `db-name` around the Ring `handler`"
-  [handler db-name]
-  (fn [request]
-    (with-connection db-name
-      (handler request))))
-
-
-(connection-pool (connection-spec (connection-url :test-db)))

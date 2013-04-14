@@ -214,7 +214,3 @@
                       ~(format "Find the first %s by %s." (singular table-name) column-name)
                       [~'db & ~'args]
                       (first (apply ~(symbol (str table-name "-by-" column-name)) ~'db ~'args)))))))))
-
-(defmacro with-connection
-  "Evaluates `body` with a connection to `db-name`."
-  [db-name & body] `(connection/with-connection ~db-name ~@body))
