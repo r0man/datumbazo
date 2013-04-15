@@ -12,10 +12,10 @@
 
 (defvalidate continent
   (presence-of :name)
-  (uniqueness-of $db :continents :name :if new-record?)
+  (uniqueness-of db :continents :name :if new-record?)
   (presence-of :code)
   (exact-length-of :code 2)
-  (uniqueness-of $db :continents :code :if new-record?))
+  (uniqueness-of db :continents :code :if new-record?))
 
 (deftable continents
   "The continents database table."
@@ -69,10 +69,10 @@
   {:name "Europe" :code "eu"})
 
 (defn save-africa []
-  (save-continent $db africa))
+  (save-continent db africa))
 
 (defn save-europe []
-  (save-continent $db europe))
+  (save-continent db europe))
 
 (deftest test-columns
   (let [columns (columns twitter-tweets-table)]
@@ -103,7 +103,7 @@
       (is (= true (:hidden? column))))))
 
 (deftest test-continents-pagination
-  (is (= (sql (continents* $db {:page 2 :per-page 20}))
+  (is (= (sql (continents* db {:page 2 :per-page 20}))
          ["SELECT continents.id, continents.name, continents.code FROM continents LIMIT 20 OFFSET 20"])))
 
 (deftest test-countries-table
@@ -130,44 +130,44 @@
 (database-test test-drop-continents
   (is (= "Drop the continents database table."
          (:doc (meta #'drop-continents))))
-  (drop-countries $db)
-  (is (= 0 (drop-continents $db)))
-  (is (= 0 (drop-continents $db (if-exists true)))))
+  (drop-countries db)
+  (is (= 0 (drop-continents db)))
+  (is (= 0 (drop-continents db (if-exists true)))))
 
 (database-test test-delete-continents
   (is (= "Delete all rows in the continents database table."
          (:doc (meta #'delete-continents))))
-  (is (= 0 (delete-continents $db)))
-  (is (= 0 (count-all $db :continents))))
+  (is (= 0 (delete-continents db)))
+  (is (= 0 (count-all db :continents))))
 
 (database-test test-delete-continent
   (is (= "Delete the continent from the database table."
          (:doc (meta #'delete-continent))))
-  (is (= 0 (delete-continent $db europe)))
-  (let [europe (insert-continent $db europe)]
-    (is (= 1 (delete-continent $db europe)))))
+  (is (= 0 (delete-continent db europe)))
+  (let [europe (insert-continent db europe)]
+    (is (= 1 (delete-continent db europe)))))
 
 (database-test test-delete-countries
   (is (= "Delete all rows in the countries database table."
          (:doc (meta #'delete-countries))))
-  (is (= 0 (delete-countries $db)))
-  (is (= 0 (count-all $db :countries))))
+  (is (= 0 (delete-countries db)))
+  (is (= 0 (count-all db :countries))))
 
 (database-test test-insert-continent
   (try+
-   (insert-continent $db {})
+   (insert-continent db {})
    (catch [:type :validation.core/error] {:keys [errors record]}
      (is (= {} record))
      (is (= ["can't be blank."] (:name errors)))
      (is (= ["has the wrong length (should be 2 characters)." "can't be blank."] (:code errors)))))
-  (let [row (insert-continent $db europe)]
+  (let [row (insert-continent db europe)]
     (is (number? (:id row)))
     (is (= "Europe" (:name row)))
     (is (= "eu" (:code row)))
-    (is (thrown? Exception (insert-continent $db row)))))
+    (is (thrown? Exception (insert-continent db row)))))
 
 (database-test test-insert-continents
-  (let [rows (insert-continents $db [africa europe])]
+  (let [rows (insert-continents db [africa europe])]
     (let [row (first rows)]
       (is (number? (:id row)))
       (is (= "Africa" (:name row)))
@@ -178,96 +178,96 @@
       (is (= "eu" (:code row))))))
 
 (database-test test-save-continent
-  (let [row (save-continent $db europe)]
+  (let [row (save-continent db europe)]
     (is (number? (:id row)))
     (is (= "Europe" (:name row)))
     (is (= "eu" (:code row)))
-    (is (= row (save-continent $db row)))))
+    (is (= row (save-continent db row)))))
 
 (database-test test-truncate-continents
   (is (= "Truncate the continents database table."
          (:doc (meta #'truncate-continents))))
-  (is (= 0 (truncate-continents $db (cascade true))))
-  (is (= 0 (truncate-continents $db (cascade true) (if-exists true) )))
-  (is (= 0 (count-all $db :continents))))
+  (is (= 0 (truncate-continents db (cascade true))))
+  (is (= 0 (truncate-continents db (cascade true) (if-exists true) )))
+  (is (= 0 (count-all db :continents))))
 
 (database-test test-truncate-countries
   (is (= "Truncate the countries database table."
          (:doc (meta #'truncate-countries))))
-  (is (= 0 (truncate-countries $db)))
-  (is (= 0 (count-all $db :countries))))
+  (is (= 0 (truncate-countries db)))
+  (is (= 0 (count-all db :countries))))
 
 (database-test test-update-continent
   (try+
-   (update-continent $db {})
+   (update-continent db {})
    (catch [:type :validation.core/error] {:keys [errors record]}
      (is (= {} record))
      (is (= ["can't be blank."] (:name errors)))
      (is (= ["has the wrong length (should be 2 characters)." "can't be blank."] (:code errors)))))
-  (is (nil? (update-continent $db europe)))
-  (let [europe (insert-continent $db europe)
-        continent (update-continent $db (assoc europe :name "Europa"))]
+  (is (nil? (update-continent db europe)))
+  (let [europe (insert-continent db europe)
+        continent (update-continent db (assoc europe :name "Europa"))]
     (is (number? (:id continent)))
     (is (= "Europa" (:name continent)))
     (is (= "eu" (:code continent)))
-    (is (= continent (update-continent $db continent)))
-    (let [continent (update-continent $db (assoc continent :name "Europe"))]
+    (is (= continent (update-continent db continent)))
+    (let [continent (update-continent db (assoc continent :name "Europe"))]
       (is (number? (:id continent)))
       (is (= "Europe" (:name continent)))
       (is (= "eu" (:code continent))))))
 
 (database-test test-continents
-  (is (empty? (continents $db)))
-  (let [europe (save-continent $db europe)
-        africa (save-continent $db africa)]
-    (is (= #{africa europe} (set (continents $db))))
-    (is (= [africa] (continents $db {:page 1 :per-page 1 :order-by :name})))
-    (is (= [europe] (continents $db {:page 2 :per-page 1 :order-by :name})))))
+  (is (empty? (continents db)))
+  (let [europe (save-continent db europe)
+        africa (save-continent db africa)]
+    (is (= #{africa europe} (set (continents db))))
+    (is (= [africa] (continents db {:page 1 :per-page 1 :order-by :name})))
+    (is (= [europe] (continents db {:page 2 :per-page 1 :order-by :name})))))
 
 (database-test test-countries
-  (is (empty? (countries $db))))
+  (is (empty? (countries db))))
 
 (database-test test-countries-by-continent-id
-  (is (empty? (countries-by-continent-id $db 1))))
+  (is (empty? (countries-by-continent-id db 1))))
 
 (database-test test-continent-by-id
-  (is (nil? (continent-by-id $db nil)))
-  (is (nil? (continent-by-id $db 1)))
-  (let [europe (save-continent $db europe)]
-    (is (= europe (continent-by-id $db (:id europe))))
-    (is (= europe (continent-by-id $db (str (:id europe)))))
-    (is (= europe (continent-by-id $db (str (:id europe) "-europe"))))))
+  (is (nil? (continent-by-id db nil)))
+  (is (nil? (continent-by-id db 1)))
+  (let [europe (save-continent db europe)]
+    (is (= europe (continent-by-id db (:id europe))))
+    (is (= europe (continent-by-id db (str (:id europe)))))
+    (is (= europe (continent-by-id db (str (:id europe) "-europe"))))))
 
 (database-test test-continent-by-name
-  (is (nil? (continent-by-name $db nil)))
-  (is (nil? (continent-by-name $db "Europe")))
-  (let [europe (save-continent $db europe)]
-    (is (= europe (continent-by-name $db (:name europe))))))
+  (is (nil? (continent-by-name db nil)))
+  (is (nil? (continent-by-name db "Europe")))
+  (let [europe (save-continent db europe)]
+    (is (= europe (continent-by-name db (:name europe))))))
 
 (database-test test-continents-by-id
-  (is (empty? (continents-by-id $db 1)))
-  (is (empty? (continents-by-id $db "1")))
+  (is (empty? (continents-by-id db 1)))
+  (is (empty? (continents-by-id db "1")))
   (is (= ["SELECT continents.id, continents.name, continents.code FROM continents WHERE (continents.id = ?)" 1]
-         (sql (continents-by-id* $db 1))))
-  (let [europe (save-continent $db europe)]
-    (is (= [europe] (continents-by-id $db (:id europe))))
-    (is (= [europe] (continents-by-id $db (str (:id europe)))))))
+         (sql (continents-by-id* db 1))))
+  (let [europe (save-continent db europe)]
+    (is (= [europe] (continents-by-id db (:id europe))))
+    (is (= [europe] (continents-by-id db (str (:id europe)))))))
 
 (database-test test-continents-by-name
-  (is (empty? (continents-by-name $db nil)))
-  (is (empty? (continents-by-name $db "Europe")))
+  (is (empty? (continents-by-name db nil)))
+  (is (empty? (continents-by-name db "Europe")))
   (is (= ["SELECT continents.id, continents.name, continents.code FROM continents WHERE (continents.name = ?)" (citext "Europe")]
-         (sql (continents-by-name* $db "Europe"))))
-  (let [europe (save-continent $db europe)]
-    (is (= [europe] (continents-by-name $db (:name europe))))
-    (is (= (continents-by-name $db (:name europe))
-           (continents-by-name $db (upper-case (:name europe)))))))
+         (sql (continents-by-name* db "Europe"))))
+  (let [europe (save-continent db europe)]
+    (is (= [europe] (continents-by-name db (:name europe))))
+    (is (= (continents-by-name db (:name europe))
+           (continents-by-name db (upper-case (:name europe)))))))
 
 (database-test test-twitter-users
-  (is (empty? (twitter-users $db))))
+  (is (empty? (twitter-users db))))
 
 (database-test test-twitter-tweets
-  (is (empty? (twitter-tweets $db))))
+  (is (empty? (twitter-tweets db))))
 
 (deftest test-twitter-users-table
   (let [table twitter-users-table]
@@ -312,12 +312,12 @@
                    :time-zone nil
                    :url nil
                    :verified false}
-                  (save-twitter-user $db))]
+                  (save-twitter-user db))]
     (is (= (dissoc user :updated-at)
-           (dissoc (save-twitter-user $db user) :updated-at)))))
+           (dissoc (save-twitter-user db user) :updated-at)))))
 
 (database-test test-count-all
-  (is (= 0 (count-all $db :continents))))
+  (is (= 0 (count-all db :continents))))
 
 (database-test test-insert-twitter-user
   (let [user (->> {:listed-count 0,
@@ -339,19 +339,19 @@
                    :verified false,
                    :id "9"
                    :description nil}
-                  (insert-twitter-user $db))]
+                  (insert-twitter-user db))]
     (is (= 9 (:id user)))))
 
 (database-test test-validation
   (let [continent {}]
     (try+
-     (insert-continent $db continent)
+     (insert-continent db continent)
      (is false)
      (catch [:type :validation.core/error] {:keys [errors record]}
        (is (= continent record))
        (is (= errors (:errors (meta record))))))
     (try+
-     (update-continent $db continent)
+     (update-continent db continent)
      (is false)
      (catch [:type :validation.core/error] {:keys [errors record]}
        (is (= continent record))
@@ -359,8 +359,8 @@
 
 (database-test test-array
   (is (= [{:array [1 2]}]
-         (run $db (select [[1 2]])))))
+         (run db (select [[1 2]])))))
 
 (database-test test-array-concat
   (is (= [{:?column? [1 2 3 4 5 6]}]
-         (run $db (select ['(|| [1 2] [3 4] [5 6])])))))
+         (run db (select ['(|| [1 2] [3 4] [5 6])])))))
