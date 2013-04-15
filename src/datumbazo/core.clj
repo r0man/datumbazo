@@ -75,32 +75,6 @@
   (fn [table]
     [nil (update-in table [:transform] concat [f])]))
 
-;; (defn update
-;;   "Returns a fn that builds a UPDATE statement."
-;;   [table row & body]
-;;   (let [row (if (map? row)
-;;               (->> (apply-preparation table row)
-;;                    (io/encode-row table))
-;;               row)]
-;;     (apply sqlingvo.core/update table row body)))
-
-;; (defn update
-;;   "Returns a fn that builds a UPDATE statement."
-;;   [table row & body]
-;;   (apply sqlingvo.core/update table row body))
-
-;; (defn values
-;;   "Returns a fn that adds a VALUES clause to an SQL statement."
-;;   [values]
-;;   (fn [stmt]
-;;     [nil (case values
-;;            :default (assoc stmt :default-values true)
-;;            (concat-in
-;;             stmt [:values]
-;;             (->> (map (partial apply-preparation stmt)
-;;                       (if (sequential? values) values [values]))
-;;                  (io/encode-rows (:table stmt)))))]))
-
 (defn count-all
   "Count all rows in the database `table`."
   [db table] (:count (run1 db (select ['(count *)] (from table)))))
