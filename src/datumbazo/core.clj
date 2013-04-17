@@ -67,22 +67,6 @@
       (with-open [connection (jdbc/get-connection db)]
         (run (jdbc/add-connection db connection))))))
 
-(defmacro with-rollback
-  "Evaluate `body` within a transaction on `db` and rollback
-  afterwards."
-  [[symbol db] & body]
-  `(let [run# (fn [db#]
-                (jdbc/db-transaction
-                 [~symbol db#]
-                 (jdbc/db-set-rollback-only! ~symbol)
-                 ~@body))]
-     (let [db# ~db]
-       (if (and (map? db#) (:connection db#))
-         (run# db#)
-         (with-open [connection# (jdbc/get-connection db#)]
-           (run# (jdbc/add-connection db# connection#)))))))
-
-
 ;; ----------------------------------------------------------------------------------------------------------
 
 (defn columns
@@ -118,12 +102,7 @@
                                       (:transform ast)
                                       (:transform (:table ast))
                                       (mapcat :transform (:from ast)))))
-         (apply run*
-                db (case (:op ast)
-                     :insert (apply-preparation ast)
-                     :update (apply-preparation ast)
-                     stmt)
-                opts))))
+         (apply run* db (apply-preparation ast) opts))))
 
 (defn run1
   "Run `stmt` against the current clojure.java.jdbc database
@@ -180,6 +159,21 @@
                  query# (apply ~query-sym ~'args)]
              ((or ~map-fn identity)
               (run1 db# query#)))))))
+
+(defmacro with-rollback
+  "Evaluate `body` within a transaction on `db` and rollback
+  afterwards."
+  [[symbol db] & body]
+  `(let [run# (fn [db#]
+                (jdbc/db-transaction
+                 [~symbol db#]
+                 (jdbc/db-set-rollback-only! ~symbol)
+                 ~@body))]
+     (let [db# ~db]
+       (if (and (map? db#) (:connection db#))
+         (run# db#)
+         (with-open [connection# (jdbc/get-connection db#)]
+           (run# (jdbc/add-connection db# connection#)))))))
 
 (defmacro deftable
   "Define a database table."
