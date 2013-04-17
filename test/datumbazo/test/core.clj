@@ -385,3 +385,10 @@
   (with-rollback [db db]
     (is (= [{:?column? 1 :?column?-2 2}]
            (run db (select [1 2]))))))
+
+(deftest test-with-connection
+  (with-connection [connection db]
+    (is (map? connection))
+    (is (= 0 (:level connection)))
+    (is (instance? java.sql.Connection (:connection connection)))
+    (is (= db (:connection-string connection)))))

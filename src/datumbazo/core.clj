@@ -25,10 +25,19 @@
     (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
     stmt))
 
+(defmacro with-connection
+  [[symbol db] & body]
+  `(let [db# ~db]
+     (if (and (map? db#) (:connection db#))
+       (let [~symbol db#]
+         ~@body)
+       (with-open [connection# (jdbc/get-connection db#)]
+         (let [~symbol (jdbc/add-connection db# connection#)]
+           ~@body)))))
+
 (defn sql-str
   "Prepare `stmt` using the database and return the raw SQL as a string."
   [db stmt & opts]
-  (prn (and (map? db) (:connection db)))
   (let [run #(let [sql (first (apply sql stmt opts))
                    stmt (prepare-stmt %1 stmt)]
                (if (.startsWith (str stmt) (str/replace sql #"\?.*" ""))
@@ -54,18 +63,15 @@
 (defn run*
   "Compile and run `stmt` against the database and return the rows."
   [db stmt & {:keys [entities identifiers transaction?]}]
-  (let [run #(let [{:keys [op returning] :as ast} (ast stmt)
-                   compiled (sql ast :entities entities)]
-               (cond
-                (= :select op)
-                (run-query %1 compiled :identifiers identifiers :transaction? transaction?)
-                returning
-                (run-query %1 compiled :identifiers identifiers :transaction? transaction?)
-                :else (run-prepared %1 compiled :identifiers identifiers :transaction? transaction?)))]
-    (if (and (map? db) (:connection db))
-      (run db)
-      (with-open [connection (jdbc/get-connection db)]
-        (run (jdbc/add-connection db connection))))))
+  (with-connection [db db]
+    (let [{:keys [op returning] :as ast} (ast stmt)
+          compiled (sql ast :entities entities)]
+      (cond
+       (= :select op)
+       (run-query db compiled :identifiers identifiers :transaction? transaction?)
+       returning
+       (run-query db compiled :identifiers identifiers :transaction? transaction?)
+       :else (run-prepared db compiled :identifiers identifiers :transaction? transaction?)))))
 
 ;; ----------------------------------------------------------------------------------------------------------
 
@@ -169,16 +175,11 @@
   "Evaluate `body` within a transaction on `db` and rollback
   afterwards."
   [[symbol db] & body]
-  `(let [run# (fn [db#]
-                (jdbc/db-transaction
-                 [~symbol db#]
-                 (jdbc/db-set-rollback-only! ~symbol)
-                 ~@body))]
-     (let [db# ~db]
-       (if (and (map? db#) (:connection db#))
-         (run# db#)
-         (with-open [connection# (jdbc/get-connection db#)]
-           (run# (jdbc/add-connection db# connection#)))))))
+  `(with-connection [db# ~db]
+     (jdbc/db-transaction
+      [~symbol db#]
+      (jdbc/db-set-rollback-only! ~symbol)
+      ~@body)))
 
 (defmacro deftable
   "Define a database table."
