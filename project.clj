@@ -13,7 +13,7 @@
                  [com.palletops/stevedore "0.8.0-beta.2"]
                  [postgresql/postgresql "9.1-901.jdbc4"]
                  [slingshot "0.10.3"]
-                 [sqlingvo "0.4.0"]]
+                 [sqlingvo "0.4.1-SNAPSHOT"]]
   :profiles {:dev {:dependencies [[validation-clj "0.5.2-SNAPSHOT"]
                                   [org.slf4j/slf4j-log4j12 "1.6.6"]
                                   [c3p0/c3p0 "0.9.1.2"]
