@@ -67,11 +67,6 @@
       (with-open [connection (jdbc/get-connection db)]
         (run (jdbc/add-connection db connection))))))
 
-;; (defn run1
-;;   "Run `stmt` against the database and return the first row."
-;;   [db stmt & opts]
-;;   (first (apply run db stmt opts)))
-
 (defmacro with-rollback
   "Evaluate `body` within a transaction on `db` and rollback
   afterwards."
