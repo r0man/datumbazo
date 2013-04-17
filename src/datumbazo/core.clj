@@ -87,6 +87,14 @@
       :update (update-in ast [:row] prepare)
       ast)))
 
+(defn- apply-transformation [ast rows]
+  (let [transformations
+        (concat [io/decode-row]
+                (:transform ast)
+                (:transform (:table ast))
+                (mapcat :transform (:from ast)))]
+    (map (apply comp (reverse transformations)) rows)))
+
 (defn prepare
   "Add the preparation fn `f` to `table`."
   [f]
@@ -98,11 +106,8 @@
   database connection."
   [db stmt & opts]
   (let [ast (ast stmt)]
-    (map (apply comp (reverse (concat [io/decode-row]
-                                      (:transform ast)
-                                      (:transform (:table ast))
-                                      (mapcat :transform (:from ast)))))
-         (apply run* db (apply-preparation ast) opts))))
+    (->> (apply run* db (apply-preparation ast) opts)
+         (apply-transformation ast))))
 
 (defn run1
   "Run `stmt` against the current clojure.java.jdbc database
