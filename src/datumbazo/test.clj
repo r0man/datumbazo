@@ -1,7 +1,7 @@
 (ns datumbazo.test
   (:require [clojure.test :refer [deftest]]
             [environ.core :refer [env]]
-            [sqlingvo.core :refer  [with-rollback]]))
+            [datumbazo.core :refer  [with-rollback]]))
 
 (def db (env :test-db))
 

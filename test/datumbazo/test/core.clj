@@ -364,3 +364,24 @@
 (database-test test-array-concat
   (is (= [{:?column? [1 2 3 4 5 6]}]
          (run db (select ['(|| [1 2] [3 4] [5 6])])))))
+
+;; RUN
+
+(database-test test-run
+  (is (= [{:?column? 1 :?column?-2 2 :?column?-3 3}]
+         (run db (select [1 2 3])))))
+
+(database-test test-run1
+  (is (= {:?column? 1 :?column?-2 2 :?column?-3 3}
+         (run1 db (select [1 2 3])))))
+
+;; RAW SQL
+
+(database-test test-sql-str
+  ;; (is (= "SELECT 1, 'a'" (sql-str db (select [1 "a"]))))
+  )
+
+(database-test test-with-rollback
+  (with-rollback [db db]
+    (is (= [{:?column? 1 :?column?-2 2}]
+           (run db (select [1 2]))))))

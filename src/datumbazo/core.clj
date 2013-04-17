@@ -17,6 +17,79 @@
 (def ^:dynamic *page* nil)
 (def ^:dynamic *per-page* 25)
 
+(defn- prepare-stmt
+  "Compile `stmt` and return a java.sql.PreparedStatement from `db`."
+  [db stmt]
+  (let [[sql & args] (sql stmt)
+        stmt (jdbc/prepare-statement db sql)]
+    (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
+    stmt))
+
+(defn sql-str
+  "Prepare `stmt` using the database and return the raw SQL as a string."
+  [db stmt & opts]
+  (prn (and (map? db) (:connection db)))
+  (let [run #(let [sql (first (apply sql stmt opts))
+                   stmt (prepare-stmt %1 stmt)]
+               (if (.startsWith (str stmt) (str/replace sql #"\?.*" ""))
+                 (str stmt)
+                 (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver."))))]
+    (if (instance? java.sql.Connection db)
+      (run db)
+      (with-open [connection (jdbc/get-connection db)]
+        (run connection)))))
+
+(defn- run-query
+  [db compiled  & {:keys [identifiers transaction?]}]
+  (let [query #(jdbc/query %1 compiled :identifiers (or identifiers hyphenize))]
+    (if transaction?
+      (jdbc/db-transaction [t-db db] (query t-db))
+      (query db))))
+
+(defn- run-prepared
+  [db compiled & {:keys [identifiers transaction?]}]
+  (->> (jdbc/db-do-prepared db transaction? (first compiled) (rest compiled))
+       (map #(hash-map :count %1))))
+
+(defn run*
+  "Compile and run `stmt` against the database and return the rows."
+  [db stmt & {:keys [entities identifiers transaction?]}]
+  (let [run #(let [{:keys [op returning] :as ast} (ast stmt)
+                   compiled (sql ast :entities entities)]
+               (cond
+                (= :select op)
+                (run-query %1 compiled :identifiers identifiers :transaction? transaction?)
+                returning
+                (run-query %1 compiled :identifiers identifiers :transaction? transaction?)
+                :else (run-prepared %1 compiled :identifiers identifiers :transaction? transaction?)))]
+    (if (and (map? db) (:connection db))
+      (run db)
+      (with-open [connection (jdbc/get-connection db)]
+        (run (jdbc/add-connection db connection))))))
+
+;; (defn run1
+;;   "Run `stmt` against the database and return the first row."
+;;   [db stmt & opts]
+;;   (first (apply run db stmt opts)))
+
+(defmacro with-rollback
+  "Evaluate `body` within a transaction on `db` and rollback
+  afterwards."
+  [[symbol db] & body]
+  `(let [run# (fn [db#]
+                (jdbc/db-transaction
+                 [~symbol db#]
+                 (jdbc/db-set-rollback-only! ~symbol)
+                 ~@body))]
+     (let [db# ~db]
+       (if (and (map? db#) (:connection db#))
+         (run# db#)
+         (with-open [connection# (jdbc/get-connection db#)]
+           (run# (jdbc/add-connection db# connection#)))))))
+
+
+;; ----------------------------------------------------------------------------------------------------------
+
 (defn columns
   "Returns the columns of `table`."
   [table] (map (:column table) (:columns table)))
@@ -50,7 +123,7 @@
                                       (:transform ast)
                                       (:transform (:table ast))
                                       (mapcat :transform (:from ast)))))
-         (apply sqlingvo.core/run
+         (apply run*
                 db (case (:op ast)
                      :insert (apply-preparation ast)
                      :update (apply-preparation ast)

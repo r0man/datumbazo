@@ -56,20 +56,18 @@
 (defn reset-serials
   "Reset the serial counters of all columns in `table`."
   [db table & {:keys [entities]}]
-  (jdbc/with-naming-strategy
-    {:entity (or entities underscore)}
-    (let [table (parse-table table)]
-      (doseq [column (meta/columns db :schema (or (:schema table) :public) :table (:name table))
-              :when (contains? #{:bigserial :serial} (:type column))]
-        (run1 db (select [`(setval ~(as-identifier (serial-seq column))
-                                   ~(select [`(max ~(:name column))]
-                                      (from (as-keyword table))))]))))))
+  (let [table (parse-table table)]
+    (doseq [column (meta/columns db :schema (or (:schema table) :public) :table (:name table))
+            :when (contains? #{:bigserial :serial} (:type column))]
+      (run1 db (select [`(setval ~(as-identifier (serial-seq column))
+                                 ~(select [`(max ~(:name column))]
+                                    (from (as-keyword table))))])
+            :entities entities))))
 
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
   [db table filename & {:keys [entities]}]
-  (let [entities (or entities underscore)
-        rows (slurp-rows filename)
+  (let [rows (slurp-rows filename)
         rows (if-not (empty? rows)
                (run db (insert table []
                          (values (encode-rows db table rows))
@@ -98,14 +96,14 @@
   "Enable triggers on the database `table`."
   [db table & {:keys [entities]}]
   (jdbc/with-naming-strategy
-    {:entity (or entities underscore)}
+    {:entity (or entities as-identifier)}
     (jdbc/execute! db [(str "ALTER TABLE " (as-identifier table) " ENABLE TRIGGER ALL")])))
 
 (defn disable-triggers
   "Disable triggers on the database `table`."
   [db table & {:keys [entities]}]
   (jdbc/with-naming-strategy
-    {:entity (or entities underscore)}
+    {:entity (or entities as-identifier)}
     (jdbc/execute! db [(str "ALTER TABLE " (as-identifier table) " DISABLE TRIGGER ALL")])))
 
 (defn dump-fixtures

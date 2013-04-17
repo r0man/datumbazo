@@ -72,13 +72,13 @@
 
 (deftest test-serial-seq
   (are [column expected]
-       (is (= expected (serial-seq column)))
-       {:table :continents :name :id}
-       :continents-id-seq
-       {:schema :public :table :continents :name :id}
-       :continents-id-seq
-       {:schema :twitter :table :users :name :id}
-       :twitter.users-id-seq))
+    (is (= expected (serial-seq column)))
+    {:table :continents :name :id}
+    :continents-id-seq
+    {:schema :public :table :continents :name :id}
+    :continents-id-seq
+    {:schema :twitter :table :users :name :id}
+    :twitter.users-id-seq))
 
 (database-test test-write-fixture
   (load-fixtures db fixture-dir)
