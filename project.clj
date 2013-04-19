@@ -5,12 +5,13 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[clj-time "0.5.0"]
+                 [com.palletops/stevedore "0.8.0-beta.2"]
                  [environ "0.4.0"]
                  [geo-clj "0.2.0"]
-                 [org.clojure/clojure "1.5.1"]
                  [org.clojure/algo.monads "0.1.4"]
+                 [org.clojure/clojure "1.5.1"]
+                 [org.clojure/java.jdbc "0.3.0-alpha1"]
                  [org.clojure/tools.logging "0.2.6"]
-                 [com.palletops/stevedore "0.8.0-beta.2"]
                  [postgresql/postgresql "9.1-901.jdbc4"]
                  [slingshot "0.10.3"]
                  [sqlingvo "0.4.1"]]
