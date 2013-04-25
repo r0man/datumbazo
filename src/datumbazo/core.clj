@@ -105,7 +105,8 @@
   "Add the preparation fn `f` to `table`."
   [f]
   (fn [table]
-    [nil (update-in table [:prepare] concat [f])]))
+    (let [preparation (remove nil? (if (sequential? f) f [f]))]
+      [nil (update-in table [:prepare] concat preparation)])))
 
 (defn run
   "Compile and run `stmt` against the current clojure.java.jdbc
@@ -208,15 +209,20 @@
            ~(format "Insert the %s row into the database." singular#)
            [~'db ~'row & ~'opts]
            (run1 ~'db (sqlingvo.core/insert ~symbol# []
-                        (values (io/encode-row ~'db ~symbol# ~'row))
-                        (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#))))))
+                        (values ~'row)
+                        (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
+                        (prepare (partial io/encode-row ~'db ~symbol#))
+                        (prepare (:prepare ~symbol#)))))
 
          (defn ~(symbol (str "insert-" (str table-name)))
            ~(format "Insert the %s rows into the database." singular#)
            [~'db ~'rows & ~'opts]
+           ;; (prn ~symbol)
            (run ~'db (sqlingvo.core/insert ~symbol# []
                        (values ~'rows)
-                       (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#))))))
+                       (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
+                       (prepare (partial io/encode-row ~'db ~symbol#))
+                       (prepare (:prepare ~symbol#)))))
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
@@ -228,9 +234,11 @@
            (let [pks# (meta/primary-keys ~'db :schema (or (:schema ~symbol#) :public) :table (:name ~symbol#))
                  pk-keys# (map :name pks#)
                  pk-vals# (map ~'row pk-keys#)]
-             (run1 ~'db (update ~symbol# (io/encode-row ~'db ~symbol# ~'row)
+             (run1 ~'db (update ~symbol# ~'row
                           (where (cons 'and (map #(list '= %1 %2) pk-keys# pk-vals#)))
-                          (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))))))
+                          (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
+                          (prepare (partial io/encode-row ~'db ~symbol#))
+                          (prepare (:prepare ~symbol#))))))
 
          (defn ~(symbol (str "save-" singular#))
            ~(format "Save the %s row to the database." singular#)
