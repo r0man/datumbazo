@@ -3,7 +3,7 @@
   (:require [clojure.algo.monads :refer [state-m m-seq with-monad]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
-            [datumbazo.connection :as connection]
+            [datumbazo.connection :refer [with-connection]]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [immigrate]]
@@ -24,16 +24,6 @@
         stmt (jdbc/prepare-statement db sql)]
     (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
     stmt))
-
-(defmacro with-connection
-  [[symbol db] & body]
-  `(let [db# ~db]
-     (if (and (map? db#) (:connection db#))
-       (let [~symbol db#]
-         ~@body)
-       (with-open [connection# (jdbc/get-connection db#)]
-         (let [~symbol (jdbc/add-connection db# connection#)]
-           ~@body)))))
 
 (defn sql-str
   "Prepare `stmt` using the database and return the raw SQL as a string."

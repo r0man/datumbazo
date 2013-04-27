@@ -37,10 +37,6 @@
                 columns))
     (is (= [:continent-id] (map :name columns)))))
 
-(database-test test-metadata
-  (is (thrown? AssertionError (metadata nil)))
-  (is (instance? DatabaseMetaData (metadata db))))
-
 (database-test test-indexes
   (let [columns (indexes db :table :continents)]
     (is (not (empty? columns)))))

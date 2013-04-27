@@ -1,5 +1,6 @@
 (ns datumbazo.connection
-  (:require [environ.core :refer [env]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [environ.core :refer [env]]
             [inflections.core :refer [dasherize underscore]]
             [inflections.util :refer [parse-integer]]
             [datumbazo.util :as util]))
@@ -102,3 +103,13 @@
 (util/defn-memo cached-connection [db-url]
   "Returns the cached database connection for `db-url`."
   (connection db-url))
+
+(defmacro with-connection
+  [[symbol db] & body]
+  `(let [db# ~db]
+     (if (and (map? db#) (:connection db#))
+       (let [~symbol db#]
+         ~@body)
+       (with-open [connection# (jdbc/get-connection db#)]
+         (let [~symbol (jdbc/add-connection db# connection#)]
+           ~@body)))))

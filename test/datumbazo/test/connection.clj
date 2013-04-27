@@ -102,3 +102,10 @@
   (let [connection (cached-connection test-url)]
     (is (map? (:spec connection)))
     (is (= connection (cached-connection test-url)))))
+
+(deftest test-with-connection
+  (with-connection [connection db]
+    (is (map? connection))
+    (is (= 0 (:level connection)))
+    (is (instance? java.sql.Connection (:connection connection)))
+    (is (= db (:connection-string connection)))))
