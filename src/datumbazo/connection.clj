@@ -1,8 +1,5 @@
 (ns datumbazo.connection
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.set :refer [rename-keys]]
-            [clojure.string :refer [split]]
-            [environ.core :refer [env]]
+  (:require [environ.core :refer [env]]
             [inflections.core :refer [dasherize underscore]]
             [inflections.util :refer [parse-integer]]
             [datumbazo.util :as util]))
@@ -29,23 +26,29 @@
 
 (defmethod connection-spec :mysql [db-url]
   (let [url (util/parse-db-url db-url)]
-    (assoc url :classname "com.mysql.jdbc.Driver")))
+    (assoc url
+      :adapter "mysql"
+      :classname "com.mysql.jdbc.Driver")))
 
 (defmethod connection-spec :oracle [db-url]
   (let [url (util/parse-db-url db-url)]
     (assoc url
+      :adapter "oracle"
       :classname "oracle.jdbc.driver.OracleDriver"
       :spec {:subprotocol "oracle:thin"
-             :subname (str ":" (:user url) "/" (:password url) "@" (util/format-server url)
-                           ":" (:db url))})))
+             :subname (str ":" (:username url) "/" (:password url) "@" (util/format-server url)
+                           ":" (:database url))})))
 
 (defmethod connection-spec :postgresql [db-url]
   (let [url (util/parse-db-url db-url)]
-    (assoc url :classname "org.postgresql.Driver")))
+    (assoc url
+      :adapter "postgresql"
+      :classname "org.postgresql.Driver")))
 
 (defmethod connection-spec :sqlite [db-url]
   (if-let [matches (re-matches #"(([^:]+):)?([^:]+):([^?]+)(\?(.*))?" (str db-url))]
-    {:classname "org.sqlite.JDBC"
+    {:adapter "sqlite"
+     :classname "org.sqlite.JDBC"
      :params (util/parse-params (nth matches 5))
      :pool (keyword (or (nth matches 2) :jdbc))
      :spec {:subname (nth matches 4)
@@ -54,11 +57,12 @@
 (defmethod connection-spec :sqlserver [db-url]
   (let [url (util/parse-db-url db-url)]
     (assoc url
+      :adapter "mssql"
       :classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
       :spec {:subprotocol "sqlserver"
              :subname (str "//" (util/format-server url) ";"
-                           "database=" (:db url) ";"
-                           "user=" (:user url) ";"
+                           "database=" (:database url) ";"
+                           "user=" (:username url) ";"
                            "password=" (:password url))})))
 
 (defmulti connection-pool
@@ -68,7 +72,7 @@
 (defmethod connection-pool :bonecp [db-spec]
   (let [config (util/invoke-constructor "com.jolbox.bonecp.BoneCPConfig")]
     (.setJdbcUrl config (str "jdbc:" (name (:subprotocol (:spec db-spec))) ":" (:subname (:spec db-spec))))
-    (.setUsername config (:user db-spec))
+    (.setUsername config (:username db-spec))
     (.setPassword config (:password db-spec))
     (assoc db-spec :spec {:datasource (util/invoke-constructor "com.jolbox.bonecp.BoneCPDataSource" config)})))
 
@@ -76,7 +80,7 @@
   (let [params (:params db-spec)
         datasource (util/invoke-constructor "com.mchange.v2.c3p0.ComboPooledDataSource")]
     (.setJdbcUrl datasource (str "jdbc:" (name (:subprotocol (:spec db-spec))) ":" (:subname (:spec db-spec))))
-    (.setUser datasource (:user db-spec))
+    (.setUser datasource (:username db-spec))
     (.setPassword datasource (:password db-spec))
     (.setAcquireRetryAttempts datasource (parse-integer (or (:acquire-retry-attempts params) 1))) ; TODO: Set back to 30
     (.setInitialPoolSize datasource (parse-integer (or (:initial-pool-size params) 3)))

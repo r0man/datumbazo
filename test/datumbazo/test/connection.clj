@@ -13,13 +13,14 @@
 
 (deftest test-connection-spec
   (let [spec (connection-spec "mysql://tiger:scotch@localhost/datumbazo?profileSQL=true")]
+    (is (= "mysql" (:adapter spec)))
     (is (= "com.mysql.jdbc.Driver" (:classname spec)))
     (is (= :jdbc (:pool spec)))
-    (is (= "localhost" (:server-name spec)))
-    (is (nil? (:server-port spec)))
-    (is (= "tiger" (:user spec)))
+    (is (= "localhost" (:host spec)))
+    (is (nil? (:port spec)))
+    (is (= "tiger" (:username spec)))
     (is (= "scotch" (:password spec)))
-    (is (= "datumbazo" (:db spec)))
+    (is (= "datumbazo" (:database spec)))
     (is (= "/datumbazo" (:uri spec)))
     (is (= {:profileSQL "true"} (:params spec)))
     (let [spec (:spec spec)]
@@ -28,13 +29,14 @@
       (is (= "tiger" (:user spec))) ; MySQL needs :user key
       (is (= "scotch" (:password spec)))))
   (let [spec (connection-spec "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
+    (is (= "postgresql" (:adapter spec)))
     (is (= "org.postgresql.Driver" (:classname spec)))
     (is (= :jdbc (:pool spec)))
-    (is (= "localhost" (:server-name spec)))
-    (is (= 5432 (:server-port spec)))
-    (is (= "tiger" (:user spec)))
+    (is (= "localhost" (:host spec)))
+    (is (= 5432 (:port spec)))
+    (is (= "tiger" (:username spec)))
     (is (= "scotch" (:password spec)))
-    (is (= "datumbazo" (:db spec)))
+    (is (= "datumbazo" (:database spec)))
     (is (= "/datumbazo" (:uri spec)))
     (is (= {:ssl "true"} (:params spec)))
     (let [spec (:spec spec)]
@@ -43,6 +45,7 @@
       (is (= "tiger" (:user spec)))
       (is (= "scotch" (:password spec)))))
   (let [spec (connection-spec "sqlite://tmp/datumbazo.sqlite")]
+    (is (= "sqlite" (:adapter spec)))
     (is (= "org.sqlite.JDBC" (:classname spec)))
     (is (= :jdbc (:pool spec)))
     (is (= {} (:params spec)))
@@ -50,6 +53,7 @@
       (is (= "sqlite" (:subprotocol spec)))
       (is (= "//tmp/datumbazo.sqlite" (:subname spec)))))
   (let [spec (connection-spec "sqlite:datumbazo.sqlite")]
+    (is (= "sqlite" (:adapter spec)))
     (is (= "org.sqlite.JDBC" (:classname spec)))
     (is (= :jdbc (:pool spec)))
     (is (= {} (:params spec)))
@@ -57,26 +61,28 @@
       (is (= "sqlite" (:subprotocol spec)))
       (is (= "datumbazo.sqlite" (:subname spec)))))
   (let [spec (connection-spec "sqlserver://tiger:scotch@localhost/datumbazo")]
+    (is (= "mssql" (:adapter spec)))
     (is (= "com.microsoft.sqlserver.jdbc.SQLServerDriver" (:classname spec)))
     (is (= :jdbc (:pool spec)))
-    (is (= "localhost" (:server-name spec)))
-    (is (nil? (:server-port spec)))
-    (is (= "tiger" (:user spec)))
+    (is (= "localhost" (:host spec)))
+    (is (nil? (:port spec)))
+    (is (= "tiger" (:username spec)))
     (is (= "scotch" (:password spec)))
-    (is (= "datumbazo" (:db spec)))
+    (is (= "datumbazo" (:database spec)))
     (is (= "/datumbazo" (:uri spec)))
     (is (= {} (:params spec)))
     (let [spec (:spec spec)]
       (is (= "sqlserver" (:subprotocol spec)))
       (is (= "//localhost;database=datumbazo;user=tiger;password=scotch" (:subname spec)))))
   (let [spec (connection-spec "oracle://tiger:scotch@localhost/datumbazo")]
+    (is (= "oracle" (:adapter spec)))
     (is (= "oracle.jdbc.driver.OracleDriver" (:classname spec)))
     (is (= :jdbc (:pool spec)))
-    (is (= "localhost" (:server-name spec)))
-    (is (nil? (:server-port spec)))
-    (is (= "tiger" (:user spec)))
+    (is (= "localhost" (:host spec)))
+    (is (nil? (:port spec)))
+    (is (= "tiger" (:username spec)))
     (is (= "scotch" (:password spec)))
-    (is (= "datumbazo" (:db spec)))
+    (is (= "datumbazo" (:database spec)))
     (is (= "/datumbazo" (:uri spec)))
     (is (= {} (:params spec)))
     (let [spec (:spec spec)]

@@ -30,9 +30,9 @@
    (Class/forName (str clazz)) (into-array args)))
 
 (defn format-server [url]
-  (str (:server-name url)
-       (if (:server-port url)
-         (str ":" (:server-port url)))))
+  (str (:host url)
+       (if (:port url)
+         (str ":" (:port url)))))
 
 (defn immigrate
   "Create a public var in this namespace for each public var in the
@@ -78,28 +78,6 @@ value is this namespace."
            (mapcat #(vector (keyword (first %1)) (second %1)))
            (apply hash-map)))
 
-(defn parse-url
-  "Parse `s` as a database url and return a JDBC/Ring compatible map."
-  [s]
-  (if-let [matches (re-matches #"(jdbc:)?([^:]+)://(([^:]+):([^@]+)@)?(([^:/]+)(:([0-9]+))?((/([^?]*))(\?(.*))?))" (str s))]
-    (let [db (nth matches 12)
-          scheme (nth matches 2)
-          server-name (nth matches 7)
-          server-port (parse-integer (nth matches 9))]
-      {:db db
-       :host (nth matches 7)
-       :password (nth matches 5)
-       :port server-port
-       :scheme scheme
-       :server-name server-name
-       :server-port server-port
-       :subname (str "//" server-name (if server-port (str ":" server-port)) "/" db)
-       :subprotocol scheme
-       :uri (nth matches 11)
-       :user (nth matches 4)
-       :params (parse-params (nth matches 14))
-       :query-string (nth matches 14)})))
-
 (defn qualified-name
   "Returns the qualified name of `k`."
   [k] (replace (str k) #"^:" ""))
@@ -129,23 +107,23 @@ value is this namespace."
   "Parse the database url `s` and return a Ring compatible map."
   [s]
   (if-let [matches (re-matches #"(([^:]+):)?([^:]+)://(([^:]+):([^@]+)@)?(([^:/]+)(:([0-9]+))?((/([^?]*))(\?(.*))?))" (str s))]
-    (let [db (nth matches 13)
+    (let [database (nth matches 13)
           server-name (nth matches 8)
           server-port (parse-integer (nth matches 10))
           query-string (nth matches 15)]
-      {:db db
+      {:database database
+       :host server-name
        :params (parse-params query-string)
        :password (nth matches 6)
        :pool (keyword (or (nth matches 2) :jdbc))
+       :port server-port
        :query-string query-string
-       :server-name server-name
-       :server-port server-port
-       :spec {:subname (str "//" server-name (if server-port (str ":" server-port)) "/" db (if-not (blank? query-string) (str "?" query-string)))
+       :username (nth matches 5)
+       :uri (nth matches 12)
+       :spec {:subname (str "//" server-name (if server-port (str ":" server-port)) "/" database (if-not (blank? query-string) (str "?" query-string)))
               :subprotocol (nth matches 3)
               :user (nth matches 5)
-              :password (nth matches 6)}
-       :uri (nth matches 12)
-       :user (nth matches 5)})
+              :password (nth matches 6)}})
     (illegal-argument-exception "Can't parse database connection url %s:" s)))
 
 (defn slurp-sql

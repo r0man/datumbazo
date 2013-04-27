@@ -3,7 +3,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [blank? join split replace]]
             [clojure.tools.logging :refer [logp]]
-            [datumbazo.util :refer [parse-url]]
+            [datumbazo.util :refer [parse-db-url]]
             [inflections.core :refer [underscore]]
             [pallet.common.shell :refer [bash]]
             [pallet.stevedore :refer [checked-script with-script-language]]
@@ -54,22 +54,22 @@
 (defn psql
   "Run the psql command."
   [db & {:as opts}]
-  (let [opts (merge (parse-url db) opts)]
+  (let [opts (merge (parse-db-url db) opts)]
     (exec-checked-script
      "Running psql"
      ("export" ~(format "PGPASS=\"%s\"" (:password opts)))
      ("psql"
       ~(if-let [command (:command opts)]
          (format "--command \"%s\"" command) "")
-      ~(if-let [db (:db opts)]
+      ~(if-let [db (:database opts)]
          (format "--dbname %s" db) "")
       ~(if-let [file (:file opts)]
          (format "--file %s" file) "")
-      ~(if-let [host (:server-name opts)]
+      ~(if-let [host (:host opts)]
          (format "--host %s" host) "")
-      ~(if-let [port (:server-port opts)]
+      ~(if-let [port (:port opts)]
          (format "--port %s" port) "")
-      ~(if-let [username (:user opts)]
+      ~(if-let [username (:username opts)]
          (format "--username %s" username) "")
       "--quiet"))))
 
