@@ -71,7 +71,7 @@
   (doseq [url [nil "" "x"]]
     (is (thrown? IllegalArgumentException (parse-db-url url))))
   (let [url (parse-db-url "postgresql://localhost:5432/korma")]
-    (is (= :jdbc (:pool url)))
+    (is (= :jdbc (:db-pool url)))
     (is (= "localhost" (:host url)))
     (is (= 5432 (:port url)))
     (is (= "korma" (:database url)))
@@ -81,7 +81,7 @@
       (is (= "//localhost:5432/korma" (:subname spec)))
       (is (= "postgresql" (:subprotocol spec)))))
   (let [url (parse-db-url "postgresql://tiger:scotch@localhost:5432/korma?a=1&b=2")]
-    (is (= :jdbc (:pool url)))
+    (is (= :jdbc (:db-pool url)))
     (is (= "tiger" (:username url)))
     (is (= "scotch" (:password url)))
     (is (= "localhost" (:host url)))
@@ -93,7 +93,7 @@
       (is (= "//localhost:5432/korma?a=1&b=2" (:subname spec)))
       (is (= "postgresql" (:subprotocol spec)))))
   (let [url (parse-db-url "c3p0:postgresql://localhost/korma")]
-    (is (= :c3p0 (:pool url)))
+    (is (= :c3p0 (:db-pool url)))
     (is (= "localhost" (:host url)))
     (is (nil? (:port url)))
     (is (nil?  (:port url)))

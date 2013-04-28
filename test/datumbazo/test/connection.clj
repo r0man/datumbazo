@@ -15,7 +15,7 @@
   (let [spec (connection-spec "mysql://tiger:scotch@localhost/datumbazo?profileSQL=true")]
     (is (= "mysql" (:adapter spec)))
     (is (= "com.mysql.jdbc.Driver" (:classname spec)))
-    (is (= :jdbc (:pool spec)))
+    (is (= :jdbc (:db-pool spec)))
     (is (= "localhost" (:host spec)))
     (is (nil? (:port spec)))
     (is (= "tiger" (:username spec)))
@@ -31,7 +31,7 @@
   (let [spec (connection-spec "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
     (is (= "postgresql" (:adapter spec)))
     (is (= "org.postgresql.Driver" (:classname spec)))
-    (is (= :jdbc (:pool spec)))
+    (is (= :jdbc (:db-pool spec)))
     (is (= "localhost" (:host spec)))
     (is (= 5432 (:port spec)))
     (is (= "tiger" (:username spec)))
@@ -47,7 +47,7 @@
   (let [spec (connection-spec "sqlite://tmp/datumbazo.sqlite")]
     (is (= "sqlite" (:adapter spec)))
     (is (= "org.sqlite.JDBC" (:classname spec)))
-    (is (= :jdbc (:pool spec)))
+    (is (= :jdbc (:db-pool spec)))
     (is (= {} (:params spec)))
     (let [spec (:spec spec)]
       (is (= "sqlite" (:subprotocol spec)))
@@ -55,7 +55,7 @@
   (let [spec (connection-spec "sqlite:datumbazo.sqlite")]
     (is (= "sqlite" (:adapter spec)))
     (is (= "org.sqlite.JDBC" (:classname spec)))
-    (is (= :jdbc (:pool spec)))
+    (is (= :jdbc (:db-pool spec)))
     (is (= {} (:params spec)))
     (let [spec (:spec spec)]
       (is (= "sqlite" (:subprotocol spec)))
@@ -63,7 +63,7 @@
   (let [spec (connection-spec "sqlserver://tiger:scotch@localhost/datumbazo")]
     (is (= "mssql" (:adapter spec)))
     (is (= "com.microsoft.sqlserver.jdbc.SQLServerDriver" (:classname spec)))
-    (is (= :jdbc (:pool spec)))
+    (is (= :jdbc (:db-pool spec)))
     (is (= "localhost" (:host spec)))
     (is (nil? (:port spec)))
     (is (= "tiger" (:username spec)))
@@ -77,7 +77,7 @@
   (let [spec (connection-spec "oracle://tiger:scotch@localhost/datumbazo")]
     (is (= "oracle" (:adapter spec)))
     (is (= "oracle.jdbc.driver.OracleDriver" (:classname spec)))
-    (is (= :jdbc (:pool spec)))
+    (is (= :jdbc (:db-pool spec)))
     (is (= "localhost" (:host spec)))
     (is (nil? (:port spec)))
     (is (= "tiger" (:username spec)))

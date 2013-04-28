@@ -51,7 +51,7 @@
     {:adapter "sqlite"
      :classname "org.sqlite.JDBC"
      :params (util/parse-params (nth matches 5))
-     :pool (keyword (or (nth matches 2) :jdbc))
+     :db-pool (keyword (or (nth matches 2) :jdbc))
      :spec {:subname (nth matches 4)
             :subprotocol (nth matches 3)}}))
 
@@ -68,7 +68,7 @@
 
 (defmulti connection-pool
   "Returns the connection pool for `db-spec`."
-  (fn [db-spec] (:pool db-spec)))
+  (fn [db-spec] (:db-pool db-spec)))
 
 (defmethod connection-pool :bonecp [db-spec]
   (let [config (util/invoke-constructor "com.jolbox.bonecp.BoneCPConfig")]

@@ -115,7 +115,7 @@ value is this namespace."
        :host server-name
        :params (parse-params query-string)
        :password (nth matches 6)
-       :pool (keyword (or (nth matches 2) :jdbc))
+       :db-pool (keyword (or (nth matches 2) :jdbc))
        :port server-port
        :query-string query-string
        :username (nth matches 5)
