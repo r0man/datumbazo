@@ -8,7 +8,6 @@
                  [com.palletops/stevedore "0.8.0-beta.2"]
                  [environ "0.4.0"]
                  [geo-clj "0.2.5"]
-                 [org.clojure/algo.monads "0.1.4"]
                  [org.clojure/clojure "1.5.1"]
                  [org.clojure/java.jdbc "0.3.0-alpha1"]
                  [org.clojure/tools.logging "0.2.6"]
