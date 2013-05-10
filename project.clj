@@ -9,7 +9,7 @@
                  [environ "0.4.0"]
                  [geo-clj "0.2.5"]
                  [org.clojure/clojure "1.5.1"]
-                 [org.clojure/java.jdbc "0.3.0-alpha1"]
+                 [org.clojure/java.jdbc "0.3.0-alpha3"]
                  [org.clojure/tools.logging "0.2.6"]
                  [postgresql/postgresql "9.1-901.jdbc4"]
                  [slingshot "0.10.3"]
