@@ -5,6 +5,9 @@
         datumbazo.core
         datumbazo.test))
 
+(defntest current-user-test
+  (is (= (System/getenv "USER") (current-user))))
+
 (deftest test-absolute-path
   (is (string? (absolute-path ""))))
 

@@ -10,6 +10,10 @@
   "Returns the absolute path of `path."
   [path] (.getAbsolutePath (file path)))
 
+(defn current-user
+  "Returns the USER environment variable."
+  [] (System/getenv "USER"))
+
 (defn edn-file?
   "Returns true if `path` is a EDN file, otherwise false."
   [path]
