@@ -5,11 +5,16 @@
         datumbazo.core
         datumbazo.test))
 
-(defntest current-user-test
-  (is (= (System/getenv "USER") (current-user))))
-
 (deftest test-absolute-path
   (is (string? (absolute-path ""))))
+
+(deftest current-user-test
+  (is (= (System/getenv "USER") (current-user))))
+
+(deftest test-compact-map
+  (is (= {} (compact-map {})))
+  (is (= {:a 1} (compact-map {:a 1})))
+  (is (= {:a 1} (compact-map {:a 1 :b nil}))))
 
 (deftest test-edn-file?
   (is (not (edn-file? "NOT-EXISTING")))
