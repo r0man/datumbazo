@@ -3,8 +3,7 @@
            org.joda.time.DateTime
            org.joda.time.DateTimeZone
            org.postgresql.util.PGobject)
-  (:require [clojure.java.jdbc :as jdbc]
-            [clj-time.core :refer [date-time]])
+  (:require [clj-time.core :refer [date-time]])
   (:use datumbazo.io
         clojure.test))
 
