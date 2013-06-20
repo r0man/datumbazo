@@ -14,7 +14,8 @@
 (deftest test-compact-map
   (is (= {} (compact-map {})))
   (is (= {:a 1} (compact-map {:a 1})))
-  (is (= {:a 1} (compact-map {:a 1 :b nil}))))
+  (is (= {:a 1} (compact-map {:a 1 :b nil})))
+  (is (= {:a 1 :c {:d 1}} (compact-map {:a 1 :b nil :c {:d 1 :e nil}}))))
 
 (deftest test-edn-file?
   (is (not (edn-file? "NOT-EXISTING")))
