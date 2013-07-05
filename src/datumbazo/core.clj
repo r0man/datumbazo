@@ -207,7 +207,6 @@
          (defn ~(symbol (str "insert-" (str table-name)))
            ~(format "Insert the %s rows into the database." singular#)
            [~'db ~'rows & ~'opts]
-           ;; (prn ~symbol)
            (run ~'db (sqlingvo.core/insert ~symbol# []
                        (values ~'rows)
                        (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
@@ -253,7 +252,7 @@
                         (fn [stmt#]
                           ((chain-state [(where `(= ~(keyword (str (name (:table column#)) "." (name (:name column#))))
                                                     ~(io/encode-column column# ~'value)))])
-                           (ast (~(symbol (str table-name "*")) ~'opts))))))
+                           (ast (~(symbol (str table-name "*")) ~'db ~'opts))))))
                     (defn ~(symbol (str (singular table-name) "-by-" column-name))
                       ~(format "Find the first %s by %s." (singular table-name) column-name)
                       [~'db & ~'args]
