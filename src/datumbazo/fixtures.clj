@@ -66,14 +66,16 @@
 
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
-  [db table filename & {:keys [entities]}]
-  (let [rows (slurp-rows filename)
-        rows (if-not (empty? rows)
-               (run db (insert table []
-                         (values (encode-rows db table rows))
-                         (returning *))
-                    :entities entities)
-               [])
+  [db table filename & {:keys [entities batch-size]}]
+  (let [batch-size (or batch-size 1000)
+        rows (reduce
+              (fn [result rows]
+                (concat result
+                        (run db (insert table []
+                                  (values (encode-rows db table rows))
+                                  (returning *))
+                             :entities entities)))
+              [] (partition batch-size batch-size nil (slurp-rows filename)))
         result (assoc {:table table :file filename} :records rows)]
     (reset-serials db table :entities entities)
     result))
