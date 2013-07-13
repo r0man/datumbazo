@@ -1,4 +1,4 @@
-(ns datumbazo.test.fixtures
+(ns datumbazo.fixtures-test
   (:require [clojure.java.io :refer [file resource]])
   (:use clojure.test
         datumbazo.test

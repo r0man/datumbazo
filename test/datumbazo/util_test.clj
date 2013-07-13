@@ -1,4 +1,4 @@
-(ns datumbazo.test.util
+(ns datumbazo.util-test
   (:refer-clojure :exclude [distinct group-by])
   (:use clojure.test
         datumbazo.util

@@ -1,4 +1,4 @@
-(ns datumbazo.test.io
+(ns datumbazo.io-test
   (:import java.util.Date
            org.joda.time.DateTime
            org.joda.time.DateTimeZone

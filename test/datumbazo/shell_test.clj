@@ -1,4 +1,4 @@
-(ns datumbazo.test.shell
+(ns datumbazo.shell-test
   (:require [pallet.common.shell :refer [bash]])
   (:use datumbazo.shell
         datumbazo.test

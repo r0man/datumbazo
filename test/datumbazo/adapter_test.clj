@@ -1,4 +1,4 @@
-(ns datumbazo.test.adapter
+(ns datumbazo.adapter-test
   (:require [datumbazo.util :as util])
   (:use clojure.test
         datumbazo.adapter)

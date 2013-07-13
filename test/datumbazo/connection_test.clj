@@ -1,4 +1,4 @@
-(ns datumbazo.test.connection
+(ns datumbazo.connection-test
   (:import [com.jolbox.bonecp BoneCPDataSource ConnectionHandle]
            com.mchange.v2.c3p0.ComboPooledDataSource
            com.mchange.v2.c3p0.impl.NewProxyConnection

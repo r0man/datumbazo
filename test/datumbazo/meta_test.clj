@@ -1,4 +1,4 @@
-(ns datumbazo.test.meta
+(ns datumbazo.meta-test
   (:import java.sql.DatabaseMetaData)
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.set :refer [subset?]])

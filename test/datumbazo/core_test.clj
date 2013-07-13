@@ -1,4 +1,4 @@
-(ns datumbazo.test.core
+(ns datumbazo.core-test
   (:refer-clojure :exclude [distinct group-by])
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [upper-case]]
