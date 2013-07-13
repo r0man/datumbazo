@@ -138,11 +138,20 @@
   [^DateTime d ^Writer w]
   (print-dup (.toDate d) w))
 
+(defmethod print-dup PGobject
+  [^PGobject o ^Writer w]
+  (print-pgobject o w))
+
+
 ;; PRINT-METHOD
 
 (defmethod print-method DateTime
   [^DateTime d ^Writer w]
   (print-method  (.toDate d) w))
+
+(defmethod print-method PGobject
+  [^PGobject o ^Writer w]
+  (print-pgobject o w))
 
 ;; READ
 
