@@ -390,13 +390,8 @@
   (run db (create-table :test-copy
             (column :a :integer)
             (column :b :text)))
-  ;; (println "___________________________________________________________________________")
-  ;; (prn (sql-str db (copy :test-copy [:a :b]
-  ;;                    (from (.getAbsolutePath (file "test-resources/test-copy.tsv"))))))
-  ;; (run db (copy :test-copy [:a :b]
-  ;;           (from (.getAbsolutePath (file "test-resources/test-copy.tsv")))))
-  )
-
-
-
-;; ;; (test-copy)
+  (run db (copy :test-copy [:a :b]
+     (from (.getAbsolutePath (file "test-resources/test-copy.tsv")))))
+  (is (= [{:b "a", :a 1}
+          {:b "b", :a 2}]
+         (run db (select [:*] (from :test-copy))))))

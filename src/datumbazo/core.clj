@@ -1,6 +1,8 @@
 (ns datumbazo.core
+  (:import org.postgresql.PGConnection)
   (:refer-clojure :exclude [distinct group-by])
   (:require [clojure.algo.monads :refer [state-m m-seq with-monad]]
+            [clojure.java.io :refer [reader]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [datumbazo.connection :refer [with-connection]]
@@ -19,9 +21,9 @@
 
 (defn- prepare-stmt
   "Compile `stmt` and return a java.sql.PreparedStatement from `db`."
-  [db stmt]
+  [db stmt & opts]
   (with-connection [db db]
-    (let [[sql & args] (sql stmt)
+    (let [[sql & args] (apply sql stmt opts)
           stmt (jdbc/prepare-statement (:connection db) sql)]
       (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
       stmt)))
@@ -35,30 +37,40 @@
       (str stmt)
       (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver.")))))
 
+(defn- run-copy
+  [db ast  & {:keys [entities identifiers transaction?]}]
+  ;; TODO: Get rid of sql-str
+  (let [compiled (sql-str db ast :entities entities)
+        stmt (.prepareStatement (:connection db) compiled)]
+    (.execute stmt)))
+
 (defn- run-query
-  [db compiled  & {:keys [identifiers transaction?]}]
-  (let [query #(jdbc/query %1 compiled :identifiers (or identifiers hyphenize))]
+  [db ast  & {:keys [entities identifiers transaction?]}]
+  (let [compiled (sql ast :entities entities)
+        query #(jdbc/query %1 compiled :identifiers (or identifiers hyphenize))]
     (if transaction?
       (jdbc/db-transaction [t-db db] (query t-db))
       (query db))))
 
 (defn- run-prepared
-  [db compiled & {:keys [identifiers transaction?]}]
-  (->> (jdbc/db-do-prepared db transaction? (first compiled) (rest compiled))
-       (map #(hash-map :count %1))))
+  [db ast & {:keys [entities identifiers transaction?]}]
+  (let [compiled (sql ast :entities entities)]
+    (->> (jdbc/db-do-prepared db transaction? (first compiled) (rest compiled))
+         (map #(hash-map :count %1)))))
 
 (defn run*
   "Compile and run `stmt` against the database and return the rows."
   [db stmt & {:keys [entities identifiers transaction?]}]
   (with-connection [db db]
-    (let [{:keys [op returning] :as ast} (ast stmt)
-          compiled (sql ast :entities entities)]
+    (let [{:keys [op returning] :as ast} (ast stmt)]
       (cond
+       (= :copy op)
+       (run-copy db ast :identifiers identifiers :transaction? transaction?)
        (= :select op)
-       (run-query db compiled :identifiers identifiers :transaction? transaction?)
+       (run-query db ast :identifiers identifiers :transaction? transaction?)
        returning
-       (run-query db compiled :identifiers identifiers :transaction? transaction?)
-       :else (run-prepared db compiled :identifiers identifiers :transaction? transaction?)))))
+       (run-query db ast :identifiers identifiers :transaction? transaction?)
+       :else (run-prepared db ast :identifiers identifiers :transaction? transaction?)))))
 
 ;; ----------------------------------------------------------------------------------------------------------
 
