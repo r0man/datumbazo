@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [distinct group-by])
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [upper-case]]
+            [clojure.java.io :refer [file]]
             [environ.core :refer [env]]
             [validation.core :refer :all]
             [slingshot.slingshot :refer [try+]])
@@ -378,10 +379,24 @@
 ;; RAW SQL
 
 (database-test test-sql-str
-  ;; (is (= "SELECT 1, 'a'" (sql-str db (select [1 "a"]))))
-  )
+  (is (= "SELECT 1, 'a'" (sql-str db (select [1 "a"])))))
 
 (database-test test-with-rollback
   (with-rollback [db db]
     (is (= [{:?column? 1 :?column?-2 2}]
            (run db (select [1 2]))))))
+
+(database-test test-copy
+  (run db (create-table :test-copy
+            (column :a :integer)
+            (column :b :text)))
+  ;; (println "___________________________________________________________________________")
+  ;; (prn (sql-str db (copy :test-copy [:a :b]
+  ;;                    (from (.getAbsolutePath (file "test-resources/test-copy.tsv"))))))
+  ;; (run db (copy :test-copy [:a :b]
+  ;;           (from (.getAbsolutePath (file "test-resources/test-copy.tsv")))))
+  )
+
+
+
+;; ;; (test-copy)

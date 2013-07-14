@@ -20,23 +20,20 @@
 (defn- prepare-stmt
   "Compile `stmt` and return a java.sql.PreparedStatement from `db`."
   [db stmt]
-  (let [[sql & args] (sql stmt)
-        stmt (jdbc/prepare-statement db sql)]
-    (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
-    stmt))
+  (with-connection [db db]
+    (let [[sql & args] (sql stmt)
+          stmt (jdbc/prepare-statement (:connection db) sql)]
+      (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
+      stmt)))
 
 (defn sql-str
   "Prepare `stmt` using the database and return the raw SQL as a string."
   [db stmt & opts]
-  (let [run #(let [sql (first (apply sql stmt opts))
-                   stmt (prepare-stmt %1 stmt)]
-               (if (.startsWith (str stmt) (str/replace sql #"\?.*" ""))
-                 (str stmt)
-                 (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver."))))]
-    (if (instance? java.sql.Connection db)
-      (run db)
-      (with-open [connection (jdbc/get-connection db)]
-        (run connection)))))
+  (let [sql (first (apply sql stmt opts))
+        stmt (prepare-stmt db stmt)]
+    (if (.startsWith (str stmt) (str/replace sql #"\?.*" ""))
+      (str stmt)
+      (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver.")))))
 
 (defn- run-query
   [db compiled  & {:keys [identifiers transaction?]}]
