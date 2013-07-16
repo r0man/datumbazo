@@ -6,6 +6,7 @@
            org.postgis.PGgeometry)
   (:require [clojure.instant :as i]
             [clojure.java.jdbc :as jdbc]
+            [clojure.edn :as edn]
             [clj-time.coerce :refer [to-date-time to-sql-date to-timestamp]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]
@@ -108,8 +109,18 @@
 (defmethod decode-column PGobject [value]
   (decode-pgobject value))
 
+(defn- decode-time
+  "Deocde `time` using the configured EDN semantics."
+  [time] (if time (edn/read-string {:readers *data-readers*} (prn-str time))))
+
+(defmethod decode-column DateTime [value]
+  (decode-time value))
+
 (defmethod decode-column java.util.Date [value]
-  (to-date-time value))
+  (decode-time value))
+
+(defmethod decode-column java.sql.Timestamp [value]
+  (decode-time value))
 
 (defmethod decode-column org.postgresql.jdbc2.AbstractJdbc2Array [array]
   (map decode-column (.getArray array)))
