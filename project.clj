@@ -20,7 +20,7 @@
                                   [c3p0/c3p0 "0.9.1.2"]
                                   [com.jolbox/bonecp "0.7.1.RELEASE"]]
                    :resource-paths ["test-resources"]
-                   :env {:test-db "postgres://tiger:scotch@localhost/datumbazo"}}}
+                   :env {:test-db "postgresql://tiger:scotch@localhost/datumbazo"}}}
   :plugins [[lein-environ "0.4.0"]]
   :db [{:name :test-db
         :fixtures "db/test-db/fixtures"

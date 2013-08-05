@@ -40,10 +40,10 @@
              :subname (str ":" (:username url) "/" (:password url) "@" (util/format-server url)
                            ":" (:database url))})))
 
-(defmethod connection-spec :postgres [db-url]
+(defmethod connection-spec :postgresql [db-url]
   (let [url (util/parse-db-url db-url)]
     (assoc url
-      :adapter "postgres"
+      :adapter "postgresql"
       :classname "org.postgresql.Driver")))
 
 (defmethod connection-spec :sqlite [db-url]
