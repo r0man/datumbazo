@@ -28,8 +28,8 @@
       (is (= "//localhost/datumbazo?profileSQL=true" (:subname spec)))
       (is (= "tiger" (:user spec))) ; MySQL needs :user key
       (is (= "scotch" (:password spec)))))
-  (let [spec (connection-spec "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
-    (is (= "postgresql" (:adapter spec)))
+  (let [spec (connection-spec "postgres://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
+    (is (= "postgres" (:adapter spec)))
     (is (= "org.postgresql.Driver" (:classname spec)))
     (is (= :jdbc (:db-pool spec)))
     (is (= "localhost" (:host spec)))
@@ -40,7 +40,7 @@
     (is (= "/datumbazo" (:uri spec)))
     (is (= {:ssl "true"} (:params spec)))
     (let [spec (:spec spec)]
-      (is (= "postgresql" (:subprotocol spec)))
+      (is (= "postgres" (:subprotocol spec)))
       (is (= "//localhost:5432/datumbazo?ssl=true" (:subname spec)))
       (is (= "tiger" (:user spec)))
       (is (= "scotch" (:password spec)))))
@@ -91,7 +91,7 @@
 
 (database-test test-connection-url
   (is (thrown? IllegalArgumentException (connection-url :unknown-db)))
-  (is (= "postgresql://tiger:scotch@localhost/datumbazo" (connection-url :test-db))))
+  (is (= "postgres://tiger:scotch@localhost/datumbazo" (connection-url :test-db))))
 
 (database-test test-connection
   (let [connection (connection test-url)]
