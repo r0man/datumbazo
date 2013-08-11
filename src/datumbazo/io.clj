@@ -58,6 +58,9 @@
 (defmethod encode-column :timestamptz [column value]
   (to-timestamp value))
 
+(defmethod encode-column :uuid [column value]
+  (if value (java.util.UUID/fromString (str value))))
+
 (defmethod encode-column :default [column value]
   value)
 
