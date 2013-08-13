@@ -113,7 +113,9 @@
   [db stmt & opts]
   (let [ast (ast stmt)]
     (->> (apply run* db (apply-preparation ast) opts)
-         (apply-transformation ast))))
+         ((if (= :delete (:op ast))
+            identity
+            #(apply-transformation ast %1))))))
 
 (defn run1
   "Run `stmt` against the current clojure.java.jdbc database
