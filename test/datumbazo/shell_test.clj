@@ -6,26 +6,26 @@
 
 (deftest test-basename
   (are [args expected]
-       (is (= expected (apply basename args)))
-       ["/usr/lib/libnetcdf.so"] "libnetcdf.so"
-       ["/usr/lib/libnetcdf.so" ".so"] "libnetcdf"
-       ["/usr/lib"] "lib"
-       ["/usr/"] "usr"
-       ["usr"] "usr"
-       ["/"] "/"
-       ["."] "."
-       [".."] ".."))
+    (is (= expected (apply basename args)))
+    ["/usr/lib/libnetcdf.so"] "libnetcdf.so"
+    ["/usr/lib/libnetcdf.so" ".so"] "libnetcdf"
+    ["/usr/lib"] "lib"
+    ["/usr/"] "usr"
+    ["usr"] "usr"
+    ["/"] "/"
+    ["."] "."
+    [".."] ".."))
 
 (deftest test-dirname
   (are [url expected]
-       (is (= expected (dirname url)))
-       "/usr/lib/libnetcdf.so" "/usr/lib"
-       "/usr/lib" "/usr"
-       "/usr/" "/"
-       "usr" "."
-       "/" "/"
-       "." "."
-       ".." ".."))
+    (is (= expected (dirname url)))
+    "/usr/lib/libnetcdf.so" "/usr/lib"
+    "/usr/lib" "/usr"
+    "/usr/" "/"
+    "usr" "."
+    "/" "/"
+    "." "."
+    ".." ".."))
 
 (deftest test-exec-checked-script*
   (let [{:keys [err exit out] :as result}
@@ -56,14 +56,14 @@
     (psql db :command "SELECT 1;")))
 
 (database-test test-shp2pgsql
-  (is (= 0 (:exit (shp2pgsql :natural-earth.ports "test-resources/ne_10m_ports/ne_10m_ports.dbf" "/tmp/test-shp2pgsql.sql"))))
+  (is (= 0 (:exit (shp2pgsql db :natural-earth.ports "test-resources/ne_10m_ports/ne_10m_ports.dbf" "/tmp/test-shp2pgsql.sql"))))
   (with-redefs
     [bash (fn [script]
             (is (= (str "echo 'Running shp2pgsql...';\n{\n    # shell.clj:82\nshp2pgsql -c test-resources/ne_10m_ports/ne_10m_ports.dbf natural_earth.ports > "
                         "/tmp/test-shp2pgsql.sql\n } || { echo '#> Running shp2pgsql : FAIL'; exit 1;} >&2 \necho '#> Running shp2pgsql : SUCCESS'\n")
                    script))
             {:exit 0})]
-    (shp2pgsql :natural-earth.ports "test-resources/ne_10m_ports/ne_10m_ports.dbf" "/tmp/test-shp2pgsql.sql")))
+    (shp2pgsql db :natural-earth.ports "test-resources/ne_10m_ports/ne_10m_ports.dbf" "/tmp/test-shp2pgsql.sql")))
 
 (database-test test-raster2pgsql
   (with-redefs
@@ -72,4 +72,4 @@
                         "OUTPUT\n } || { echo '#> Running shp2pgsql : FAIL'; exit 1;} >&2 \necho '#> Running shp2pgsql : SUCCESS'\n")
                    script))
             {:exit 0})]
-    (raster2pgsql :weather.nww3-dirpwsfc-2013-02-10 "INPUT" "OUTPUT")))
+    (raster2pgsql db :weather.nww3-dirpwsfc-2013-02-10 "INPUT" "OUTPUT")))

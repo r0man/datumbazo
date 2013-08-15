@@ -4,7 +4,7 @@
             [inflections.core :refer [dasherize underscore]]
             [inflections.util :refer [parse-integer]]
             [datumbazo.util :as util]
-            [sqlingvo.util :refer [default-entities default-identifiers]]))
+            [sqlingvo.util :refer [default-entities default-identifiers default-quotes]]))
 
 (def ^:dynamic *connection* nil)
 
@@ -32,7 +32,8 @@
       :adapter "mysql"
       :classname "com.mysql.jdbc.Driver"
       :entities default-entities
-      :identifiers default-identifiers)))
+      :identifiers default-identifiers
+      :quotes default-quotes)))
 
 (defmethod connection-spec :oracle [db-url]
   (let [spec (util/parse-db-url db-url)]
@@ -41,6 +42,7 @@
       :classname "oracle.jdbc.driver.OracleDriver"
       :entities default-entities
       :identifiers default-identifiers
+      :quotes default-quotes
       :subprotocol "oracle:thin"
       :subname (str ":" (:username spec) "/" (:password spec) "@" (util/format-server spec)
                     ":" (:database spec)))))
@@ -51,7 +53,8 @@
       :adapter "postgresql"
       :classname "org.postgresql.Driver"
       :entities default-entities
-      :identifiers default-identifiers)))
+      :identifiers default-identifiers
+      :quotes default-quotes)))
 
 (defmethod connection-spec :sqlite [db-url]
   (if-let [matches (re-matches #"(([^:]+):)?([^:]+):([^?]+)(\?(.*))?" (str db-url))]
@@ -59,6 +62,7 @@
      :classname "org.sqlite.JDBC"
      :entities default-entities
      :identifiers default-identifiers
+     :quotes default-quotes
      :params (util/parse-params (nth matches 5))
      :db-pool (keyword (or (nth matches 2) :jdbc))
      :subname (nth matches 4)
@@ -71,6 +75,7 @@
       :classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
       :entities default-entities
       :identifiers default-identifiers
+      :quotes default-quotes
       :subprotocol "sqlserver"
       :subname (str "//" (util/format-server spec) ";"
                     "database=" (:database spec) ";"

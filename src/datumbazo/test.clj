@@ -4,11 +4,11 @@
             [datumbazo.core :refer  [with-rollback]]
             [datumbazo.connection :refer  [connection]]))
 
-;; (def db (connection (env :test-db)))
+(def db (connection (env :test-db)))
 
 (defmacro database-test
   "Define a database test."
   [name & body]
   `(deftest ^:integration ~name
-     (with-rollback [~'db (env :test-db)]
+     (with-rollback [~'db db]
        ~@body)))

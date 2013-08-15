@@ -54,7 +54,7 @@
 (defn psql
   "Run the psql command."
   [db & {:as opts}]
-  (let [opts (merge (parse-db-url db) opts)]
+  (let [opts (merge db opts)]
     (exec-checked-script
      "Running psql"
      ("export" ~(format "PGPASS=\"%s\"" (:password opts)))
@@ -75,7 +75,7 @@
 
 (defn shp2pgsql
   "Run the shp2pgsql command."
-  [table shape-file sql-file & {:as opts}]
+  [db table shape-file sql-file & {:as opts}]
   (jdbc/with-naming-strategy {:entity (or (:entities opts) underscore)}
     (exec-checked-script
      "Running shp2pgsql"
@@ -92,11 +92,11 @@
          (format "-s %s" srid) "")
       ~(if-let [encoding (:encoding opts)]
          (format "-W %s" encoding) "")
-      ~shape-file ~(as-identifier table) > ~sql-file))))
+      ~shape-file ~(as-identifier db table) > ~sql-file))))
 
 (defn raster2pgsql
   "Run the raster2pgsql command."
-  [table input output & {:as opts}]
+  [db table input output & {:as opts}]
   (jdbc/with-naming-strategy {:entity (or (:entities opts) underscore)}
     (exec-checked-script
      "Running shp2pgsql"
@@ -132,4 +132,4 @@
       ~(if (sequential? input)
          (join " " input)
          input)
-      ~(as-identifier table) > ~output))))
+      ~(as-identifier db table) > ~output))))

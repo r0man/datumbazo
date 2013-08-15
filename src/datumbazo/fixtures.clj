@@ -59,7 +59,7 @@
   (let [table (parse-table table)]
     (doseq [column (meta/columns db :schema (or (:schema table) :public) :table (:name table))
             :when (contains? #{:bigserial :serial} (:type column))]
-      (run1 db (select [`(setval ~(as-identifier (serial-seq column))
+      (run1 db (select [`(setval ~(as-identifier db (serial-seq column))
                                  ~(select [`(max ~(:name column))]
                                     (from (as-keyword table))))])
             :entities entities))))
@@ -98,15 +98,15 @@
   "Enable triggers on the database `table`."
   [db table & {:keys [entities]}]
   (jdbc/with-naming-strategy
-    {:entity (or entities as-identifier)}
-    (jdbc/execute! db [(str "ALTER TABLE " (as-identifier table) " ENABLE TRIGGER ALL")])))
+    {:entity (:entities db)}
+    (jdbc/execute! db [(str "ALTER TABLE " (as-identifier db table) " ENABLE TRIGGER ALL")])))
 
 (defn disable-triggers
   "Disable triggers on the database `table`."
   [db table & {:keys [entities]}]
   (jdbc/with-naming-strategy
-    {:entity (or entities as-identifier)}
-    (jdbc/execute! db [(str "ALTER TABLE " (as-identifier table) " DISABLE TRIGGER ALL")])))
+    {:entity (:entities db)}
+    (jdbc/execute! db [(str "ALTER TABLE " (as-identifier db table) " DISABLE TRIGGER ALL")])))
 
 (defn dump-fixtures
   "Write the fixtures for `tables` into `directory`."

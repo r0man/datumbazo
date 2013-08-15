@@ -3,7 +3,8 @@
            com.mchange.v2.c3p0.ComboPooledDataSource
            com.mchange.v2.c3p0.impl.NewProxyConnection
            java.sql.Connection)
-  (:require [clojure.java.jdbc :as jdbc])
+  (:require [clojure.java.jdbc :as jdbc]
+            [environ.core :refer [env]])
   (:use datumbazo.connection
         datumbazo.util
         datumbazo.test
@@ -111,9 +112,8 @@
   (is (= [[1]] (map vals (jdbc/query db ["SELECT 1"])))))
 
 (deftest test-with-connection
-  (with-connection [connection db]
-    (clojure.pprint/pprint connection)
+  (with-connection [connection (env :test-db)]
     (is (map? connection))
     (is (= 0 (:level connection)))
     (is (instance? java.sql.Connection (:connection connection)))
-    (is (= db (:connection-string connection)))))
+    (is (= (env :test-db) (:connection-string connection)))))
