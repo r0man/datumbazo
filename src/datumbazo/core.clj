@@ -21,40 +21,40 @@
 
 (defn- prepare-stmt
   "Compile `stmt` and return a java.sql.PreparedStatement from `db`."
-  [db stmt & opts]
+  [db stmt]
   (with-connection [db db]
-    (let [[sql & args] (apply sql stmt opts)
+    (let [[sql & args] (sql db stmt)
           stmt (jdbc/prepare-statement (:connection db) sql)]
       (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
       stmt)))
 
 (defn sql-str
   "Prepare `stmt` using the database and return the raw SQL as a string."
-  [db stmt & opts]
-  (let [sql (first (apply sql stmt opts))
+  [db stmt]
+  (let [sql (first (sql db stmt))
         stmt (prepare-stmt db stmt)]
     (if (.startsWith (str stmt) (str/replace sql #"\?.*" ""))
       (str stmt)
       (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver.")))))
 
 (defn- run-copy
-  [db ast  & {:keys [entities identifiers transaction?]}]
+  [db ast  & {:keys [transaction?]}]
   ;; TODO: Get rid of sql-str
-  (let [compiled (sql-str db ast :entities entities)
+  (let [compiled (sql-str db ast)
         stmt (.prepareStatement (:connection db) compiled)]
     (.execute stmt)))
 
 (defn- run-query
-  [db ast  & {:keys [entities identifiers transaction?]}]
-  (let [compiled (sql ast :entities entities)
-        query #(jdbc/query %1 compiled :identifiers (or identifiers hyphenize))]
+  [db ast  & {:keys [transaction?]}]
+  (let [compiled (sql db ast)
+        query #(jdbc/query %1 compiled :identifiers (:identifiers db))]
     (if transaction?
       (jdbc/db-transaction [t-db db] (query t-db))
       (query db))))
 
 (defn- run-prepared
-  [db ast & {:keys [entities identifiers transaction?]}]
-  (let [compiled (sql ast :entities entities)]
+  [db ast & {:keys [transaction?]}]
+  (let [compiled (sql db ast)]
     (->> (jdbc/db-do-prepared db transaction? (first compiled) (rest compiled))
          (map #(hash-map :count %1)))))
 

@@ -79,39 +79,36 @@
 (deftest test-parse-db-url
   (doseq [url [nil "" "x"]]
     (is (thrown? IllegalArgumentException (parse-db-url url))))
-  (let [url (parse-db-url "postgresql://localhost:5432/korma")]
-    (is (= :jdbc (:db-pool url)))
-    (is (= "localhost" (:host url)))
-    (is (= 5432 (:port url)))
-    (is (= "korma" (:database url)))
-    (is (= "/korma" (:uri url)))
-    (is (= {} (:params url)))
-    (let [spec (:spec url)]
-      (is (= "//localhost:5432/korma" (:subname spec)))
-      (is (= "postgresql" (:subprotocol spec)))))
-  (let [url (parse-db-url "postgresql://tiger:scotch@localhost:5432/korma?a=1&b=2")]
-    (is (= :jdbc (:db-pool url)))
-    (is (= "tiger" (:username url)))
-    (is (= "scotch" (:password url)))
-    (is (= "localhost" (:host url)))
-    (is (= 5432 (:port url)))
-    (is (= "korma" (:database url)))
-    (is (= "/korma" (:uri url)))
-    (is (= {:a "1" :b "2"} (:params url)))
-    (let [spec (:spec url)]
-      (is (= "//localhost:5432/korma?a=1&b=2" (:subname spec)))
-      (is (= "postgresql" (:subprotocol spec)))))
-  (let [url (parse-db-url "c3p0:postgresql://localhost/korma")]
-    (is (= :c3p0 (:db-pool url)))
-    (is (= "localhost" (:host url)))
-    (is (nil? (:port url)))
-    (is (nil?  (:port url)))
-    (is (= "korma" (:database url)))
-    (is (= "/korma" (:uri url)))
-    (is (= {} (:params url)))
-    (let [spec (:spec url)]
-      (is (= "//localhost/korma" (:subname spec)))
-      (is (= "postgresql" (:subprotocol spec))))))
+  (let [spec (parse-db-url "postgresql://localhost:5432/korma")]
+    (is (= :jdbc (:db-pool spec)))
+    (is (= "localhost" (:host spec)))
+    (is (= 5432 (:port spec)))
+    (is (= "korma" (:database spec)))
+    (is (= "/korma" (:uri spec)))
+    (is (= {} (:params spec)))
+    (is (= "//localhost:5432/korma" (:subname spec)))
+    (is (= "postgresql" (:subprotocol spec))))
+  (let [spec (parse-db-url "postgresql://tiger:scotch@localhost:5432/korma?a=1&b=2")]
+    (is (= :jdbc (:db-pool spec)))
+    (is (= "tiger" (:username spec)))
+    (is (= "scotch" (:password spec)))
+    (is (= "localhost" (:host spec)))
+    (is (= 5432 (:port spec)))
+    (is (= "korma" (:database spec)))
+    (is (= "/korma" (:uri spec)))
+    (is (= {:a "1" :b "2"} (:params spec)))
+    (is (= "//localhost:5432/korma?a=1&b=2" (:subname spec)))
+    (is (= "postgresql" (:subprotocol spec))))
+  (let [spec (parse-db-url "c3p0:postgresql://localhost/korma")]
+    (is (= :c3p0 (:db-pool spec)))
+    (is (= "localhost" (:host spec)))
+    (is (nil? (:port spec)))
+    (is (nil?  (:port spec)))
+    (is (= "korma" (:database spec)))
+    (is (= "/korma" (:uri spec)))
+    (is (= {} (:params spec)))
+    (is (= "//localhost/korma" (:subname spec)))
+    (is (= "postgresql" (:subprotocol spec)))))
 
 (deftest test-slurp-sql
   (let [stmts (slurp-sql "test-resources/stmts-simple.sql")]

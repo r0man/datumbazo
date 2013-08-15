@@ -132,16 +132,15 @@ value is this namespace."
       (compact-map {:database database
                     :host server-name
                     :params (parse-params query-string)
-                    :password (nth matches 6)
                     :db-pool (keyword (or (nth matches 2) :jdbc))
                     :port server-port
                     :query-string query-string
-                    :username (nth matches 5)
                     :uri (nth matches 12)
-                    :spec {:subname (str "//" server-name (if server-port (str ":" server-port)) "/" database (if-not (blank? query-string) (str "?" query-string)))
-                           :subprotocol (nth matches 3)
-                           :user (nth matches 5)
-                           :password (nth matches 6)}}))
+                    :subname (str "//" server-name (if server-port (str ":" server-port)) "/" database (if-not (blank? query-string) (str "?" query-string)))
+                    :subprotocol (nth matches 3)
+                    :user (nth matches 5)
+                    :username (nth matches 5)
+                    :password (nth matches 6)}))
     (illegal-argument-exception "Can't parse database connection url %s:" s)))
 
 (defn slurp-sql

@@ -107,9 +107,11 @@
 
 (defn connection [db-url]
   "Returns the database connection for `db-name`."
-  (if-let [db-spec (connection-spec db-url)]
-    (connection-pool db-spec)
-    (util/illegal-argument-exception "Can't connect to: %s" db-url)))
+  (if (map? db-url)
+    db-url
+    (if-let [db-spec (connection-spec db-url)]
+      (connection-pool db-spec)
+      (util/illegal-argument-exception "Can't connect to: %s" db-url))))
 
 (util/defn-memo cached-connection [db-url]
   "Returns the cached database connection for `db-url`."
