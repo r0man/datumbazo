@@ -1,7 +1,6 @@
 (ns datumbazo.shell
   (:refer-clojure :exclude [replace])
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.string :refer [blank? join split replace]]
+  (:require [clojure.string :refer [blank? join split replace]]
             [clojure.tools.logging :refer [logp]]
             [datumbazo.util :refer [parse-db-url]]
             [inflections.core :refer [underscore]]
@@ -76,60 +75,58 @@
 (defn shp2pgsql
   "Run the shp2pgsql command."
   [db table shape-file sql-file & {:as opts}]
-  (jdbc/with-naming-strategy {:entity (or (:entities opts) underscore)}
-    (exec-checked-script
-     "Running shp2pgsql"
-     ("shp2pgsql"
-      ~(case (:mode opts)
-         :append "-a"
-         :create "-c"
-         :drop "-d"
-         :prepare "-p"
-         nil "-c")
-      ~(if (:index opts)
-         "-I" "")
-      ~(if-let [srid (:srid opts)]
-         (format "-s %s" srid) "")
-      ~(if-let [encoding (:encoding opts)]
-         (format "-W %s" encoding) "")
-      ~shape-file ~(as-identifier db table) > ~sql-file))))
+  (exec-checked-script
+   "Running shp2pgsql"
+   ("shp2pgsql"
+    ~(case (:mode opts)
+       :append "-a"
+       :create "-c"
+       :drop "-d"
+       :prepare "-p"
+       nil "-c")
+    ~(if (:index opts)
+       "-I" "")
+    ~(if-let [srid (:srid opts)]
+       (format "-s %s" srid) "")
+    ~(if-let [encoding (:encoding opts)]
+       (format "-W %s" encoding) "")
+    ~shape-file ~(as-identifier db table) > ~sql-file)))
 
 (defn raster2pgsql
   "Run the raster2pgsql command."
   [db table input output & {:as opts}]
-  (jdbc/with-naming-strategy {:entity (or (:entities opts) underscore)}
-    (exec-checked-script
-     "Running shp2pgsql"
-     ("raster2pgsql"
-      ~(if-let [srid (:srid opts)]
-         (format "-s %s" srid) "")
-      ~(if-let [band (:band opts)]
-         (format "-b %s" band) "")
-      ~(case (:mode opts)
-         :append "-a"
-         :create "-c"
-         :drop "-d"
-         :prepare "-p"
-         nil "-c")
-      ~(if-let [column (:column opts)]
-         (format "-f %s" column) "")
-      ~(if-let [no-data (:no-data opts)]
-         (format "-N %s" no-data) "")
-      ~(if (:no-transaction opts)
-         "-e" "")
-      ~(if (:regular-blocking opts)
-         "-r" "")
-      ~(if (:disable-max-extend opts)
-         "-x" "")
-      ~(if (:constraints opts)
-         "-C" "")
-      ~(if (:index opts)
-         "-I" "")
-      ~(if (:analyze opts)
-         "-M" "")
-      ~(if (:register opts)
-         "-R" "")
-      ~(if (sequential? input)
-         (join " " input)
-         input)
-      ~(as-identifier db table) > ~output))))
+  (exec-checked-script
+   "Running shp2pgsql"
+   ("raster2pgsql"
+    ~(if-let [srid (:srid opts)]
+       (format "-s %s" srid) "")
+    ~(if-let [band (:band opts)]
+       (format "-b %s" band) "")
+    ~(case (:mode opts)
+       :append "-a"
+       :create "-c"
+       :drop "-d"
+       :prepare "-p"
+       nil "-c")
+    ~(if-let [column (:column opts)]
+       (format "-f %s" column) "")
+    ~(if-let [no-data (:no-data opts)]
+       (format "-N %s" no-data) "")
+    ~(if (:no-transaction opts)
+       "-e" "")
+    ~(if (:regular-blocking opts)
+       "-r" "")
+    ~(if (:disable-max-extend opts)
+       "-x" "")
+    ~(if (:constraints opts)
+       "-C" "")
+    ~(if (:index opts)
+       "-I" "")
+    ~(if (:analyze opts)
+       "-M" "")
+    ~(if (:register opts)
+       "-R" "")
+    ~(if (sequential? input)
+       (join " " input)
+       input)
+    ~(as-identifier db table) > ~output)))
