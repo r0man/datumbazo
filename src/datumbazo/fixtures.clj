@@ -71,6 +71,7 @@
         rows (reduce
               (fn [result rows]
                 (concat result
+                        ;; TDOD: Find insert columns and do not rely on first row.
                         (run db (insert table []
                                   (values (encode-rows db table rows))
                                   (returning *))
