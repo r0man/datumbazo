@@ -5,6 +5,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [blank? join replace split]]
+            [clojure.tools.logging :refer [infof]]
             [datumbazo.core :refer :all :exclude [join]]
             [datumbazo.io :refer [encode-rows decode-row]]
             [datumbazo.meta :as meta]
@@ -67,6 +68,7 @@
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
   [db table filename & {:keys [entities batch-size]}]
+  (infof "Loading fixtures for table %s from %s." ((:entities db) table) filename)
   (let [batch-size (or batch-size 1000)
         rows (reduce
               (fn [result rows]
