@@ -4,7 +4,7 @@
   :min-lein-version "2.0.0"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[clj-time "0.5.1"]
+  :dependencies [[clj-time "0.6.0"]
                  [com.palletops/stevedore "0.8.0-beta.4"]
                  [environ "0.4.0"]
                  [geo-clj "0.2.8"]
