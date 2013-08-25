@@ -114,6 +114,11 @@
     {:entity (:entities db)}
     (jdbc/execute! db [(str "ALTER TABLE " (as-identifier db table) " DISABLE TRIGGER ALL")])))
 
+(defn delete-fixtures [db tables]
+  (infof "Deleting fixtures from database.")
+  (doseq [table tables]
+    (run db (truncate [table] (cascade true)))))
+
 (defn dump-fixtures
   "Write the fixtures for `tables` into `directory`."
   [db directory tables & opts]
@@ -135,8 +140,8 @@
        (doall (map #(apply enable-triggers db %1 opts) (map :table fixtures)))
        fixtures))))
 
-(defn tables [db]
-  [])
+(defn tables [directory]
+  (map :table (fixture-seq directory)))
 
 (defn show-help []
   (print-help "fixtures DB-URL DIRECTORY [delete|dump|load|]")
@@ -147,10 +152,11 @@
     [[h help "Print this help."]]
     (when (or help (nil? db-url) (nil? directory))
       (show-help))
-    (let [db (connection-spec db-url)]
+    (let [db (connection-spec db-url)
+          tables (tables directory)]
       (case (keyword command)
-        ;; :delete (delete-fixtures db)
-        :dump (dump-fixtures db (tables db))
+        :delete (delete-fixtures db tables)
+        :dump (dump-fixtures db tables)
         :load (load-fixtures db directory)
         (show-help))
       nil)))

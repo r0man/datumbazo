@@ -1,6 +1,7 @@
 (ns datumbazo.fixtures-test
   (:require [clojure.java.io :refer [file resource]])
   (:use clojure.test
+        datumbazo.core-test
         datumbazo.test
         datumbazo.fixtures))
 
@@ -17,6 +18,9 @@
 (database-test test-disable-triggers
   (disable-triggers db :continents)
   (enable-triggers db :twitter.users))
+
+(database-test test-delete-fixtures
+  (delete-fixtures db (tables fixture-dir)))
 
 (database-test test-dump-fixtures
   (dump-fixtures db "/tmp/test-dump-fixtures" [:continents :twitter.users])
@@ -53,10 +57,12 @@
       (is (= :twitter.tweets (:table fixture))))))
 
 (database-test test-load-fixtures
+  (delete-fixtures db (tables fixture-dir))
   (let [fixtures (load-fixtures db fixture-dir)]
     (is (= 5 (count fixtures)))))
 
 (database-test test-read-fixture
+  (delete-continents db)
   (let [fixture (read-fixture db :continents fixture-file)]
     (is (= :continents (:table fixture)))
     (is (= fixture-file (:file fixture)))
@@ -80,8 +86,11 @@
     {:schema :twitter :table :users :name :id}
     :twitter.users-id-seq))
 
+(deftest test-tables
+  (is (= [:continents :countries :twitter.tweets :twitter.tweets_users :twitter.users]
+         (tables fixture-dir))))
+
 (database-test test-write-fixture
-  (load-fixtures db fixture-dir)
   (let [fixture (write-fixture db :continents "/tmp/test-write-fixture/continents.edn")]
     (is (= :continents (:table fixture)))
     (is (= "/tmp/test-write-fixture/continents.edn" (:file fixture)))
