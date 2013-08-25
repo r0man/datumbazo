@@ -1,18 +1,16 @@
 (ns datumbazo.meta-test
-  (:import java.sql.DatabaseMetaData)
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.set :refer [subset?]])
-  (:use clojure.test
-        datumbazo.meta
-        datumbazo.test))
+  (:require [clojure.set :refer [subset?]]
+            [clojure.test :refer :all]
+            [datumbazo.meta :refer :all]
+            [datumbazo.test :refer :all]))
 
 (database-test test-best-row-identifiers
-  (let [columns (best-row-identifiers db :table :continents :scope :transaction)]
+  (let [columns (best-row-identifiers db :table :continents)]
     (is (= [:id] (map :name columns)))
     (is (not (empty? columns)))
     (is (every? #(keyword? (:name %1)) columns))
     (is (every? #(keyword? (:type %1)) columns)))
-  (let [columns (best-row-identifiers db :table :tweets-users :scope :transaction)]
+  (let [columns (best-row-identifiers db :table :tweets-users)]
     (is (= [:tweet-id :user-id] (map :name columns)))
     (is (not (empty? columns)))
     (is (every? #(keyword? (:name %1)) columns))
