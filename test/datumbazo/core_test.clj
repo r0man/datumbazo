@@ -63,6 +63,12 @@
   (column :created-at :timestamp-with-time-zone :not-null? true :default "now()")
   (column :updated-at :timestamp-with-time-zone :not-null? true :default "now()"))
 
+(deftable tweets-users
+  "The join table between tweets and users."
+  (table :twitter.tweets-users)
+  (column :user-id :integer :not-null? true :references :users/id)
+  (column :tweet-id :integer :not-null? true :references :tweets/id))
+
 (def africa
   {:name "Africa" :code "af"})
 
@@ -177,6 +183,29 @@
       (is (number? (:id row)))
       (is (= "Europe" (:name row)))
       (is (= "eu" (:code row))))))
+
+(database-test test-update-columns-best-row-identifiers
+  (is (= {:id 1} (update-columns-best-row-identifiers db continents-table {:id 1 :name "Europe"})))
+  (is (= {:user-id 8841372 :tweet-id 285415218434154496}
+         (update-columns-best-row-identifiers db tweets-users-table {:user-id 8841372 :tweet-id 285415218434154496}))))
+
+(database-test test-update-columns-unique-columns
+  (is (= {:id 1 :name "Europe"} (update-columns-unique-columns db continents-table {:id 1 :name "Europe"})))
+  (is (= {:user-id 8841372 :tweet-id 285415218434154496}
+         (update-columns-unique-columns db tweets-users-table {:user-id 8841372 :tweet-id 285415218434154496}))))
+
+(database-test test-where-clause-columns
+  (is (= {:id 1} (where-clause-columns db continents-table {:id 1})))
+  (is (= {:name "Europe"} (where-clause-columns db continents-table {:name "Europe"})))
+  (is (= {:user-id 8841372 :tweet-id 285415218434154496}
+         (where-clause-columns db tweets-users-table {:user-id 8841372 :tweet-id 285415218434154496}))))
+
+(database-test test-update-clause
+  (let [[_ clause] ((update-clause db continents-table {:id 1}) nil)]
+    (is (map? clause))))
+
+;; (database-test test-save-tweets-users
+;;   #_(save-tweets-user db {:tweet-id 1 :user-id 1}))
 
 (database-test test-save-continent
   (let [row (save-continent db europe)]
@@ -382,21 +411,3 @@
 
 (database-test test-sql-str
   (is (= "SELECT 1, 'a'" (sql-str db (select [1 "a"])))))
-
-;; (database-test test-with-rollback
-;;   (with-rollback [db db]
-;;     (is (= [{:?column? 1 :?column?-2 2}]
-;;            (run db (select [1 2]))))))
-
-;; (database-test test-copy
-;;   (run db (create-table :test-copy
-;;             (column :a :integer)
-;;             (column :b :text)))
-;;   (run db (copy :test-copy [:a :b]
-;;      (from (.getAbsolutePath (file "test-resources/test-copy.tsv")))))
-;;   (is (= [{:b "a", :a 1}
-;;           {:b "b", :a 2}]
-;;          (run db (select [:*] (from :test-copy))))))
-
-;; (datumbazo.connection/with-connection [db "postgresql://tiger:scotch@localhost/datumbazo"]
-;;   db)

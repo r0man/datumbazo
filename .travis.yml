@@ -12,6 +12,7 @@ before_script:
   - "psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-twitter-schema.sql"
   - "psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-twitter-users-table.sql"
   - "psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-twitter-tweets-table.sql"
+  - "psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-twitter-tweets-users.sql"
   - "mysql -e \"CREATE DATABASE datumbazo;\""
   - "mysql -e \"CREATE USER 'tiger'@'%' IDENTIFIED BY 'scotch';\""
   - "mysql -e \"FLUSH PRIVILEGES;\""

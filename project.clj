@@ -6,6 +6,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[clj-time "0.6.0"]
                  [com.palletops/stevedore "0.8.0-beta.4"]
+                 [commandline-clj "0.1.5"]
                  [environ "0.4.0"]
                  [geo-clj "0.2.8"]
                  [org.clojure/clojure "1.5.1"]
@@ -22,6 +23,7 @@
                    :resource-paths ["test-resources"]
                    :env {:test-db "postgresql://tiger:scotch@localhost/datumbazo"}}}
   :plugins [[lein-environ "0.4.0"]]
+  :main ^{:skip-aot true} datumbazo.fixtures
   :db [{:name :test-db
         :fixtures "db/test-db/fixtures"
         :migrations "db/test-db/migrations"}])

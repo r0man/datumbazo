@@ -8,7 +8,7 @@
             [datumbazo.connection :refer [with-connection]]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
-            [datumbazo.util :refer [immigrate]]
+            [datumbazo.util :refer [compact-map immigrate]]
             [inflections.core :refer [hyphenize singular]]
             [inflections.util :refer [parse-integer]]
             [sqlingvo.util :refer [as-identifier as-keyword parse-table parse-expr concat-in]]
@@ -183,6 +183,24 @@
       (jdbc/db-set-rollback-only! ~symbol)
       ~@body)))
 
+(defn update-columns-best-row-identifiers [db table row]
+  (let [columns (meta/best-row-identifiers db :schema (or (:schema table) :public) :table (:name table) :nullable false)
+        row (compact-map (select-keys row (map :name columns)))]
+    (if-not (empty? row) row)))
+
+(defn update-columns-unique-columns [db table row]
+  (let [columns (meta/unique-columns db :schema (or (:schema table) :public) :table (:name table) :nullable false)
+        row (compact-map (select-keys row (map :name columns)))]
+    (if-not (empty? row) row)))
+
+(defn where-clause-columns [db table row]
+  (or (update-columns-best-row-identifiers db table row)
+      (update-columns-unique-columns db table row)))
+
+(defn update-clause [db table row]
+  (let [row (where-clause-columns db table row)]
+    (where (cons 'and (map #(list '= %1 %2) (keys row) (vals row))))))
+
 (defmacro deftable
   "Define a database table."
   [table-name doc & body]
@@ -231,14 +249,12 @@
          (defn ~(symbol (str "update-" singular#))
            ~(format "Update the %s row in the database." singular#)
            [~'db ~'row & ~'opts]
-           (let [columns# (meta/unique-columns ~'db :schema (or (:schema ~symbol#) :public) :table (:name ~symbol#))
-                 keys# (map :name columns#)
-                 values# (map ~'row keys#)]
-             (run1 ~'db (update ~symbol# ~'row
-                          (where (cons 'or (map #(list '= %1 %2) keys# values#)))
-                          (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
-                          (prepare (partial io/encode-row ~'db ~symbol#))
-                          (prepare (:prepare ~symbol#))))))
+           (run1 ~'db (update ~symbol# ~'row
+                        ;; (where (cons 'and (map #(list '= %1 %2) keys# values#)))
+                        (update-clause ~'db ~symbol# ~'row)
+                        (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
+                        (prepare (partial io/encode-row ~'db ~symbol#))
+                        (prepare (:prepare ~symbol#)))))
 
          (defn ~(symbol (str "save-" singular#))
            ~(format "Save the %s row to the database." singular#)

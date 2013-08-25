@@ -1,4 +1,5 @@
 (ns datumbazo.fixtures
+  (:gen-class)
   (:refer-clojure :exclude [distinct group-by replace])
   (:require [clojure.instant :refer [read-instant-timestamp]]
             [clojure.java.io :refer [file make-parents resource writer]]
@@ -6,7 +7,9 @@
             [clojure.pprint :refer [pprint]]
             [clojure.string :refer [blank? join replace split]]
             [clojure.tools.logging :refer [infof]]
+            [commandline.core :refer [print-help with-commandline]]
             [datumbazo.core :refer :all :exclude [join]]
+            [datumbazo.connection :refer [connection-spec]]
             [datumbazo.io :refer [encode-rows decode-row]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [edn-file-seq path-split path-replace]]
@@ -131,3 +134,23 @@
                          (doall))]
        (doall (map #(apply enable-triggers db %1 opts) (map :table fixtures)))
        fixtures))))
+
+(defn tables [db]
+  [])
+
+(defn show-help []
+  (print-help "fixtures DB-URL DIRECTORY [delete|dump|load|]")
+  (System/exit 0))
+
+(defn -main [& args]
+  (with-commandline [[db-url directory command] args]
+    [[h help "Print this help."]]
+    (when (or help (nil? db-url) (nil? directory))
+      (show-help))
+    (let [db (connection-spec db-url)]
+      (case (keyword command)
+        ;; :delete (delete-fixtures db)
+        :dump (dump-fixtures db (tables db))
+        :load (load-fixtures db directory)
+        (show-help))
+      nil)))

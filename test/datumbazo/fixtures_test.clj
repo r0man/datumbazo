@@ -32,29 +32,29 @@
 
 (deftest test-fixture-seq
   (let [fixtures (fixture-seq fixture-dir)]
-    (is (= 3 (count fixtures)))
+    (is (= 5 (count fixtures)))
     (let [fixture (first fixtures)]
       (is (= (file fixture-dir "continents.edn")
              (:file fixture)))
       (is (= :continents (:table fixture))))
     (let [fixture (nth fixtures 2)]
-      (is (= (file fixture-dir "twitter" "users.edn")
+      (is (= (file fixture-dir "twitter" "tweets.edn")
              (:file fixture)))
-      (is (= :twitter.users (:table fixture)))))
+      (is (= :twitter.tweets (:table fixture)))))
   (let [fixtures (fixture-seq (resource "db/test-db/fixtures"))]
-    (is (= 3 (count fixtures)))
+    (is (= 5 (count fixtures)))
     (let [fixture (first fixtures)]
       (is (= (.getAbsoluteFile (file "test-resources/db/test-db/fixtures/continents.edn"))
              (:file fixture)))
       (is (= :continents (:table fixture))))
     (let [fixture (nth fixtures 2)]
-      (is (= (.getAbsoluteFile (file "test-resources/db/test-db/fixtures/twitter/users.edn"))
+      (is (= (.getAbsoluteFile (file "test-resources/db/test-db/fixtures/twitter/tweets.edn"))
              (:file fixture)))
-      (is (= :twitter.users (:table fixture))))))
+      (is (= :twitter.tweets (:table fixture))))))
 
 (database-test test-load-fixtures
   (let [fixtures (load-fixtures db fixture-dir)]
-    (is (= 3 (count fixtures)))))
+    (is (= 5 (count fixtures)))))
 
 (database-test test-read-fixture
   (let [fixture (read-fixture db :continents fixture-file)]
@@ -88,9 +88,9 @@
     (is (= 7 (:records fixture)))
     (is (= (slurp (str fixture-dir "/continents.edn"))
            (slurp "/tmp/test-write-fixture/continents.edn"))))
-  (let [fixture (write-fixture db :twitter.users "/tmp/test-write-fixture/twitter/users.edn")]
-    (is (= :twitter.users (:table fixture)))
-    (is (= "/tmp/test-write-fixture/twitter/users.edn" (:file fixture)))
-    (is (= 1 (:records fixture)))
-    (is (= (slurp (str fixture-dir "/twitter/users.edn"))
-           (slurp "/tmp/test-write-fixture/twitter/users.edn")))))
+  (let [fixture (write-fixture db :twitter.tweets "/tmp/test-write-fixture/twitter/tweets.edn")]
+    (is (= :twitter.tweets (:table fixture)))
+    (is (= "/tmp/test-write-fixture/twitter/tweets.edn" (:file fixture)))
+    (is (= 23 (:records fixture)))
+    (is (= (set (map :id (read-string (slurp (str fixture-dir "/twitter/tweets.edn")))))
+           (set (map :id (read-string (slurp "/tmp/test-write-fixture/twitter/tweets.edn"))))))))
