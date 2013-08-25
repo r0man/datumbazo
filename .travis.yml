@@ -1,6 +1,6 @@
 language: clojure
 
 before_install: ./travis/before_install.sh
-before_script: ./travis/before_script
+before_script: ./travis/before_script.sh
 
 lein: lein2
