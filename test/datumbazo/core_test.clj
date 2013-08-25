@@ -20,7 +20,7 @@
 
 (deftable continents
   "The continents database table."
-  (column :id :serial)
+  (column :id :serial :primary-key? true)
   (column :name :text :unique? true)
   (column :code :text :unique? true)
   (column :geometry :geometry :hidden? true)
@@ -28,7 +28,7 @@
 
 (deftable countries
   "The countries database table."
-  (column :id :serial)
+  (column :id :serial :primary-key? true)
   (column :continent-id :integer :references :continents/id)
   (column :name :text :unique? true)
   (column :geometry :geometry :hidden? true))
@@ -36,7 +36,7 @@
 (deftable twitter-users
   "The Twitter users database table."
   (table :twitter.users)
-  (column :id :bigint)
+  (column :id :bigint :primary-key? true)
   (column :screen-name :text :not-null? true)
   (column :name :text :not-null? true)
   (column :followers-count :integer :not-null? true :default 0)
@@ -56,7 +56,7 @@
 (deftable twitter-tweets
   "The Twitter tweets database table."
   (table :twitter.tweets)
-  (column :id :bigint)
+  (column :id :bigint :primary-key? true)
   (column :user-id :integer :references :twitter.users/id)
   (column :retweeted :boolean :not-null? true :default false)
   (column :text :text :not-null? true)
@@ -183,7 +183,8 @@
     (is (number? (:id row)))
     (is (= "Europe" (:name row)))
     (is (= "eu" (:code row)))
-    (is (= row (save-continent db row)))))
+    (is (= row (save-continent db row)))
+    (is (= row (save-continent db (dissoc row :id))))))
 
 (database-test test-truncate-continents
   (is (= "Truncate the continents database table."
@@ -212,6 +213,7 @@
     (is (= "Europa" (:name continent)))
     (is (= "eu" (:code continent)))
     (is (= continent (update-continent db continent)))
+    (is (= continent (update-continent db (dissoc continent :id))))
     (let [continent (update-continent db (assoc continent :name "Europe"))]
       (is (number? (:id continent)))
       (is (= "Europe" (:name continent)))

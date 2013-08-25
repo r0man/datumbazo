@@ -231,11 +231,11 @@
          (defn ~(symbol (str "update-" singular#))
            ~(format "Update the %s row in the database." singular#)
            [~'db ~'row & ~'opts]
-           (let [pks# (meta/primary-keys ~'db :schema (or (:schema ~symbol#) :public) :table (:name ~symbol#))
-                 pk-keys# (map :name pks#)
-                 pk-vals# (map ~'row pk-keys#)]
+           (let [columns# (meta/unique-columns ~'db :schema (or (:schema ~symbol#) :public) :table (:name ~symbol#))
+                 keys# (map :name columns#)
+                 values# (map ~'row keys#)]
              (run1 ~'db (update ~symbol# ~'row
-                          (where (cons 'and (map #(list '= %1 %2) pk-keys# pk-vals#)))
+                          (where (cons 'or (map #(list '= %1 %2) keys# values#)))
                           (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
                           (prepare (partial io/encode-row ~'db ~symbol#))
                           (prepare (:prepare ~symbol#))))))
