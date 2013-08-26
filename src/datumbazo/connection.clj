@@ -4,7 +4,8 @@
             [inflections.core :refer [dasherize underscore]]
             [inflections.util :refer [parse-integer]]
             [datumbazo.util :as util]
-            [sqlingvo.util :refer [default-entities default-identifiers default-quotes]]))
+            [sqlingvo.util :refer [default-entities default-identifiers default-quotes]]
+            [sqlingvo.compiler :refer [*vendors*]]))
 
 (def ^:dynamic *connection* nil)
 
@@ -28,12 +29,9 @@
 
 (defmethod connection-spec :mysql [db-url]
   (let [spec (util/parse-db-url db-url)]
-    (assoc spec
+    (assoc (merge spec (:mysql *vendors*))
       :adapter "mysql"
-      :classname "com.mysql.jdbc.Driver"
-      :entities default-entities
-      :identifiers default-identifiers
-      :quotes default-quotes)))
+      :classname "com.mysql.jdbc.Driver")))
 
 (defmethod connection-spec :oracle [db-url]
   (let [spec (util/parse-db-url db-url)]
@@ -49,12 +47,9 @@
 
 (defmethod connection-spec :postgresql [db-url]
   (let [spec (util/parse-db-url db-url)]
-    (assoc spec
+    (assoc (merge spec (:postgresql *vendors*))
       :adapter "postgresql"
-      :classname "org.postgresql.Driver"
-      :entities default-entities
-      :identifiers default-identifiers
-      :quotes default-quotes)))
+      :classname "org.postgresql.Driver")))
 
 (defmethod connection-spec :sqlite [db-url]
   (if-let [matches (re-matches #"(([^:]+):)?([^:]+):([^?]+)(\?(.*))?" (str db-url))]
