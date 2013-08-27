@@ -3,9 +3,9 @@
   (:refer-clojure :exclude [resultset-seq])
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [lower-case]]
+            [sqlingvo.core :refer [sql-name]]
             [datumbazo.connection :refer [with-connection]]
-            [inflections.core :refer [hyphenize hyphenize-keys underscore]]
-            [sqlingvo.util :refer [as-identifier]]))
+            [inflections.core :refer [hyphenize hyphenize-keys underscore]]))
 
 (defn- hyphenize-keyword [k]
   (if k (keyword (hyphenize (name k)))))
@@ -21,9 +21,9 @@
     (with-connection [db db]
       (->> (.getBestRowIdentifier
             (.getMetaData (:connection db))
-            (if catalog (as-identifier db catalog))
-            (if schema (as-identifier db schema))
-            (if table (as-identifier db table))
+            (if catalog (sql-name db catalog))
+            (if schema (sql-name db schema))
+            (if table (sql-name db table))
             (condp = scope
               :temporary DatabaseMetaData/bestRowTemporary
               :transaction DatabaseMetaData/bestRowTransaction
@@ -51,10 +51,10 @@
     (with-connection [db db]
       (->> (.getColumns
             (.getMetaData (:connection db))
-            (if catalog (as-identifier db catalog))
-            (if schema (as-identifier db schema))
-            (if table (as-identifier db table))
-            (if name (as-identifier db name)))
+            (if catalog (sql-name db catalog))
+            (if schema (sql-name db schema))
+            (if table (sql-name db table))
+            (if name (sql-name db name)))
            (resultset-seq)
            (map #(assoc %1
                    :catalog (hyphenize-keyword (:table-cat %1))
@@ -70,9 +70,9 @@
     (with-connection [db db]
       (->> (.getIndexInfo
             (.getMetaData (:connection db))
-            (if catalog (as-identifier db catalog))
-            (if schema (as-identifier db schema))
-            (if table (as-identifier db table))
+            (if catalog (sql-name db catalog))
+            (if schema (sql-name db schema))
+            (if table (sql-name db table))
             (= true unique)
             (= true approximate))
            (resultset-seq)
@@ -88,9 +88,9 @@
     (with-connection [db db]
       (->> (.getPrimaryKeys
             (.getMetaData (:connection db))
-            (if catalog (as-identifier db catalog))
-            (if schema (as-identifier db schema))
-            (if table (as-identifier db table)))
+            (if catalog (sql-name db catalog))
+            (if schema (sql-name db schema))
+            (if table (sql-name db table)))
            (resultset-seq)
            (map #(assoc %1
                    :catalog (hyphenize-keyword (:table-cat %1))
@@ -120,9 +120,9 @@
     (with-connection [db db]
       (->> (.getTables
             (.getMetaData (:connection db))
-            (if catalog (as-identifier db catalog))
-            (if schema (as-identifier db schema))
-            (if name (as-identifier db name))
+            (if catalog (sql-name db catalog))
+            (if schema (sql-name db schema))
+            (if name (sql-name db name))
             (into-array String (or types ["TABLE"])))
            (resultset-seq)
            (map #(assoc %1

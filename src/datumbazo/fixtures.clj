@@ -8,12 +8,12 @@
             [clojure.string :refer [blank? join replace split]]
             [clojure.tools.logging :refer [infof]]
             [commandline.core :refer [print-help with-commandline]]
-            [datumbazo.core :refer :all :exclude [join]]
             [datumbazo.connection :refer [connection-spec]]
+            [datumbazo.core :refer :all :exclude [join]]
+            [datumbazo.core :refer [select from run1]]
             [datumbazo.io :refer [encode-rows decode-row]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [edn-file-seq path-split path-replace]]
-            [datumbazo.core :refer [select from run1]]
             [geo.postgis :as geo]
             [inflections.core :refer [hyphenize underscore]]
             [sqlingvo.util :refer [as-identifier as-keyword parse-table]]))
@@ -65,13 +65,12 @@
             :when (contains? #{:bigserial :serial} (:type column))]
       (run1 db (select [`(setval ~(as-identifier db (serial-seq column))
                                  ~(select [`(max ~(:name column))]
-                                    (from (as-keyword table))))])
-            :entities entities))))
+                                    (from (as-keyword table))))])))))
 
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
   [db table filename & {:keys [entities batch-size]}]
-  (infof "Loading fixtures for table %s from %s." ((:entities db) table) filename)
+  (infof "Loading fixtures for table %s from %s." (sql-name db table) filename)
   (let [batch-size (or batch-size 1000)
         rows (reduce
               (fn [result rows]
@@ -79,11 +78,10 @@
                         ;; TDOD: Find insert columns and do not rely on first row.
                         (run db (insert table []
                                   (values (encode-rows db table rows))
-                                  (returning *))
-                             :entities entities)))
+                                  (returning *)))))
               [] (partition batch-size batch-size nil (slurp-rows filename)))
         result (assoc {:table table :file filename} :records rows)]
-    (reset-serials db table :entities entities)
+    (reset-serials db table)
     result))
 
 (defn write-fixture
@@ -91,9 +89,7 @@
   [db table filename & {:keys [entities identifiers]}]
   (make-parents filename)
   (with-open [writer (writer filename)]
-    (let [rows (run db (select [*] (from table))
-                    :entities entities
-                    :identifiers identifiers)]
+    (let [rows (run db (select [*] (from table)))]
       (pprint rows writer)
       {:file filename :table table :records (count rows)})))
 
@@ -104,14 +100,14 @@
   "Enable triggers on the database `table`."
   [db table & {:keys [entities]}]
   (jdbc/with-naming-strategy
-    {:entity (:entities db)}
+    {:entity #(sql-keyword db %1)}
     (jdbc/execute! db [(str "ALTER TABLE " (as-identifier db table) " ENABLE TRIGGER ALL")])))
 
 (defn disable-triggers
   "Disable triggers on the database `table`."
   [db table & {:keys [entities]}]
   (jdbc/with-naming-strategy
-    {:entity (:entities db)}
+    {:entity #(sql-keyword db %1)}
     (jdbc/execute! db [(str "ALTER TABLE " (as-identifier db table) " DISABLE TRIGGER ALL")])))
 
 (defn delete-fixtures [db tables]

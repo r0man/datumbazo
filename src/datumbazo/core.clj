@@ -47,7 +47,8 @@
 (defn- run-query
   [db ast  & {:keys [transaction?]}]
   (let [compiled (sql db ast)
-        query #(jdbc/query %1 compiled :identifiers (:identifiers db))]
+        identifiers #(sql-keyword db %1)
+        query #(jdbc/query %1 compiled :identifiers identifiers)]
     (if transaction?
       (jdbc/db-transaction [t-db db] (query t-db))
       (query db))))
@@ -60,17 +61,17 @@
 
 (defn run*
   "Compile and run `stmt` against the database and return the rows."
-  [db stmt & {:keys [entities identifiers transaction?]}]
+  [db stmt & {:keys [transaction?]}]
   (with-connection [db db]
     (let [{:keys [op returning] :as ast} (ast stmt)]
       (cond
        (= :copy op)
-       (run-copy db ast :identifiers identifiers :transaction? transaction?)
+       (run-copy db ast :transaction? transaction?)
        (= :select op)
-       (run-query db ast :identifiers identifiers :transaction? transaction?)
+       (run-query db ast :transaction? transaction?)
        returning
-       (run-query db ast :identifiers identifiers :transaction? transaction?)
-       :else (run-prepared db ast :identifiers identifiers :transaction? transaction?)))))
+       (run-query db ast :transaction? transaction?)
+       :else (run-prepared db ast :transaction? transaction?)))))
 
 ;; ----------------------------------------------------------------------------------------------------------
 
@@ -275,7 +276,7 @@
                `(do (defquery ~(symbol (str table-name "-by-" column-name))
                       ~(format "Find all %s by %s." table-name column-name)
                       [~'db ~'value & [~'opts]]
-                      (let [column# (first (meta/columns ~'db :schema (or ~(:schema table#) :public) :table ~(:name table#) :name ~(:name column) :entities (:entities ~'opts)))]
+                      (let [column# (first (meta/columns ~'db :schema (or ~(:schema table#) :public) :table ~(:name table#) :name ~(:name column)))]
                         (fn [stmt#]
                           ((chain-state [(where `(= ~(keyword (str (name (:table column#)) "." (name (:name column#))))
                                                     ~(io/encode-column column# ~'value)))])

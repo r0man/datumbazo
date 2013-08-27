@@ -4,7 +4,7 @@
             [inflections.core :refer [dasherize underscore]]
             [inflections.util :refer [parse-integer]]
             [datumbazo.util :as util]
-            [sqlingvo.util :refer [default-entities default-identifiers default-quotes]]))
+            [sqlingvo.vendor :as vendor]))
 
 (def ^:dynamic *connection* nil)
 
@@ -28,59 +28,49 @@
 
 (defmethod connection-spec :mysql [db-url]
   (let [spec (util/parse-db-url db-url)]
-    (assoc spec
-      :adapter "mysql"
-      :classname "com.mysql.jdbc.Driver"
-      :entities default-entities
-      :identifiers default-identifiers
-      :quotes default-quotes)))
+    (vendor/map->mysql
+     (assoc spec
+       :adapter "mysql"
+       :classname "com.mysql.jdbc.Driver"))))
 
 (defmethod connection-spec :oracle [db-url]
   (let [spec (util/parse-db-url db-url)]
-    (assoc spec
-      :adapter "oracle"
-      :classname "oracle.jdbc.driver.OracleDriver"
-      :entities default-entities
-      :identifiers default-identifiers
-      :quotes default-quotes
-      :subprotocol "oracle:thin"
-      :subname (str ":" (:username spec) "/" (:password spec) "@" (util/format-server spec)
-                    ":" (:database spec)))))
+    (vendor/map->oracle
+     (assoc spec
+       :adapter "oracle"
+       :classname "oracle.jdbc.driver.OracleDriver"
+       :subprotocol "oracle:thin"
+       :subname (str ":" (:username spec) "/" (:password spec) "@" (util/format-server spec)
+                     ":" (:database spec))))))
 
 (defmethod connection-spec :postgresql [db-url]
   (let [spec (util/parse-db-url db-url)]
-    (assoc spec
-      :adapter "postgresql"
-      :classname "org.postgresql.Driver"
-      :entities default-entities
-      :identifiers default-identifiers
-      :quotes default-quotes)))
+    (vendor/map->postgresql
+     (assoc spec
+       :adapter "postgresql"
+       :classname "org.postgresql.Driver"))))
 
 (defmethod connection-spec :sqlite [db-url]
   (if-let [matches (re-matches #"(([^:]+):)?([^:]+):([^?]+)(\?(.*))?" (str db-url))]
-    {:adapter "sqlite"
-     :classname "org.sqlite.JDBC"
-     :entities default-entities
-     :identifiers default-identifiers
-     :quotes default-quotes
-     :params (util/parse-params (nth matches 5))
-     :db-pool (keyword (or (nth matches 2) :jdbc))
-     :subname (nth matches 4)
-     :subprotocol (nth matches 3)}))
+    (vendor/map->sqlite
+     {:adapter "sqlite"
+      :classname "org.sqlite.JDBC"
+      :params (util/parse-params (nth matches 5))
+      :db-pool (keyword (or (nth matches 2) :jdbc))
+      :subname (nth matches 4)
+      :subprotocol (nth matches 3)})))
 
 (defmethod connection-spec :sqlserver [db-url]
   (let [spec (util/parse-db-url db-url)]
-    (assoc spec
-      :adapter "mssql"
-      :classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-      :entities default-entities
-      :identifiers default-identifiers
-      :quotes default-quotes
-      :subprotocol "sqlserver"
-      :subname (str "//" (util/format-server spec) ";"
-                    "database=" (:database spec) ";"
-                    "user=" (:username spec) ";"
-                    "password=" (:password spec)))))
+    (vendor/map->sqlserver
+     (assoc spec
+       :adapter "mssql"
+       :classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+       :subprotocol "sqlserver"
+       :subname (str "//" (util/format-server spec) ";"
+                     "database=" (:database spec) ";"
+                     "user=" (:username spec) ";"
+                     "password=" (:password spec))))))
 
 (defmulti connection-pool
   "Returns the connection pool for `db-spec`."
