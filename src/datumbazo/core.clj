@@ -11,7 +11,7 @@
             [datumbazo.util :refer [compact-map immigrate]]
             [inflections.core :refer [hyphenize singular]]
             [inflections.util :refer [parse-integer]]
-            [sqlingvo.util :refer [as-identifier as-keyword parse-table parse-expr concat-in]]
+            [sqlingvo.util :refer [as-identifier parse-table parse-expr concat-in]]
             sqlingvo.core))
 
 (immigrate 'sqlingvo.core)

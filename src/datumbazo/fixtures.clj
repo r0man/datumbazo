@@ -16,7 +16,7 @@
             [datumbazo.util :refer [edn-file-seq path-split path-replace]]
             [geo.postgis :as geo]
             [inflections.core :refer [hyphenize underscore]]
-            [sqlingvo.util :refer [as-identifier as-keyword parse-table]]))
+            [sqlingvo.util :refer [as-identifier parse-table]]))
 
 (def ^:dynamic *readers*
   (assoc geo/*readers* 'inst read-instant-timestamp))
@@ -65,7 +65,7 @@
             :when (contains? #{:bigserial :serial} (:type column))]
       (run1 db (select [`(setval ~(as-identifier db (serial-seq column))
                                  ~(select [`(max ~(:name column))]
-                                    (from (as-keyword table))))])))))
+                                    (from table)))])))))
 
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
