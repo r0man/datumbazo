@@ -8,7 +8,7 @@
             [pallet.stevedore :refer [checked-script with-script-language]]
             [pallet.stevedore.bash :refer :all]
             [slingshot.slingshot :refer [throw+]]
-            [sqlingvo.util :refer [as-identifier]]))
+            [sqlingvo.core :refer [sql-name]]))
 
 (defn basename
   "Returns the basename of `s`."
@@ -90,7 +90,7 @@
        (format "-s %s" srid) "")
     ~(if-let [encoding (:encoding opts)]
        (format "-W %s" encoding) "")
-    ~shape-file ~(as-identifier db table) > ~sql-file)))
+    ~shape-file ~(sql-name db table) > ~sql-file)))
 
 (defn raster2pgsql
   "Run the raster2pgsql command."
@@ -129,4 +129,4 @@
     ~(if (sequential? input)
        (join " " input)
        input)
-    ~(as-identifier db table) > ~output)))
+    ~(sql-name db table) > ~output)))

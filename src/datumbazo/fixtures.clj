@@ -16,7 +16,7 @@
             [datumbazo.util :refer [edn-file-seq path-split path-replace]]
             [geo.postgis :as geo]
             [inflections.core :refer [hyphenize underscore]]
-            [sqlingvo.util :refer [as-identifier parse-table]]))
+            [sqlingvo.util :refer [parse-table]]))
 
 (def ^:dynamic *readers*
   (assoc geo/*readers* 'inst read-instant-timestamp))
@@ -63,7 +63,7 @@
   (let [table (parse-table table)]
     (doseq [column (meta/columns db :schema (or (:schema table) :public) :table (:name table))
             :when (contains? #{:bigserial :serial} (:type column))]
-      (run1 db (select [`(setval ~(as-identifier db (serial-seq column))
+      (run1 db (select [`(setval ~(sql-name db (serial-seq column))
                                  ~(select [`(max ~(:name column))]
                                     (from table)))])))))
 
@@ -101,14 +101,14 @@
   [db table & {:keys [entities]}]
   (jdbc/with-naming-strategy
     {:entity #(sql-keyword db %1)}
-    (jdbc/execute! db [(str "ALTER TABLE " (as-identifier db table) " ENABLE TRIGGER ALL")])))
+    (jdbc/execute! db [(str "ALTER TABLE " (sql-name db table) " ENABLE TRIGGER ALL")])))
 
 (defn disable-triggers
   "Disable triggers on the database `table`."
   [db table & {:keys [entities]}]
   (jdbc/with-naming-strategy
     {:entity #(sql-keyword db %1)}
-    (jdbc/execute! db [(str "ALTER TABLE " (as-identifier db table) " DISABLE TRIGGER ALL")])))
+    (jdbc/execute! db [(str "ALTER TABLE " (sql-name db table) " DISABLE TRIGGER ALL")])))
 
 (defn delete-fixtures [db tables]
   (infof "Deleting fixtures from database.")
