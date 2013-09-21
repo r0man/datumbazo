@@ -10,7 +10,7 @@
                  [environ "0.4.0"]
                  [geo-clj "0.2.8"]
                  [org.clojure/clojure "1.5.1"]
-                 [org.clojure/java.jdbc "0.3.0-alpha4"]
+                 [org.clojure/java.jdbc "0.3.0-alpha5"]
                  [org.clojure/tools.logging "0.2.6"]
                  [postgresql/postgresql "9.1-901-1.jdbc4"]
                  [mysql/mysql-connector-java "5.1.26"]
