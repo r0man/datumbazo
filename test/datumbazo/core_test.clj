@@ -5,6 +5,7 @@
             [clojure.java.io :refer [file]]
             [environ.core :refer [env]]
             [validation.core :refer :all]
+            [datumbazo.validation :refer [new-record? uniqueness-of]]
             [slingshot.slingshot :refer [try+]])
   (:use clojure.test
         datumbazo.core
