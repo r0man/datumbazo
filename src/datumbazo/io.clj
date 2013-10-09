@@ -10,7 +10,7 @@
             [clj-time.coerce :refer [to-date-time to-sql-date to-timestamp]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]
-            [inflections.util :refer [parse-double parse-integer parse-long]]
+            [no.en.core :refer [parse-double parse-integer parse-long]]
             [sqlingvo.compiler :refer [SQLType]]
             [sqlingvo.util :refer [parse-table]]
             geo.postgis))

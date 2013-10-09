@@ -4,7 +4,7 @@
   (:require [clojure.java.io :refer [file reader]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [blank? split replace trim]]
-            [inflections.util :refer [parse-integer]]))
+            [no.en.core :refer [parse-integer]]))
 
 (defn absolute-path
   "Returns the absolute path of `path."

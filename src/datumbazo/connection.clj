@@ -2,7 +2,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [environ.core :refer [env]]
             [inflections.core :refer [dasherize underscore]]
-            [inflections.util :refer [parse-integer]]
+            [no.en.core :refer [parse-integer]]
             [datumbazo.util :as util]
             [sqlingvo.vendor :as vendor]))
 
