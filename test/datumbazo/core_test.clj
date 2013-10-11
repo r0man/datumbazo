@@ -418,3 +418,17 @@
 
 (database-test test-sql-str
   (is (= "SELECT 1, 'a'" (sql-str db (select [1 "a"])))))
+
+;; PostgreSQL JSON Support Functions
+
+(database-test test-array-to-json
+  (is (= [{:array-to-json [[1 5] [99 100]]}]
+         (run db (select [`(array_to_json (cast "{{1,5},{99,100}}" ~(keyword "int[]")))])))))
+
+(database-test test-row-to-json
+  (is (= [{:row-to-json {:f1 1, :f2 "foo"}}]
+         (run db (select ['(row_to_json (row 1 "foo"))])))))
+
+(database-test test-to-json
+  (is (= [{:to-json "Fred said \"Hi.\""}]
+         (run db (select ['(to_json "Fred said \"Hi.\"")])))))

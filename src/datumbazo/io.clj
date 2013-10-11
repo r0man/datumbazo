@@ -7,6 +7,7 @@
   (:require [clojure.instant :as i]
             [clojure.java.jdbc :as jdbc]
             [clojure.edn :as edn]
+            [clojure.data.json :as json]
             [clj-time.coerce :refer [to-date-time to-sql-date to-timestamp]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]
@@ -100,6 +101,10 @@
 
 (defmethod decode-pgobject :citext [pgobject]
   (.getValue pgobject))
+
+(defmethod decode-pgobject :json [pgobject]
+  (if-let [value (.getValue pgobject)]
+    (json/read-str value :key-fn keyword)))
 
 (defmethod decode-pgobject :default [pgobject]
   pgobject)
