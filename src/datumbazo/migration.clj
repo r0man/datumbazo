@@ -36,18 +36,25 @@
   [root-dir name]
   (migration-path root-dir name :test))
 
-(defn make-migration [root-dir name & {:keys [time]}]
+(defn make-migration
+  "Make a new migration."
+  [root-dir name & {:keys [time]}]
   {:name name
    :root-dir root-dir
    :deploy (migration-deploy-path root-dir name)
    :revert (migration-revert-path root-dir name)
    :test (migration-test-path root-dir name)})
 
-(defn spit-content [filename content]
+(defn spit-content
+  "Spit the `content` into `filename` and make the parent
+  directories."
+  [filename content]
   (make-parents filename)
   (spit filename content))
 
-(defn create-migration [migration]
+(defn create-migration
+  "Create the empty deploy, revert and test migration files."
+  [migration]
   (spit-content (:deploy migration) "-- DEPLOY COMMANDS")
   (spit-content (:revert migration) "-- REVERT COMMANDS")
   (spit-content (:test migration) "-- TEST COMMANDS"))
