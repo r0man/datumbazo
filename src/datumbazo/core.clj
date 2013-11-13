@@ -1,8 +1,7 @@
 (ns datumbazo.core
   (:import org.postgresql.PGConnection)
   (:refer-clojure :exclude [distinct group-by])
-  (:require [clojure.algo.monads :refer [state-m m-seq with-monad]]
-            [clojure.java.io :refer [reader]]
+  (:require [clojure.java.io :refer [reader]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [datumbazo.connection :refer [with-connection]]
