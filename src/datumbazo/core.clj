@@ -68,6 +68,10 @@
        (run-copy db ast :transaction? transaction?)
        (= :select op)
        (run-query db ast :transaction? transaction?)
+       (and (= :with op)
+            (or (= :select (:op (:query ast)))
+                (:returning (:query ast))))
+       (run-query db ast :transaction? transaction?)
        returning
        (run-query db ast :transaction? transaction?)
        :else (run-prepared db ast :transaction? transaction?)))))

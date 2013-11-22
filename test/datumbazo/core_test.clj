@@ -432,3 +432,8 @@
 (database-test test-to-json
   (is (= [{:to-json "Fred said \"Hi.\""}]
          (run db (select ['(to_json "Fred said \"Hi.\"")])))))
+
+(database-test test-with
+  (is (= (run db (with [:x (select [:*] (from :continents))]
+                       (select [:*] (from :x))))
+         (run db (select [:*] (from :continents))))))
