@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
+set -x
 sudo /etc/init.d/postgresql stop
 sudo cp /etc/postgresql/9.2/main/pg_hba.conf ./
 sudo apt-get remove postgresql postgresql-9.2 -qq --purge
 source /etc/lsb-release
-echo "deb http://apt.postgresql.org/pub/repos/apt/ $DISTRIB_CODENAME-pgdg main" > pgdg.list
-sudo mv pgdg.list /etc/apt/sources.list.d/
-wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | sudo apt-key add -
+# echo "deb http://apt.postgresql.org/pub/repos/apt/ $DISTRIB_CODENAME-pgdg main" > pgdg.list
+# sudo mv pgdg.list /etc/apt/sources.list.d/
+# wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | sudo apt-key add -
 sudo apt-get update
 sudo apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" install postgresql-9.3 postgresql-contrib-9.3 -qq
 sudo /etc/init.d/postgresql stop
