@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 sudo /etc/init.d/postgresql stop
-sudo cp /etc/postgresql/9.1/main/pg_hba.conf ./
-sudo apt-get remove postgresql postgresql-9.1 -qq --purge
+sudo cp /etc/postgresql/9.2/main/pg_hba.conf ./
+sudo apt-get remove postgresql postgresql-9.2 -qq --purge
 source /etc/lsb-release
 echo "deb http://apt.postgresql.org/pub/repos/apt/ $DISTRIB_CODENAME-pgdg main" > pgdg.list
 sudo mv pgdg.list /etc/apt/sources.list.d/
