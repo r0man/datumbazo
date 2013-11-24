@@ -11,7 +11,7 @@
 # sudo /etc/init.d/postgresql stop
 # sudo cp ./pg_hba.conf /etc/postgresql/9.2/main
 # sudo /etc/init.d/postgresql start
-# psql -c 'create database test;' -U postgres
+psql -c 'create database test;' -U postgres
 # sudo apt-add-repository -y ppa:ubuntugis/ubuntugis-unstable
 # sudo apt-get update
 # sudo apt-get install -qq libgeos-dev libproj-dev postgresql-9.2-postgis
