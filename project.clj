@@ -10,7 +10,7 @@
                  [commandline-clj "0.1.7"]
                  [environ "0.4.0"]
                  [geo-clj "0.3.6"]
-                 [inflections "0.9.4"]
+                 [inflections "0.9.5"]
                  [org.clojure/clojure "1.5.1"]
                  [org.clojure/java.jdbc "0.3.0-beta2"]
                  [org.clojure/tools.logging "0.2.6"]
