@@ -1,7 +1,10 @@
 (ns datumbazo.core-test
   (:refer-clojure :exclude [distinct group-by])
-  (:require [clojure.java.jdbc :as jdbc]
+  (:require [clj-time.core :refer [now]]
+            [clj-time.coerce :refer [to-timestamp]]
+            [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [upper-case]]
+            [clojure.pprint :refer [pprint]]
             [clojure.java.io :refer [file]]
             [environ.core :refer [env]]
             [validation.core :refer :all]
@@ -33,6 +36,29 @@
   (column :continent-id :integer :references :continents/id)
   (column :name :text :unique? true)
   (column :geometry :geometry :hidden? true))
+
+(deftable ratings
+  (column :id :serial)
+  (column :user-id :integer :not-null? true :references :users/id)
+  (column :spot-id :integer :not-null? true :references :spots/id)
+  (column :rating :integer :not-null? true)
+  (column :created-at :timestamp-with-time-zone :not-null? true :default '(now))
+  (column :updated-at :timestamp-with-time-zone :not-null? true :default '(now))
+  (primary-key :user-id :spot-id :created-at))
+
+(deftest test-continent-by-pk*
+  (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = 1)"]
+         (sql (continent-by-pk* nil {:id 1})))))
+
+(database-test test-continent-by-pk
+  (is (empty? (continent-by-pk db {:id 1}))))
+
+(deftest test-rating-by-pk
+  (let [time (now)]
+    (is (= [(str "SELECT \"ratings\".\"user_id\", \"ratings\".\"spot_id\", \"ratings\".\"rating\", \"ratings\".\"created_at\", \"ratings\".\"updated_at\" "
+                 "FROM \"ratings\" WHERE ((\"ratings\".\"user_id\" = 1) and (\"ratings\".\"spot_id\" = 2) and (\"ratings\".\"created_at\" = ?))")
+            (to-timestamp time)]
+           (sql (rating-by-pk* db {:user-id 1 :spot-id 2 :created-at time}))))))
 
 (deftable twitter-users
   "The Twitter users database table."
@@ -215,6 +241,17 @@
 
 ;; ;; (database-test test-save-tweets-users
 ;; ;;   #_(save-tweets-user db {:tweet-id 1 :user-id 1}))
+
+(database-test test-create-table-compound-primary-key
+  (is (= (run db (create-table :ratings
+                   (column :id :serial)
+                   (column :user-id :integer :not-null? true :references :users/id)
+                   (column :spot-id :integer :not-null? true :references :spots/id)
+                   (column :rating :integer :not-null? true)
+                   (column :created-at :timestamp-with-time-zone :not-null? true :default '(now))
+                   (column :updated-at :timestamp-with-time-zone :not-null? true :default '(now))
+                   (primary-key :user-id :spot-id :created-at)))
+         [{:count 0}])))
 
 (database-test test-save-continent
   (let [row (save-continent db (europe db))]

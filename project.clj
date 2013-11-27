@@ -17,7 +17,7 @@
                  [postgresql/postgresql "9.1-901-1.jdbc4"]
                  [mysql/mysql-connector-java "5.1.27"]
                  [slingshot "0.10.3"]
-                 [sqlingvo "0.5.9"]]
+                 [sqlingvo "0.5.10-SNAPSHOT"]]
   :profiles {:dev {:dependencies [[validation-clj "0.5.6"]
                                   [org.slf4j/slf4j-log4j12 "1.7.5"]
                                   [c3p0/c3p0 "0.9.1.2"]

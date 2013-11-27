@@ -205,6 +205,20 @@
   (let [row (where-clause-columns db table row)]
     (where (cons 'and (map #(list '= %1 %2) (keys row) (vals row))))))
 
+(defn primary-key-clause [table row]
+  (let [primary-key (or (:primary-key table)
+                        (map :name (filter :primary-key? (vals (:column table)))))]
+    (cons 'and (map #(list := (keyword (str (name (:name table)) "." (name %1)))
+                           (get row %1))
+                    primary-key))))
+
+(defn find-by-primary-key [db table row]
+  (let [primary-key (or (:primary-key table)
+                        (map :name (filter :primary-key? (vals (:column table)))))]
+    (select [:*]
+      (from (:name table))
+      (where (primary-key-clause table row)))))
+
 (defmacro deftable
   "Define a database table."
   [table-name doc & body]
@@ -213,6 +227,20 @@
         symbol# (symbol (str table-name "-table"))]
     `(do (def ~symbol#
            (second ((table ~(keyword table-name) ~@body) {})))
+
+         (defquery ~table-name
+           ~(format "Select %s from the database table." table-name)
+           [~'db & [~'opts]]
+           (select (remove #(= true (:hidden? %1)) (columns ~symbol#))
+             (from ~symbol#)
+             (paginate (:page ~'opts) (:per-page ~'opts))
+             (order-by (:order-by ~'opts))))
+
+         (defquery1 ~(symbol (str (singular table-name)  "-by-pk"))
+           ~(format "Find the %s by primary key." (singular table-name))
+           [~'db ~'row & [~'opts]]
+           (compose (~(symbol (str table-name "*")) ~'db)
+                    (where (primary-key-clause ~symbol# ~'row))))
 
          (defn ~(symbol (str "drop-" table-name))
            ~(format "Drop the %s database table." table-name)
@@ -254,8 +282,7 @@
            ~(format "Update the %s row in the database." singular#)
            [~'db ~'row & ~'opts]
            (run1 ~'db (update ~symbol# ~'row
-                        ;; (where (cons 'and (map #(list '= %1 %2) keys# values#)))
-                        (update-clause ~'db ~symbol# ~'row)
+                        (where (primary-key-clause ~symbol# ~'row))
                         (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
                         (prepare (partial io/encode-row ~'db ~symbol#))
                         (prepare (:prepare ~symbol#)))))
@@ -265,14 +292,6 @@
            [~'db ~'row & ~'opts]
            (or (apply ~(symbol (str "update-" singular#)) ~'db ~'row ~'opts)
                (apply ~(symbol (str "insert-" singular#)) ~'db ~'row ~'opts)))
-
-         (defquery ~table-name
-           ~(format "Select %s from the database table." table-name)
-           [~'db & [~'opts]]
-           (select (remove #(= true (:hidden? %1)) (columns ~symbol#))
-             (from ~symbol#)
-             (paginate (:page ~'opts) (:per-page ~'opts))
-             (order-by (:order-by ~'opts))))
 
          ~@(for [column (vals (:column table#)) :let [column-name (name (:name column))]]
              (do
