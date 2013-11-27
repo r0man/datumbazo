@@ -19,5 +19,5 @@ sudo apt-get update
 sudo apt-get install -qq libgeos-dev libproj-dev postgresql-9.3-postgis
 psql -d test -c 'CREATE EXTENSION postgis;' -U postgres
 psql --version
-psql -d test -c 'SELECT version();' -U postgres
+# psql -d test -c 'SELECT version();' -U postgres
 psql -d test -c 'SELECT PostGIS_version();' -U postgres
