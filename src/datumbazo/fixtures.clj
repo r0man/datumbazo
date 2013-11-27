@@ -99,16 +99,12 @@
 (defn enable-triggers
   "Enable triggers on the database `table`."
   [db table & {:keys [entities]}]
-  (jdbc/with-naming-strategy
-    {:entity #(sql-keyword db %1)}
-    (jdbc/execute! db [(str "ALTER TABLE " (sql-name db table) " ENABLE TRIGGER ALL")])))
+  (jdbc/execute! db [(str "ALTER TABLE " (sql-name db table) " ENABLE TRIGGER ALL")]))
 
 (defn disable-triggers
   "Disable triggers on the database `table`."
   [db table & {:keys [entities]}]
-  (jdbc/with-naming-strategy
-    {:entity #(sql-keyword db %1)}
-    (jdbc/execute! db [(str "ALTER TABLE " (sql-name db table) " DISABLE TRIGGER ALL")])))
+  (jdbc/execute! db [(str "ALTER TABLE " (sql-name db table) " DISABLE TRIGGER ALL")]))
 
 (defn delete-fixtures [db tables]
   (infof "Deleting fixtures from database.")
