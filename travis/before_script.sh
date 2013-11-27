@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+mysql -uroot -e "CREATE DATABASE datumbazo;"
 mysql -uroot -e "GRANT ALL PRIVILEGES ON datumbazo.* TO tiger@localhost IDENTIFIED BY 'scotch';"
 
 psql -c "CREATE DATABASE datumbazo;" -U postgres
