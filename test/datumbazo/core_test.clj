@@ -443,10 +443,6 @@
 
 ;; RUN
 
-(database-test test-run
-  (is (= [{:?column? 1 :?column?-2 2 :?column?-3 3}]
-         (run db (select [1 2 3])))))
-
 (database-test test-run1
   (is (= {:?column? 1 :?column?-2 2 :?column?-3 3}
          (run1 db (select [1 2 3])))))
@@ -474,3 +470,36 @@
   (is (= (run db (with [:x (select [:*] (from :continents))]
                        (select [:*] (from :x))))
          (run db (select [:*] (from :continents))))))
+
+;; VENDOR TESTS
+
+(defvendor-test test-select-1
+  (is (= [(case vendor
+            :postgresql {:?column? 1}
+            {:1 1})]
+         (run db (select [1])))))
+
+(defvendor-test test-select-1-2-3
+  (is (= [(case vendor
+            :postgresql {:?column?-3 3, :?column?-2 2, :?column? 1}
+            {:3 3, :2 2, :1 1})]
+         (run db (select [1 2 3])))))
+
+(defvendor-test test-select-1-as-n
+  (is (= [{:n 1}]
+         (run db (select [(as 1 :n)])))))
+
+(defvendor-test test-select-x-as-n
+  (is (= [{:n "x"}]
+         (run db (select [(as "x" :n)])))))
+
+(defvendor-test test-test-select-1-2-3-as
+  (is (= [{:a 1, :b 2, :c 3}]
+         (run db (select [(as 1 :a) (as 2 :b) (as 3 :c)])))))
+
+(defvendor-test test-cast-string-to-int
+  (is (= [(case vendor
+            :mysql {(keyword "CAST('1' AS int)") 1}
+            :postgresql {:int4 1}
+            :sqlite {(keyword "CAST(? AS int)") 1})]
+         (run db (select [`(cast "1" :int)])))))

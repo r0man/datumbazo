@@ -15,6 +15,7 @@
                  [org.clojure/java.jdbc "0.3.0-beta1"]
                  [org.clojure/tools.logging "0.2.6"]
                  [postgresql/postgresql "9.1-901-1.jdbc4"]
+                 [org.xerial/sqlite-jdbc "3.7.2"]
                  [mysql/mysql-connector-java "5.1.27"]
                  [slingshot "0.10.3"]
                  [sqlingvo "0.5.10-SNAPSHOT"]]
