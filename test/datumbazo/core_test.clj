@@ -46,6 +46,11 @@
   (column :updated-at :timestamp-with-time-zone :not-null? true :default '(now))
   (primary-key :user-id :spot-id :created-at))
 
+(deftable users
+  (column :id :integer)
+  (column :nick :varchar :length 255)
+  (primary-key :nick))
+
 (deftest test-continent-by-pk*
   (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = 1)"]
          (sql (continent-by-pk* nil {:id 1})))))
@@ -443,10 +448,6 @@
 
 ;; RUN
 
-(database-test test-run1
-  (is (= {:?column? 1 :?column?-2 2 :?column?-3 3}
-         (run1 db (select [1 2 3])))))
-
 ;; RAW SQL
 
 (database-test test-sql-str
@@ -473,33 +474,63 @@
 
 ;; VENDOR TESTS
 
-(defvendor-test test-select-1
-  (is (= [(case vendor
-            :postgresql {:?column? 1}
-            {:1 1})]
-         (run db (select [1])))))
-
-(defvendor-test test-select-1-2-3
-  (is (= [(case vendor
-            :postgresql {:?column?-3 3, :?column?-2 2, :?column? 1}
-            {:3 3, :2 2, :1 1})]
-         (run db (select [1 2 3])))))
-
-(defvendor-test test-select-1-as-n
-  (is (= [{:n 1}]
-         (run db (select [(as 1 :n)])))))
-
-(defvendor-test test-select-x-as-n
-  (is (= [{:n "x"}]
-         (run db (select [(as "x" :n)])))))
-
-(defvendor-test test-test-select-1-2-3-as
-  (is (= [{:a 1, :b 2, :c 3}]
-         (run db (select [(as 1 :a) (as 2 :b) (as 3 :c)])))))
-
 (defvendor-test test-cast-string-to-int
-  (is (= [(case vendor
+  (is (= (run db (select [`(cast "1" :int)]))
+         [(case vendor
             :mysql {(keyword "CAST('1' AS int)") 1}
             :postgresql {:int4 1}
-            :sqlite {(keyword "CAST(? AS int)") 1})]
-         (run db (select [`(cast "1" :int)])))))
+            :sqlite {(keyword "CAST(? AS int)") 1})])))
+
+(defvendor-test test-run1
+  (is (= (run1 db (select [1 2 3]))
+         (first (run db (select [1 2 3]))))))
+
+(defvendor-test test-select-1
+  (is (= (run db (select [1]))
+         [(case vendor
+            :postgresql {:?column? 1}
+            {:1 1})])))
+
+(defvendor-test test-select-1-2-3
+  (is (= (run db (select [1 2 3]))
+         [(case vendor
+            :postgresql {:?column? 1 :?column?-2 2 :?column?-3 3}
+            {:1 1 :2 2 :3 3})])))
+
+(defvendor-test test-select-1-as-n
+  (is (= (run db (select [(as 1 :n)]))
+         [{:n 1}])))
+
+(defvendor-test test-select-x-as-n
+  (is (= (run db (select [(as "x" :n)]))
+         [{:n "x"}])))
+
+(defvendor-test test-test-select-1-2-3-as
+  (is (= (run db (select [(as 1 :a) (as 2 :b) (as 3 :c)]))
+         [{:a 1, :b 2, :c 3}])))
+
+(defvendor-test test-concat-strings
+  (is (= [(case vendor
+            :mysql {(keyword "('a' || 'b' || 'c')") 0} ;; not string concat, but OR operator
+            :postgresql {:?column? "abc"}
+            :sqlite {(keyword "(? || ? || ?)") "abc"})]
+         (run db (select ['(|| "a" "b" "c")])))))
+
+(defvendor-test test-create-table
+  (let [table :test-create-table]
+    (try (is (= (run db (create-table table
+                          (column :id :integer)
+                          (column :nick :varchar :length 255)
+                          (primary-key :nick)))
+                (if (= :sqlite vendor)
+                  [] [{:count 0}])))
+         ;; (is (empty? (run db (select [:*] (from table)))))
+         (finally
+           ;; Cleanup for MySQL (non-transactional DDL)
+           (run db (drop-table [table] (if-exists true)))))))
+
+(defvendor-test test-drop-table-if-exists
+  (is (= (run db (drop-table [:not-existing]
+                   (if-exists true)))
+         (if (= :sqlite vendor)
+           [] [{:count 0}]))))
