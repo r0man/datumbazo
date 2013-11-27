@@ -12,7 +12,7 @@
                  [geo-clj "0.3.6"]
                  [inflections "0.9.4"]
                  [org.clojure/clojure "1.5.1"]
-                 [org.clojure/java.jdbc "0.3.0-beta1"]
+                 [org.clojure/java.jdbc "0.3.0-beta2"]
                  [org.clojure/tools.logging "0.2.6"]
                  [postgresql/postgresql "9.1-901-1.jdbc4"]
                  [org.xerial/sqlite-jdbc "3.7.2"]
