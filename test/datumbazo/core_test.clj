@@ -475,11 +475,12 @@
 ;; VENDOR TESTS
 
 (defvendor-test test-cast-string-to-int
-  (is (= (run db (select [`(cast "1" :integer)]))
-         [(case vendor
-            :mysql {(keyword "CAST('1' AS integer)") 1}
-            :postgresql {:int4 1}
-            :sqlite {(keyword "CAST(? AS integer)") 1})])))
+  (when-not (= :mysql vendor)
+    (is (= (run db (select [`(cast "1" :integer)]))
+           [(case vendor
+              :mysql {(keyword "CAST('1' AS integer)") 1}
+              :postgresql {:int4 1}
+              :sqlite {(keyword "CAST(? AS integer)") 1})]))))
 
 (defvendor-test test-run1
   (is (= (run1 db (select [1 2 3]))
