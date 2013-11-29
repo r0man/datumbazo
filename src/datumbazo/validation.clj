@@ -16,10 +16,11 @@
           condition `(and ~@(map (fn [c v] `(= ~c ~v)) columns vals))]
       (if (and (or (nil? (:if opts))
                    ((:if opts) record))
-               (run1 db (select columns
-                          (from table)
-                          (where condition)
-                          (limit 1))))
+               (run1 (if (fn? db) (db) db)
+                     (select columns
+                       (from table)
+                       (where condition)
+                       (limit 1))))
         (reduce
          (fn [record column]
            (with-meta record
