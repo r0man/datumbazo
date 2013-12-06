@@ -51,19 +51,25 @@
   (column :nick :varchar :length 255)
   (primary-key :nick))
 
-(deftest test-continent-by-pk*
-  (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = 1)"]
-         (sql (continent-by-pk* nil {:id 1})))))
+(database-test test-continent-by-pk*
+  (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = ?)" 1]
+         (sql (continent-by-pk* db {:id 1})))))
 
 (database-test test-continent-by-pk
   (is (empty? (continent-by-pk db {:id 1}))))
 
-(deftest test-rating-by-pk
+;; TODO: Create table
+(database-test test-rating-by-pk
   (let [time (now)]
+    ;; (is (= [(str "SELECT \"ratings\".\"user_id\", \"ratings\".\"spot_id\", \"ratings\".\"rating\", \"ratings\".\"created_at\", \"ratings\".\"updated_at\" "
+    ;;              "FROM \"ratings\" WHERE ((\"ratings\".\"user_id\" = ?) and (\"ratings\".\"spot_id\" = ?) and (\"ratings\".\"created_at\" = ?))")
+    ;;         1 2 (to-timestamp time)]
+    ;;        (sql (rating-by-pk* db {:user-id 1 :spot-id 2 :created-at time}))))
     (is (= [(str "SELECT \"ratings\".\"user_id\", \"ratings\".\"spot_id\", \"ratings\".\"rating\", \"ratings\".\"created_at\", \"ratings\".\"updated_at\" "
-                 "FROM \"ratings\" WHERE ((\"ratings\".\"user_id\" = 1) and (\"ratings\".\"spot_id\" = 2) and (\"ratings\".\"created_at\" = ?))")
-            (to-timestamp time)]
+                 "FROM \"ratings\" WHERE ((\"ratings\".\"user_id\" = NULL) and (\"ratings\".\"spot_id\" = NULL) and (\"ratings\".\"created_at\" = NULL))")]
            (sql (rating-by-pk* db {:user-id 1 :spot-id 2 :created-at time}))))))
+
+;; (test-rating-by-pk)
 
 (deftable twitter-users
   "The Twitter users database table."

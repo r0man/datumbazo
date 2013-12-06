@@ -210,8 +210,9 @@
   (let [row (where-clause-columns db table row)]
     (where (cons 'and (map #(list '= %1 %2) (keys row) (vals row))))))
 
-(defn primary-key-clause [table row]
-  (let [primary-key (or (:primary-key table)
+(defn primary-key-clause [db table row]
+  (let [row (io/encode-row db table row)
+        primary-key (or (:primary-key table)
                         (map :name (filter :primary-key? (vals (:column table)))))]
     (cons 'and (map #(list := (keyword (str (name (:name table)) "." (name %1)))
                            (get row %1))
@@ -222,7 +223,7 @@
                         (map :name (filter :primary-key? (vals (:column table)))))]
     (select [:*]
       (from (:name table))
-      (where (primary-key-clause table row)))))
+      (where (primary-key-clause db table row)))))
 
 (defmacro deftable
   "Define a database table."
@@ -245,7 +246,7 @@
            ~(format "Find the %s by primary key." (singular table-name))
            [~'db ~'row & [~'opts]]
            (compose (~(symbol (str table-name "*")) ~'db)
-                    (where (primary-key-clause ~symbol# ~'row))))
+                    (where (primary-key-clause ~'db ~symbol# ~'row))))
 
          (defn ~(symbol (str "drop-" table-name))
            ~(format "Drop the %s database table." table-name)
@@ -287,7 +288,7 @@
            ~(format "Update the %s row in the database." singular#)
            [~'db ~'row & ~'opts]
            (run1 ~'db (update ~symbol# ~'row
-                        (where (primary-key-clause ~symbol# ~'row))
+                        (where (primary-key-clause ~'db ~symbol# ~'row))
                         (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
                         (prepare (partial io/encode-row ~'db ~symbol#))
                         (prepare (:prepare ~symbol#)))))
