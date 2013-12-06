@@ -290,8 +290,10 @@
          (defn ~(symbol (str "save-" singular#))
            ~(format "Save the %s row to the database." singular#)
            [~'db ~'row & ~'opts]
-           (or (apply ~(symbol (str "update-" singular#)) ~'db ~'row ~'opts)
-               (apply ~(symbol (str "insert-" singular#)) ~'db ~'row ~'opts)))
+           (jdbc/db-transaction
+            [~'db ~'db]
+            (or (apply ~(symbol (str "update-" singular#)) ~'db ~'row ~'opts)
+                (apply ~(symbol (str "insert-" singular#)) ~'db ~'row ~'opts))))
 
          ~@(for [column (vals (:column table#)) :let [column-name (name (:name column))]]
              (do
