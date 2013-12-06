@@ -63,18 +63,23 @@
   [db stmt & {:keys [transaction?]}]
   (with-connection [db db]
     (let [{:keys [op returning] :as ast} (ast stmt)]
-      (cond
-       (= :copy op)
-       (run-copy db ast :transaction? transaction?)
-       (= :select op)
-       (run-query db ast :transaction? transaction?)
-       (and (= :with op)
-            (or (= :select (:op (:query ast)))
-                (:returning (:query ast))))
-       (run-query db ast :transaction? transaction?)
-       returning
-       (run-query db ast :transaction? transaction?)
-       :else (run-prepared db ast :transaction? transaction?)))))
+      (try (cond
+            (= :copy op)
+            (run-copy db ast :transaction? transaction?)
+            (= :select op)
+            (run-query db ast :transaction? transaction?)
+            (and (= :with op)
+                 (or (= :select (:op (:query ast)))
+                     (:returning (:query ast))))
+            (run-query db ast :transaction? transaction?)
+            returning
+            (run-query db ast :transaction? transaction?)
+            :else (run-prepared db ast :transaction? transaction?))
+           (catch Exception e
+             (throw (ex-info (format "Can't execute SQL statement: %s\n%s"
+                                     (pr-str (sql stmt))
+                                     (.getMessage e))
+                             ast e)))))))
 
 ;; ----------------------------------------------------------------------------------------------------------
 
