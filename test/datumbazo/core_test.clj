@@ -452,8 +452,6 @@
   (is (= [{:?column? [1 2 3 4 5 6]}]
          (run db (select ['(|| [1 2] [3 4] [5 6])])))))
 
-;; RUN
-
 ;; RAW SQL
 
 (database-test test-sql-str
@@ -515,6 +513,10 @@
 (defvendor-test test-test-select-1-2-3-as
   (is (= (run db (select [(as 1 :a) (as 2 :b) (as 3 :c)]))
          [{:a 1, :b 2, :c 3}])))
+
+(defvendor-test test-select-1-in-list
+  (if-not (= :mysql vendor)
+    (is (= [{:a 1}] (run db (select [(as 1 :a)] (where `(in 1 ~(list 1 2 3)))))))))
 
 (defvendor-test test-concat-strings
   (is (= [(case vendor
