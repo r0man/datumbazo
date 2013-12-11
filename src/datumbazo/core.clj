@@ -1,5 +1,6 @@
 (ns datumbazo.core
-  (:import org.postgresql.PGConnection)
+  (:import java.sql.SQLException
+           org.postgresql.PGConnection)
   (:refer-clojure :exclude [distinct group-by])
   (:require [clojure.java.io :refer [reader]]
             [clojure.java.jdbc :as jdbc]
@@ -76,10 +77,13 @@
             (run-query db ast :transaction? transaction?)
             :else (run-prepared db ast :transaction? transaction?))
            (catch Exception e
-             (throw (ex-info (format "Can't execute SQL statement: %s\n%s"
-                                     (pr-str (sql stmt))
-                                     (.getMessage e))
-                             ast e)))))))
+             (if (or (instance? SQLException e)
+                     (instance? SQLException (.getCause e)))
+               (throw (ex-info (format "Can't execute SQL statement: %s\n%s"
+                                       (pr-str (sql stmt))
+                                       (.getMessage e))
+                               ast e))
+               (throw e)))))))
 
 ;; ----------------------------------------------------------------------------------------------------------
 
