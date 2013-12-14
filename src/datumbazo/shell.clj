@@ -95,38 +95,41 @@
 (defn raster2pgsql
   "Run the raster2pgsql command."
   [db table input output & {:as opts}]
-  (exec-checked-script
-   "Running shp2pgsql"
-   ("raster2pgsql"
-    ~(if-let [srid (:srid opts)]
-       (format "-s %s" srid) "")
-    ~(if-let [band (:band opts)]
-       (format "-b %s" band) "")
-    ~(case (:mode opts)
-       :append "-a"
-       :create "-c"
-       :drop "-d"
-       :prepare "-p"
-       nil "-c")
-    ~(if-let [column (:column opts)]
-       (format "-f %s" column) "")
-    ~(if-let [no-data (:no-data opts)]
-       (format "-N %s" no-data) "")
-    ~(if (:no-transaction opts)
-       "-e" "")
-    ~(if (:regular-blocking opts)
-       "-r" "")
-    ~(if (:disable-max-extend opts)
-       "-x" "")
-    ~(if (:constraints opts)
-       "-C" "")
-    ~(if (:index opts)
-       "-I" "")
-    ~(if (:analyze opts)
-       "-M" "")
-    ~(if (:register opts)
-       "-R" "")
-    ~(if (sequential? input)
-       (join " " input)
-       input)
-    ~(sql-name db table) > ~output)))
+  (let [{:keys [width height]} opts]
+    (exec-checked-script
+     "Running shp2pgsql"
+     ("raster2pgsql"
+      ~(if-let [srid (:srid opts)]
+         (format "-s %s" srid) "")
+      ~(if-let [band (:band opts)]
+         (format "-b %s" band) "")
+      ~(case (:mode opts)
+         :append "-a"
+         :create "-c"
+         :drop "-d"
+         :prepare "-p"
+         nil "-c")
+      ~(if-let [column (:column opts)]
+         (format "-f %s" column) "")
+      ~(if-let [no-data (:no-data opts)]
+         (format "-N %s" no-data) "")
+      ~(if (:no-transaction opts)
+         "-e" "")
+      ~(if (:regular-blocking opts)
+         "-r" "")
+      ~(if (and width height)
+         (format "-t %sx%s" width height) "")
+      ~(if (:disable-max-extend opts)
+         "-x" "")
+      ~(if (:constraints opts)
+         "-C" "")
+      ~(if (:index opts)
+         "-I" "")
+      ~(if (:analyze opts)
+         "-M" "")
+      ~(if (:register opts)
+         "-R" "")
+      ~(if (sequential? input)
+         (join " " input)
+         input)
+      ~(sql-name db table) > ~output))))
