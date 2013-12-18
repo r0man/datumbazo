@@ -69,7 +69,7 @@
 (database-test test-raster2pgsql
   (with-redefs
     [bash (fn [script]
-            (is (= (str "echo 'Running shp2pgsql...';\n{\n    # shell.clj:100\n"
+            (is (= (str "echo 'Running shp2pgsql...';\n{\n    # shell.clj:101\n"
                         "raster2pgsql -c INPUT weather.nww3_dirpwsfc_2013_02_10 > OUTPUT\n } "
                         "|| { echo '#> Running shp2pgsql : FAIL'; exit 1;} >&2 \necho '#> Running shp2pgsql : SUCCESS'\n") script))
             {:exit 0})]
