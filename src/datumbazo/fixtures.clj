@@ -122,15 +122,15 @@
   "Load all database fixtures from `directory`."
   [db directory & opts]
   (let [fixtures (fixture-seq directory)]
-    (jdbc/db-transaction
-     [db db]
-     (apply deferred-constraints db opts)
-     (doall (map #(apply disable-triggers db %1 opts) (map :table fixtures)))
-     (let [fixtures (->> fixtures
-                         (map #(apply read-fixture db (:table %1) (:file %1) opts))
-                         (doall))]
-       (doall (map #(apply enable-triggers db %1 opts) (map :table fixtures)))
-       fixtures))))
+    (jdbc/with-db-transaction
+      [db db]
+      (apply deferred-constraints db opts)
+      (doall (map #(apply disable-triggers db %1 opts) (map :table fixtures)))
+      (let [fixtures (->> fixtures
+                          (map #(apply read-fixture db (:table %1) (:file %1) opts))
+                          (doall))]
+        (doall (map #(apply enable-triggers db %1 opts) (map :table fixtures)))
+        fixtures))))
 
 (defn tables [directory]
   (map :table (fixture-seq directory)))
