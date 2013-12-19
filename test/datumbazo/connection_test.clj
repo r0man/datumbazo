@@ -88,7 +88,21 @@
     (is (= "/datumbazo" (:uri spec)))
     (is (= {} (:params spec)))
     (is (= "oracle:thin" (:subprotocol spec)))
-    (is (= ":tiger/scotch@localhost:datumbazo" (:subname spec)))))
+    (is (= ":tiger/scotch@localhost:datumbazo" (:subname spec))))
+  (let [spec (connection-spec "vertica://tiger:scotch@localhost/datumbazo")]
+    (is (instance? sqlingvo.vendor.vertica spec))
+    (is (= "vertica" (:adapter spec)))
+    (is (= "com.vertica.jdbc.Driver" (:classname spec)))
+    (is (= :jdbc (:db-pool spec)))
+    (is (= "localhost" (:host spec)))
+    (is (nil? (:port spec)))
+    (is (= "tiger" (:username spec)))
+    (is (= "scotch" (:password spec)))
+    (is (= "datumbazo" (:database spec)))
+    (is (= "/datumbazo" (:uri spec)))
+    (is (= {} (:params spec)))
+    (is (= "vertica" (:subprotocol spec)))
+    (is (= "//localhost/datumbazo" (:subname spec)))))
 
 (database-test test-connection-url
   (is (thrown? IllegalArgumentException (connection-url :unknown-db)))

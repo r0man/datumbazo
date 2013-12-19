@@ -50,6 +50,13 @@
        :adapter "postgresql"
        :classname "org.postgresql.Driver"))))
 
+(defmethod connection-spec :vertica [db-url]
+  (let [spec (util/parse-db-url db-url)]
+    (vendor/map->vertica
+     (assoc spec
+       :adapter "vertica"
+       :classname "com.vertica.jdbc.Driver"))))
+
 (defmethod connection-spec :sqlite [db-url]
   (if-let [matches (re-matches #"(([^:]+):)?([^:]+):([^?]+)(\?(.*))?" (str db-url))]
     (vendor/map->sqlite
