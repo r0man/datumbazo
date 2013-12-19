@@ -119,6 +119,10 @@
 (database-test test-query
   (is (= [[1]] (map vals (jdbc/query db ["SELECT 1"])))))
 
+(deftest test-jdbc-url
+  (is (= "jdbc:postgresql://localhost/datumbazo?password=scotch&user=tiger"
+         (jdbc-url (connection-spec (connection-url :test-db))))))
+
 (deftest test-with-connection
   (with-connection [connection (env :test-db)]
     (is (map? connection))
