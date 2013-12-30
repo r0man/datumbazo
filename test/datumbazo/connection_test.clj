@@ -4,6 +4,7 @@
            com.mchange.v2.c3p0.impl.NewProxyConnection
            java.sql.Connection)
   (:require [clojure.java.jdbc :as jdbc]
+            [com.stuartsierra.component :refer [start stop]]
             [environ.core :refer [env]])
   (:use datumbazo.connection
         datumbazo.util
@@ -111,3 +112,14 @@
     (is (= 0 (:level connection)))
     (is (instance? java.sql.Connection (:connection connection)))
     (is (= (env :test-db) (:connection-string connection)))))
+
+(deftest test-start
+  (let [db (connection-spec test-url)
+        db (start db)]
+    (is (instance? java.sql.Connection (:connection db)))
+    (.close (:connection db))))
+
+(deftest test-start
+  (let [db (connection-spec test-url)
+        db (stop (start db))]
+    (is (nil? (:connection db)))))

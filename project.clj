@@ -7,6 +7,7 @@
   :lein-release {:deploy-via :clojars}
   :dependencies [[clj-time "0.6.0"]
                  [com.palletops/stevedore "0.8.0-beta.5"]
+                 [com.stuartsierra/component "0.2.1"]
                  [commandline-clj "0.1.7"]
                  [environ "0.4.0"]
                  [geo-clj "0.3.6"]

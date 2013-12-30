@@ -1,5 +1,7 @@
 (ns datumbazo.connection
   (:require [clojure.java.jdbc :as jdbc]
+            [clojure.tools.logging :refer [infof]]
+            [com.stuartsierra.component :refer [Lifecycle]]
             [environ.core :refer [env]]
             [inflections.core :refer [dasherize underscore]]
             [no.en.core :refer [parse-integer]]
@@ -124,3 +126,39 @@
                          :connection-string ~db
                          :level 0)]
            ~@body)))))
+
+
+(defn connect
+  "Establish the database connection for `component`."
+  [component]
+  (let [connection (jdbc/get-connection component)
+        component (assoc component :connection connection) ]
+    (infof "Database connection to %s on %s established."
+           (:database component) (:host component))
+    component))
+
+(defn disconnect
+  "Close the database connection for `component`."
+  [component]
+  (.close (:connection component))
+  (let [component (dissoc component :connection) ]
+    (infof "Database connection to %s on %s closed."
+           (:database component) (:host component))
+    component))
+
+(defmacro deflifecycle [& vendors]
+  `(do ~@(for [vendor# vendors]
+           `(extend-type ~vendor#
+              Lifecycle
+              (start [component#]
+                (connect component#))
+              (stop [component#]
+                (disconnect component#))))))
+
+(deflifecycle
+  sqlingvo.vendor.mysql
+  sqlingvo.vendor.postgresql
+  sqlingvo.vendor.oracle
+  sqlingvo.vendor.sqlite
+  sqlingvo.vendor.sqlserver
+  sqlingvo.vendor.vertica)
