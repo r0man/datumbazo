@@ -2,6 +2,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :refer [infof]]
             [com.stuartsierra.component :refer [Lifecycle]]
+            [clojure.string :refer [join]]
             [environ.core :refer [env]]
             [inflections.core :refer [dasherize underscore]]
             [no.en.core :refer [parse-integer]]
@@ -51,6 +52,13 @@
      (assoc spec
        :adapter "postgresql"
        :classname "org.postgresql.Driver"))))
+
+(defmethod connection-spec :vertica [db-url]
+  (let [spec (util/parse-db-url db-url)]
+    (vendor/map->vertica
+     (assoc spec
+       :adapter "vertica"
+       :classname "com.vertica.jdbc.Driver"))))
 
 (defmethod connection-spec :sqlite [db-url]
   (if-let [matches (re-matches #"(([^:]+):)?([^:]+):([^?]+)(\?(.*))?" (str db-url))]
@@ -113,6 +121,19 @@
 (util/defn-memo cached-connection [db-url]
   "Returns the cached database connection for `db-url`."
   (connection db-url))
+
+(defn jdbc-url
+  "Returns a JDBC url from the `db-spec`."
+  [db-spec]
+  (str "jdbc:" (:subprotocol db-spec) "://"
+       (:host db-spec)
+       (if-let [port (:port db-spec)]
+         (str ":" port))
+       "/" (:database db-spec)
+       (str "?" (join "&" (map (fn [[k v]] (str (name k) "=" v))
+                               (seq (assoc (:params db-spec)
+                                      :user (:user db-spec)
+                                      :password (:password db-spec))))))))
 
 (defmacro with-connection
   [[symbol db] & body]

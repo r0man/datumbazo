@@ -50,7 +50,7 @@
         identifiers #(sql-keyword db %1)
         query #(jdbc/query %1 compiled :identifiers identifiers)]
     (if transaction?
-      (jdbc/db-transaction [t-db db] (query t-db))
+      (jdbc/with-db-transaction [t-db db] (query t-db))
       (query db))))
 
 (defn- run-prepared
@@ -191,7 +191,7 @@
   afterwards."
   [[symbol db] & body]
   `(with-connection [db# ~db]
-     (jdbc/db-transaction
+     (jdbc/with-db-transaction
       [~symbol db#]
       (jdbc/db-set-rollback-only! ~symbol)
       ~@body)))
@@ -300,7 +300,7 @@
          (defn ~(symbol (str "save-" singular#))
            ~(format "Save the %s row to the database." singular#)
            [~'db ~'row & ~'opts]
-           (jdbc/db-transaction
+           (jdbc/with-db-transaction
             [~'db ~'db]
             (or (apply ~(symbol (str "update-" singular#)) ~'db ~'row ~'opts)
                 (apply ~(symbol (str "insert-" singular#)) ~'db ~'row ~'opts))))
