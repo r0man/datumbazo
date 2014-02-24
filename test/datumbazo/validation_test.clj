@@ -12,4 +12,4 @@
                               (sql stmt)))
                        [])]
     (let [errors (:errors (meta ((uniqueness-of nil :users :nick) {:nick "Bob"})))]
-      (is (= "has already been taken" (:nick errors))))))
+      (is (= ["has already been taken"] (:nick errors))))))

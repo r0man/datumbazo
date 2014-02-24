@@ -24,6 +24,6 @@
         (reduce
          (fn [record column]
            (with-meta record
-             (assoc-in (meta record) [:errors column] error)))
+             (update-in (meta record) [:errors column] conj error)))
          record columns)
         record))))
