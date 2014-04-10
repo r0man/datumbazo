@@ -141,3 +141,12 @@
   (let [db (connection-spec test-url)
         db (stop (start db))]
     (is (nil? (:connection db)))))
+
+(deftest test-lifecycle
+  (let [component (connection-spec test-url)
+        started (start component)]
+    (is (:connection started))
+    (is (thrown? clojure.lang.ExceptionInfo (start started)))
+    (let [stopped (stop started)]
+      (is (nil? (:connection stopped)))
+      (is (map? (stop stopped))))))

@@ -1,6 +1,6 @@
 (ns datumbazo.connection
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :refer [infof]]
+            [clojure.tools.logging :refer [infof warnf]]
             [com.stuartsierra.component :refer [Lifecycle]]
             [clojure.string :refer [join]]
             [environ.core :refer [env]]
@@ -152,20 +152,22 @@
 (defn connect
   "Establish the database connection for `component`."
   [component]
-  (let [connection (jdbc/get-connection component)
-        component (assoc component :connection connection) ]
+  (if (:connection component)
+    (throw (ex-info "Database connection already established." component)))
+  (let [connection (jdbc/get-connection component)]
     (infof "Database connection to %s on %s established."
            (:database component) (:host component))
-    component))
+    (assoc component :connection connection) ))
 
 (defn disconnect
   "Close the database connection for `component`."
   [component]
-  (.close (:connection component))
-  (let [component (dissoc component :connection) ]
-    (infof "Database connection to %s on %s closed."
-           (:database component) (:host component))
-    component))
+  (if-let [connection (:connection component)]
+    (do (.close connection)
+        (infof "Database connection to %s on %s closed."
+               (:database component) (:host component)))
+    (warnf "Database connection already closed."))
+  (dissoc component :connection))
 
 (defmacro deflifecycle [& vendors]
   `(do ~@(for [vendor# vendors]
