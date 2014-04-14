@@ -4,7 +4,6 @@
   (:require [clojure.instant :refer [read-instant-timestamp]]
             [clojure.java.io :refer [file make-parents resource writer]]
             [clojure.java.jdbc :as jdbc]
-            [clojure.pprint :refer [pprint]]
             [clojure.string :refer [blank? join replace split]]
             [clojure.tools.logging :refer [infof]]
             [commandline.core :refer [print-help with-commandline]]

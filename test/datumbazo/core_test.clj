@@ -4,7 +4,6 @@
             [clj-time.coerce :refer [to-timestamp]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [upper-case]]
-            [clojure.pprint :refer [pprint]]
             [clojure.java.io :refer [file]]
             [environ.core :refer [env]]
             [validation.core :refer :all]
