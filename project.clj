@@ -5,14 +5,15 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :lein-release {:deploy-via :clojars}
-  :dependencies [[clj-time "0.6.0"]
+  :dependencies [[clj-time "0.7.0"]
                  [com.palletops/stevedore "0.8.0-beta.6"]
                  [com.stuartsierra/component "0.2.1"]
                  [commandline-clj "0.1.7"]
-                 [environ "0.4.0"]
-                 [geo-clj "0.3.10"]
+                 [environ "0.5.0"]
+                 [geo-clj "0.3.11"]
                  [inflections "0.9.6"]
-                 [org.clojure/clojure "1.5.1"]
+                 [org.clojure/clojure "1.6.0"]
+                 [org.clojure/data.json "0.2.4"]
                  [org.clojure/java.jdbc "0.3.3"]
                  [org.clojure/tools.logging "0.2.6"]
                  [postgresql/postgresql "9.1-901-1.jdbc4"]
