@@ -89,7 +89,7 @@
   (make-parents filename)
   (with-open [writer (writer filename)]
     (let [rows (run db (select [*] (from table)))]
-      (pprint rows writer)
+      (clojure.pprint/pprint rows writer)
       {:file filename :table table :records (count rows)})))
 
 (defn deferred-constraints [db]

@@ -19,6 +19,18 @@
 (def ^:dynamic *page* nil)
 (def ^:dynamic *per-page* 25)
 
+(declare run)
+
+(defn copy!
+  "Execute a COPY statement."
+  [db table columns & body]
+  (run db (apply copy table columns body)))
+
+(defn select!
+  "Execute a SELECT statement."
+  [db exprs & body]
+  (run db (apply select exprs body)))
+
 (defn- prepare-stmt
   "Compile `stmt` and return a java.sql.PreparedStatement from `db`."
   [db stmt]
@@ -192,9 +204,9 @@
   [[symbol db] & body]
   `(with-connection [db# ~db]
      (jdbc/with-db-transaction
-      [~symbol db#]
-      (jdbc/db-set-rollback-only! ~symbol)
-      ~@body)))
+       [~symbol db#]
+       (jdbc/db-set-rollback-only! ~symbol)
+       ~@body)))
 
 (defn update-columns-best-row-identifiers [db table row]
   (let [columns (meta/best-row-identifiers db :schema (or (:schema table) :public) :table (:name table) :nullable false)
@@ -301,9 +313,9 @@
            ~(format "Save the %s row to the database." singular#)
            [~'db ~'row & ~'opts]
            (jdbc/with-db-transaction
-            [~'db ~'db]
-            (or (apply ~(symbol (str "update-" singular#)) ~'db ~'row ~'opts)
-                (apply ~(symbol (str "insert-" singular#)) ~'db ~'row ~'opts))))
+             [~'db ~'db]
+             (or (apply ~(symbol (str "update-" singular#)) ~'db ~'row ~'opts)
+                 (apply ~(symbol (str "insert-" singular#)) ~'db ~'row ~'opts))))
 
          ~@(for [column (vals (:column table#)) :let [column-name (name (:name column))]]
              (do

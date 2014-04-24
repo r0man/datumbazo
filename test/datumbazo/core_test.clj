@@ -542,3 +542,22 @@
                    (if-exists true)))
          (if (= :sqlite vendor)
            [] [{:count 0}]))))
+
+(database-test test-select!
+  (are [result expected]
+    (= result expected)
+    (select! db [(as 1 :x)])
+    [{:x 1}]
+    (select! db [:*]
+      (from (as (select [(as 1 :x) (as 2 :y)]) :z)))
+    [{:x 1 :y 2}]
+    (select! db [:name]
+      (from :continents)
+      (order-by :name))
+    [{:name "Africa"}
+     {:name "Antarctica"}
+     {:name "Asia"}
+     {:name "Europe"}
+     {:name "North America"}
+     {:name "Oceania"}
+     {:name "South America"}]))
