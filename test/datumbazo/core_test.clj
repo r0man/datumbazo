@@ -543,6 +543,12 @@
          (if (= :sqlite vendor)
            [] [{:count 0}]))))
 
+(database-test test-delete!
+  (delete! db :countries))
+
+(database-test test-drop-table!
+  (drop-table! db [:countries]))
+
 (database-test test-select!
   (are [result expected]
     (= result expected)
@@ -561,3 +567,6 @@
      {:name "North America"}
      {:name "Oceania"}
      {:name "South America"}]))
+
+(database-test test-truncate!
+  (truncate! db [:countries]))

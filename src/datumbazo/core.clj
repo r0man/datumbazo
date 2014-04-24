@@ -26,10 +26,35 @@
   [db table columns & body]
   (run db (apply copy table columns body)))
 
+(defn delete!
+  "Execute a DELETE statement."
+  [db table & body]
+  (run db (apply delete table body)))
+
+(defn drop-table!
+  "Execute a DROP TABLE statement."
+  [db table & body]
+  (run db (apply drop-table table body)))
+
+(defn insert!
+  "Execute a INSERT statement."
+  [db table columns & body]
+  (run db (apply insert table columns body)))
+
 (defn select!
   "Execute a SELECT statement."
   [db exprs & body]
   (run db (apply select exprs body)))
+
+(defn truncate!
+  "Execute a TRUNCATE statement."
+  [db tables & body]
+  (run db (apply truncate tables body)))
+
+(defn update!
+  "Execute a UPDATE statement."
+  [db table row & body]
+  (run db (apply update table row body)))
 
 (defn- prepare-stmt
   "Compile `stmt` and return a java.sql.PreparedStatement from `db`."
