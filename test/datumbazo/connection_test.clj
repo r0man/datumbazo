@@ -15,8 +15,8 @@
 
 (deftest test-connection-spec
   (let [spec (connection-spec "mysql://tiger:scotch@localhost/datumbazo?profileSQL=true")]
-    (is (instance? sqlingvo.vendor.mysql spec))
-    (is (= "mysql" (:adapter spec)))
+    (is (instance? sqlingvo.db.Database spec))
+    (is (= :mysql (:name spec)))
     (is (= "com.mysql.jdbc.Driver" (:classname spec)))
     (is (= :jdbc (:db-pool spec)))
     (is (= "localhost" (:host spec)))
@@ -31,8 +31,8 @@
     (is (= "tiger" (:user spec))) ; MySQL needs :user key
     (is (= "scotch" (:password spec))))
   (let [spec (connection-spec "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
-    (is (instance? sqlingvo.vendor.postgresql spec))
-    (is (= "postgresql" (:adapter spec)))
+    (is (instance? sqlingvo.db.Database spec))
+    (is (= :postgresql (:name spec)))
     (is (= "org.postgresql.Driver" (:classname spec)))
     (is (= :jdbc (:db-pool spec)))
     (is (= "localhost" (:host spec)))
@@ -47,24 +47,24 @@
     (is (= "tiger" (:user spec)))
     (is (= "scotch" (:password spec))))
   (let [spec (connection-spec "sqlite://tmp/datumbazo.sqlite")]
-    (is (instance? sqlingvo.vendor.sqlite spec))
-    (is (= "sqlite" (:adapter spec)))
+    (is (instance? sqlingvo.db.Database spec))
+    (is (= :sqlite (:name spec)))
     (is (= "org.sqlite.JDBC" (:classname spec)))
     (is (= :jdbc (:db-pool spec)))
     (is (= {} (:params spec)))
     (is (= "sqlite" (:subprotocol spec)))
     (is (= "//tmp/datumbazo.sqlite" (:subname spec))))
   (let [spec (connection-spec "sqlite:datumbazo.sqlite")]
-    (is (instance? sqlingvo.vendor.sqlite spec))
-    (is (= "sqlite" (:adapter spec)))
+    (is (instance? sqlingvo.db.Database spec))
+    (is (= :sqlite (:name spec)))
     (is (= "org.sqlite.JDBC" (:classname spec)))
     (is (= :jdbc (:db-pool spec)))
     (is (= {} (:params spec)))
     (is (= "sqlite" (:subprotocol spec)))
     (is (= "datumbazo.sqlite" (:subname spec))))
   (let [spec (connection-spec "sqlserver://tiger:scotch@localhost/datumbazo")]
-    (is (instance? sqlingvo.vendor.sqlserver spec))
-    (is (= "mssql" (:adapter spec)))
+    (is (instance? sqlingvo.db.Database spec))
+    (is (= :sqlserver (:name spec)))
     (is (= "com.microsoft.sqlserver.jdbc.SQLServerDriver" (:classname spec)))
     (is (= :jdbc (:db-pool spec)))
     (is (= "localhost" (:host spec)))
@@ -77,8 +77,8 @@
     (is (= "sqlserver" (:subprotocol spec)))
     (is (= "//localhost;database=datumbazo;user=tiger;password=scotch" (:subname spec))))
   (let [spec (connection-spec "oracle://tiger:scotch@localhost/datumbazo")]
-    (is (instance? sqlingvo.vendor.oracle spec))
-    (is (= "oracle" (:adapter spec)))
+    (is (instance? sqlingvo.db.Database spec))
+    (is (= :oracle (:name spec)))
     (is (= "oracle.jdbc.driver.OracleDriver" (:classname spec)))
     (is (= :jdbc (:db-pool spec)))
     (is (= "localhost" (:host spec)))
@@ -91,8 +91,8 @@
     (is (= "oracle:thin" (:subprotocol spec)))
     (is (= ":tiger/scotch@localhost:datumbazo" (:subname spec))))
   (let [spec (connection-spec "vertica://tiger:scotch@localhost/datumbazo")]
-    (is (instance? sqlingvo.vendor.vertica spec))
-    (is (= "vertica" (:adapter spec)))
+    (is (instance? sqlingvo.db.Database spec))
+    (is (= :vertica (:name spec)))
     (is (= "com.vertica.jdbc.Driver" (:classname spec)))
     (is (= :jdbc (:db-pool spec)))
     (is (= "localhost" (:host spec)))

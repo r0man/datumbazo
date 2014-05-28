@@ -1,13 +1,13 @@
 (ns datumbazo.connection
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :refer [infof warnf]]
-            [com.stuartsierra.component :refer [Lifecycle]]
+            [com.stuartsierra.component :as component]
             [clojure.string :refer [join]]
             [environ.core :refer [env]]
             [inflections.core :refer [dasherize underscore]]
             [no.en.core :refer [parse-integer]]
             [datumbazo.util :as util]
-            [sqlingvo.vendor :as vendor]))
+            [sqlingvo.db :as db]))
 
 (def ^:dynamic *connection* nil)
 
@@ -31,16 +31,14 @@
 
 (defmethod connection-spec :mysql [db-url]
   (let [spec (util/parse-db-url db-url)]
-    (vendor/map->mysql
+    (db/mysql
      (assoc spec
-       :adapter "mysql"
        :classname "com.mysql.jdbc.Driver"))))
 
 (defmethod connection-spec :oracle [db-url]
   (let [spec (util/parse-db-url db-url)]
-    (vendor/map->oracle
+    (db/oracle
      (assoc spec
-       :adapter "oracle"
        :classname "oracle.jdbc.driver.OracleDriver"
        :subprotocol "oracle:thin"
        :subname (str ":" (:username spec) "/" (:password spec) "@" (util/format-server spec)
@@ -48,23 +46,20 @@
 
 (defmethod connection-spec :postgresql [db-url]
   (let [spec (util/parse-db-url db-url)]
-    (vendor/map->postgresql
+    (db/postgresql
      (assoc spec
-       :adapter "postgresql"
        :classname "org.postgresql.Driver"))))
 
 (defmethod connection-spec :vertica [db-url]
   (let [spec (util/parse-db-url db-url)]
-    (vendor/map->vertica
+    (db/vertica
      (assoc spec
-       :adapter "vertica"
        :classname "com.vertica.jdbc.Driver"))))
 
 (defmethod connection-spec :sqlite [db-url]
   (if-let [matches (re-matches #"(([^:]+):)?([^:]+):([^?]+)(\?(.*))?" (str db-url))]
-    (vendor/map->sqlite
-     {:adapter "sqlite"
-      :classname "org.sqlite.JDBC"
+    (db/sqlite
+     {:classname "org.sqlite.JDBC"
       :params (util/parse-params (nth matches 5))
       :db-pool (keyword (or (nth matches 2) :jdbc))
       :subname (nth matches 4)
@@ -72,9 +67,8 @@
 
 (defmethod connection-spec :sqlserver [db-url]
   (let [spec (util/parse-db-url db-url)]
-    (vendor/map->sqlserver
+    (db/sqlserver
      (assoc spec
-       :adapter "mssql"
        :classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
        :subprotocol "sqlserver"
        :subname (str "//" (util/format-server spec) ";"
@@ -169,19 +163,26 @@
     (warnf "Database connection already closed."))
   (dissoc component :connection))
 
-(defmacro deflifecycle [& vendors]
-  `(do ~@(for [vendor# vendors]
-           `(extend-type ~vendor#
-              Lifecycle
-              (start [component#]
-                (connect component#))
-              (stop [component#]
-                (disconnect component#))))))
+(extend-type sqlingvo.db.Database
+  component/Lifecycle
+  (start [component]
+    (connect component))
+  (stop [component]
+    (disconnect component)))
 
-(deflifecycle
-  sqlingvo.vendor.mysql
-  sqlingvo.vendor.postgresql
-  sqlingvo.vendor.oracle
-  sqlingvo.vendor.sqlite
-  sqlingvo.vendor.sqlserver
-  sqlingvo.vendor.vertica)
+;; (defmacro deflifecycle [& dbs]
+;;   `(do ~@(for [db# dbs]
+;;            `(extend-type ~db#
+;;               Lifecycle
+;;               (start [component#]
+;;                 (connect component#))
+;;               (stop [component#]
+;;                 (disconnect component#))))))
+
+;; (deflifecycle
+;;   sqlingvo.db.mysql
+;;   sqlingvo.db.postgresql
+;;   sqlingvo.db.oracle
+;;   sqlingvo.db.sqlite
+;;   sqlingvo.db.sqlserver
+;;   sqlingvo.db.vertica)

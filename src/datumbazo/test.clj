@@ -19,11 +19,11 @@
      (with-rollback [~'db db]
        ~@body)))
 
-(defmacro defvendor-test
+(defmacro database-test-all
   [test-name & body]
   `(deftest ~test-name
-     ~@(for [[vendor# url#] connections]
-         `(testing ~(str test-name " (" (name vendor#) ")")
-            (let [~'vendor ~vendor#]
-              (with-rollback [~'db ~url#]
+     ~@(for [[db# url#] connections]
+         `(testing ~(str test-name " (" (name db#) ")")
+            (let [~'db (connection ~url#)]
+              (with-rollback [~'db ~'db]
                 ~@body))))))
