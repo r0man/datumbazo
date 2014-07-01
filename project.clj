@@ -4,7 +4,7 @@
   :min-lein-version "2.0.0"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :lein-release {:deploy-via :clojars}
+  :deploy-repositories [["releases" :clojars]]
   :dependencies [[clj-time "0.7.0"]
                  [com.palletops/stevedore "0.8.0-beta.7"]
                  [com.stuartsierra/component "0.2.1"]
