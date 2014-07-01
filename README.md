@@ -8,6 +8,6 @@ Via Clojars: http://clojars.org/datumbazo
 
 ## License
 
-Copyright (C) 2011 Roman Scherer
+Copyright (C) 2011 r0man
 
 Distributed under the Eclipse Public License, the same as Clojure.

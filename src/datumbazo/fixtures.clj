@@ -14,7 +14,7 @@
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [edn-file-seq path-split path-replace]]
             [geo.postgis :as geo]
-            [inflections.core :refer [hyphenize underscore]]
+            [inflections.core :refer [hyphenate underscore]]
             [sqlingvo.util :refer [parse-table]]))
 
 (def ^:dynamic *readers*

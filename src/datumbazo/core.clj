@@ -9,7 +9,7 @@
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [compact-map immigrate]]
-            [inflections.core :refer [hyphenize singular]]
+            [inflections.core :refer [hyphenate singular]]
             [no.en.core :refer [parse-integer]]
             [sqlingvo.util :refer [parse-table parse-expr concat-in]]
             sqlingvo.core))
