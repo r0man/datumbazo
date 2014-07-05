@@ -154,3 +154,9 @@
 (deftest test-with-db
   (with-db [db (connection-spec test-url)]
     (is (instance? java.sql.Connection (:connection db)))))
+
+(deftest test-with-db-rollback
+  (let [component (connection-spec test-url)
+        component (assoc component :test true)]
+    (with-db [db component]
+      (is (instance? java.sql.Connection (:connection db))))))

@@ -1,6 +1,6 @@
 (ns datumbazo.connection
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :refer [infof warnf]]
+            [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
             [clojure.string :refer [join]]
             [environ.core :refer [env]]
@@ -142,26 +142,34 @@
                          :level 0)]
            ~@body)))))
 
+(defn start-transaction [db]
+  (.setAutoCommit (:connection db) false)
+  (assoc db :rollback (atom true) :level 1))
 
 (defn connect
   "Establish the database connection for `component`."
   [component]
   (if (:connection component)
     (throw (ex-info "Database connection already established." component)))
-  (let [connection (jdbc/get-connection component)]
-    (infof "Database connection to %s on %s established."
-           (:database component) (:host component))
-    (assoc component :connection connection) ))
+  (let [connection (jdbc/get-connection component)
+        component (jdbc/add-connection component connection)]
+    (log/infof "Database connection to %s on %s established."
+               (:database component) (:host component))
+    (if (:test component)
+      (start-transaction component)
+      component)))
 
 (defn disconnect
   "Close the database connection for `component`."
   [component]
   (if-let [connection (:connection component)]
-    (do (.close connection)
-        (infof "Database connection to %s on %s closed."
-               (:database component) (:host component)))
-    (warnf "Database connection already closed."))
-  (dissoc component :connection))
+    (do (when (and (:rollback component) @(:rollback component))
+          (.rollback connection))
+        (.close connection)
+        (log/infof "Database connection to %s on %s closed."
+                   (:database component) (:host component)))
+    (log/warnf "Database connection already closed."))
+  (dissoc component :connection :savepoint))
 
 (extend-type sqlingvo.db.Database
   component/Lifecycle

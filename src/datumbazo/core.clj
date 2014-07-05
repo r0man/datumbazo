@@ -5,7 +5,6 @@
   (:require [clojure.java.io :refer [reader]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
-            [datumbazo.connection :refer [with-connection]]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [compact-map immigrate]]
@@ -59,11 +58,10 @@
 (defn- prepare-stmt
   "Compile `stmt` and return a java.sql.PreparedStatement from `db`."
   [db stmt]
-  (with-connection [db db]
-    (let [[sql & args] (sql db stmt)
-          stmt (jdbc/prepare-statement (:connection db) sql)]
-      (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
-      stmt)))
+  (let [[sql & args] (sql db stmt)
+        stmt (jdbc/prepare-statement (:connection db) sql)]
+    (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
+    stmt))
 
 (defn sql-str
   "Prepare `stmt` using the database and return the raw SQL as a string."
@@ -99,28 +97,27 @@
 (defn run*
   "Compile and run `stmt` against the database and return the rows."
   [db stmt & {:keys [transaction?]}]
-  (with-connection [db db]
-    (let [{:keys [op returning] :as ast} (ast stmt)]
-      (try (cond
-            (= :copy op)
-            (run-copy db ast :transaction? transaction?)
-            (= :select op)
-            (run-query db ast :transaction? transaction?)
-            (and (= :with op)
-                 (or (= :select (:op (:query ast)))
-                     (:returning (:query ast))))
-            (run-query db ast :transaction? transaction?)
-            returning
-            (run-query db ast :transaction? transaction?)
-            :else (run-prepared db ast :transaction? transaction?))
-           (catch Exception e
-             (if (or (instance? SQLException e)
-                     (instance? SQLException (.getCause e)))
-               (throw (ex-info (format "Can't execute SQL statement: %s\n%s"
-                                       (pr-str (sql stmt))
-                                       (.getMessage e))
-                               ast e))
-               (throw e)))))))
+  (let [{:keys [op returning] :as ast} (ast stmt)]
+    (try (cond
+          (= :copy op)
+          (run-copy db ast :transaction? transaction?)
+          (= :select op)
+          (run-query db ast :transaction? transaction?)
+          (and (= :with op)
+               (or (= :select (:op (:query ast)))
+                   (:returning (:query ast))))
+          (run-query db ast :transaction? transaction?)
+          returning
+          (run-query db ast :transaction? transaction?)
+          :else (run-prepared db ast :transaction? transaction?))
+         (catch Exception e
+           (if (or (instance? SQLException e)
+                   (instance? SQLException (.getCause e)))
+             (throw (ex-info (format "Can't execute SQL statement: %s\n%s"
+                                     (pr-str (sql stmt))
+                                     (.getMessage e))
+                             ast e))
+             (throw e))))))
 
 ;; ----------------------------------------------------------------------------------------------------------
 
@@ -222,16 +219,6 @@
                  query# (apply ~query-sym ~'args)]
              ((or ~map-fn identity)
               (run1 db# query#)))))))
-
-(defmacro with-rollback
-  "Evaluate `body` within a transaction on `db` and rollback
-  afterwards."
-  [[symbol db] & body]
-  `(with-connection [db# ~db]
-     (jdbc/with-db-transaction
-       [~symbol db#]
-       (jdbc/db-set-rollback-only! ~symbol)
-       ~@body)))
 
 (defn update-columns-best-row-identifiers [db table row]
   (let [columns (meta/best-row-identifiers db :schema (or (:schema table) :public) :table (:name table) :nullable false)

@@ -2,8 +2,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.test :refer :all]
             [environ.core :refer [env]]
-            [datumbazo.core :refer  [with-rollback]]
-            [datumbazo.connection :refer  [connection]]))
+            [datumbazo.connection :refer  [connection with-db]]))
 
 (def connections
   {:mysql "mysql://tiger:scotch@localhost/datumbazo"
@@ -16,7 +15,7 @@
   "Define a database test."
   [name & body]
   `(deftest ^:integration ~name
-     (with-rollback [~'db db]
+     (with-db [~'db (assoc db :test true)]
        ~@body)))
 
 (defmacro database-test-all
@@ -24,6 +23,5 @@
   `(deftest ~test-name
      ~@(for [[db# url#] connections]
          `(testing ~(str test-name " (" (name db#) ")")
-            (let [~'db (connection ~url#)]
-              (with-rollback [~'db ~'db]
-                ~@body))))))
+            (with-db [~'db (assoc (connection ~url#) :test true)]
+              ~@body)))))
