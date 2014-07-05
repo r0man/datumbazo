@@ -170,19 +170,10 @@
   (stop [component]
     (disconnect component)))
 
-;; (defmacro deflifecycle [& dbs]
-;;   `(do ~@(for [db# dbs]
-;;            `(extend-type ~db#
-;;               Lifecycle
-;;               (start [component#]
-;;                 (connect component#))
-;;               (stop [component#]
-;;                 (disconnect component#))))))
-
-;; (deflifecycle
-;;   sqlingvo.db.mysql
-;;   sqlingvo.db.postgresql
-;;   sqlingvo.db.oracle
-;;   sqlingvo.db.sqlite
-;;   sqlingvo.db.sqlserver
-;;   sqlingvo.db.vertica)
+(defmacro with-db
+  "Evaluate `body` within the context of a database connection."
+  [[db-sym component] & body]
+  `(let [component# (component/start ~component)
+         ~db-sym component#]
+     (try ~@body
+          (finally (component/stop component#)))))

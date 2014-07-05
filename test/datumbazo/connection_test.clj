@@ -150,3 +150,7 @@
     (let [stopped (stop started)]
       (is (nil? (:connection stopped)))
       (is (map? (stop stopped))))))
+
+(deftest test-with-db
+  (with-db [db (connection-spec test-url)]
+    (is (instance? java.sql.Connection (:connection db)))))
