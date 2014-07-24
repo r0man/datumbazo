@@ -1,13 +1,16 @@
 (ns datumbazo.connection
   (:require [clojure.java.jdbc :as jdbc]
+            [clojure.string :refer [join replace]]
             [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
-            [clojure.string :refer [join]]
+            [datumbazo.util :as util]
             [environ.core :refer [env]]
             [inflections.core :refer [dasherize underscore]]
             [no.en.core :refer [parse-integer]]
-            [datumbazo.util :as util]
-            [sqlingvo.db :as db]))
+            [sqlingvo.core :refer [ast sql sql-keyword]]
+            [sqlingvo.db :as db])
+  (:import (java.sql SQLException))
+  (:refer-clojure :exclude [replace]))
 
 (def ^:dynamic *connection* nil)
 
@@ -171,12 +174,79 @@
     (log/warnf "Database connection already closed."))
   (dissoc component :connection :savepoint))
 
+(defn- prepare-stmt
+  "Compile `stmt` and return a java.sql.PreparedStatement from `db`."
+  [db stmt]
+  (let [[sql & args] (sql db stmt)
+        stmt (jdbc/prepare-statement (:connection db) sql)]
+    (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
+    stmt))
+
+(defn sql-str
+  "Prepare `stmt` using the database and return the raw SQL as a string."
+  [db stmt]
+  (let [sql (first (sql db stmt))
+        stmt (prepare-stmt db stmt)]
+    (if (.startsWith (str stmt) (replace sql #"\?.*" ""))
+      (str stmt)
+      (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver.")))))
+
+(defn- run-copy
+  [db ast  & {:keys [transaction?]}]
+  ;; TODO: Get rid of sql-str
+  (let [compiled (sql-str db ast)
+        stmt (.prepareStatement (:connection db) compiled)]
+    (.execute stmt)))
+
+(defn- run-query
+  [db ast  & {:keys [transaction?]}]
+  (let [compiled (sql db ast)
+        identifiers #(sql-keyword db %1)
+        query #(jdbc/query %1 compiled :identifiers identifiers)]
+    (if transaction?
+      (jdbc/with-db-transaction [t-db db] (query t-db))
+      (query db))))
+
+(defn- run-prepared
+  [db ast & {:keys [transaction?]}]
+  (let [compiled (sql db ast)]
+    (->> (jdbc/db-do-prepared db transaction? (first compiled) (rest compiled))
+         (map #(hash-map :count %1)))))
+
+(defn run*
+  "Compile and run `stmt` against the database and return the rows."
+  [db stmt & [{:keys [transaction?]}]]
+  (let [{:keys [op returning] :as ast} (ast stmt)]
+    (try (cond
+          (= :copy op)
+          (run-copy db ast :transaction? transaction?)
+          (= :select op)
+          (run-query db ast :transaction? transaction?)
+          (and (= :with op)
+               (or (= :select (:op (:query ast)))
+                   (:returning (:query ast))))
+          (run-query db ast :transaction? transaction?)
+          returning
+          (run-query db ast :transaction? transaction?)
+          :else (run-prepared db ast :transaction? transaction?))
+         (catch Exception e
+           (if (or (instance? SQLException e)
+                   (instance? SQLException (.getCause e)))
+             (throw (ex-info (format "Can't execute SQL statement: %s\n%s"
+                                     (pr-str (sql stmt))
+                                     (.getMessage e))
+                             ast e))
+             (throw e))))))
+
 (extend-type sqlingvo.db.Database
   component/Lifecycle
   (start [component]
     (connect component))
   (stop [component]
-    (disconnect component)))
+    (disconnect component))
+  sqlingvo.db/Executable
+  (sql-exec [db stmt opts]
+    (run* db stmt opts)))
 
 (defmacro with-db
   "Evaluate `body` within the context of a database connection."

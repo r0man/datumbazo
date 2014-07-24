@@ -5,7 +5,8 @@
            java.sql.Connection)
   (:require [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :refer [start stop]]
-            [environ.core :refer [env]])
+            [environ.core :refer [env]]
+            [datumbazo.core :refer [select]])
   (:use datumbazo.connection
         datumbazo.util
         datumbazo.test
@@ -160,3 +161,6 @@
         component (assoc component :test true)]
     (with-db [db component]
       (is (instance? java.sql.Connection (:connection db))))))
+
+(database-test test-sql-str
+  (is (= "SELECT 1, 'a'" (sql-str db (select [1 "a"])))))

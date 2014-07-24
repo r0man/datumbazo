@@ -6,7 +6,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [com.stuartsierra.component :as component]
-            [datumbazo.connection :refer [connection]]
+            [datumbazo.connection :refer [connection run*]]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [compact-map immigrate]]
@@ -34,10 +34,6 @@
          ~db-sym component#]
      (try ~@body
           (finally (component/stop component#)))))
-
-(comment
-  (with-db [db "postgresql://localhost/datumbazo"]
-    (db (select [1]))))
 
 (defn copy!
   "Execute a COPY statement."
@@ -73,70 +69,6 @@
   "Execute a UPDATE statement."
   [db table row & body]
   (run db (apply update table row body)))
-
-(defn- prepare-stmt
-  "Compile `stmt` and return a java.sql.PreparedStatement from `db`."
-  [db stmt]
-  (let [[sql & args] (sql db stmt)
-        stmt (jdbc/prepare-statement (:connection db) sql)]
-    (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
-    stmt))
-
-(defn sql-str
-  "Prepare `stmt` using the database and return the raw SQL as a string."
-  [db stmt]
-  (let [sql (first (sql db stmt))
-        stmt (prepare-stmt db stmt)]
-    (if (.startsWith (str stmt) (str/replace sql #"\?.*" ""))
-      (str stmt)
-      (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver.")))))
-
-(defn- run-copy
-  [db ast  & {:keys [transaction?]}]
-  ;; TODO: Get rid of sql-str
-  (let [compiled (sql-str db ast)
-        stmt (.prepareStatement (:connection db) compiled)]
-    (.execute stmt)))
-
-(defn- run-query
-  [db ast  & {:keys [transaction?]}]
-  (let [compiled (sql db ast)
-        identifiers #(sql-keyword db %1)
-        query #(jdbc/query %1 compiled :identifiers identifiers)]
-    (if transaction?
-      (jdbc/with-db-transaction [t-db db] (query t-db))
-      (query db))))
-
-(defn- run-prepared
-  [db ast & {:keys [transaction?]}]
-  (let [compiled (sql db ast)]
-    (->> (jdbc/db-do-prepared db transaction? (first compiled) (rest compiled))
-         (map #(hash-map :count %1)))))
-
-(defn run*
-  "Compile and run `stmt` against the database and return the rows."
-  [db stmt & {:keys [transaction?]}]
-  (let [{:keys [op returning] :as ast} (ast stmt)]
-    (try (cond
-          (= :copy op)
-          (run-copy db ast :transaction? transaction?)
-          (= :select op)
-          (run-query db ast :transaction? transaction?)
-          (and (= :with op)
-               (or (= :select (:op (:query ast)))
-                   (:returning (:query ast))))
-          (run-query db ast :transaction? transaction?)
-          returning
-          (run-query db ast :transaction? transaction?)
-          :else (run-prepared db ast :transaction? transaction?))
-         (catch Exception e
-           (if (or (instance? SQLException e)
-                   (instance? SQLException (.getCause e)))
-             (throw (ex-info (format "Can't execute SQL statement: %s\n%s"
-                                     (pr-str (sql stmt))
-                                     (.getMessage e))
-                             ast e))
-             (throw e))))))
 
 ;; ----------------------------------------------------------------------------------------------------------
 
@@ -176,9 +108,9 @@
 (defn run
   "Compile and run `stmt` against the current clojure.java.jdbc
   database connection."
-  [db stmt & opts]
+  [db stmt & [opts]]
   (let [ast (ast stmt)]
-    (->> (apply run* db (apply-preparation ast) opts)
+    (->> (run* db (apply-preparation ast) opts)
          ((if (= :delete (:op ast))
             identity
             #(apply-transformation ast %1))))))
