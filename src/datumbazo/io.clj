@@ -187,3 +187,8 @@
   "To read an instant as an DateTime, bind *data-readers* to a map
 with this var as the value for the 'inst key."
   (partial i/parse-timestamp (i/validated construct-date-time)))
+
+(extend-protocol jdbc/IResultSetReadColumn
+  org.postgresql.jdbc2.AbstractJdbc2Array
+  (result-set-read-column [val rsmeta idx]
+    (seq (.getArray val))))
