@@ -171,11 +171,6 @@
     (log/warnf "Database connection already closed."))
   (dissoc component :connection :savepoint))
 
-(defn new-db
-  "Return a new database component."
-  [url & [opts]]
-  (merge (connection url) opts))
-
 (extend-type sqlingvo.db.Database
   component/Lifecycle
   (start [component]

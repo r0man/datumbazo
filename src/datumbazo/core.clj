@@ -5,13 +5,15 @@
   (:require [clojure.java.io :refer [reader]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
+            [com.stuartsierra.component :as component]
+            [datumbazo.connection :refer [connection]]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [compact-map immigrate]]
             [inflections.core :refer [hyphenate singular]]
             [no.en.core :refer [parse-integer]]
-            [sqlingvo.util :refer [parse-table parse-expr concat-in]]
-            sqlingvo.core))
+            sqlingvo.core
+            [sqlingvo.util :refer [parse-table parse-expr concat-in]]))
 
 (immigrate 'sqlingvo.core)
 
@@ -19,6 +21,23 @@
 (def ^:dynamic *per-page* 25)
 
 (declare run)
+
+(defn new-db
+  "Return a new database component."
+  [url & [opts]]
+  (merge (connection url) opts))
+
+(defmacro with-db
+  "Evaluate `body` within the context of a database connection."
+  [[db-sym spec] & body]
+  `(let [component# (component/start (new-db ~spec))
+         ~db-sym component#]
+     (try ~@body
+          (finally (component/stop component#)))))
+
+(comment
+  (with-db [db "postgresql://localhost/datumbazo"]
+    (db (select [1]))))
 
 (defn copy!
   "Execute a COPY statement."

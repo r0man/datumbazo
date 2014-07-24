@@ -570,3 +570,27 @@
 
 (database-test test-truncate!
   (truncate! db [:countries]))
+
+(deftest test-new-db
+  (let [db (new-db "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
+    (is (instance? sqlingvo.db.Database db))
+    (is (= :postgresql (:name db)))
+    (is (= "tiger" (:username db)))
+    (is (= "scotch" (:password db)))
+    (is (= "localhost" (:host db)))
+    (is (= 5432 (:port db)))
+    (is (= "datumbazo" (:database db)))
+    (is (= {:ssl "true"} (:params db)))
+    (is (= db (new-db db)))))
+
+(deftest test-with-db
+  (with-db [db "postgresql://tiger:scotch@localhost:5432/datumbazo"]
+    (is (instance? sqlingvo.db.Database db))
+    (is (instance? java.sql.Connection (:connection db)))
+    (is (= :postgresql (:name db)))
+    (is (= "tiger" (:username db)))
+    (is (= "scotch" (:password db)))
+    (is (= "localhost" (:host db)))
+    (is (= 5432 (:port db)))
+    (is (= "datumbazo" (:database db)))
+    (is (= db (new-db db)))))
