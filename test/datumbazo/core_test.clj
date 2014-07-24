@@ -473,70 +473,70 @@
 ;; DB TESTS
 
 (database-test-all test-cast-string-to-int
-                   (when-not (= :mysql (:name db))
-                     (is (= (run db (select [`(cast "1" :integer)]))
-                            [(case (:name db)
-                               :mysql {(keyword "CAST('1' AS integer)") 1}
-                               :postgresql {:int4 1}
-                               :sqlite {(keyword "CAST(? AS integer)") 1})]))))
+  (when-not (= :mysql (:name db))
+    (is (= (run db (select [`(cast "1" :integer)]))
+           [(case (:name db)
+              :mysql {(keyword "CAST('1' AS integer)") 1}
+              :postgresql {:int4 1}
+              :sqlite {(keyword "CAST(? AS integer)") 1})]))))
 
 (database-test-all test-run1
-                   (is (= (run1 db (select [1 2 3]))
-                          (first (run db (select [1 2 3]))))))
+  (is (= (run1 db (select [1 2 3]))
+         (first (run db (select [1 2 3]))))))
 
 (database-test-all test-select-1
-                   (is (= (run db (select [1]))
-                          [(case (:name db)
-                             :postgresql {:?column? 1}
-                             {:1 1})])))
+  (is (= (run db (select [1]))
+         [(case (:name db)
+            :postgresql {:?column? 1}
+            {:1 1})])))
 
 (database-test-all test-select-1-2-3
-                   (is (= (run db (select [1 2 3]))
-                          [(case (:name db)
-                             :postgresql {:?column? 1 :?column?-2 2 :?column?-3 3}
-                             {:1 1 :2 2 :3 3})])))
+  (is (= (run db (select [1 2 3]))
+         [(case (:name db)
+            :postgresql {:?column? 1 :?column?-2 2 :?column?-3 3}
+            {:1 1 :2 2 :3 3})])))
 
 (database-test-all test-select-1-as-n
-                   (is (= (run db (select [(as 1 :n)]))
-                          [{:n 1}])))
+  (is (= (run db (select [(as 1 :n)]))
+         [{:n 1}])))
 
 (database-test-all test-select-x-as-n
-                   (is (= (run db (select [(as "x" :n)]))
-                          [{:n "x"}])))
+  (is (= (run db (select [(as "x" :n)]))
+         [{:n "x"}])))
 
 (database-test-all test-test-select-1-2-3-as
-                   (is (= (run db (select [(as 1 :a) (as 2 :b) (as 3 :c)]))
-                          [{:a 1, :b 2, :c 3}])))
+  (is (= (run db (select [(as 1 :a) (as 2 :b) (as 3 :c)]))
+         [{:a 1, :b 2, :c 3}])))
 
 (database-test-all test-select-1-in-list
-                   (if-not (= :mysql (:name db))
-                     (is (= [{:a 1}] (run db (select [(as 1 :a)] (where `(in 1 ~(list 1 2 3)))))))))
+  (if-not (= :mysql (:name db))
+    (is (= [{:a 1}] (run db (select [(as 1 :a)] (where `(in 1 ~(list 1 2 3)))))))))
 
 (database-test-all test-concat-strings
-                   (is (= [(case (:name db)
-                             :mysql {(keyword "('a' || 'b' || 'c')") 0} ;; not string concat, but OR operator
-                             :postgresql {:?column? "abc"}
-                             :sqlite {(keyword "(? || ? || ?)") "abc"})]
-                          (run db (select ['(|| "a" "b" "c")])))))
+  (is (= [(case (:name db)
+            :mysql {(keyword "('a' || 'b' || 'c')") 0} ;; not string concat, but OR operator
+            :postgresql {:?column? "abc"}
+            :sqlite {(keyword "(? || ? || ?)") "abc"})]
+         (run db (select ['(|| "a" "b" "c")])))))
 
 (database-test-all test-create-table
-                   (let [table :test-create-table]
-                     (try (is (= (run db (create-table table
-                                           (column :id :integer)
-                                           (column :nick :varchar :length 255)
-                                           (primary-key :nick)))
-                                 (if (= :sqlite (:name db))
-                                   [] [{:count 0}])))
-                          ;; (is (empty? (run db (select [:*] (from table)))))
-                          (finally
-                            ;; Cleanup for MySQL (non-transactional DDL)
-                            (run db (drop-table [table] (if-exists true)))))))
+  (let [table :test-create-table]
+    (try (is (= (run db (create-table table
+                          (column :id :integer)
+                          (column :nick :varchar :length 255)
+                          (primary-key :nick)))
+                (if (= :sqlite (:name db))
+                  [] [{:count 0}])))
+         ;; (is (empty? (run db (select [:*] (from table)))))
+         (finally
+           ;; Cleanup for MySQL (non-transactional DDL)
+           (run db (drop-table [table] (if-exists true)))))))
 
 (database-test-all test-drop-table-if-exists
-                   (is (= (run db (drop-table [:not-existing]
-                                    (if-exists true)))
-                          (if (= :sqlite (:name db))
-                            [] [{:count 0}]))))
+  (is (= (run db (drop-table [:not-existing]
+                   (if-exists true)))
+         (if (= :sqlite (:name db))
+           [] [{:count 0}]))))
 
 (database-test test-delete!
   (delete! db :countries))
