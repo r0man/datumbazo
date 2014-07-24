@@ -160,3 +160,7 @@
         component (assoc component :test true)]
     (with-db [db component]
       (is (instance? java.sql.Connection (:connection db))))))
+
+(deftest test-new-db
+  (let [db (new-db test-url)]
+    (is (instance? sqlingvo.db.Database db))))
