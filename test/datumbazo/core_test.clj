@@ -595,3 +595,10 @@
          (db (select [(as 1 :a)
                       (as 2 :b)
                       (as 3 :c)])))))
+
+
+;; CAST
+
+(database-test test-cast-int-as-text
+  (is (= [{:text "1"}]
+         (db (select [(as `(cast 1 :text) :text)])))))
