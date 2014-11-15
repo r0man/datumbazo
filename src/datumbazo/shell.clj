@@ -60,7 +60,7 @@
      ("psql"
       ~(if-let [command (:command opts)]
          (format "--command \"%s\"" command) "")
-      ~(if-let [db (:database opts)]
+      ~(if-let [db (:name opts)]
          (format "--dbname %s" db) "")
       ~(if-let [file (:file opts)]
          (format "--file %s" file) "")

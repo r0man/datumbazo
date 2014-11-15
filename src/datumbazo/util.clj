@@ -129,7 +129,7 @@ value is this namespace."
           server-name (nth matches 8)
           server-port (parse-integer (nth matches 10))
           query-string (nth matches 15)]
-      (compact-map {:database database
+      (compact-map {:name database
                     :host server-name
                     :params (parse-params query-string)
                     :db-pool (keyword (or (nth matches 2) :jdbc))

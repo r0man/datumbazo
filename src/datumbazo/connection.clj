@@ -45,7 +45,7 @@
        :classname "oracle.jdbc.driver.OracleDriver"
        :subprotocol "oracle:thin"
        :subname (str ":" (:username spec) "/" (:password spec) "@" (util/format-server spec)
-                     ":" (:database spec))))))
+                     ":" (:name spec))))))
 
 (defmethod connection-spec :postgresql [db-url]
   (let [spec (util/parse-db-url db-url)]
@@ -75,7 +75,7 @@
        :classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
        :subprotocol "sqlserver"
        :subname (str "//" (util/format-server spec) ";"
-                     "database=" (:database spec) ";"
+                     "database=" (:name spec) ";"
                      "user=" (:username spec) ";"
                      "password=" (:password spec))))))
 
@@ -126,7 +126,7 @@
        (:host db-spec)
        (if-let [port (:port db-spec)]
          (str ":" port))
-       "/" (:database db-spec)
+       "/" (:name db-spec)
        (str "?" (join "&" (map (fn [[k v]] (str (name k) "=" v))
                                (seq (assoc (:params db-spec)
                                       :user (:user db-spec)
@@ -157,7 +157,7 @@
   (let [connection (jdbc/get-connection component)
         component (jdbc/add-connection component connection)]
     (log/infof "Database connection to %s on %s established."
-               (:database component) (:host component))
+               (:name component) (:host component))
     (if (:test component)
       (start-transaction component)
       component)))
@@ -170,7 +170,7 @@
           (.rollback connection))
         (.close connection)
         (log/infof "Database connection to %s on %s closed."
-                   (:database component) (:host component)))
+                   (:name component) (:host component)))
     (log/warnf "Database connection already closed."))
   (dissoc component :connection :savepoint))
 
@@ -240,13 +240,10 @@
 
 (extend-type sqlingvo.db.Database
   component/Lifecycle
-  (start [component]
-    (connect component))
-  (stop [component]
-    (disconnect component))
-  sqlingvo.db/Executable
-  (sql-exec [db stmt opts]
-    (run* db stmt opts)))
+  (start [db]
+    (connect db))
+  (stop [db]
+    (disconnect db)))
 
 (defmacro with-db
   "Evaluate `body` within the context of a database connection."
