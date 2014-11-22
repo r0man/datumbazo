@@ -51,7 +51,7 @@
   (primary-key :nick))
 
 (database-test test-continent-by-pk*
-  (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = ?)" 1]
+  (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = 1)"]
          (sql (continent-by-pk* db {:id 1})))))
 
 (database-test test-continent-by-pk
@@ -335,7 +335,7 @@
 (database-test test-continents-by-id
   (is (empty? (continents-by-id db -1)))
   (is (empty? (continents-by-id db "-1")))
-  (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = ?)" -1]
+  (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = -1)"]
          (sql (continents-by-id* db -1))))
   (is (= [(europe db)] (continents-by-id db (:id (europe db)))))
   (is (= [(europe db)] (continents-by-id db (str (:id (europe db)))))))
@@ -384,7 +384,6 @@
   (let [user (->> {:created-at #inst "2011-02-22T06:29:06.000-00:00"
                    :default-profile-image false
                    :description ""
-                   :favourites-count 0
                    :followers-count 1864
                    :friends-count 4
                    :id 255879714

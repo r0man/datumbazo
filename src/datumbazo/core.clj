@@ -76,18 +76,40 @@
   "Returns the columns of `table`."
   [table] (map (:column table) (:columns table)))
 
+(defn column-keys
+  "Returns the column keys of `table`."
+  [table] (map :name (columns table)))
+
+(defn select-columns
+  "Select the columns of `table` from `row`."
+  [table row] (select-keys row (column-keys table)))
+
 (defn description
   "Add `text` as description to to `table`."
   [text]
   (fn [table]
     [text (assoc table :doc text)]))
 
+(defn- raw-row [row]
+  (->> (for [[k v] row
+             :when (= :constant (:op v))]
+         [k (:val v)])
+       (into {})))
+
+(defn- lift-row [table row f]
+  (reduce
+   (fn [row [k v]]
+     (-> row
+         (assoc-in [k :val] v)
+         (assoc-in [k :form] v)))
+   row (f (raw-row row))))
+
 (defn- apply-preparation [ast]
   (let [prepare (concat (:prepare ast) (:prepare (:table ast)))
         prepare (if (empty? prepare) identity (apply comp prepare))]
     (case (:op ast)
-      :insert (update-in ast [:values] #(map prepare %1))
-      :update (update-in ast [:row] prepare)
+      :insert (update-in ast [:values] #(map (fn [row] (lift-row (:table ast) row prepare)) %1))
+      :update (update-in ast [:row] #(lift-row (:table ast) % prepare))
       ast)))
 
 (defn- apply-transformation [ast rows]
@@ -245,7 +267,7 @@
            ~(format "Insert the %s row into the database." singular#)
            [~'db ~'row & ~'opts]
            (run1 ~'db (sqlingvo.core/insert ~symbol# []
-                        (values ~'row)
+                        (values (select-columns ~symbol# ~'row))
                         (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
                         (prepare (partial io/encode-row ~'db ~symbol#))
                         (prepare (:prepare ~symbol#)))))
@@ -254,7 +276,7 @@
            ~(format "Insert the %s rows into the database." singular#)
            [~'db ~'rows & ~'opts]
            (run ~'db (sqlingvo.core/insert ~symbol# []
-                       (values ~'rows)
+                       (values (map #(select-columns ~symbol# %) ~'rows))
                        (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
                        (prepare (partial io/encode-row ~'db ~symbol#))
                        (prepare (:prepare ~symbol#)))))
@@ -266,7 +288,7 @@
          (defn ~(symbol (str "update-" singular#))
            ~(format "Update the %s row in the database." singular#)
            [~'db ~'row & ~'opts]
-           (run1 ~'db (update ~symbol# ~'row
+           (run1 ~'db (update ~symbol# (select-columns ~symbol# ~'row)
                         (where (primary-key-clause ~'db ~symbol# ~'row))
                         (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
                         (prepare (partial io/encode-row ~'db ~symbol#))
