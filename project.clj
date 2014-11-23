@@ -11,7 +11,7 @@
                  [commandline-clj "0.1.7"]
                  [environ "1.0.0"]
                  [geo-clj "0.3.15"]
-                 [inflections "0.9.12"]
+                 [inflections "0.9.13"]
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/data.json "0.2.5"]
                  [org.clojure/java.jdbc "0.3.6"]
