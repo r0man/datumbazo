@@ -226,6 +226,41 @@
       (from (:name table))
       (where (primary-key-clause db table row)))))
 
+(defn select-rows
+  "Select rows from the database `table`."
+  [db table & [opts]]
+  (select (remove #(= true (:hidden? %1)) (columns table))
+    (from table)
+    (paginate (:page opts) (:per-page opts))
+    (order-by (:order-by opts))))
+
+(defn insert-row
+  "Insert `row` into the database `table`."
+  [db table row & [opts]]
+  (run1 db (sqlingvo.core/insert table []
+             (values (select-columns table row))
+             (apply returning (remove #(= true (:hidden? %1)) (columns table)))
+             (prepare (partial io/encode-row db table))
+             (prepare (:prepare table)))))
+
+(defn insert-rows
+  "Insert `rows` into the database `table`."
+  [db table rows & [opts]]
+  (run db (sqlingvo.core/insert table []
+            (values (map #(select-columns table %) rows))
+            (apply returning (remove #(= true (:hidden? %1)) (columns table)))
+            (prepare (partial io/encode-row db table))
+            (prepare (:prepare table)))))
+
+(defn update-row
+  "Update the `row` in the database `table`."
+  [db table row & [opts]]
+  (run1 db (update table (select-columns table row)
+             (where (primary-key-clause db table row))
+             (apply returning (remove #(= true (:hidden? %1)) (columns table)))
+             (prepare (partial io/encode-row db table))
+             (prepare (:prepare table)))))
+
 (defmacro deftable
   "Define a database table."
   [table-name doc & body]
@@ -238,10 +273,7 @@
          (defquery ~table-name
            ~(format "Select %s from the database table." table-name)
            [~'db & [~'opts]]
-           (select (remove #(= true (:hidden? %1)) (columns ~symbol#))
-             (from ~symbol#)
-             (paginate (:page ~'opts) (:per-page ~'opts))
-             (order-by (:order-by ~'opts))))
+           (select-rows ~'db ~symbol# ~'opts))
 
          (defquery1 ~(symbol (str (singular table-name)  "-by-pk"))
            ~(format "Find the %s by primary key." (singular table-name))
@@ -266,20 +298,12 @@
          (defn ~(symbol (str "insert-" singular#))
            ~(format "Insert the %s row into the database." singular#)
            [~'db ~'row & ~'opts]
-           (run1 ~'db (sqlingvo.core/insert ~symbol# []
-                        (values (select-columns ~symbol# ~'row))
-                        (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
-                        (prepare (partial io/encode-row ~'db ~symbol#))
-                        (prepare (:prepare ~symbol#)))))
+           (insert-row ~'db ~symbol# ~'row ~'opts))
 
          (defn ~(symbol (str "insert-" (str table-name)))
            ~(format "Insert the %s rows into the database." singular#)
            [~'db ~'rows & ~'opts]
-           (run ~'db (sqlingvo.core/insert ~symbol# []
-                       (values (map #(select-columns ~symbol# %) ~'rows))
-                       (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
-                       (prepare (partial io/encode-row ~'db ~symbol#))
-                       (prepare (:prepare ~symbol#)))))
+           (insert-rows ~'db ~symbol# ~'rows ~'opts))
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
@@ -288,11 +312,7 @@
          (defn ~(symbol (str "update-" singular#))
            ~(format "Update the %s row in the database." singular#)
            [~'db ~'row & ~'opts]
-           (run1 ~'db (update ~symbol# (select-columns ~symbol# ~'row)
-                        (where (primary-key-clause ~'db ~symbol# ~'row))
-                        (apply returning (remove #(= true (:hidden? %1)) (columns ~symbol#)))
-                        (prepare (partial io/encode-row ~'db ~symbol#))
-                        (prepare (:prepare ~symbol#)))))
+           (update-row ~'db ~symbol# ~'row ~'opts))
 
          (defn ~(symbol (str "save-" singular#))
            ~(format "Save the %s row to the database." singular#)
