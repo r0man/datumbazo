@@ -11,12 +11,10 @@
 
 (def db (connection (env :test-db)))
 
-(defmacro database-test
-  "Define a database test."
-  [name & body]
-  `(deftest ^:integration ~name
-     (with-db [~'db (assoc db :test true)]
-       ~@body)))
+(defmacro with-test-db
+  [[db-sym] & body]
+  `(with-db [~db-sym (assoc db :test true)]
+     ~@body))
 
 (defmacro database-test-all
   [test-name & body]

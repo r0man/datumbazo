@@ -116,7 +116,8 @@
   (let [stmts (slurp-sql "test-resources/stmts-raster.sql")]
     (is (= 2 (count stmts)))))
 
-(database-test test-exec-sql-file
-  (run db (drop-table [:akw-dirpwsfc-2013-02-10t06]
-            (if-exists true)))
-  (exec-sql-file db "test-resources/stmts-raster.sql"))
+(deftest test-exec-sql-file
+  (with-test-db [db]
+    (run db (drop-table [:akw-dirpwsfc-2013-02-10t06]
+              (if-exists true)))
+    (exec-sql-file db "test-resources/stmts-raster.sql")))

@@ -50,23 +50,26 @@
   (column :nick :varchar :length 255)
   (primary-key :nick))
 
-(database-test test-continent-by-pk*
-  (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = 1)"]
-         (sql (continent-by-pk* db {:id 1})))))
+(deftest test-continent-by-pk*
+  (with-test-db [db]
+    (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = 1)"]
+           (sql (continent-by-pk* db {:id 1}))))))
 
-(database-test test-continent-by-pk
-  (is (empty? (continent-by-pk db {:id 1}))))
+(deftest test-continent-by-pk
+  (with-test-db [db]
+    (is (empty? (continent-by-pk db {:id 1})))))
 
 ;; TODO: Create table
-(database-test test-rating-by-pk
-  (let [time (now)]
-    ;; (is (= [(str "SELECT \"ratings\".\"user_id\", \"ratings\".\"spot_id\", \"ratings\".\"rating\", \"ratings\".\"created_at\", \"ratings\".\"updated_at\" "
-    ;;              "FROM \"ratings\" WHERE ((\"ratings\".\"user_id\" = ?) and (\"ratings\".\"spot_id\" = ?) and (\"ratings\".\"created_at\" = ?))")
-    ;;         1 2 (to-timestamp time)]
-    ;;        (sql (rating-by-pk* db {:user-id 1 :spot-id 2 :created-at time}))))
-    (is (= [(str "SELECT \"ratings\".\"user_id\", \"ratings\".\"spot_id\", \"ratings\".\"rating\", \"ratings\".\"created_at\", \"ratings\".\"updated_at\" "
-                 "FROM \"ratings\" WHERE ((\"ratings\".\"user_id\" = NULL) and (\"ratings\".\"spot_id\" = NULL) and (\"ratings\".\"created_at\" = NULL))")]
-           (sql (rating-by-pk* db {:user-id 1 :spot-id 2 :created-at time}))))))
+(deftest test-rating-by-pk
+  (with-test-db [db]
+    (let [time (now)]
+      ;; (is (= [(str "SELECT \"ratings\".\"user_id\", \"ratings\".\"spot_id\", \"ratings\".\"rating\", \"ratings\".\"created_at\", \"ratings\".\"updated_at\" "
+      ;;              "FROM \"ratings\" WHERE ((\"ratings\".\"user_id\" = ?) and (\"ratings\".\"spot_id\" = ?) and (\"ratings\".\"created_at\" = ?))")
+      ;;         1 2 (to-timestamp time)]
+      ;;        (sql (rating-by-pk* db {:user-id 1 :spot-id 2 :created-at time}))))
+      (is (= [(str "SELECT \"ratings\".\"user_id\", \"ratings\".\"spot_id\", \"ratings\".\"rating\", \"ratings\".\"created_at\", \"ratings\".\"updated_at\" "
+                   "FROM \"ratings\" WHERE ((\"ratings\".\"user_id\" = NULL) and (\"ratings\".\"spot_id\" = NULL) and (\"ratings\".\"created_at\" = NULL))")]
+             (sql (rating-by-pk* db {:user-id 1 :spot-id 2 :created-at time})))))))
 
 ;; (test-rating-by-pk)
 
@@ -174,186 +177,210 @@
       (is (= :name (:name column)))
       (is (= :text (:type column))))))
 
-(database-test test-drop-continents
-  (is (= "Drop the continents database table."
-         (:doc (meta #'drop-continents))))
-  (drop-countries db)
-  (is (= 0 (drop-continents db)))
-  (is (= 0 (drop-continents db (if-exists true)))))
+(deftest test-drop-continents
+  (with-test-db [db]
+    (is (= "Drop the continents database table."
+           (:doc (meta #'drop-continents))))
+    (drop-countries db)
+    (is (= 0 (drop-continents db)))
+    (is (= 0 (drop-continents db (if-exists true))))))
 
-(database-test test-delete-continents
-  (is (= "Delete all rows in the continents database table."
-         (:doc (meta #'delete-continents))))
-  (is (= 7 (delete-continents db)))
-  (is (= 0 (delete-continents db)))
-  (is (= 0 (count-all db :continents))))
+(deftest test-delete-continents
+  (with-test-db [db]
+    (is (= "Delete all rows in the continents database table."
+           (:doc (meta #'delete-continents))))
+    (is (= 7 (delete-continents db)))
+    (is (= 0 (delete-continents db)))
+    (is (= 0 (count-all db :continents)))))
 
-(database-test test-delete-continent
-  (is (= "Delete the continent from the database table."
-         (:doc (meta #'delete-continent))))
-  (let [europe (europe db)]
-    (is (= 1 (delete-continent db europe)))
-    (is (= 0 (delete-continent db europe)))))
+(deftest test-delete-continent
+  (with-test-db [db]
+    (is (= "Delete the continent from the database table."
+           (:doc (meta #'delete-continent))))
+    (let [europe (europe db)]
+      (is (= 1 (delete-continent db europe)))
+      (is (= 0 (delete-continent db europe))))))
 
-(database-test test-delete-countries
-  (is (= "Delete all rows in the countries database table."
-         (:doc (meta #'delete-countries))))
-  (is (= 0 (delete-countries db)))
-  (is (= 0 (count-all db :countries))))
+(deftest test-delete-countries
+  (with-test-db [db]
+    (is (= "Delete all rows in the countries database table."
+           (:doc (meta #'delete-countries))))
+    (is (= 0 (delete-countries db)))
+    (is (= 0 (count-all db :countries)))))
 
-(database-test test-insert-continent
-  (try+
-   (insert-continent db {})
-   (catch [:type :validation.core/error] {:keys [errors record]}
-     (is (= {} record))
-     (is (= ["can't be blank."] (:name errors)))
-     (is (= ["has the wrong length (should be 2 characters)." "can't be blank."] (:code errors)))))
-  (let [europe (europe db)]
-    (delete-continent db europe)
-    (let [row (insert-continent db europe)]
+(deftest test-insert-continent
+  (with-test-db [db]
+    (try+
+     (insert-continent db {})
+     (catch [:type :validation.core/error] {:keys [errors record]}
+       (is (= {} record))
+       (is (= ["can't be blank."] (:name errors)))
+       (is (= ["has the wrong length (should be 2 characters)." "can't be blank."] (:code errors)))))
+    (let [europe (europe db)]
+      (delete-continent db europe)
+      (let [row (insert-continent db europe)]
+        (is (number? (:id row)))
+        (is (= "Europe" (:name row)))
+        (is (= "EU" (:code row)))
+        (is (thrown? Exception (insert-continent db row)))))))
+
+(deftest test-insert-continents
+  (with-test-db [db]
+    (let [continents [(africa db) (europe db)]]
+      (delete-continents db)
+      (let [rows (insert-continents db continents)]
+        (let [row (first rows)]
+          (is (number? (:id row)))
+          (is (= "Africa" (:name row)))
+          (is (= "AF" (:code row))))
+        (let [row (second rows)]
+          (is (number? (:id row)))
+          (is (= "Europe" (:name row)))
+          (is (= "EU" (:code row))))))))
+
+(deftest test-update-columns-best-row-identifiers
+  (with-test-db [db]
+    (is (= {:id 1} (update-columns-best-row-identifiers db continents-table {:id 1 :name "Europe"})))
+    (is (= {:user-id 8841372 :tweet-id 285415218434154496}
+           (update-columns-best-row-identifiers db tweets-users-table {:user-id 8841372 :tweet-id 285415218434154496})))))
+
+(deftest test-update-columns-unique-columns
+  (with-test-db [db]
+    (is (= {:id 1 :name "Europe"} (update-columns-unique-columns db continents-table {:id 1 :name "Europe"})))
+    (is (= {:user-id 8841372 :tweet-id 285415218434154496}
+           (update-columns-unique-columns db tweets-users-table {:user-id 8841372 :tweet-id 285415218434154496})))))
+
+(deftest test-where-clause-columns
+  (with-test-db [db]
+    (is (= {:id 1} (where-clause-columns db continents-table {:id 1})))
+    (is (= {:name "Europe"} (where-clause-columns db continents-table {:name "Europe"})))
+    (is (= {:user-id 8841372 :tweet-id 285415218434154496}
+           (where-clause-columns db tweets-users-table {:user-id 8841372 :tweet-id 285415218434154496})))))
+
+(deftest test-update-clause
+  (with-test-db [db]
+    (let [[_ clause] ((update-clause db continents-table {:id 1}) nil)]
+      (is (map? clause)))))
+
+;; ;; (deftest test-save-tweets-users
+;; ;;   #_(save-tweets-user db {:tweet-id 1 :user-id 1}))
+
+(deftest test-create-table-compound-primary-key
+  (with-test-db [db]
+    (is (= (run db (create-table :ratings
+                     (column :id :serial)
+                     (column :user-id :integer :not-null? true :references :users/id)
+                     (column :spot-id :integer :not-null? true :references :spots/id)
+                     (column :rating :integer :not-null? true)
+                     (column :created-at :timestamp-with-time-zone :not-null? true :default '(now))
+                     (column :updated-at :timestamp-with-time-zone :not-null? true :default '(now))
+                     (primary-key :user-id :spot-id :created-at)))
+           [{:count 0}]))))
+
+(deftest test-save-continent
+  (with-test-db [db]
+    (let [row (save-continent db (europe db))]
       (is (number? (:id row)))
       (is (= "Europe" (:name row)))
       (is (= "EU" (:code row)))
-      (is (thrown? Exception (insert-continent db row))))))
+      (is (= row (save-continent db row)))
+      ;; (is (= row (save-continent db (dissoc row :id))))
+      )))
 
-(database-test test-insert-continents
-  (let [continents [(africa db) (europe db)]]
-    (delete-continents db)
-    (let [rows (insert-continents db continents)]
-      (let [row (first rows)]
-        (is (number? (:id row)))
-        (is (= "Africa" (:name row)))
-        (is (= "AF" (:code row))))
-      (let [row (second rows)]
-        (is (number? (:id row)))
-        (is (= "Europe" (:name row)))
-        (is (= "EU" (:code row)))))))
+(deftest test-truncate-continents
+  (with-test-db [db]
+    (is (= "Truncate the continents database table."
+           (:doc (meta #'truncate-continents))))
+    (is (= 0 (truncate-continents db (cascade true))))
+    (is (= 0 (truncate-continents db (cascade true) (if-exists true) )))
+    (is (= 0 (count-all db :continents)))))
 
-(database-test test-update-columns-best-row-identifiers
-  (is (= {:id 1} (update-columns-best-row-identifiers db continents-table {:id 1 :name "Europe"})))
-  (is (= {:user-id 8841372 :tweet-id 285415218434154496}
-         (update-columns-best-row-identifiers db tweets-users-table {:user-id 8841372 :tweet-id 285415218434154496}))))
+(deftest test-truncate-countries
+  (with-test-db [db]
+    (is (= "Truncate the countries database table."
+           (:doc (meta #'truncate-countries))))
+    (is (= 0 (truncate-countries db)))
+    (is (= 0 (count-all db :countries)))))
 
-(database-test test-update-columns-unique-columns
-  (is (= {:id 1 :name "Europe"} (update-columns-unique-columns db continents-table {:id 1 :name "Europe"})))
-  (is (= {:user-id 8841372 :tweet-id 285415218434154496}
-         (update-columns-unique-columns db tweets-users-table {:user-id 8841372 :tweet-id 285415218434154496}))))
-
-(database-test test-where-clause-columns
-  (is (= {:id 1} (where-clause-columns db continents-table {:id 1})))
-  (is (= {:name "Europe"} (where-clause-columns db continents-table {:name "Europe"})))
-  (is (= {:user-id 8841372 :tweet-id 285415218434154496}
-         (where-clause-columns db tweets-users-table {:user-id 8841372 :tweet-id 285415218434154496}))))
-
-(database-test test-update-clause
-  (let [[_ clause] ((update-clause db continents-table {:id 1}) nil)]
-    (is (map? clause))))
-
-;; ;; (database-test test-save-tweets-users
-;; ;;   #_(save-tweets-user db {:tweet-id 1 :user-id 1}))
-
-(database-test test-create-table-compound-primary-key
-  (is (= (run db (create-table :ratings
-                   (column :id :serial)
-                   (column :user-id :integer :not-null? true :references :users/id)
-                   (column :spot-id :integer :not-null? true :references :spots/id)
-                   (column :rating :integer :not-null? true)
-                   (column :created-at :timestamp-with-time-zone :not-null? true :default '(now))
-                   (column :updated-at :timestamp-with-time-zone :not-null? true :default '(now))
-                   (primary-key :user-id :spot-id :created-at)))
-         [{:count 0}])))
-
-(database-test test-save-continent
-  (let [row (save-continent db (europe db))]
-    (is (number? (:id row)))
-    (is (= "Europe" (:name row)))
-    (is (= "EU" (:code row)))
-    (is (= row (save-continent db row)))
-    ;; (is (= row (save-continent db (dissoc row :id))))
-    ))
-
-(database-test test-truncate-continents
-  (is (= "Truncate the continents database table."
-         (:doc (meta #'truncate-continents))))
-  (is (= 0 (truncate-continents db (cascade true))))
-  (is (= 0 (truncate-continents db (cascade true) (if-exists true) )))
-  (is (= 0 (count-all db :continents))))
-
-(database-test test-truncate-countries
-  (is (= "Truncate the countries database table."
-         (:doc (meta #'truncate-countries))))
-  (is (= 0 (truncate-countries db)))
-  (is (= 0 (count-all db :countries))))
-
-(database-test test-update-continent
-  (try+
-   (update-continent db {})
-   (catch [:type :validation.core/error] {:keys [errors record]}
-     (is (= {} record))
-     (is (= ["can't be blank."] (:name errors)))
-     (is (= ["has the wrong length (should be 2 characters)." "can't be blank."] (:code errors)))))
-  (try+
-   (update-continent db (europe db))
-   (catch [:type :validation.core/error] {:keys [errors record]}
-     (is (= (europe db) record))
-     (is (= "has already been taken" (:name errors)))))
-  (let [europe (europe db)
-        continent (update-continent db (assoc europe :name "Europa"))]
-    (is (number? (:id continent)))
-    (is (= "Europa" (:name continent)))
-    (is (= "EU" (:code continent)))
-    (is (= continent (update-continent db continent)))
-    ;; (is (= continent (update-continent db (dissoc continent :id))))
-    (let [continent (update-continent db (assoc continent :name "Europe"))]
+(deftest test-update-continent
+  (with-test-db [db]
+    (try+
+     (update-continent db {})
+     (catch [:type :validation.core/error] {:keys [errors record]}
+       (is (= {} record))
+       (is (= ["can't be blank."] (:name errors)))
+       (is (= ["has the wrong length (should be 2 characters)." "can't be blank."] (:code errors)))))
+    (try+
+     (update-continent db (europe db))
+     (catch [:type :validation.core/error] {:keys [errors record]}
+       (is (= (europe db) record))
+       (is (= "has already been taken" (:name errors)))))
+    (let [europe (europe db)
+          continent (update-continent db (assoc europe :name "Europa"))]
       (is (number? (:id continent)))
-      (is (= "Europe" (:name continent)))
-      (is (= "EU" (:code continent))))))
+      (is (= "Europa" (:name continent)))
+      (is (= "EU" (:code continent)))
+      (is (= continent (update-continent db continent)))
+      ;; (is (= continent (update-continent db (dissoc continent :id))))
+      (let [continent (update-continent db (assoc continent :name "Europe"))]
+        (is (number? (:id continent)))
+        (is (= "Europe" (:name continent)))
+        (is (= "EU" (:code continent)))))))
 
-(database-test test-continents
-  (is (= 7 (count (continents db))))
-  (is (= [(africa db)] (continents db {:page 1 :per-page 1 :order-by :name})))
-  (is (= [(antarctica db)] (continents db {:page 2 :per-page 1 :order-by :name}))))
+(deftest test-continents
+  (with-test-db [db]
+    (is (= 7 (count (continents db))))
+    (is (= [(africa db)] (continents db {:page 1 :per-page 1 :order-by :name})))
+    (is (= [(antarctica db)] (continents db {:page 2 :per-page 1 :order-by :name})))))
 
-(database-test test-countries
-  (is (= 0 (count (countries db)))))
+(deftest test-countries
+  (with-test-db [db]
+    (is (= 0 (count (countries db))))))
 
-(database-test test-countries-by-continent-id
-  (is (empty? (countries-by-continent-id db (:id (europe db))))))
+(deftest test-countries-by-continent-id
+  (with-test-db [db]
+    (is (empty? (countries-by-continent-id db (:id (europe db)))))))
 
-(database-test test-continent-by-id
-  (is (nil? (continent-by-id db nil)))
-  (is (nil? (continent-by-id db -1)))
-  (is (= (europe db) (continent-by-id db (:id (europe db)))))
-  (is (= (europe db) (continent-by-id db (str (:id (europe db))))))
-  (is (= (europe db) (continent-by-id db (str (:id (europe db)) "-europe")))))
+(deftest test-continent-by-id
+  (with-test-db [db]
+    (is (nil? (continent-by-id db nil)))
+    (is (nil? (continent-by-id db -1)))
+    (is (= (europe db) (continent-by-id db (:id (europe db)))))
+    (is (= (europe db) (continent-by-id db (str (:id (europe db))))))
+    (is (= (europe db) (continent-by-id db (str (:id (europe db)) "-europe"))))))
 
-(database-test test-continent-by-name
-  (is (nil? (continent-by-name db nil)))
-  (is (nil? (continent-by-name db "unknown")))
-  (is (= (europe db) (continent-by-name db (:name (europe db))))))
+(deftest test-continent-by-name
+  (with-test-db [db]
+    (is (nil? (continent-by-name db nil)))
+    (is (nil? (continent-by-name db "unknown")))
+    (is (= (europe db) (continent-by-name db (:name (europe db)))))))
 
-(database-test test-continents-by-id
-  (is (empty? (continents-by-id db -1)))
-  (is (empty? (continents-by-id db "-1")))
-  (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = -1)"]
-         (sql (continents-by-id* db -1))))
-  (is (= [(europe db)] (continents-by-id db (:id (europe db)))))
-  (is (= [(europe db)] (continents-by-id db (str (:id (europe db)))))))
+(deftest test-continents-by-id
+  (with-test-db [db]
+    (is (empty? (continents-by-id db -1)))
+    (is (empty? (continents-by-id db "-1")))
+    (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = -1)"]
+           (sql (continents-by-id* db -1))))
+    (is (= [(europe db)] (continents-by-id db (:id (europe db)))))
+    (is (= [(europe db)] (continents-by-id db (str (:id (europe db))))))))
 
-(database-test test-continents-by-name
-  (is (empty? (continents-by-name db nil)))
-  (is (= [(continent-by-name db "Europe")] (continents-by-name db "Europe")))
-  (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"name\" = ?)" (citext "Europe")]
-         (sql (continents-by-name* db "Europe"))))
-  (is (= [(europe db)] (continents-by-name db (:name (europe db)))))
-  (is (= (continents-by-name db (:name (europe db)))
-         (continents-by-name db (upper-case (:name (europe db)))))))
+(deftest test-continents-by-name
+  (with-test-db [db]
+    (is (empty? (continents-by-name db nil)))
+    (is (= [(continent-by-name db "Europe")] (continents-by-name db "Europe")))
+    (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"name\" = ?)" (citext "Europe")]
+           (sql (continents-by-name* db "Europe"))))
+    (is (= [(europe db)] (continents-by-name db (:name (europe db)))))
+    (is (= (continents-by-name db (:name (europe db)))
+           (continents-by-name db (upper-case (:name (europe db))))))))
 
-(database-test test-twitter-users
-  (is (= 33 (count (twitter-users db)))))
+(deftest test-twitter-users
+  (with-test-db [db]
+    (is (= 33 (count (twitter-users db))))))
 
-(database-test test-twitter-tweets
-  (is (= 23 (count (twitter-tweets db)))))
+(deftest test-twitter-tweets
+  (with-test-db [db]
+    (is (= 23 (count (twitter-tweets db))))))
 
 (deftest test-twitter-users-table
   (let [table twitter-users-table]
@@ -380,94 +407,104 @@
       (is (= :id (:name column)))
       (is (= :bigint (:type column))))))
 
-(database-test test-save-twitter-user
-  (let [user (->> {:created-at #inst "2011-02-22T06:29:06.000-00:00"
-                   :default-profile-image false
-                   :description ""
-                   :followers-count 1864
-                   :friends-count 4
-                   :id 255879714
-                   :lang "en"
-                   :listed-count 61
-                   :location ""
-                   :name "FinancePress"
-                   :profile-image-url "http://a0.twimg.com/profile_images/1251163314/finpress2_normal.png"
-                   :screen-name "thefinancepress"
-                   :statuses-count 92687
-                   :time-zone nil
-                   :url nil
-                   :verified false}
-                  (save-twitter-user db))]
-    (is (= (dissoc user :updated-at)
-           (dissoc (save-twitter-user db user) :updated-at)))))
+(deftest test-save-twitter-user
+  (with-test-db [db]
+    (let [user (->> {:created-at #inst "2011-02-22T06:29:06.000-00:00"
+                     :default-profile-image false
+                     :description ""
+                     :followers-count 1864
+                     :friends-count 4
+                     :id 255879714
+                     :lang "en"
+                     :listed-count 61
+                     :location ""
+                     :name "FinancePress"
+                     :profile-image-url "http://a0.twimg.com/profile_images/1251163314/finpress2_normal.png"
+                     :screen-name "thefinancepress"
+                     :statuses-count 92687
+                     :time-zone nil
+                     :url nil
+                     :verified false}
+                    (save-twitter-user db))]
+      (is (= (dissoc user :updated-at)
+             (dissoc (save-twitter-user db user) :updated-at))))))
 
-(database-test test-count-all
-  (is (= 7 (count-all db :continents))))
+(deftest test-count-all
+  (with-test-db [db]
+    (is (= 7 (count-all db :continents)))))
 
-(database-test test-insert-twitter-user
-  (let [user (->> {:listed-count 0,
-                   :default-profile-image true,
-                   :time-zone nil,
-                   :name "Twitter",
-                   :location nil,
-                   :profile-image-url nil,
-                   :friends-count 0,
-                   :followers-count 0,
-                   :lang nil,
-                   :url nil,
-                   :updated-at #inst "2012-10-06T18:22:58.640-00:00",
-                   :created-at #inst "2012-10-06T18:22:58.640-00:00",
-                   :screen-name "twitter 2",
-                   :retweet-count 0,
-                   :possibly-sensitive false,
-                   :statuses-count 0,
-                   :verified false,
-                   :id "9"
-                   :description nil}
-                  (insert-twitter-user db))]
-    (is (= 9 (:id user)))))
+(deftest test-insert-twitter-user
+  (with-test-db [db]
+    (let [user (->> {:listed-count 0,
+                     :default-profile-image true,
+                     :time-zone nil,
+                     :name "Twitter",
+                     :location nil,
+                     :profile-image-url nil,
+                     :friends-count 0,
+                     :followers-count 0,
+                     :lang nil,
+                     :url nil,
+                     :updated-at #inst "2012-10-06T18:22:58.640-00:00",
+                     :created-at #inst "2012-10-06T18:22:58.640-00:00",
+                     :screen-name "twitter 2",
+                     :retweet-count 0,
+                     :possibly-sensitive false,
+                     :statuses-count 0,
+                     :verified false,
+                     :id "9"
+                     :description nil}
+                    (insert-twitter-user db))]
+      (is (= 9 (:id user))))))
 
-(database-test test-validation
-  (let [continent {}]
-    (try+
-     (insert-continent db continent)
-     (is false)
-     (catch [:type :validation.core/error] {:keys [errors record]}
-       (is (= continent record))
-       (is (= errors (:errors (meta record))))))
-    (try+
-     (update-continent db continent)
-     (is false)
-     (catch [:type :validation.core/error] {:keys [errors record]}
-       (is (= continent record))
-       (is (= errors (:errors (meta record))))))))
+(deftest test-validation
+  (with-test-db [db]
+    (let [continent {}]
+      (try+
+       (insert-continent db continent)
+       (is false)
+       (catch [:type :validation.core/error] {:keys [errors record]}
+         (is (= continent record))
+         (is (= errors (:errors (meta record))))))
+      (try+
+       (update-continent db continent)
+       (is false)
+       (catch [:type :validation.core/error] {:keys [errors record]}
+         (is (= continent record))
+         (is (= errors (:errors (meta record)))))))))
 
-(database-test test-array
-  (is (= [{:array [1 2]}]
-         (run db (select [[1 2]])))))
+(deftest test-array
+  (with-test-db [db]
+    (is (= [{:array [1 2]}]
+           (run db (select [[1 2]]))))))
 
-(database-test test-array-concat
-  (is (= [{:?column? [1 2 3 4 5 6]}]
-         (run db (select ['(|| [1 2] [3 4] [5 6])])))))
+(deftest test-array-concat
+  (with-test-db [db]
+    (is (= [{:?column? [1 2 3 4 5 6]}]
+           (run db (select ['(|| [1 2] [3 4] [5 6])]))))))
 
 ;; PostgreSQL JSON Support Functions
 
-(database-test test-array-to-json
-  (is (= [{:array-to-json [[1 5] [99 100]]}]
-         (run db (select [`(array_to_json (cast "{{1,5},{99,100}}" ~(keyword "int[]")))])))))
+(deftest test-array-to-json
+  (with-test-db [db]
+    (is (= [{:array-to-json [[1 5] [99 100]]}]
+           (run db (select [`(array_to_json (cast "{{1,5},{99,100}}" ~(keyword "int[]")))]))))))
 
-(database-test test-row-to-json
-  (is (= [{:row-to-json {:f1 1, :f2 "foo"}}]
-         (run db (select ['(row_to_json (row 1 "foo"))])))))
+(deftest test-row-to-json
+  (with-test-db [db]
+    (is (= [{:row-to-json {:f1 1, :f2 "foo"}}]
+           (run db (select ['(row_to_json (row 1 "foo"))]))))))
 
-(database-test test-to-json
-  (is (= [{:to-json "Fred said \"Hi.\""}]
-         (run db (select ['(to_json "Fred said \"Hi.\"")])))))
+(deftest test-to-json
+  (with-test-db [db]
+    (is (= [{:to-json "Fred said \"Hi.\""}]
+           (run db (select ['(to_json "Fred said \"Hi.\"")]))))))
 
-(database-test test-with
-  (is (= (run db (with [:x (select [:*] (from :continents))]
-                       (select [:*] (from :x))))
-         (run db (select [:*] (from :continents))))))
+(deftest test-with
+  (with-test-db [db]
+    (is (= (run db (with [:x (select [:*] (from :continents))]
+                         (select [:*] (from :x))))
+           (run db (select [:*] (from :continents)))))))
 
 ;; DB TESTS
 
@@ -537,33 +574,37 @@
                           (if (= "sqlite" (:subprotocol db))
                             [] [{:count 0}]))))
 
-(database-test test-delete!
-  (delete! db :countries))
+(deftest test-delete!
+  (with-test-db [db]
+    (delete! db :countries)))
 
-(database-test test-drop-table!
-  (drop-table! db [:countries]))
+(deftest test-drop-table!
+  (with-test-db [db]
+    (drop-table! db [:countries])))
 
-(database-test test-select!
-  (are [result expected]
-    (= result expected)
-    (select! db [(as 1 :x)])
-    [{:x 1}]
-    (select! db [:*]
-      (from (as (select [(as 1 :x) (as 2 :y)]) :z)))
-    [{:x 1 :y 2}]
-    (select! db [:name]
-      (from :continents)
-      (order-by :name))
-    [{:name "Africa"}
-     {:name "Antarctica"}
-     {:name "Asia"}
-     {:name "Europe"}
-     {:name "North America"}
-     {:name "Oceania"}
-     {:name "South America"}]))
+(deftest test-select!
+  (with-test-db [db]
+    (are [result expected]
+      (= result expected)
+      (select! db [(as 1 :x)])
+      [{:x 1}]
+      (select! db [:*]
+        (from (as (select [(as 1 :x) (as 2 :y)]) :z)))
+      [{:x 1 :y 2}]
+      (select! db [:name]
+        (from :continents)
+        (order-by :name))
+      [{:name "Africa"}
+       {:name "Antarctica"}
+       {:name "Asia"}
+       {:name "Europe"}
+       {:name "North America"}
+       {:name "Oceania"}
+       {:name "South America"}])))
 
-(database-test test-truncate!
-  (truncate! db [:countries]))
+(deftest test-truncate!
+  (with-test-db [db]
+    (truncate! db [:countries])))
 
 (deftest test-new-db
   (let [db (new-db "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
@@ -589,15 +630,17 @@
     (is (= "datumbazo" (:name db)))
     (is (= db (new-db db)))))
 
-(database-test test-select-1-as-a-2-as-b-3-as-c
-  (is (= [{:a 1 :b 2 :c 3}]
-         (run db (select [(as 1 :a)
-                          (as 2 :b)
-                          (as 3 :c)])))))
+(deftest test-select-1-as-a-2-as-b-3-as-c
+  (with-test-db [db]
+    (is (= [{:a 1 :b 2 :c 3}]
+           (run db (select [(as 1 :a)
+                            (as 2 :b)
+                            (as 3 :c)]))))))
 
 
 ;; CAST
 
-(database-test test-cast-int-as-text
-  (is (= [{:text "1"}]
-         (run db (select [(as `(cast 1 :text) :text)])))))
+(deftest test-cast-int-as-text
+  (with-test-db [db]
+    (is (= [{:text "1"}]
+           (run db (select [(as `(cast 1 :text) :text)]))))))

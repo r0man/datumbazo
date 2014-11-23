@@ -100,20 +100,24 @@
     (is (= "vertica" (:subprotocol spec)))
     (is (= "//localhost/datumbazo" (:subname spec)))))
 
-(database-test test-connection-url
-  (is (thrown? IllegalArgumentException (connection-url :unknown-db)))
+(deftest test-connection-url
+  (with-test-db [db]
+    (is (thrown? IllegalArgumentException (connection-url :unknown-db))))
   (is (= "postgresql://tiger:scotch@localhost/datumbazo" (connection-url :test-db))))
 
-(database-test test-connection
-  (let [connection (connection test-url)]
-    (is (map? connection))))
+(deftest test-connection
+  (with-test-db [db]
+    (let [connection (connection test-url)]
+      (is (map? connection)))))
 
-(database-test test-cached-connection
-  (let [connection (cached-connection test-url)]
-    (is (= connection (cached-connection test-url)))))
+(deftest test-cached-connection
+  (with-test-db [db]
+    (let [connection (cached-connection test-url)]
+      (is (= connection (cached-connection test-url))))))
 
-(database-test test-query
-  (is (= [[1]] (map vals (jdbc/query db ["SELECT 1"])))))
+(deftest test-query
+  (with-test-db [db]
+    (is (= [[1]] (map vals (jdbc/query db ["SELECT 1"]))))))
 
 (deftest test-jdbc-url
   (is (= "jdbc:postgresql://localhost/datumbazo?password=scotch&user=tiger"
@@ -156,5 +160,6 @@
     (with-db [db component]
       (is (instance? java.sql.Connection (:connection db))))))
 
-(database-test test-sql-str
-  (is (= "SELECT 1, 'a'" (sql-str db (select [1 "a"])))))
+(deftest test-sql-str
+  (with-test-db [db]
+    (is (= "SELECT 1, 'a'" (sql-str db (select [1 "a"]))))))
