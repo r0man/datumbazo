@@ -16,10 +16,11 @@
   `(with-db [~db-sym (assoc db :test true)]
      ~@body))
 
-(defmacro database-test-all
-  [test-name & body]
-  `(deftest ~test-name
-     ~@(for [[db# url#] connections]
-         `(testing ~(str test-name " (" (name db#) ")")
-            (with-db [~'db (assoc (connection ~url#) :test true)]
-              ~@body)))))
+(defmacro with-test-dbs
+  [[db-sym vendors] & body]
+  `(do ~@(for [[db# url#] connections
+               :when (or (empty? vendors)
+                         (contains? vendors db#))]
+           `(testing ~(name db#)
+              (with-db [~'db (assoc (connection ~url#) :test true)]
+                ~@body)))))
