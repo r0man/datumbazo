@@ -118,6 +118,6 @@
 
 (deftest test-exec-sql-file
   (with-test-db [db]
-    (run db (drop-table [:akw-dirpwsfc-2013-02-10t06]
-              (if-exists true)))
+    (run (drop-table db [:akw-dirpwsfc-2013-02-10t06]
+           (if-exists true)))
     (exec-sql-file db "test-resources/stmts-raster.sql")))

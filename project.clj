@@ -1,4 +1,4 @@
-(defproject datumbazo "0.6.5-SNAPSHOT"
+(defproject datumbazo "0.7.0-SNAPSHOT"
   :description "Clojure Database Kung-Foo"
   :url "https://github.com/r0man/datumbazo"
   :min-lein-version "2.0.0"
@@ -10,7 +10,7 @@
                  [com.stuartsierra/component "0.2.2"]
                  [commandline-clj "0.1.7"]
                  [environ "1.0.0"]
-                 [geo-clj "0.3.15"]
+                 [geo-clj "0.3.17"]
                  [inflections "0.9.13"]
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/data.json "0.2.5"]
@@ -20,7 +20,7 @@
                  [org.xerial/sqlite-jdbc "3.7.2"]
                  [mysql/mysql-connector-java "5.1.34"]
                  [slingshot "0.12.1"]
-                 [sqlingvo "0.6.7"]]
+                 [sqlingvo "0.7.0"]]
   :profiles {:dev {:dependencies [[validation-clj "0.5.6"]
                                   [org.slf4j/slf4j-log4j12 "1.7.7"]
                                   [c3p0/c3p0 "0.9.1.2"]

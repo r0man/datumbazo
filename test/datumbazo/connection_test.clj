@@ -162,4 +162,4 @@
 
 (deftest test-sql-str
   (with-test-db [db]
-    (is (= "SELECT 1, 'a'" (sql-str db (select [1 "a"]))))))
+    (is (= "SELECT 1, 'a'" (sql-str (select db [1 "a"]))))))

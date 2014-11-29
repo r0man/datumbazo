@@ -16,8 +16,7 @@
           condition `(and ~@(map (fn [c v] `(= ~c ~v)) columns vals))]
       (if (and (or (nil? (:if opts))
                    ((:if opts) record))
-               (run1 (if (fn? db) (db) db)
-                     (select columns
+               (run1 (select (if (fn? db) (db) db) columns
                        (from table)
                        (where condition)
                        (limit 1))))

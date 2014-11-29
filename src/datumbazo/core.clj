@@ -38,37 +38,37 @@
 (defn copy!
   "Execute a COPY statement."
   [db table columns & body]
-  (run db (apply copy table columns body)))
+  (run (apply copy db table columns body)))
 
 (defn delete!
   "Execute a DELETE statement."
   [db table & body]
-  (run db (apply delete table body)))
+  (run (apply delete db table body)))
 
 (defn drop-table!
   "Execute a DROP TABLE statement."
   [db table & body]
-  (run db (apply drop-table table body)))
+  (run (apply drop-table db table body)))
 
 (defn insert!
   "Execute a INSERT statement."
   [db table columns & body]
-  (run db (apply insert table columns body)))
+  (run (apply insert db table columns body)))
 
 (defn select!
   "Execute a SELECT statement."
   [db exprs & body]
-  (run db (apply select exprs body)))
+  (run (apply select db exprs body)))
 
 (defn truncate!
   "Execute a TRUNCATE statement."
   [db tables & body]
-  (run db (apply truncate tables body)))
+  (run (apply truncate db tables body)))
 
 (defn update!
   "Execute a UPDATE statement."
   [db table row & body]
-  (run db (apply update table row body)))
+  (run (apply update db table row body)))
 
 ;; ----------------------------------------------------------------------------------------------------------
 
@@ -130,9 +130,9 @@
 (defn run
   "Compile and run `stmt` against the current clojure.java.jdbc
   database connection."
-  [db stmt & [opts]]
+  [stmt & [opts]]
   (let [ast (ast stmt)]
-    (->> (run* db (apply-preparation ast) opts)
+    (->> (run* (apply-preparation ast) opts)
          ((if (= :delete (:op ast))
             identity
             #(apply-transformation ast %1))))))
@@ -140,8 +140,8 @@
 (defn run1
   "Run `stmt` against the current clojure.java.jdbc database
   connection and return the first row."
-  [db stmt & opts]
-  (first (apply run db stmt opts)))
+  [stmt & opts]
+  (first (apply run stmt opts)))
 
 (defn table
   "Make a new table."
@@ -157,7 +157,7 @@
 
 (defn count-all
   "Count all rows in the database `table`."
-  [db table] (:count (run1 db (select ['(count *)] (from table)))))
+  [db table] (:count (run1 (select db ['(count *)] (from table)))))
 
 (defn paginate
   "Add LIMIT and OFFSET clauses to `query` calculated from `page` and
@@ -180,7 +180,7 @@
          (defn ~name ~doc [& ~'args]
            (let [db# (first ~'args)
                  query# (apply ~query-sym ~'args)]
-             (->> (run db# query#)
+             (->> (run query#)
                   (map (or ~map-fn identity))))))))
 
 (defmacro defquery1 [name doc args body & [map-fn]]
@@ -191,7 +191,7 @@
            (let [db# (first ~'args)
                  query# (apply ~query-sym ~'args)]
              ((or ~map-fn identity)
-              (run1 db# query#)))))))
+              (run1 query#)))))))
 
 (defn update-columns-best-row-identifiers [db table row]
   (let [columns (meta/best-row-identifiers db :schema (or (:schema table) :public) :table (:name table) :nullable false)
@@ -222,14 +222,14 @@
 (defn find-by-primary-key [db table row]
   (let [primary-key (or (:primary-key table)
                         (map :name (filter :primary-key? (vals (:column table)))))]
-    (select [:*]
+    (select db [:*]
       (from (:name table))
       (where (primary-key-clause db table row)))))
 
 (defn select-rows
   "Select rows from the database `table`."
   [db table & [opts]]
-  (select (remove #(= true (:hidden? %1)) (columns table))
+  (select db (remove #(= true (:hidden? %1)) (columns table))
     (from table)
     (paginate (:page opts) (:per-page opts))
     (order-by (:order-by opts))))
@@ -237,29 +237,29 @@
 (defn insert-row
   "Insert `row` into the database `table`."
   [db table row & [opts]]
-  (run1 db (sqlingvo.core/insert table []
-             (values (select-columns table row))
-             (apply returning (remove #(= true (:hidden? %1)) (columns table)))
-             (prepare (partial io/encode-row db table))
-             (prepare (:prepare table)))))
+  (run1 (sqlingvo.core/insert db table []
+          (values (select-columns table row))
+          (apply returning (remove #(= true (:hidden? %1)) (columns table)))
+          (prepare (partial io/encode-row db table))
+          (prepare (:prepare table)))))
 
 (defn insert-rows
   "Insert `rows` into the database `table`."
   [db table rows & [opts]]
-  (run db (sqlingvo.core/insert table []
-            (values (map #(select-columns table %) rows))
-            (apply returning (remove #(= true (:hidden? %1)) (columns table)))
-            (prepare (partial io/encode-row db table))
-            (prepare (:prepare table)))))
+  (run (sqlingvo.core/insert db table []
+         (values (map #(select-columns table %) rows))
+         (apply returning (remove #(= true (:hidden? %1)) (columns table)))
+         (prepare (partial io/encode-row db table))
+         (prepare (:prepare table)))))
 
 (defn update-row
   "Update the `row` in the database `table`."
   [db table row & [opts]]
-  (run1 db (update table (select-columns table row)
-             (where (primary-key-clause db table row))
-             (apply returning (remove #(= true (:hidden? %1)) (columns table)))
-             (prepare (partial io/encode-row db table))
-             (prepare (:prepare table)))))
+  (run1 (update db table (select-columns table row)
+          (where (primary-key-clause db table row))
+          (apply returning (remove #(= true (:hidden? %1)) (columns table)))
+          (prepare (partial io/encode-row db table))
+          (prepare (:prepare table)))))
 
 (defmacro deftable
   "Define a database table."
@@ -283,17 +283,18 @@
 
          (defn ~(symbol (str "drop-" table-name))
            ~(format "Drop the %s database table." table-name)
-           [~'db & ~'body] (:count (run1 ~'db (apply drop-table [~symbol#] ~'body))))
+           [~'db & ~'body]
+           (:count (run1 (apply drop-table ~'db [~symbol#] ~'body))))
 
          (defn ~(symbol (str "delete-" table-name))
            ~(format "Delete all rows in the %s database table." table-name)
-           [~'db & ~'body] (:count (run1 ~'db (apply delete ~symbol# ~'body))))
+           [~'db & ~'body] (:count (run1 (apply delete ~'db ~symbol# ~'body))))
 
          (defn ~(symbol (str "delete-" singular#))
            ~(format "Delete the %s from the database table." singular#)
-           [~'db ~'row] (:count (run1 ~'db (delete ~symbol#
-                                             (from ~(keyword table-name))
-                                             (where `(= :id ~(:id ~'row)))))))
+           [~'db ~'row] (:count (run1 (delete ~'db  ~symbol#
+                                        (from ~(keyword table-name))
+                                        (where `(= :id ~(:id ~'row)))))))
 
          (defn ~(symbol (str "insert-" singular#))
            ~(format "Insert the %s row into the database." singular#)
@@ -307,7 +308,7 @@
 
          (defn ~(symbol (str "truncate-" table-name))
            ~(format "Truncate the %s database table." table-name)
-           [~'db & ~'body] (:count (run1 ~'db (apply truncate [~symbol#] ~'body))))
+           [~'db & ~'body] (:count (run1 (apply truncate ~'db [~symbol#] ~'body))))
 
          (defn ~(symbol (str "update-" singular#))
            ~(format "Update the %s row in the database." singular#)

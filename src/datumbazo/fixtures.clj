@@ -62,8 +62,8 @@
   (let [table (parse-table table)]
     (doseq [column (meta/columns db :schema (or (:schema table) :public) :table (:name table))
             :when (contains? #{:bigserial :serial} (:type column))]
-      (run1 db (select [`(setval ~(sql-name db (serial-seq column))
-                                 ~(select [`(max ~(:name column))]
+      (run1 (select db [`(setval ~(sql-name db (serial-seq column))
+                                 ~(select db [`(max ~(:name column))]
                                     (from table)))])))))
 
 (defn read-fixture
@@ -75,9 +75,9 @@
               (fn [result rows]
                 (concat result
                         ;; TDOD: Find insert columns and do not rely on first row.
-                        (run db (insert table []
-                                  (values (encode-rows db table rows))
-                                  (returning *)))))
+                        (run (insert db table []
+                               (values (encode-rows db table rows))
+                               (returning *)))))
               [] (partition batch-size batch-size nil (slurp-rows filename)))
         result (assoc {:table table :file filename} :records rows)]
     (reset-serials db table)
@@ -88,7 +88,7 @@
   [db table filename & {:keys [entities identifiers]}]
   (make-parents filename)
   (with-open [writer (writer filename)]
-    (let [rows (run db (select [*] (from table)))]
+    (let [rows (run (select db [*] (from table)))]
       (clojure.pprint/pprint rows writer)
       {:file filename :table table :records (count rows)})))
 
@@ -108,7 +108,7 @@
 (defn delete-fixtures [db tables]
   (infof "Deleting fixtures from database.")
   (doseq [table tables]
-    (run db (truncate [table] (cascade true)))))
+    (run (truncate db [table] (cascade true)))))
 
 (defn dump-fixtures
   "Write the fixtures for `tables` into `directory`."

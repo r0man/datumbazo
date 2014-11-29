@@ -174,61 +174,68 @@
     (log/warnf "Database connection already closed."))
   (dissoc component :connection :savepoint))
 
+(defn- db
+  "Return the db from `ast`."
+  [ast]
+  (assert db (str "No db:" (:db ast)))
+  (:db ast))
+
 (defn- prepare-stmt
   "Compile `stmt` and return a java.sql.PreparedStatement from `db`."
-  [db stmt]
-  (let [[sql & args] (sql db stmt)
-        stmt (jdbc/prepare-statement (:connection db) sql)]
+  [stmt]
+  (let [[sql & args] (sql stmt)
+        stmt (jdbc/prepare-statement (:connection (db (ast stmt))) sql)]
     (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
     stmt))
 
 (defn sql-str
   "Prepare `stmt` using the database and return the raw SQL as a string."
-  [db stmt]
-  (let [sql (first (sql db stmt))
-        stmt (prepare-stmt db stmt)]
+  [stmt]
+  (let [sql (first (sql stmt))
+        stmt (prepare-stmt stmt)]
     (if (.startsWith (str stmt) (replace sql #"\?.*" ""))
       (str stmt)
       (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver.")))))
 
 (defn- run-copy
-  [db ast  & {:keys [transaction?]}]
+  [ast & {:keys [transaction?]}]
   ;; TODO: Get rid of sql-str
-  (let [compiled (sql-str db ast)
-        stmt (.prepareStatement (:connection db) compiled)]
+  (let [compiled (sql-str ast)
+        stmt (.prepareStatement (:connection (db ast)) compiled)]
     (.execute stmt)))
 
 (defn- run-query
-  [db ast  & {:keys [transaction?]}]
-  (let [compiled (sql db ast)
-        identifiers #(sql-keyword db %1)
+  [ast & {:keys [transaction?]}]
+  (let [compiled (sql ast)
+        identifiers #(sql-keyword (db ast) %1)
         query #(jdbc/query %1 compiled :identifiers identifiers)]
     (if transaction?
-      (jdbc/with-db-transaction [t-db db] (query t-db))
-      (query db))))
+      (jdbc/with-db-transaction [t-db (db ast)]
+        (query t-db))
+      (query (db ast)))))
 
 (defn- run-prepared
-  [db ast & {:keys [transaction?]}]
-  (let [compiled (sql db ast)]
-    (->> (jdbc/db-do-prepared db transaction? (first compiled) (rest compiled))
+  [ast & {:keys [transaction?]}]
+  (let [compiled (sql ast)]
+    (->> (jdbc/db-do-prepared (db ast) transaction? (first compiled) (rest compiled))
          (map #(hash-map :count %1)))))
 
 (defn run*
   "Compile and run `stmt` against the database and return the rows."
-  [db stmt & [{:keys [transaction?]}]]
+  [stmt & [{:keys [transaction?]}]]
   (let [{:keys [op returning] :as ast} (ast stmt)]
     (try (cond
           (= :copy op)
-          (run-copy db ast :transaction? transaction?)
+          (run-copy ast :transaction? transaction?)
           (= :select op)
-          (run-query db ast :transaction? transaction?)
+          (run-query ast :transaction? transaction?)
           (and (= :with op)
                (or (= :select (:op (:query ast)))
                    (:returning (:query ast))))
-          (run-query db ast :transaction? transaction?)
+          (run-query ast :transaction? transaction?)
           returning
-          (run-query db ast :transaction? transaction?)
-          :else (run-prepared db ast :transaction? transaction?))
+          (run-query ast :transaction? transaction?)
+          :else (run-prepared ast :transaction? transaction?))
          (catch Exception e
            (if (or (instance? SQLException e)
                    (instance? SQLException (.getCause e)))
