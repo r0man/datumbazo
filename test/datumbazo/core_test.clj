@@ -654,3 +654,41 @@
   (with-test-db [db]
     (is (= [{:text "1"}]
            (run (select db [(as `(cast 1 :text) :text)]))))))
+
+(deftest test-deref-select
+  (with-test-db [db]
+    (is (= @(select db [(as 1 :a)
+                        (as 2 :b)
+                        (as 3 :c)])
+           [{:a 1 :b 2 :c 3}]))))
+
+(deftest test-deref-create-table
+  (with-test-db [db]
+    (let [table :test-deref-create-table]
+      (is (= @(create-table db table
+                (column :a :integer)
+                (column :b :integer))
+             [{:count 0}]))
+      @(drop-table db [table]))))
+
+(deftest test-deref-drop-table
+  (with-test-db [db]
+    (let [table :test-deref-drop-table]
+      @(create-table db table
+         (column :a :integer))
+      (is (= @(drop-table db [table])
+             [{:count 0}]))
+      (is (= @(drop-table db [table]
+                (if-exists true))
+             [{:count 0}])))))
+
+(deftest test-deref-insert
+  (with-test-db [db]
+    (let [table :test-deref-insert]
+      @(create-table db table
+         (column :a :integer)
+         (column :b :integer))
+      (is (= @(insert db table [:a :b]
+                (values {:a 1 :b 2}))
+             [{:count 1}]))
+      @(drop-table db [table]))))

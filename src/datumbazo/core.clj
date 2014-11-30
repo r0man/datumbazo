@@ -13,7 +13,8 @@
             [inflections.core :refer [hyphenate singular]]
             [no.en.core :refer [parse-integer]]
             sqlingvo.core
-            [sqlingvo.util :refer [parse-table parse-expr concat-in]]))
+            [sqlingvo.expr :refer [parse-table parse-expr]]
+            [sqlingvo.util :refer [concat-in]]))
 
 (immigrate 'sqlingvo.core)
 
@@ -337,3 +338,5 @@
                       ~(format "Find the first %s by %s." (singular table-name) column-name)
                       [~'db & ~'args]
                       (first (apply ~(symbol (str table-name "-by-" column-name)) ~'db ~'args)))))))))
+
+(alter-var-root #'sqlingvo.expr/eval-stmt (constantly run))

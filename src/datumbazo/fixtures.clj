@@ -15,7 +15,7 @@
             [datumbazo.util :refer [edn-file-seq path-split path-replace]]
             [geo.postgis :as geo]
             [inflections.core :refer [hyphenate underscore]]
-            [sqlingvo.util :refer [parse-table]]))
+            [sqlingvo.expr :refer [parse-table]]))
 
 (def ^:dynamic *readers*
   (assoc geo/*readers* 'inst read-instant-timestamp))

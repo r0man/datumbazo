@@ -13,7 +13,7 @@
             [datumbazo.util :refer :all]
             [no.en.core :refer [parse-double parse-integer parse-long]]
             [sqlingvo.compiler :refer [SQLType]]
-            [sqlingvo.util :refer [parse-table]]
+            [sqlingvo.expr :refer [parse-table]]
             geo.postgis))
 
 (extend-type DateTime
