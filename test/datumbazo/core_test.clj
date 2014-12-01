@@ -702,8 +702,47 @@
               (values [{:a 1 :b 2} {:b 3} {:c 3}])
               (returning *))
            [{:a 1 :b 2}
-            {:a nil :b 3, }
+            {:a nil :b 3}
             {:a nil :b nil}]))))
+
+(defn create-quotes-table [db]
+  (create-table db :quotes
+    (column :id :serial :primary-key? true)
+    (column :exchange-id :integer :not-null? true :references :exchanged/id)
+    (column :company-id :integer :references :companies/id)
+    (column :symbol :citext :not-null? true :unique? true)
+    (column :created-at :timestamp-with-time-zone :not-null? true :default '(now))
+    (column :updated-at :timestamp-with-time-zone :not-null? true :default '(now))))
+
+(deftest test-insert-fixed-columns-mixed-values-2
+  (with-test-db [db]
+    @(create-quotes-table db)
+    (is (= @(insert db :quotes [:id :exchange-id :company-id
+                                :symbol :created-at :updated-at]
+              (values [{:updated-at (to-timestamp "2012-11-02T18:22:59.688-00:00")
+                        :created-at (to-timestamp "2012-11-02T18:22:59.688-00:00")
+                        :symbol "MSFT"
+                        :exchange-id 2
+                        :company-id 5
+                        :id 5}
+                       {:updated-at (to-timestamp "2012-11-02T18:22:59.688-00:00")
+                        :created-at (to-timestamp "2012-11-02T18:22:59.688-00:00")
+                        :symbol "SPY"
+                        :exchange-id 2
+                        :id 6}])
+              (returning *))
+           [{:updated-at #inst "2012-11-02T18:22:59.688-00:00"
+             :created-at #inst "2012-11-02T18:22:59.688-00:00"
+             :symbol "MSFT"
+             :company-id 5
+             :exchange-id 2
+             :id 5}
+            {:updated-at #inst "2012-11-02T18:22:59.688-00:00"
+             :created-at #inst "2012-11-02T18:22:59.688-00:00"
+             :symbol "SPY"
+             :company-id nil
+             :exchange-id 2
+             :id 6}]))))
 
 (comment
 
