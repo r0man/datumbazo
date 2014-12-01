@@ -68,7 +68,7 @@
 
 (defn- find-column-keys [db table]
   (let [table (parse-table table)]
-    (->> (meta/columns db :schema (:schema table) :table (:name table))
+    (->> (meta/columns db :schema (or (:schema table) :public) :table (:name table))
          (map (comp #(sql-keyword db %) :column-name)))))
 
 (defn read-fixture
@@ -81,9 +81,9 @@
               (fn [result rows]
                 (concat result
                         ;; TDOD: Find insert columns and do not rely on first row.
-                        (run (insert db table columns
-                               (values (encode-rows db table rows))
-                               (returning *)))))
+                        @(insert db table columns
+                           (values (encode-rows db table rows))
+                           (returning *))))
               [] (partition batch-size batch-size nil (slurp-rows filename)))
         result (assoc {:table table :file filename} :records rows)]
     (reset-serials db table)
