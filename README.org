@@ -71,16 +71,27 @@ Database Kung Fu in Clojure.
   #+RESULTS:
   : ({:code "de", :name "Germany", :id 1} {:code "es", :name "Spain", :id 2})
 
-  Select a country by name.
+  Select a the country id and code by name.
 
   #+BEGIN_SRC clojure :exports both :results verbatim
-    @(select db [:*]
+    @(select db [:id :code]
        (from :countries)
        (where '(= :name "Spain")))
   #+END_SRC
 
   #+RESULTS:
-  : ({:code "es", :name "Spain", :id 2})
+  : ({:code "es", :id 2})
+
+  Call functions and aliases in expressions.
+
+  #+BEGIN_SRC clojure :exports both :results verbatim
+    @(select db [(as '(+ :id 10) :id)
+                 (as '(upper :code) :code)]
+       (from :countries))
+  #+END_SRC
+
+  #+RESULTS:
+  : ({:code "DE", :id 11} {:code "ES", :id 12})
 
   Drop the countries table.
 
