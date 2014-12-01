@@ -66,6 +66,11 @@
                                  ~(select db [`(max ~(:name column))]
                                     (from table)))])))))
 
+(defn- find-column-keys [db table]
+  (let [table (parse-table table)]
+    (->> (meta/columns db :table (:name table))
+         (map (comp #(sql-keyword db %) :column-name)))))
+
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
   [db table filename & {:keys [entities batch-size]}]
@@ -75,7 +80,7 @@
               (fn [result rows]
                 (concat result
                         ;; TDOD: Find insert columns and do not rely on first row.
-                        (run (insert db table []
+                        (run (insert db table (find-column-keys db table)
                                (values (encode-rows db table rows))
                                (returning *)))))
               [] (partition batch-size batch-size nil (slurp-rows filename)))
