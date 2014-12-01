@@ -14,7 +14,7 @@ Database Kung Fu in Clojure.
   [[https://clojars.org/sqlingvo][https://clojars.org/datumbazo/latest-version.svg]]
 
 * Usage
-** Setup
+** Imports
 
    Datumbazo shadows some Clojure core functions, so exclude them.
 
@@ -22,6 +22,8 @@ Database Kung Fu in Clojure.
   (refer-clojure :exclude '[distinct group-by])
   (require '[datumbazo.core :refer :all])
    #+END_SRC
+
+** Database connection
 
    Define a database connection.
 
