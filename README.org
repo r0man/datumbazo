@@ -42,6 +42,7 @@ Database Kung Fu in Clojure.
 
   #+BEGIN_SRC clojure :exports both :results verbatim
     @(create-table db :countries
+       (column :id :serial :primary-key? true)
        (column :name :text)
        (column :code :text))
   #+END_SRC
@@ -53,11 +54,33 @@ Database Kung Fu in Clojure.
 
   #+BEGIN_SRC clojure :exports both :results verbatim
     @(insert db :countries []
-       (values [{:code "es" :name "Spain"}]))
+       (values [{:code "de" :name "Germany"}
+                {:code "es" :name "Spain"}]))
   #+END_SRC
 
   #+RESULTS:
-  : ({:count 1})
+  : ({:count 2})
+
+  Select all countries.
+
+  #+BEGIN_SRC clojure :exports both :results verbatim
+    @(select db [:*]
+       (from :countries))
+  #+END_SRC
+
+  #+RESULTS:
+  : ({:code "de", :name "Germany", :id 1} {:code "es", :name "Spain", :id 2})
+
+  Select a country by name.
+
+  #+BEGIN_SRC clojure :exports both :results verbatim
+    @(select db [:*]
+       (from :countries)
+       (where '(= :name "Spain")))
+  #+END_SRC
+
+  #+RESULTS:
+  : ({:code "es", :name "Spain", :id 2})
 
   Drop the countries table.
 
