@@ -59,16 +59,17 @@ Database Kung Fu in Clojure.
   #+RESULTS:
   : ({:count 0})
 
-  Insert a row into the countries table.
+  Insert a row into the countries table and return the inserted rows.
 
   #+BEGIN_SRC clojure :exports both :results verbatim
     @(insert db :countries []
        (values [{:code "de" :name "Germany"}
-                {:code "es" :name "Spain"}]))
+                {:code "es" :name "Spain"}])
+       (returning :*))
   #+END_SRC
 
   #+RESULTS:
-  : ({:count 2})
+  : ({:code "de", :name "Germany", :id 3} {:code "es", :name "Spain", :id 4})
 
   Select all countries.
 
