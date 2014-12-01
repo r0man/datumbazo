@@ -69,7 +69,7 @@ Database Kung Fu in Clojure.
   #+END_SRC
 
   #+RESULTS:
-  : ({:code "de", :name "Germany", :id 3} {:code "es", :name "Spain", :id 4})
+  : ({:code "de", :name "Germany", :id 1} {:code "es", :name "Spain", :id 2})
 
   Select all countries.
 
@@ -92,16 +92,16 @@ Database Kung Fu in Clojure.
   #+RESULTS:
   : ({:code "es", :id 2})
 
-  Call functions and aliases in expressions.
+  Delete a country by name, and return the affected rows.
 
   #+BEGIN_SRC clojure :exports both :results verbatim
-    @(select db [(as '(+ :id 10) :id)
-                 (as '(upper :code) :code)]
-       (from :countries))
+    @(delete db :countries
+       (where '(= :name "Spain"))
+       (returning :*))
   #+END_SRC
 
   #+RESULTS:
-  : ({:code "DE", :id 11} {:code "ES", :id 12})
+  : ({:code "es", :name "Spain", :id 2})
 
   Drop the countries table.
 
