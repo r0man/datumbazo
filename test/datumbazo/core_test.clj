@@ -692,3 +692,48 @@
                 (values {:a 1 :b 2}))
              [{:count 1}]))
       @(drop-table db [table]))))
+
+(comment
+
+  (def db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))
+
+  @(select db [1 "2" '(+ 1 2) '(+ (now) (cast "1 day" :interval))])
+
+  @(create-table db :countries
+     (column :name :text)
+     (column :code :text))
+
+  @(insert db :countries []
+     (values [{:code "es" :name "Spain"}]))
+
+  @(drop-table db [:countries])
+
+  @(select db [:*]
+     (from :countries))
+
+  @(select db [(as '(+ :id 10) :id)
+               (as (upper-case :code) :code)]
+     (from :countries))
+
+  @(select db [(as '(+ :id 10) :id)
+               (as '(upper :code) :code)]
+     (from :countries))
+  select * from information_schema.tables
+
+  @(select db [:*]
+     (from :countries)
+     (order-by (asc :name)))
+
+  (select db [:*]
+     (from :countries)
+     (order-by (asc :name)))
+
+
+  (first @(select db [:*]
+            (from :information-schema.tables)
+            (where '(= :table-name "pg_statistic"))))
+
+  (->> @(select db [:*]
+          (from :information-schema.tables)
+          (where '(= :table-name "pg_statistic"))
+          )))
