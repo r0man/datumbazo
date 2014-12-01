@@ -693,6 +693,18 @@
              [{:count 1}]))
       @(drop-table db [table]))))
 
+(deftest test-insert-fixed-columns-mixed-values
+  (with-test-db [db]
+    @(create-table db :test
+       (column :a :integer)
+       (column :b :integer))
+    (is (= @(insert db :test [:a :b]
+              (values [{:a 1 :b 2} {:b 3} {:c 3}])
+              (returning *))
+           [{:a 1 :b 2}
+            {:a nil :b 3, }
+            {:a nil :b nil}]))))
+
 (comment
 
   (def db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))
@@ -725,8 +737,8 @@
      (order-by (asc :name)))
 
   (select db [:*]
-     (from :countries)
-     (order-by (asc :name)))
+    (from :countries)
+    (order-by (asc :name)))
 
 
   (first @(select db [:*]
