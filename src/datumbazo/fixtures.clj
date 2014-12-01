@@ -68,7 +68,7 @@
 
 (defn- find-column-keys [db table]
   (let [table (parse-table table)]
-    (->> (meta/columns db :table (:name table))
+    (->> (meta/columns db :schema (:schema table) :table (:name table))
          (map (comp #(sql-keyword db %) :column-name)))))
 
 (defn read-fixture
@@ -76,11 +76,12 @@
   [db table filename & {:keys [entities batch-size]}]
   (infof "Loading fixtures for table %s from %s." (sql-name db table) filename)
   (let [batch-size (or batch-size 1000)
+        columns (find-column-keys db table)
         rows (reduce
               (fn [result rows]
                 (concat result
                         ;; TDOD: Find insert columns and do not rely on first row.
-                        (run (insert db table (find-column-keys db table)
+                        (run (insert db table columns
                                (values (encode-rows db table rows))
                                (returning *)))))
               [] (partition batch-size batch-size nil (slurp-rows filename)))

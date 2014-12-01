@@ -40,6 +40,16 @@
       (is (every? #(keyword? (:name %1)) columns))
       (is (every? #(keyword? (:type %1)) columns))
       (is (= [:id] (map :name columns))))
+    (let [columns (columns db :schema :public :table :users)]
+      (is (= (set (map :column-name columns))
+             #{"id" "name" "created_at" "updated_at"})))
+    (let [columns (columns db :schema :twitter :table :users)]
+      (is (= (set (map :column-name columns))
+             #{"listed_count" "lang" "url" "friends_count" "id" "name" "verified"
+               "time_zone" "location" "updated_at" "profile_image_url"
+               "default_profile_image" "statuses_count" "created_at"
+               "followers_count" "possibly_sensitive" "screen_name" "description"
+               "retweet_count"})))
     ;; TODO: Fixme
     ;; (let [columns (columns db :table :countries :name :continent-id)]
     ;;   (is (not (empty? columns)))

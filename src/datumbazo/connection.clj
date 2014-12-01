@@ -157,7 +157,7 @@
   (let [connection (jdbc/get-connection component)
         component (jdbc/add-connection component connection)]
     (log/infof "Database connection to %s on %s established."
-               (:name component) (:host component))
+               (:name component) (:server-name component))
     (if (:test component)
       (start-transaction component)
       component)))
@@ -170,7 +170,7 @@
           (.rollback connection))
         (.close connection)
         (log/infof "Database connection to %s on %s closed."
-                   (:name component) (:host component)))
+                   (:name component) (:server-name component)))
     (log/warnf "Database connection already closed."))
   (dissoc component :connection :savepoint))
 

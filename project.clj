@@ -20,7 +20,7 @@
                  [org.xerial/sqlite-jdbc "3.7.2"]
                  [mysql/mysql-connector-java "5.1.34"]
                  [slingshot "0.12.1"]
-                 [sqlingvo "0.7.1"]]
+                 [sqlingvo "0.7.2-SNAPSHOT"]]
   :profiles {:dev {:dependencies [[validation-clj "0.5.6"]
                                   [org.slf4j/slf4j-log4j12 "1.7.7"]
                                   [c3p0/c3p0 "0.9.1.2"]
