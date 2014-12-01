@@ -71,7 +71,7 @@ Database Kung Fu in Clojure.
   #+RESULTS:
   : ({:code "de", :name "Germany", :id 1} {:code "es", :name "Spain", :id 2})
 
-  Select a the country id and code by name.
+  Select the country id and code by name.
 
   #+BEGIN_SRC clojure :exports both :results verbatim
     @(select db [:id :code]
