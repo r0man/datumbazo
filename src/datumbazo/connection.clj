@@ -8,7 +8,7 @@
             [datumbazo.util :as util]
             [no.en.core :refer [parse-integer]]
             [sqlingvo.core :refer [ast sql sql-keyword]])
-  (:import (java.sql SQLException)))
+  (:import (java.sql Connection SQLException)))
 
 (defn start-transaction
   "Start a database transaction."
@@ -94,6 +94,15 @@
 (defmethod disconnect :c3p0 [db]
   (disconnect-datasource db))
 
+(defmacro with-connection [[connection-sym db] & body]
+  `(cond
+    (instance? Connection (:connection ~db))
+    (let [~connection-sym (:connection ~db)]
+      ~@body)
+    (:datasource ~db)
+    (with-open [~connection-sym (jdbc/get-connection ~db)]
+      ~@body)))
+
 (defn- db
   "Return the db from `ast`."
   [ast]
@@ -103,10 +112,11 @@
 (defn- prepare-stmt
   "Compile `stmt` and return a java.sql.PreparedStatement from `db`."
   [stmt]
-  (let [[sql & args] (sql stmt)
-        stmt (jdbc/prepare-statement (jdbc/get-connection (db (ast stmt))) sql)]
-    (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
-    stmt))
+  (with-connection [connection (db (ast stmt))]
+    (let [[sql & args] (sql stmt)
+          stmt (jdbc/prepare-statement connection sql)]
+      (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
+      stmt)))
 
 (defn sql-str
   "Prepare `stmt` using the database and return the raw SQL as a string."
@@ -120,9 +130,10 @@
 (defn- run-copy
   [ast & {:keys [transaction?]}]
   ;; TODO: Get rid of sql-str
-  (let [compiled (sql-str ast)
-        stmt (.prepareStatement (jdbc/get-connection (db ast)) compiled)]
-    (.execute stmt)))
+  (with-connection [connection (db ast)]
+    (let [compiled (sql-str ast)
+          stmt (.prepareStatement connection compiled)]
+      (.execute stmt))))
 
 (defn- run-query
   [ast & {:keys [transaction?]}]

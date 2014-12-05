@@ -61,13 +61,16 @@
     ;;   (is (= [:continent-id] (map :name columns))))
     ))
 
-(deftest test-metadata
-  (with-test-dbs [db]
-    (is (instance? DatabaseMetaData (metadata db))))
-  (with-test-db [db "bonecp:postgresql://tiger:scotch@localhost/datumbazo"]
-    (is (instance? DatabaseMetaData (metadata db))))
+(deftest test-columns-c3p0
   (with-test-db [db "c3p0:postgresql://tiger:scotch@localhost/datumbazo"]
-    (is (instance? DatabaseMetaData (metadata db)))))
+    (let [columns (columns db :table :continents)]
+      (is (not (empty? columns)))
+      (is (every? #(= :public (:schema %1)) columns))
+      (is (every? #(= :continents (:table %1)) columns))
+      (is (every? #(keyword? (:name %1)) columns))
+      (is (every? #(keyword? (:type %1)) columns))
+      (is (= [:id :name :code :geometry :freebase-guid :geonames-id :created-at :updated-at]
+             (map :name columns))))))
 
 (deftest test-indexes
   (with-test-db [db]

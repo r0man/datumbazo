@@ -42,3 +42,11 @@
     (is (instance? Connection (:connection db)))
     (is (= @(select db [(as 1 :a)])
            [{:a 1}]))))
+
+(deftest test-with-connection
+  (with-test-db [db "postgresql://tiger:scotch@localhost:5432/datumbazo"]
+    (with-connection [connection db]
+      (is (instance? Connection connection))))
+  (with-test-db [db "c3p0:postgresql://tiger:scotch@localhost:5432/datumbazo"]
+    (with-connection [connection db]
+      (is (instance? Connection connection)))))
