@@ -114,35 +114,6 @@ value is this namespace."
       3 (zipmap [:schema :table :name] parts)
       :else (throw (illegal-argument-exception "Can't parse column: %s" s)))))
 
-(defn parse-subprotocol
-  "Parse the JDBC subprotocol from `db-url`."
-  [db-url]
-  (if-let [matches (re-matches #"(([^:]+):)?([^:/]+):.+" (str db-url))]
-    (nth matches 3)
-    (illegal-argument-exception "Can't parse JDBC subprotocol: %s" db-url)))
-
-(defn parse-db-url
-  "Parse the database url `s` and return a Ring compatible map."
-  [s]
-  (if-let [matches (re-matches #"(([^:]+):)?([^:]+)://(([^:]+):([^@]+)@)?(([^:/]+)(:([0-9]+))?((/([^?]*))(\?(.*))?))" (str s))]
-    (let [database (nth matches 13)
-          server-name (nth matches 8)
-          server-port (parse-integer (nth matches 10))
-          query-string (nth matches 15)]
-      (compact-map {:name database
-                    :host server-name
-                    :params (parse-params query-string)
-                    :db-pool (keyword (or (nth matches 2) :jdbc))
-                    :port server-port
-                    :query-string query-string
-                    :uri (nth matches 12)
-                    :subname (str "//" server-name (if server-port (str ":" server-port)) "/" database (if-not (blank? query-string) (str "?" query-string)))
-                    :subprotocol (nth matches 3)
-                    :user (nth matches 5)
-                    :username (nth matches 5)
-                    :password (nth matches 6)}))
-    (illegal-argument-exception "Can't parse database connection url %s:" s)))
-
 (defn slurp-sql
   [file]
   (with-open [reader (reader file)]

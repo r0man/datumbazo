@@ -13,3 +13,4 @@
 /logs/debug.log
 /pom.xml.asc
 /.nrepl-port
+/logs/

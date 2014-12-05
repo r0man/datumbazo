@@ -6,7 +6,9 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [com.stuartsierra.component :as component]
-            [datumbazo.connection :refer [connection run*]]
+            [datumbazo.connection :as connection]
+            [datumbazo.connection :refer [run*]]
+            [datumbazo.db :as db]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [compact-map immigrate]]
@@ -25,13 +27,13 @@
 
 (defn new-db
   "Return a new database component."
-  [url & [opts]]
-  (merge (connection url) opts))
+  [spec] (db/new-db spec))
 
 (defmacro with-db
-  "Evaluate `body` within the context of a database connection."
-  [[db-sym spec] & body]
-  `(let [component# (component/start (new-db ~spec))
+  "Start a database connection using `config` bind it to `db-sym`,
+  evaluate `body` and close the database connection again."
+  [[db-sym config] & body]
+  `(let [component# (component/start (new-db ~config))
          ~db-sym component#]
      (try ~@body
           (finally (component/stop component#)))))

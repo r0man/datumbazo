@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [replace])
   (:require [clojure.string :refer [blank? join split replace]]
             [clojure.tools.logging :refer [logp]]
-            [datumbazo.util :refer [parse-db-url]]
+            [datumbazo.db :refer [parse-url]]
             [inflections.core :refer [underscore]]
             [pallet.common.shell :refer [bash]]
             [pallet.stevedore :refer [checked-script with-script-language]]

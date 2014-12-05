@@ -66,50 +66,6 @@
     :continents "continents"
     :public.continents "public.continents"))
 
-(deftest test-parse-subprotocol
-  (doseq [db-url [nil "" "x"]]
-    (is (thrown? IllegalArgumentException (parse-subprotocol db-url))))
-  (are [db-url subprotocol]
-    (is (= subprotocol (parse-subprotocol db-url)))
-    "bonecp:mysql://localhost/korma" "mysql"
-    "c3p0:mysql://localhost/korma" "mysql"
-    "jdbc:mysql://localhost/korma" "mysql"
-    "mysql://localhost/korma" "mysql"))
-
-(deftest test-parse-db-url
-  (doseq [url [nil "" "x"]]
-    (is (thrown? IllegalArgumentException (parse-db-url url))))
-  (let [spec (parse-db-url "postgresql://localhost:5432/korma")]
-    (is (= :jdbc (:db-pool spec)))
-    (is (= "localhost" (:host spec)))
-    (is (= 5432 (:port spec)))
-    (is (= "korma" (:name spec)))
-    (is (= "/korma" (:uri spec)))
-    (is (= {} (:params spec)))
-    (is (= "//localhost:5432/korma" (:subname spec)))
-    (is (= "postgresql" (:subprotocol spec))))
-  (let [spec (parse-db-url "postgresql://tiger:scotch@localhost:5432/korma?a=1&b=2")]
-    (is (= :jdbc (:db-pool spec)))
-    (is (= "tiger" (:username spec)))
-    (is (= "scotch" (:password spec)))
-    (is (= "localhost" (:host spec)))
-    (is (= 5432 (:port spec)))
-    (is (= "korma" (:name spec)))
-    (is (= "/korma" (:uri spec)))
-    (is (= {:a "1" :b "2"} (:params spec)))
-    (is (= "//localhost:5432/korma?a=1&b=2" (:subname spec)))
-    (is (= "postgresql" (:subprotocol spec))))
-  (let [spec (parse-db-url "c3p0:postgresql://localhost/korma")]
-    (is (= :c3p0 (:db-pool spec)))
-    (is (= "localhost" (:host spec)))
-    (is (nil? (:port spec)))
-    (is (nil?  (:port spec)))
-    (is (= "korma" (:name spec)))
-    (is (= "/korma" (:uri spec)))
-    (is (= {} (:params spec)))
-    (is (= "//localhost/korma" (:subname spec)))
-    (is (= "postgresql" (:subprotocol spec)))))
-
 (deftest test-slurp-sql
   (let [stmts (slurp-sql "test-resources/stmts-simple.sql")]
     (is (= ["DROP TABLE x" "DROP TABLE y"] stmts)))

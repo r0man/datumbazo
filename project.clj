@@ -9,7 +9,6 @@
                  [com.palletops/stevedore "0.8.0-beta.7"]
                  [com.stuartsierra/component "0.2.2"]
                  [commandline-clj "0.1.7"]
-                 [environ "1.0.0"]
                  [geo-clj "0.3.17"]
                  [inflections "0.9.13"]
                  [org.clojure/clojure "1.6.0"]
@@ -21,15 +20,10 @@
                  [mysql/mysql-connector-java "5.1.34"]
                  [slingshot "0.12.1"]
                  [sqlingvo "0.7.2"]]
-  :profiles {:dev {:dependencies [[validation-clj "0.5.6"]
-                                  [org.slf4j/slf4j-log4j12 "1.7.7"]
-                                  [c3p0/c3p0 "0.9.1.2"]
-                                  [com.jolbox/bonecp "0.8.0.RELEASE"]]
-                   :resource-paths ["test-resources"]
-                   :env {:test-db "postgresql://tiger:scotch@localhost/datumbazo"}}}
-  :plugins [[lein-environ "0.4.0"]]
+  :profiles {:dev {:dependencies [[ch.qos.logback/logback-classic "1.1.2"]
+                                  [com.mchange/c3p0 "0.9.5-pre10"]
+                                  [com.jolbox/bonecp "0.8.0.RELEASE"]
+                                  [validation-clj "0.5.6"]]}
+             :test {:resource-paths ["test-resources"]}}
   :aliases {"test-ancient" ["test"]}
-  :main ^{:skip-aot true} datumbazo.fixtures
-  :db [{:name :test-db
-        :fixtures "db/test-db/fixtures"
-        :migrations "db/test-db/migrations"}])
+  :main ^{:skip-aot true} datumbazo.fixtures)

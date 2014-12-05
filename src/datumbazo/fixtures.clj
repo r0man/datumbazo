@@ -7,9 +7,7 @@
             [clojure.string :refer [blank? join replace split]]
             [clojure.tools.logging :refer [infof]]
             [commandline.core :refer [print-help with-commandline]]
-            [datumbazo.connection :refer [connection-spec]]
             [datumbazo.core :refer :all :exclude [join]]
-            [datumbazo.core :refer [select from run1]]
             [datumbazo.io :refer [encode-rows decode-row]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [edn-file-seq path-split path-replace]]
@@ -149,11 +147,11 @@
     [[h help "Print this help."]]
     (when (or help (nil? db-url) (nil? directory))
       (show-help))
-    (let [db (connection-spec db-url)
-          tables (tables directory)]
-      (case (keyword command)
-        :delete (delete-fixtures db tables)
-        :dump (dump-fixtures db tables)
-        :load (load-fixtures db directory)
-        (show-help))
-      nil)))
+    (with-db [db db-url]
+      (let [tables (tables directory)]
+        (case (keyword command)
+          :delete (delete-fixtures db tables)
+          :dump (dump-fixtures db tables)
+          :load (load-fixtures db directory)
+          (show-help))
+        nil))))

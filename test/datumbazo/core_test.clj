@@ -5,14 +5,13 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [upper-case]]
             [clojure.java.io :refer [file]]
-            [environ.core :refer [env]]
             [validation.core :refer :all]
+            [datumbazo.test :refer :all]
             [datumbazo.validation :refer [new-record? uniqueness-of]]
             [slingshot.slingshot :refer [try+]])
   (:use clojure.test
         datumbazo.core
-        datumbazo.io
-        datumbazo.test))
+        datumbazo.io))
 
 (defvalidate continent
   (presence-of :name)
@@ -123,6 +122,11 @@
 
 (defn save-europe []
   (save-continent db europe))
+
+(deftest test-with-db
+  (with-db [db "postgresql://tiger:scotch@localhost:5432/datumbazo"]
+    (is (instance? sqlingvo.db.Database db))
+    (is (:connection db))))
 
 (deftest test-columns
   (let [columns (columns twitter-tweets-table)]

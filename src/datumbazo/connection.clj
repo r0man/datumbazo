@@ -1,160 +1,64 @@
 (ns datumbazo.connection
+  (:refer-clojure :exclude [replace])
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.string :refer [join replace]]
+            [clojure.string :refer [replace]]
             [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
+            [datumbazo.db :as db]
             [datumbazo.util :as util]
-            [environ.core :refer [env]]
-            [inflections.core :refer [dasherize underscore]]
             [no.en.core :refer [parse-integer]]
-            [sqlingvo.core :refer [ast sql sql-keyword]]
-            [sqlingvo.db :as db])
-  (:import (java.sql SQLException))
-  (:refer-clojure :exclude [replace]))
+            [sqlingvo.core :refer [ast sql sql-keyword]])
+  (:import (java.sql SQLException)))
 
-(def ^:dynamic *connection* nil)
+(defn start-transaction
+  "Start a database transaction."
+  [db]
+  (let [connection (jdbc/get-connection db)]
+    (.setAutoCommit connection false)
+    (assoc db :rollback (atom true) :level 1)))
 
-(def ^:dynamic *naming-strategy*
-  {:entity underscore :keyword dasherize})
+(defn rollback-transaction
+  "Rollback a database transaction."
+  [db]
+  (when (and (:rollback db) @(:rollback db))
+    (.rollback (jdbc/get-connection db))))
 
-(defn connection-url
-  "Lookup the JDBC connection url for `db-name` via environ."
-  [db-name]
-  (cond
-   ;; TODO: Check url.
-   (string? db-name)
-   db-name
-   (keyword? db-name)
-   (or (env db-name)
-       (util/illegal-argument-exception "Can't find connection url: %s" db-name))))
+(defmulti connect
+  "Connect to `db`."
+  (fn [db] (:db-pool db)))
 
-(defmulti connection-spec
-  "Parse `db-url` and return the connection spec."
-  (fn [db-url] (keyword (util/parse-subprotocol db-url))))
+(defn- connect-datasource [db datasource]
+  (log/infof "Database connection pool (%s) to %s on %s established."
+             (:name db) (name (:db-pool db)) (:server-name db))
+  (assoc db :datasource datasource))
 
-(defmethod connection-spec :mysql [db-url]
-  (let [spec (util/parse-db-url db-url)]
-    (db/mysql
-     (assoc spec
-       :classname "com.mysql.jdbc.Driver"))))
+(defmethod connect :bonecp [db]
+  (connect-datasource
+   db (util/invoke-constructor
+       "com.jolbox.bonecp.BoneCPDataSource"
+       (doto (util/invoke-constructor "com.jolbox.bonecp.BoneCPConfig")
+         (.setJdbcUrl (str "jdbc:" (name (:subprotocol db)) ":" (:subname db)))
+         (.setUsername (:username db))
+         (.setPassword (:password db))
+         (.setDefaultAutoCommit (not (true? (:test db))))))))
 
-(defmethod connection-spec :oracle [db-url]
-  (let [spec (util/parse-db-url db-url)]
-    (db/oracle
-     (assoc spec
-       :classname "oracle.jdbc.driver.OracleDriver"
-       :subprotocol "oracle:thin"
-       :subname (str ":" (:username spec) "/" (:password spec) "@" (util/format-server spec)
-                     ":" (:name spec))))))
+(defmethod connect :c3p0 [{:keys [params] :as db}]
+  (connect-datasource
+   db (doto (util/invoke-constructor "com.mchange.v2.c3p0.ComboPooledDataSource")
+        (.setJdbcUrl (str "jdbc:" (name (:subprotocol db)) ":" (:subname db)))
+        (.setUser (:username db))
+        (.setPassword (:password db))
+        (.setAcquireRetryAttempts (parse-integer (or (:acquire-retry-attempts params) 1))) ; TODO: Set back to 30
+        (.setInitialPoolSize (parse-integer (or (:initial-pool-size params) 3)))
+        (.setMaxIdleTime (parse-integer (or (:max-idle-time params) (* 3 60 60))))
+        (.setMaxIdleTimeExcessConnections (parse-integer (or (:max-idle-time-excess-connections params) (* 30 60))))
+        (.setMaxPoolSize (parse-integer (or (:max-pool-size params) 15)))
+        (.setMinPoolSize (parse-integer (or (:min-pool-size params) 3))))))
 
-(defmethod connection-spec :postgresql [db-url]
-  (let [spec (util/parse-db-url db-url)]
-    (db/postgresql
-     (assoc spec
-       :classname "org.postgresql.Driver"))))
-
-(defmethod connection-spec :vertica [db-url]
-  (let [spec (util/parse-db-url db-url)]
-    (db/vertica
-     (assoc spec
-       :classname "com.vertica.jdbc.Driver"))))
-
-(defmethod connection-spec :sqlite [db-url]
-  (if-let [matches (re-matches #"(([^:]+):)?([^:]+):([^?]+)(\?(.*))?" (str db-url))]
-    (db/sqlite
-     {:classname "org.sqlite.JDBC"
-      :params (util/parse-params (nth matches 5))
-      :db-pool (keyword (or (nth matches 2) :jdbc))
-      :subname (nth matches 4)
-      :subprotocol (nth matches 3)})))
-
-(defmethod connection-spec :sqlserver [db-url]
-  (let [spec (util/parse-db-url db-url)]
-    (db/sqlserver
-     (assoc spec
-       :classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-       :subprotocol "sqlserver"
-       :subname (str "//" (util/format-server spec) ";"
-                     "database=" (:name spec) ";"
-                     "user=" (:username spec) ";"
-                     "password=" (:password spec))))))
-
-(defmulti connection-pool
-  "Returns the connection pool for `db-spec`."
-  (fn [db-spec] (:db-pool db-spec)))
-
-(defmethod connection-pool :bonecp [db-spec]
-  (let [config (util/invoke-constructor "com.jolbox.bonecp.BoneCPConfig")]
-    (.setJdbcUrl config (str "jdbc:" (name (:subprotocol (:spec db-spec))) ":" (:subname (:spec db-spec))))
-    (.setUsername config (:username db-spec))
-    (.setPassword config (:password db-spec))
-    (assoc db-spec :spec {:datasource (util/invoke-constructor "com.jolbox.bonecp.BoneCPDataSource" config)})))
-
-(defmethod connection-pool :c3p0 [db-spec]
-  (let [params (:params db-spec)
-        datasource (util/invoke-constructor "com.mchange.v2.c3p0.ComboPooledDataSource")]
-    (.setJdbcUrl datasource (str "jdbc:" (name (:subprotocol (:spec db-spec))) ":" (:subname (:spec db-spec))))
-    (.setUser datasource (:username db-spec))
-    (.setPassword datasource (:password db-spec))
-    (.setAcquireRetryAttempts datasource (parse-integer (or (:acquire-retry-attempts params) 1))) ; TODO: Set back to 30
-    (.setInitialPoolSize datasource (parse-integer (or (:initial-pool-size params) 3)))
-    (.setMaxIdleTime datasource (parse-integer (or (:max-idle-time params) (* 3 60 60))))
-    (.setMaxIdleTimeExcessConnections datasource (parse-integer (or (:max-idle-time-excess-connections params) (* 30 60))))
-    (.setMaxPoolSize datasource (parse-integer (or (:max-pool-size params) 15)))
-    (.setMinPoolSize datasource (parse-integer (or (:min-pool-size params) 3)))
-    (assoc db-spec :spec {:datasource datasource})))
-
-(defmethod connection-pool :jdbc [db-spec]
-  db-spec)
-
-(defn connection [db-url]
-  "Returns the database connection for `db-name`."
-  (if (map? db-url)
-    db-url
-    (if-let [db-spec (connection-spec db-url)]
-      (connection-pool db-spec)
-      (util/illegal-argument-exception "Can't connect to: %s" db-url))))
-
-(util/defn-memo cached-connection [db-url]
-  "Returns the cached database connection for `db-url`."
-  (connection db-url))
-
-(defn jdbc-url
-  "Returns a JDBC url from the `db-spec`."
-  [db-spec]
-  (str "jdbc:" (:subprotocol db-spec) "://"
-       (:host db-spec)
-       (if-let [port (:port db-spec)]
-         (str ":" port))
-       "/" (:name db-spec)
-       (str "?" (join "&" (map (fn [[k v]] (str (name k) "=" v))
-                               (seq (assoc (:params db-spec)
-                                      :user (:user db-spec)
-                                      :password (:password db-spec))))))))
-
-(defmacro with-connection
-  [[symbol db] & body]
-  `(let [db# (connection ~db)]
-     (if (and (map? db#) (:connection db#))
-       (let [~symbol db#]
-         ~@body)
-       (with-open [connection# (jdbc/get-connection db#)]
-         (let [~symbol (assoc db#
-                         :connection connection#
-                         :connection-string ~db
-                         :level 0)]
-           ~@body)))))
-
-(defn start-transaction [db]
-  (.setAutoCommit (:connection db) false)
-  (assoc db :rollback (atom true) :level 1))
-
-(defn connect
-  "Establish the database connection for `component`."
-  [component]
+(defmethod connect :default [component]
   (if (:connection component)
     (throw (ex-info "Database connection already established." component)))
-  (let [connection (jdbc/get-connection component)
+  (let [connection (jdbc/get-connection (dissoc component :name))
         component (jdbc/add-connection component connection)]
     (log/infof "Database connection to %s on %s established."
                (:name component) (:server-name component))
@@ -162,17 +66,33 @@
       (start-transaction component)
       component)))
 
-(defn disconnect
-  "Close the database connection for `component`."
-  [component]
-  (if-let [connection (:connection component)]
-    (do (when (and (:rollback component) @(:rollback component))
-          (.rollback connection))
+(defmulti disconnect
+  "Disconnect from `db`."
+  (fn [db] (:db-pool db)))
+
+(defn- disconnect-datasource [db]
+  (if-let [datasource (:datasource db)]
+    (do ;; (if (:test db) (rollback-transaction db))
+      (.close datasource)
+      (log/infof "Database connection pool (%s) to %s on %s closed."
+                 (:name db) (name (:db-pool db)) (:server-name db)))
+    (log/warnf "Database connection already closed."))
+  (assoc db :datasource nil :savepoint nil))
+
+(defmethod disconnect :default [db]
+  (if-let [connection (:connection db)]
+    (do (if (:test db) (rollback-transaction db))
         (.close connection)
         (log/infof "Database connection to %s on %s closed."
-                   (:name component) (:server-name component)))
+                   (:name db) (:server-name db)))
     (log/warnf "Database connection already closed."))
-  (dissoc component :connection :savepoint))
+  (assoc db :connection nil :savepoint nil))
+
+(defmethod disconnect :bonecp [db]
+  (disconnect-datasource db))
+
+(defmethod disconnect :c3p0 [db]
+  (disconnect-datasource db))
 
 (defn- db
   "Return the db from `ast`."
@@ -251,11 +171,3 @@
     (connect db))
   (stop [db]
     (disconnect db)))
-
-(defmacro with-db
-  "Evaluate `body` within the context of a database connection."
-  [[db-sym component] & body]
-  `(let [component# (component/start ~component)
-         ~db-sym component#]
-     (try ~@body
-          (finally (component/stop component#)))))
