@@ -25,11 +25,11 @@
 
 (defmulti connect
   "Connect to `db`."
-  (fn [db] (:db-pool db)))
+  (fn [db] (:pool db)))
 
 (defn- connect-datasource [db datasource]
   (log/infof "Database connection pool (%s) to %s on %s established."
-             (:name db) (name (:db-pool db)) (:server-name db))
+             (:name db) (name (:pool db)) (:server-name db))
   (assoc db :datasource datasource))
 
 (defmethod connect :bonecp [db]
@@ -68,14 +68,14 @@
 
 (defmulti disconnect
   "Disconnect from `db`."
-  (fn [db] (:db-pool db)))
+  (fn [db] (:pool db)))
 
 (defn- disconnect-datasource [db]
   (if-let [datasource (:datasource db)]
     (do ;; (if (:test db) (rollback-transaction db))
       (.close datasource)
       (log/infof "Database connection pool (%s) to %s on %s closed."
-                 (:name db) (name (:db-pool db)) (:server-name db)))
+                 (:name db) (name (:pool db)) (:server-name db)))
     (log/warnf "Database connection already closed."))
   (assoc db :datasource nil :savepoint nil))
 

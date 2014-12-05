@@ -5,18 +5,18 @@
 (deftest test-new-db-bonecp
   (let [url "postgresql://localhost/datumbazo"]
     (is (= (new-db (str "bonecp:" url))
-           (assoc (new-db url) :db-pool :bonecp)))))
+           (assoc (new-db url) :pool :bonecp)))))
 
 (deftest test-new-db-c3p0
   (let [url "postgresql://localhost/datumbazo"]
     (is (= (new-db (str "c3p0:" url))
-           (assoc (new-db url) :db-pool :c3p0)))))
+           (assoc (new-db url) :pool :c3p0)))))
 
 (deftest test-new-db-mysql
   (let [spec (new-db "mysql://tiger:scotch@localhost/datumbazo?profileSQL=true")]
     (is (instance? sqlingvo.db.Database spec))
     (is (= "com.mysql.jdbc.Driver" (:classname spec)))
-    (is (= :jdbc (:db-pool spec)))
+    (is (= :jdbc (:pool spec)))
     (is (= "localhost" (:host spec)))
     (is (nil? (:port spec)))
     (is (= "tiger" (:username spec)))
@@ -33,7 +33,7 @@
   (let [spec (new-db "oracle://tiger:scotch@localhost/datumbazo")]
     (is (instance? sqlingvo.db.Database spec))
     (is (= "oracle.jdbc.driver.OracleDriver" (:classname spec)))
-    (is (= :jdbc (:db-pool spec)))
+    (is (= :jdbc (:pool spec)))
     (is (= "localhost" (:host spec)))
     (is (nil? (:port spec)))
     (is (= "tiger" (:username spec)))
@@ -48,7 +48,7 @@
   (let [spec (new-db "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
     (is (instance? sqlingvo.db.Database spec))
     (is (= "org.postgresql.Driver" (:classname spec)))
-    (is (= :jdbc (:db-pool spec)))
+    (is (= :jdbc (:pool spec)))
     (is (= "localhost" (:host spec)))
     (is (= 5432 (:port spec)))
     (is (= "tiger" (:username spec)))
@@ -65,7 +65,7 @@
   (let [spec (new-db "sqlite://tmp/datumbazo.sqlite")]
     (is (instance? sqlingvo.db.Database spec))
     (is (= "org.sqlite.JDBC" (:classname spec)))
-    (is (= :jdbc (:db-pool spec)))
+    (is (= :jdbc (:pool spec)))
     (is (nil? (:params spec)))
     (is (= "sqlite" (:subprotocol spec)))
     (is (= "//tmp/datumbazo.sqlite" (:subname spec)))))
@@ -74,7 +74,7 @@
   (let [spec (new-db "sqlserver://tiger:scotch@localhost/datumbazo")]
     (is (instance? sqlingvo.db.Database spec))
     (is (= "com.microsoft.sqlserver.jdbc.SQLServerDriver" (:classname spec)))
-    (is (= :jdbc (:db-pool spec)))
+    (is (= :jdbc (:pool spec)))
     (is (= "localhost" (:host spec)))
     (is (nil? (:port spec)))
     (is (= "tiger" (:username spec)))
@@ -90,7 +90,7 @@
     (is (instance? sqlingvo.db.Database spec))
     (is (= "vertica" (:subprotocol spec)))
     (is (= "com.vertica.jdbc.Driver" (:classname spec)))
-    (is (= :jdbc (:db-pool spec)))
+    (is (= :jdbc (:pool spec)))
     (is (= "localhost" (:host spec)))
     (is (nil? (:port spec)))
     (is (= "tiger" (:username spec)))
@@ -110,7 +110,7 @@
   (doseq [url [nil "" "x"]]
     (is (thrown? clojure.lang.ExceptionInfo (parse-url url))))
   (let [spec (parse-url "postgresql://localhost:5432/datumbazo")]
-    (is (= :jdbc (:db-pool spec)))
+    (is (= :jdbc (:pool spec)))
     (is (= "localhost" (:host spec)))
     (is (= 5432 (:port spec)))
     (is (= "datumbazo" (:name spec)))
@@ -118,7 +118,7 @@
     (is (nil? (:params spec)))
     (is (= "postgresql" (:subprotocol spec))))
   (let [spec (parse-url "postgresql://tiger:scotch@localhost:5432/datumbazo?a=1&b=2")]
-    (is (= :jdbc (:db-pool spec)))
+    (is (= :jdbc (:pool spec)))
     (is (= "tiger" (:username spec)))
     (is (= "scotch" (:password spec)))
     (is (= "localhost" (:host spec)))
@@ -128,7 +128,7 @@
     (is (= {:a "1" :b "2"} (:params spec)))
     (is (= "postgresql" (:subprotocol spec))))
   (let [spec (parse-url "c3p0:postgresql://localhost/datumbazo")]
-    (is (= :c3p0 (:db-pool spec)))
+    (is (= :c3p0 (:pool spec)))
     (is (= "localhost" (:host spec)))
     (is (nil? (:port spec)))
     (is (nil?  (:port spec)))

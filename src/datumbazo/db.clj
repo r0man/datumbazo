@@ -33,7 +33,7 @@
        :server-name server-name
        :server-port server-port
        :params (parse-query-params query-string)
-       :db-pool (keyword (or (nth matches 2) :jdbc))
+       :pool (keyword (or (nth matches 2) :jdbc))
        :port server-port
        :query-string query-string
        :uri (nth matches 12)
