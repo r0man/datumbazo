@@ -104,7 +104,7 @@
   "Compile `stmt` and return a java.sql.PreparedStatement from `db`."
   [stmt]
   (let [[sql & args] (sql stmt)
-        stmt (jdbc/prepare-statement (:connection (db (ast stmt))) sql)]
+        stmt (jdbc/prepare-statement (jdbc/get-connection (db (ast stmt))) sql)]
     (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
     stmt))
 
@@ -121,7 +121,7 @@
   [ast & {:keys [transaction?]}]
   ;; TODO: Get rid of sql-str
   (let [compiled (sql-str ast)
-        stmt (.prepareStatement (:connection (db ast)) compiled)]
+        stmt (.prepareStatement (jdbc/get-connection (db ast)) compiled)]
     (.execute stmt)))
 
 (defn- run-query
