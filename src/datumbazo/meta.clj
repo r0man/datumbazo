@@ -13,11 +13,15 @@
   (->> (clojure.core/resultset-seq rs)
        (map #(hyphenate-keys (merge {} %1)))))
 
+(defn metadata
+  "Return the DatabaseMetaData object for `db`."
+  [db] (.getMetaData (jdbc/get-connection db)))
+
 (defn best-row-identifiers
   "Retrieves a description of a table's optimal set of columns that uniquely identifies a row."
   [db & {:keys [catalog schema table scope nullable entities]}]
   (->> (.getBestRowIdentifier
-        (.getMetaData (:connection db))
+        (metadata db)
         (if catalog (sql-name db catalog))
         (if schema (sql-name db schema))
         (if table (sql-name db table))
@@ -35,7 +39,7 @@
 (defn catalogs
   "Retrieves the catalog names available in this database."
   [db]
-  (->> (.getCatalogs (.getMetaData (:connection db)))
+  (->> (.getCatalogs (metadata db))
        (resultset-seq)
        (map #(assoc %1 :name (hyphenate-keyword (:table-cat %1))))))
 
@@ -44,7 +48,7 @@
   `schema`, `table` and `name`."
   [db & {:keys [catalog schema table name entities]}]
   (->> (.getColumns
-        (.getMetaData (:connection db))
+        (metadata db)
         (if catalog (sql-name db catalog))
         (if schema (sql-name db schema))
         (if table (sql-name db table))
@@ -61,7 +65,7 @@
   "Retrieves a description of the given table's primary key columns."
   [db & {:keys [catalog schema table unique approximate entities]}]
   (->> (.getIndexInfo
-        (.getMetaData (:connection db))
+        (metadata db)
         (if catalog (sql-name db catalog))
         (if schema (sql-name db schema))
         (if table (sql-name db table))
@@ -77,7 +81,7 @@
   "Retrieves a description of the given table's primary key columns."
   [db & {:keys [catalog schema table entities]}]
   (->> (.getPrimaryKeys
-        (.getMetaData (:connection db))
+        (metadata db)
         (if catalog (sql-name db catalog))
         (if schema (sql-name db schema))
         (if table (sql-name db table)))
@@ -97,7 +101,7 @@
 (defn schemas
   "Retrieves the catalog names available in this database."
   [db]
-  (->> (.getSchemas (.getMetaData (:connection db)))
+  (->> (.getSchemas (metadata db))
        (resultset-seq)
        (map #(assoc %1 :name (hyphenate-keyword (:table-schem %1))))))
 
@@ -106,7 +110,7 @@
   `schema`, `name` and `types`."
   [db & {:keys [catalog schema name types entities]}]
   (->> (.getTables
-        (.getMetaData (:connection db))
+        (metadata db)
         (if catalog (sql-name db catalog))
         (if schema (sql-name db schema))
         (if name (sql-name db name))

@@ -2,7 +2,8 @@
   (:require [clojure.set :refer [subset?]]
             [clojure.test :refer :all]
             [datumbazo.meta :refer :all]
-            [datumbazo.test :refer :all]))
+            [datumbazo.test :refer :all])
+  (:import java.sql.DatabaseMetaData))
 
 (deftest test-best-row-identifiers
   (with-test-db [db]
@@ -59,6 +60,14 @@
     ;;   (is (every? #(keyword? (:type %1)) columns))
     ;;   (is (= [:continent-id] (map :name columns))))
     ))
+
+(deftest test-metadata
+  (with-test-dbs [db]
+    (is (instance? DatabaseMetaData (metadata db))))
+  (with-test-db [db "bonecp:postgresql://tiger:scotch@localhost/datumbazo"]
+    (is (instance? DatabaseMetaData (metadata db))))
+  (with-test-db [db "c3p0:postgresql://tiger:scotch@localhost/datumbazo"]
+    (is (instance? DatabaseMetaData (metadata db)))))
 
 (deftest test-indexes
   (with-test-db [db]
