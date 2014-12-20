@@ -39,43 +39,6 @@
      (try ~@body
           (finally (component/stop component#)))))
 
-(defn copy!
-  "Execute a COPY statement."
-  [db table columns & body]
-  (run (apply copy db table columns body)))
-
-(defn delete!
-  "Execute a DELETE statement."
-  [db table & body]
-  (run (apply delete db table body)))
-
-(defn drop-table!
-  "Execute a DROP TABLE statement."
-  [db table & body]
-  (run (apply drop-table db table body)))
-
-(defn insert!
-  "Execute a INSERT statement."
-  [db table columns & body]
-  (run (apply insert db table columns body)))
-
-(defn select!
-  "Execute a SELECT statement."
-  [db exprs & body]
-  (run (apply select db exprs body)))
-
-(defn truncate!
-  "Execute a TRUNCATE statement."
-  [db tables & body]
-  (run (apply truncate db tables body)))
-
-(defn update!
-  "Execute a UPDATE statement."
-  [db table row & body]
-  (run (apply update db table row body)))
-
-;; ----------------------------------------------------------------------------------------------------------
-
 (defn columns
   "Returns the columns of `table`."
   [table] (map (:column table) (:columns table)))

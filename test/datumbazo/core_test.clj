@@ -588,26 +588,28 @@
            (if (= "sqlite" (:subprotocol db))
              [] [{:count 0}])))))
 
-(deftest test-delete!
+(deftest test-delete
   (with-test-db [db]
-    (delete! db :countries)))
+    (is (= @(delete db :countries)
+           [{:count 0}]))))
 
-(deftest test-drop-table!
+(deftest test-drop-table
   (with-test-db [db]
-    (drop-table! db [:countries])))
+    (is (= @(drop-table db [:countries])
+           [{:count 0}]))))
 
-(deftest test-select!
+(deftest test-select
   (with-test-db [db]
-    (are [result expected]
-      (= result expected)
-      (select! db [(as 1 :x)])
+    (are [stmt expected]
+      (= (deref stmt) expected)
+      (select db [(as 1 :x)])
       [{:x 1}]
-      (select! db [:*]
-               (from (as (select db [(as 1 :x) (as 2 :y)]) :z)))
+      (select db [:*]
+        (from (as (select db [(as 1 :x) (as 2 :y)]) :z)))
       [{:x 1 :y 2}]
-      (select! db [:name]
-               (from :continents)
-               (order-by :name))
+      (select db [:name]
+        (from :continents)
+        (order-by :name))
       [{:name "Africa"}
        {:name "Antarctica"}
        {:name "Asia"}
@@ -616,9 +618,10 @@
        {:name "Oceania"}
        {:name "South America"}])))
 
-(deftest test-truncate!
+(deftest test-truncate
   (with-test-db [db]
-    (truncate! db [:countries])))
+    (is (= @(truncate db [:countries])
+           [{:count 0}]))))
 
 (deftest test-new-db
   (let [db (new-db "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
