@@ -187,6 +187,10 @@
 
 (extend-protocol jdbc/ISQLValue
 
+  org.joda.time.DateTime
+  (sql-value [date-time]
+    (to-timestamp date-time))
+
   org.postgis.LineString
   (sql-value [geometry]
     (PGgeometry. geometry))
