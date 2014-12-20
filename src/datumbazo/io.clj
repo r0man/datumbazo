@@ -12,14 +12,9 @@
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]
             [no.en.core :refer [parse-double parse-integer parse-long]]
-            [sqlingvo.compiler :refer [SQLType]]
+            [sqlingvo.compiler]
             [sqlingvo.expr :refer [parse-table]]
             geo.postgis))
-
-(extend-type DateTime
-  SQLType
-  (sql-type [date-time]
-    (to-timestamp date-time)))
 
 (defn citext [s]
   (if s
@@ -37,9 +32,6 @@
 
 (defmethod encode-column :date [column value]
   (to-sql-date value))
-
-(defmethod encode-column :geometry [column value]
-  (if value (PGgeometry. value)))
 
 (defmethod encode-column :int4 [column value]
   (parse-integer value))
@@ -70,12 +62,12 @@
   [columns row]
   (reduce (fn [row column]
             (cond
-             ;; TODO: Howto insert/update raster?
-             (= :raster (:type column))
-             (dissoc row (:name column))
-             (contains? row (:name column))
-             (assoc row (:name column) (encode-column column (get row (:name column))))
-             :else row))
+              ;; TODO: Howto insert/update raster?
+              (= :raster (:type column))
+              (dissoc row (:name column))
+              (contains? row (:name column))
+              (assoc row (:name column) (encode-column column (get row (:name column))))
+              :else row))
           (select-keys row (map :name columns))
           columns))
 
@@ -185,10 +177,40 @@
 
 (def read-instant-date-time
   "To read an instant as an DateTime, bind *data-readers* to a map
-with this var as the value for the 'inst key."
+  with this var as the value for the 'inst key."
   (partial i/parse-timestamp (i/validated construct-date-time)))
 
 (extend-protocol jdbc/IResultSetReadColumn
   org.postgresql.jdbc2.AbstractJdbc2Array
   (result-set-read-column [val rsmeta idx]
     (seq (.getArray val))))
+
+(extend-protocol jdbc/ISQLValue
+
+  org.postgis.LineString
+  (sql-value [geometry]
+    (PGgeometry. geometry))
+
+  org.postgis.LinearRing
+  (sql-value [geometry]
+    (PGgeometry. geometry))
+
+  org.postgis.MultiLineString
+  (sql-value [geometry]
+    (PGgeometry. geometry))
+
+  org.postgis.MultiPoint
+  (sql-value [geometry]
+    (PGgeometry. geometry))
+
+  org.postgis.MultiPolygon
+  (sql-value [geometry]
+    (PGgeometry. geometry))
+
+  org.postgis.Point
+  (sql-value [geometry]
+    (PGgeometry. geometry))
+
+  org.postgis.Polygon
+  (sql-value [geometry]
+    (PGgeometry. geometry)))
