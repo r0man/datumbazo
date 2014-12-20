@@ -1,5 +1,6 @@
 (ns datumbazo.db
   (:require [clojure.string :refer [blank?]]
+            [datumbazo.connection :refer [run*]]
             [datumbazo.util :as util]
             [no.en.core :refer [parse-integer parse-query-params]]
             [sqlingvo.db :as db]))
@@ -50,35 +51,37 @@
 
 (defmethod enhance-spec :mysql [spec]
   (assoc (db/mysql spec)
-    :subname (subname spec)))
+         :subname (subname spec)))
 
 (defmethod enhance-spec :oracle [spec]
   (db/oracle
    (assoc spec
-     :subprotocol "oracle:thin"
-     :subname (str ":" (:username spec) "/" (:password spec) "@"
-                   (format-server spec)
-                   ":" (:name spec)))))
+          :subprotocol "oracle:thin"
+          :subname (str ":" (:username spec) "/" (:password spec) "@"
+                        (format-server spec)
+                        ":" (:name spec)))))
 
 (defmethod enhance-spec :postgresql [spec]
   (assoc (db/postgresql spec)
-    :subname (subname spec)))
+         :subname (subname spec)))
 
 (defmethod enhance-spec :vertica [spec]
   (assoc (db/vertica spec)
-    :subname (subname spec)))
+         :subname (subname spec)))
 
 (defmethod enhance-spec :sqlite [spec]
   (assoc (db/sqlite spec)
-    :subname (subname spec)))
+         :subname (subname spec)))
 
 (defmethod enhance-spec :sqlserver [spec]
   (db/sqlserver
    (assoc spec
-     :subname (str "//" (format-server spec) ";"
-                   "database=" (:name spec) ";"
-                   "user=" (:username spec) ";"
-                   "password=" (:password spec)))))
+          :subname (str "//" (format-server spec) ";"
+                        "database=" (:name spec) ";"
+                        "user=" (:username spec) ";"
+                        "password=" (:password spec)))))
 
 (defn new-db [spec]
-  (enhance-spec (if (map? spec) spec (parse-url spec))))
+  (let [spec (if (map? spec) spec (parse-url spec))
+        db (enhance-spec spec)]
+    (assoc db :eval-fn #'run*)))

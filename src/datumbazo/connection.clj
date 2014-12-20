@@ -4,7 +4,6 @@
             [clojure.string :refer [replace]]
             [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
-            [datumbazo.db :as db]
             [datumbazo.util :as util]
             [no.en.core :refer [parse-integer]]
             [sqlingvo.core :refer [ast sql sql-keyword]])

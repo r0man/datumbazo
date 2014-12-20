@@ -8,7 +8,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.edn :as edn]
             [clojure.data.json :as json]
-            [clj-time.coerce :refer [to-date-time to-sql-date to-timestamp]]
+            [clj-time.coerce :refer [to-date-time to-date to-sql-date to-timestamp]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer :all]
             [no.en.core :refer [parse-double parse-integer parse-long]]
@@ -181,11 +181,28 @@
   (partial i/parse-timestamp (i/validated construct-date-time)))
 
 (extend-protocol jdbc/IResultSetReadColumn
+
   org.postgresql.jdbc2.AbstractJdbc2Array
   (result-set-read-column [val rsmeta idx]
-    (seq (.getArray val))))
+    (seq (.getArray val)))
+
+  org.postgresql.util.PGobject
+  (result-set-read-column [val rsmeta idx]
+    (decode-pgobject val))
+
+  java.sql.Date
+  (result-set-read-column [val rsmeta idx]
+    (to-date val))
+
+  java.sql.Timestamp
+  (result-set-read-column [val rsmeta idx]
+    (to-date val)))
 
 (extend-protocol jdbc/ISQLValue
+
+  java.util.Date
+  (sql-value [date]
+    (to-timestamp date))
 
   org.joda.time.DateTime
   (sql-value [date-time]

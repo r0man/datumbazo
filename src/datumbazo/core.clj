@@ -27,7 +27,8 @@
 
 (defn new-db
   "Return a new database component."
-  [spec] (db/new-db spec))
+  [spec]
+  (db/new-db spec))
 
 (defmacro with-db
   "Start a database connection using `config` bind it to `db-sym`,
@@ -340,5 +341,3 @@
                       ~(format "Find the first %s by %s." (singular table-name) column-name)
                       [~'db & ~'args]
                       (first (apply ~(symbol (str table-name "-by-" column-name)) ~'db ~'args)))))))))
-
-(alter-var-root #'sqlingvo.expr/eval-stmt (constantly run))
