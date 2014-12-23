@@ -114,7 +114,7 @@
   (with-connection [connection (db (ast stmt))]
     (let [[sql & args] (sql stmt)
           stmt (jdbc/prepare-statement connection sql)]
-      (doall (map-indexed (fn [i v] (.setObject stmt (inc i) v)) args))
+      (dorun (map-indexed (fn [i v] (jdbc/set-parameter v stmt (inc i))) args))
       stmt)))
 
 (defn sql-str
