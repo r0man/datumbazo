@@ -120,19 +120,19 @@
 (defn sql-str
   "Prepare `stmt` using the database and return the raw SQL as a string."
   [stmt]
-  (let [sql (first (sql stmt))
-        stmt (prepare-stmt stmt)]
-    (if (.startsWith (str stmt) (replace sql #"\?.*" ""))
-      (str stmt)
-      (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver.")))))
+  (let [sql (first (sql stmt))]
+    (with-open [stmt (prepare-stmt stmt)]
+      (if (.startsWith (str stmt) (replace sql #"\?.*" ""))
+        (str stmt)
+        (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver."))))))
 
 (defn- run-copy
   [ast & {:keys [transaction?]}]
   ;; TODO: Get rid of sql-str
   (with-connection [connection (db ast)]
-    (let [compiled (sql-str ast)
-          stmt (.prepareStatement connection compiled)]
-      (.execute stmt))))
+    (let [compiled (sql-str ast)]
+      (with-open [stmt (.prepareStatement connection compiled)]
+        (.execute stmt)))))
 
 (defn- run-query
   [ast & {:keys [transaction?]}]
