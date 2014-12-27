@@ -37,7 +37,7 @@
        "com.jolbox.bonecp.BoneCPDataSource"
        (doto (util/invoke-constructor "com.jolbox.bonecp.BoneCPConfig")
          (.setJdbcUrl (str "jdbc:" (name (:subprotocol db)) ":" (:subname db)))
-         (.setUsername (:username db))
+         (.setUsername (:user db))
          (.setPassword (:password db))
          (.setDefaultAutoCommit (not (true? (:test db))))))))
 
@@ -45,7 +45,7 @@
   (connect-datasource
    db (doto (util/invoke-constructor "com.mchange.v2.c3p0.ComboPooledDataSource")
         (.setJdbcUrl (str "jdbc:" (name (:subprotocol db)) ":" (:subname db)))
-        (.setUser (:username db))
+        (.setUser (:user db))
         (.setPassword (:password db))
         (.setAcquireRetryAttempts (parse-integer (or (:acquire-retry-attempts params) 1))) ; TODO: Set back to 30
         (.setInitialPoolSize (parse-integer (or (:initial-pool-size params) 3)))
@@ -95,12 +95,12 @@
 
 (defmacro with-connection [[connection-sym db] & body]
   `(cond
-    (instance? Connection (:connection ~db))
-    (let [~connection-sym (:connection ~db)]
-      ~@body)
-    (:datasource ~db)
-    (with-open [~connection-sym (jdbc/get-connection ~db)]
-      ~@body)))
+     (instance? Connection (:connection ~db))
+     (let [~connection-sym (:connection ~db)]
+       ~@body)
+     (:datasource ~db)
+     (with-open [~connection-sym (jdbc/get-connection ~db)]
+       ~@body)))
 
 (defn- db
   "Return the db from `ast`."
@@ -155,17 +155,17 @@
   [stmt & [{:keys [transaction?]}]]
   (let [{:keys [op returning] :as ast} (ast stmt)]
     (try (cond
-          (= :copy op)
-          (run-copy ast :transaction? transaction?)
-          (= :select op)
-          (run-query ast :transaction? transaction?)
-          (and (= :with op)
-               (or (= :select (:op (:query ast)))
-                   (:returning (:query ast))))
-          (run-query ast :transaction? transaction?)
-          returning
-          (run-query ast :transaction? transaction?)
-          :else (run-prepared ast :transaction? transaction?))
+           (= :copy op)
+           (run-copy ast :transaction? transaction?)
+           (= :select op)
+           (run-query ast :transaction? transaction?)
+           (and (= :with op)
+                (or (= :select (:op (:query ast)))
+                    (:returning (:query ast))))
+           (run-query ast :transaction? transaction?)
+           returning
+           (run-query ast :transaction? transaction?)
+           :else (run-prepared ast :transaction? transaction?))
          (catch Exception e
            (if (or (instance? SQLException e)
                    (instance? SQLException (.getCause e)))

@@ -40,7 +40,6 @@
        :uri (nth matches 12)
        :subprotocol (nth matches 3)
        :user (nth matches 5)
-       :username (nth matches 5)
        :password (nth matches 6)})
     (throw (ex-info "Can't parse JDBC url %s." {:url url}))))
 
@@ -57,7 +56,7 @@
   (db/oracle
    (assoc spec
           :subprotocol "oracle:thin"
-          :subname (str ":" (:username spec) "/" (:password spec) "@"
+          :subname (str ":" (:user spec) "/" (:password spec) "@"
                         (format-server spec)
                         ":" (:name spec)))))
 
@@ -78,7 +77,7 @@
    (assoc spec
           :subname (str "//" (format-server spec) ";"
                         "database=" (:name spec) ";"
-                        "user=" (:username spec) ";"
+                        "user=" (:user spec) ";"
                         "password=" (:password spec)))))
 
 (defn new-db [spec]

@@ -68,7 +68,7 @@
          (format "--host %s" host) "")
       ~(if-let [port (:port opts)]
          (format "--port %s" port) "")
-      ~(if-let [username (:username opts)]
+      ~(if-let [username (:user opts)]
          (format "--username %s" username) "")
       "--quiet"))))
 

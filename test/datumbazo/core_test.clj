@@ -627,7 +627,7 @@
   (let [db (new-db "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
     (is (instance? sqlingvo.db.Database db))
     (is (= "postgresql" (:subprotocol db)))
-    (is (= "tiger" (:username db)))
+    (is (= "tiger" (:user db)))
     (is (= "scotch" (:password db)))
     (is (= "localhost" (:host db)))
     (is (= 5432 (:port db)))
@@ -640,7 +640,7 @@
     (is (instance? sqlingvo.db.Database db))
     (is (instance? java.sql.Connection (:connection db)))
     (is (= "postgresql" (:subprotocol db)))
-    (is (= "tiger" (:username db)))
+    (is (= "tiger" (:user db)))
     (is (= "scotch" (:password db)))
     (is (= "localhost" (:host db)))
     (is (= 5432 (:port db)))

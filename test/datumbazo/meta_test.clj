@@ -41,9 +41,10 @@
       (is (every? #(keyword? (:name %1)) columns))
       (is (every? #(keyword? (:type %1)) columns))
       (is (= [:id] (map :name columns))))
-    (let [columns (columns db :schema :public :table :users)]
+    (let [columns (columns db :schema :public :table :continents)]
       (is (= (set (map :column-name columns))
-             #{"id" "name" "created_at" "updated_at"})))
+             #{"freebase_guid" "id" "name" "geometry" "updated_at" "geonames_id"
+               "created_at" "code"})))
     (let [columns (columns db :schema :twitter :table :users)]
       (is (= (set (map :column-name columns))
              #{"listed_count" "lang" "url" "friends_count" "id" "name" "verified"
@@ -51,15 +52,13 @@
                "default_profile_image" "statuses_count" "created_at"
                "followers_count" "possibly_sensitive" "screen_name" "description"
                "retweet_count"})))
-    ;; TODO: Fixme
-    ;; (let [columns (columns db :table :countries :name :continent-id)]
-    ;;   (is (not (empty? columns)))
-    ;;   (is (every? #(= :public (:schema %1)) columns))
-    ;;   (is (every? #(= :countries (:table %1)) columns))
-    ;;   (is (every? #(keyword? (:name %1)) columns))
-    ;;   (is (every? #(keyword? (:type %1)) columns))
-    ;;   (is (= [:continent-id] (map :name columns))))
-    ))
+    (let [columns (columns db :table :countries :name :continent-id)]
+      (is (not (empty? columns)))
+      (is (every? #(= :public (:schema %1)) columns))
+      (is (every? #(= :countries (:table %1)) columns))
+      (is (every? #(keyword? (:name %1)) columns))
+      (is (every? #(keyword? (:type %1)) columns))
+      (is (= [:continent-id] (map :name columns))))))
 
 (deftest test-columns-c3p0
   (with-test-db [db "c3p0:postgresql://tiger:scotch@localhost/datumbazo"]
