@@ -47,7 +47,7 @@
         (.setJdbcUrl (str "jdbc:" (name (:subprotocol db)) ":" (:subname db)))
         (.setUser (:user db))
         (.setPassword (:password db))
-        (.setAcquireRetryAttempts (parse-integer (or (:acquire-retry-attempts params) 1))) ; TODO: Set back to 30
+        (.setAcquireRetryAttempts (parse-integer (or (:acquire-retry-attempts params) 30)))
         (.setInitialPoolSize (parse-integer (or (:initial-pool-size params) 3)))
         (.setMaxIdleTime (parse-integer (or (:max-idle-time params) (* 3 60 60))))
         (.setMaxIdleTimeExcessConnections (parse-integer (or (:max-idle-time-excess-connections params) (* 30 60))))
