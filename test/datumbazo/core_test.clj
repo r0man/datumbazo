@@ -570,12 +570,11 @@
 (deftest test-create-table
   (with-test-dbs [db]
     (let [table :test-create-table]
-      (try (is (= (run (create-table db table
-                         (column :id :integer)
-                         (column :nick :varchar :length 255)
-                         (primary-key :nick)))
-                  (if (= "sqlite" (:subprotocol db))
-                    [] [{:count 0}])))
+      (try (is (= @(create-table db table
+                     (column :id :integer)
+                     (column :nick :varchar :length 255)
+                     (primary-key :nick))
+                  [{:count 0}]))
            ;; (is (empty? (run (select [:*] (from table)))))
            (finally
              ;; Cleanup for MySQL (non-transactional DDL)
@@ -583,10 +582,9 @@
 
 (deftest test-drop-table-if-exists
   (with-test-dbs [db]
-    (is (= (run (drop-table db [:not-existing]
-                  (if-exists true)))
-           (if (= "sqlite" (:subprotocol db))
-             [] [{:count 0}])))))
+    (is (= @(drop-table db [:not-existing]
+              (if-exists true))
+           [{:count 0}]))))
 
 (deftest test-delete
   (with-test-db [db]
@@ -750,6 +748,65 @@
              :company-id nil,
              :exchange-id 2,
              :id 6}]))))
+
+(deftest test-create-test-table
+  (with-test-db [db]
+    (is (= @(create-test-table db :empsalary)
+           [{:count 0}]))))
+
+(deftest test-insert-test-table
+  (with-test-db [db]
+    @(create-test-table db :empsalary)
+    (is (= @(insert-test-table db :empsalary)
+           [{:count 10}]))))
+
+;; Window functions: http://www.postgresql.org/docs/9.4/static/tutorial-window.html
+
+(deftest test-compare-salaries
+  (with-test-db [db]
+    (with-test-table db :empsalary
+      (is (= @(select db [:depname :empno :salary '(over (avg :salary) (partiton-by :depname))]
+                (from :empsalary))
+             [{:avg 5020.0000000000000000M
+               :salary 5200
+               :empno 11
+               :depname "develop"}
+              {:avg 5020.0000000000000000M
+               :salary 4200
+               :empno 7
+               :depname "develop"}
+              {:avg 5020.0000000000000000M
+               :salary 4500
+               :empno 9
+               :depname "develop"}
+              {:avg 5020.0000000000000000M
+               :salary 6000
+               :empno 8
+               :depname "develop"}
+              {:avg 5020.0000000000000000M
+               :salary 5200
+               :empno 10
+               :depname "develop"}
+              {:avg 3700.0000000000000000M
+               :salary 3500
+               :empno 5
+               :depname "personnel"}
+              {:avg 3700.0000000000000000M
+               :salary 3900
+               :empno 2
+               :depname "personnel"}
+              {:avg 4866.6666666666666667M
+               :salary 4800
+               :empno 3
+               :depname "sales"}
+              {:avg 4866.6666666666666667M
+               :salary 5000
+               :empno 1
+               :depname "sales"}
+              {:avg 4866.6666666666666667M
+               :salary 4800
+               :empno 4
+               :depname "sales"}])))))
 
 (comment
 

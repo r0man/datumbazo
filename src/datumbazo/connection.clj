@@ -147,7 +147,7 @@
 (defn- run-prepared
   [ast & {:keys [transaction?]}]
   (let [compiled (sql ast)]
-    (->> (jdbc/db-do-prepared (db ast) transaction? (first compiled) (rest compiled))
+    (->> (jdbc/execute! (db ast) compiled :transaction? transaction?)
          (map #(hash-map :count %1)))))
 
 (defn run*
