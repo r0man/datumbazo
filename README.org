@@ -2,8 +2,8 @@
 #+author: r0man
 #+LANGUAGE: en
 
-[[https://travis-ci.org/r0man/sqlingvo][https://travis-ci.org/r0man/datumbazo.png]]
-[[http://jarkeeper.com/r0man/sqlingvo][http://jarkeeper.com/r0man/datumbazo/status.png]]
+[[https://travis-ci.org/r0man/datumbazo][https://travis-ci.org/r0man/datumbazo.png]]
+[[http://jarkeeper.com/r0man/datumbazo][http://jarkeeper.com/r0man/datumbazo/status.png]]
 
 Database Kung Fu in Clojure.
 
@@ -11,7 +11,7 @@ Database Kung Fu in Clojure.
 
 * Installation
 
-  [[https://clojars.org/sqlingvo][https://clojars.org/datumbazo/latest-version.svg]]
+  [[https://clojars.org/datumbazo][https://clojars.org/datumbazo/latest-version.svg]]
 
 * Usage
 ** Imports
