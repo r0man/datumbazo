@@ -60,9 +60,9 @@
   (let [table (parse-table table)]
     (doseq [column (meta/columns db :schema (or (:schema table) :public) :table (:name table))
             :when (contains? #{:bigserial :serial} (:type column))]
-      (run1 (select db [`(setval ~(sql-name db (serial-seq column))
-                                 ~(select db [`(max ~(:name column))]
-                                    (from table)))])))))
+      (first @(select db [`(setval ~(sql-name db (serial-seq column))
+                                   ~(select db [`(max ~(:name column))]
+                                      (from table)))])))))
 
 (defn- find-column-keys [db table]
   (let [table (parse-table table)]
@@ -92,7 +92,7 @@
   [db table filename & {:keys [entities identifiers]}]
   (make-parents filename)
   (with-open [writer (writer filename)]
-    (let [rows (run (select db [*] (from table)))]
+    (let [rows @(select db [*] (from table))]
       (clojure.pprint/pprint rows writer)
       {:file filename :table table :records (count rows)})))
 
@@ -112,7 +112,7 @@
 (defn delete-fixtures [db tables]
   (infof "Deleting fixtures from database.")
   (doseq [table tables]
-    (run (truncate db [table] (cascade true)))))
+    @(truncate db [table] (cascade true))))
 
 (defn dump-fixtures
   "Write the fixtures for `tables` into `directory`."

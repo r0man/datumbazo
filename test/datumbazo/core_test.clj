@@ -271,14 +271,14 @@
 
 (deftest test-create-table-compound-primary-key
   (with-test-db [db]
-    (is (= (run (create-table db :ratings
-                  (column :id :serial)
-                  (column :user-id :integer :not-null? true :references :users/id)
-                  (column :spot-id :integer :not-null? true :references :spots/id)
-                  (column :rating :integer :not-null? true)
-                  (column :created-at :timestamp-with-time-zone :not-null? true :default '(now))
-                  (column :updated-at :timestamp-with-time-zone :not-null? true :default '(now))
-                  (primary-key :user-id :spot-id :created-at)))
+    (is (= @(create-table db :ratings
+              (column :id :serial)
+              (column :user-id :integer :not-null? true :references :users/id)
+              (column :spot-id :integer :not-null? true :references :spots/id)
+              (column :rating :integer :not-null? true)
+              (column :created-at :timestamp-with-time-zone :not-null? true :default '(now))
+              (column :updated-at :timestamp-with-time-zone :not-null? true :default '(now))
+              (primary-key :user-id :spot-id :created-at))
            [{:count 0}]))))
 
 (deftest test-save-continent
@@ -480,84 +480,79 @@
 (deftest test-array
   (with-test-db [db]
     (is (= [{:array [1 2]}]
-           (run (select db [[1 2]]))))))
+           @(select db [[1 2]])))))
 
 (deftest test-array-concat
   (with-test-db [db]
     (is (= [{:?column? [1 2 3 4 5 6]}]
-           (run (select db ['(|| [1 2] [3 4] [5 6])]))))))
+           @(select db ['(|| [1 2] [3 4] [5 6])])))))
 
 ;; PostgreSQL JSON Support Functions
 
 (deftest test-array-to-json
   (with-test-db [db]
     (is (= [{:array-to-json [[1 5] [99 100]]}]
-           (run (select db [`(array_to_json (cast "{{1,5},{99,100}}" ~(keyword "int[]")))]))))))
+           @(select db [`(array_to_json (cast "{{1,5},{99,100}}" ~(keyword "int[]")))])))))
 
 (deftest test-row-to-json
   (with-test-db [db]
     (is (= [{:row-to-json {:f1 1, :f2 "foo"}}]
-           (run (select db ['(row_to_json (row 1 "foo"))]))))))
+           @(select db ['(row_to_json (row 1 "foo"))])))))
 
 (deftest test-to-json
   (with-test-db [db]
     (is (= [{:to-json "Fred said \"Hi.\""}]
-           (run (select db ['(to_json "Fred said \"Hi.\"")]))))))
+           @(select db ['(to_json "Fred said \"Hi.\"")])))))
 
 (deftest test-with
   (with-test-db [db]
-    (is (= (run (with db [:x (select db [:*] (from :continents))]
-                  (select db [:*] (from :x))))
-           (run (select db [:*] (from :continents)))))))
+    (is (= @(with db [:x (select db [:*] (from :continents))]
+              (select db [:*] (from :x)))
+           @(select db [:*] (from :continents))))))
 
 ;; DB TESTS
 
 (deftest test-cast-string-to-int
   (with-test-dbs [db]
     (when-not (= :mysql (:name db))
-      (is (= (run (select db [`(cast "1" :integer)]))
+      (is (= @(select db [`(cast "1" :integer)])
              [(case (:subprotocol db)
                 "mysql" {(keyword "CAST('1' AS integer)") 1}
                 "postgresql" {:int4 1}
                 "sqlite" {(keyword "CAST(? AS integer)") 1})])))))
 
-(deftest test-run1
-  (with-test-dbs [db]
-    (is (= (run1 (select db [1 2 3]))
-           (first (run (select db [1 2 3])))))))
-
 (deftest test-select-1
   (with-test-dbs [db]
-    (is (= (run (select db [1]))
+    (is (= @(select db [1])
            [(case (:subprotocol db)
               "postgresql" {:?column? 1}
               {:1 1})]))))
 
 (deftest test-select-1-2-3
   (with-test-dbs [db]
-    (is (= (run (select db [1 2 3]))
+    (is (= @(select db [1 2 3])
            [(case (:subprotocol db)
               "postgresql" {:?column? 1 :?column?-2 2 :?column?-3 3}
               {:1 1 :2 2 :3 3})]))))
 
 (deftest test-select-1-as-n
   (with-test-dbs [db]
-    (is (= (run (select db [(as 1 :n)]))
+    (is (= @(select db [(as 1 :n)])
            [{:n 1}]))))
 
 (deftest test-select-x-as-n
   (with-test-dbs [db]
-    (is (= (run (select db [(as "x" :n)]))
+    (is (= @(select db [(as "x" :n)])
            [{:n "x"}]))))
 
 (deftest test-test-select-1-2-3-as
   (with-test-dbs [db]
-    (is (= (run (select db [(as 1 :a) (as 2 :b) (as 3 :c)]))
+    (is (= @(select db [(as 1 :a) (as 2 :b) (as 3 :c)])
            [{:a 1, :b 2, :c 3}]))))
 
 (deftest test-select-1-in-list
   (with-test-dbs [db #{:postgresql :sqlite}]
-    (is (= [{:a 1}] (run (select db [(as 1 :a)] (where `(in 1 ~(list 1 2 3)))))))))
+    (is (= [{:a 1}] @(select db [(as 1 :a)] (where `(in 1 ~(list 1 2 3))))))))
 
 (deftest test-concat-strings
   (with-test-dbs [db]
@@ -565,7 +560,7 @@
               "mysql" {(keyword "('a' || 'b' || 'c')") 0} ;; not string concat, but OR operator
               "postgresql" {:?column? "abc"}
               "sqlite" {(keyword "(? || ? || ?)") "abc"})]
-           (run (select db ['(|| "a" "b" "c")]))))))
+           @(select db ['(|| "a" "b" "c")])))))
 
 (deftest test-create-table
   (with-test-dbs [db]
@@ -575,10 +570,9 @@
                      (column :nick :varchar :length 255)
                      (primary-key :nick))
                   [{:count 0}]))
-           ;; (is (empty? (run (select [:*] (from table)))))
            (finally
              ;; Cleanup for MySQL (non-transactional DDL)
-             (run (drop-table db [table] (if-exists true))))))))
+             @(drop-table db [table] (if-exists true)))))))
 
 (deftest test-drop-table-if-exists
   (with-test-dbs [db]
@@ -648,9 +642,9 @@
 (deftest test-select-1-as-a-2-as-b-3-as-c
   (with-test-db [db]
     (is (= [{:a 1 :b 2 :c 3}]
-           (run (select db [(as 1 :a)
-                            (as 2 :b)
-                            (as 3 :c)]))))))
+           @(select db [(as 1 :a)
+                        (as 2 :b)
+                        (as 3 :c)])))))
 
 
 ;; CAST
@@ -658,7 +652,7 @@
 (deftest test-cast-int-as-text
   (with-test-db [db]
     (is (= [{:text "1"}]
-           (run (select db [(as `(cast 1 :text) :text)]))))))
+           @(select db [(as `(cast 1 :text) :text)])))))
 
 (deftest test-deref-select
   (with-test-db [db]
