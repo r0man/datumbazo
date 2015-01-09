@@ -834,6 +834,22 @@
               {:sum 47100 :salary 6000}
               {:sum 47100 :salary 5200}])))))
 
+(deftest test-window-sum-over-order-by
+  (with-test-db [db]
+    (with-test-table db :empsalary
+      (is (= @(select db [:salary '(over (sum :salary) (order-by :salary))]
+                (from :empsalary))
+             [{:sum 3500 :salary 3500}
+              {:sum 7400 :salary 3900}
+              {:sum 11600 :salary 4200}
+              {:sum 16100 :salary 4500}
+              {:sum 25700 :salary 4800}
+              {:sum 25700 :salary 4800}
+              {:sum 30700 :salary 5000}
+              {:sum 41100 :salary 5200}
+              {:sum 41100 :salary 5200}
+              {:sum 47100 :salary 6000}])))))
+
 (comment
 
   (def db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))
