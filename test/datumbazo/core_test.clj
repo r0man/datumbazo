@@ -818,6 +818,22 @@
               {:rank 2 :salary 4800 :empno 4 :depname "sales"}
               {:rank 2 :salary 4800 :empno 3 :depname "sales"}])))))
 
+(deftest test-window-over-empty
+  (with-test-db [db]
+    (with-test-table db :empsalary
+      (is (= @(select db [:salary '(over (sum :salary))]
+                (from :empsalary))
+             [{:sum 47100 :salary 5200}
+              {:sum 47100 :salary 5000}
+              {:sum 47100 :salary 3500}
+              {:sum 47100 :salary 4800}
+              {:sum 47100 :salary 3900}
+              {:sum 47100 :salary 4200}
+              {:sum 47100 :salary 4500}
+              {:sum 47100 :salary 4800}
+              {:sum 47100 :salary 6000}
+              {:sum 47100 :salary 5200}])))))
+
 (comment
 
   (def db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))
