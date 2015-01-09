@@ -15,7 +15,7 @@
                  [org.clojure/data.json "0.2.5"]
                  [org.clojure/java.jdbc "0.3.6"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [postgresql/postgresql "9.1-901-1.jdbc4"]
+                 [postgresql/postgresql "9.3-1102.jdbc41"]
                  [org.xerial/sqlite-jdbc "3.8.7"]
                  [mysql/mysql-connector-java "5.1.34"]
                  [slingshot "0.12.1"]
@@ -25,5 +25,5 @@
                                   [com.jolbox/bonecp "0.8.0.RELEASE"]
                                   [validation-clj "0.5.6"]]}
              :test {:resource-paths ["test-resources"]}}
-  ;; :aliases {"test-ancient" ["test"]}
+  :aliases {"test-ancient" ["test"]}
   :main ^{:skip-aot true} datumbazo.fixtures)
