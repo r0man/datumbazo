@@ -759,7 +759,7 @@
 (deftest test-compare-salaries
   (with-test-db [db]
     (with-test-table db :empsalary
-      (is (= @(select db [:depname :empno :salary '(over (avg :salary) (partiton-by :depname))]
+      (is (= @(select db [:depname :empno :salary '(over (avg :salary) (partition-by :depname))]
                 (from :empsalary))
              [{:avg 5020.0000000000000000M
                :salary 5200
@@ -805,7 +805,7 @@
 (deftest test-rank-over-order-by
   (with-test-db [db]
     (with-test-table db :empsalary
-      (is (= @(select db [:depname :empno :salary '(over (rank) (partiton-by :depname (order-by (desc :salary))))]
+      (is (= @(select db [:depname :empno :salary '(over (rank) (partition-by :depname (order-by (desc :salary))))]
                 (from :empsalary))
              [{:rank 1 :salary 6000 :empno 8 :depname "develop"}
               {:rank 2 :salary 5200 :empno 10 :depname "develop"}
@@ -849,6 +849,40 @@
               {:sum 41100 :salary 5200}
               {:sum 41100 :salary 5200}
               {:sum 47100 :salary 6000}])))))
+
+(deftest test-window-rank-over-partition-by
+  (with-test-db [db]
+    (with-test-table db :empsalary
+      (is (= @(select db [:depname :empno :salary :enroll-date]
+                (from (as (select db [:depname :empno :salary :enroll-date
+                                      (as '(over (rank) (partition-by :depname (order-by (desc :salary) :empno))) :pos)]
+                            (from :empsalary))
+                          :ss))
+                (where '(< pos 3)))
+             [{:enroll-date #inst "2006-09-30T22:00:00.000-00:00"
+               :salary 6000
+               :empno 8
+               :depname "develop"}
+              {:enroll-date #inst "2007-07-31T22:00:00.000-00:00"
+               :salary 5200
+               :empno 10
+               :depname "develop"}
+              {:enroll-date #inst "2006-12-22T23:00:00.000-00:00"
+               :salary 3900
+               :empno 2
+               :depname "personnel"}
+              {:enroll-date #inst "2007-12-09T23:00:00.000-00:00"
+               :salary 3500
+               :empno 5
+               :depname "personnel"}
+              {:enroll-date #inst "2006-09-30T22:00:00.000-00:00"
+               :salary 5000
+               :empno 1
+               :depname "sales"}
+              {:enroll-date #inst "2007-07-31T22:00:00.000-00:00"
+               :salary 4800
+               :empno 3
+               :depname "sales"}])))))
 
 (comment
 
