@@ -802,6 +802,22 @@
                :empno 4
                :depname "sales"}])))))
 
+(deftest test-rank-over-order-by
+  (with-test-db [db]
+    (with-test-table db :empsalary
+      (is (= @(select db [:depname :empno :salary '(over (rank) (partiton-by :depname (order-by (desc :salary))))]
+                (from :empsalary))
+             [{:rank 1 :salary 6000 :empno 8 :depname "develop"}
+              {:rank 2 :salary 5200 :empno 10 :depname "develop"}
+              {:rank 2 :salary 5200 :empno 11 :depname "develop"}
+              {:rank 4 :salary 4500 :empno 9 :depname "develop"}
+              {:rank 5 :salary 4200 :empno 7 :depname "develop"}
+              {:rank 1 :salary 3900 :empno 2 :depname "personnel"}
+              {:rank 2 :salary 3500 :empno 5 :depname "personnel"}
+              {:rank 1 :salary 5000 :empno 1 :depname "sales"}
+              {:rank 2 :salary 4800 :empno 4 :depname "sales"}
+              {:rank 2 :salary 4800 :empno 3 :depname "sales"}])))))
+
 (comment
 
   (def db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))
