@@ -884,6 +884,24 @@
                :empno 3
                :depname "sales"}])))))
 
+(deftest test-window-alias
+  (with-test-db [db]
+    (with-test-table db :empsalary
+      (is (= @(select db ['(over (sum :salary) :w)
+                          '(over (avg :salary) :w)]
+                (from :empsalary)
+                (window (as '(partition-by :depname (order-by (desc salary))) :w)))
+             [{:avg 6000.0000000000000000M :sum 6000}
+              {:avg 5466.6666666666666667M :sum 16400}
+              {:avg 5466.6666666666666667M :sum 16400}
+              {:avg 5225.0000000000000000M :sum 20900}
+              {:avg 5020.0000000000000000M :sum 25100}
+              {:avg 3900.0000000000000000M :sum 3900}
+              {:avg 3700.0000000000000000M :sum 7400}
+              {:avg 5000.0000000000000000M :sum 5000}
+              {:avg 4866.6666666666666667M :sum 14600}
+              {:avg 4866.6666666666666667M :sum 14600}])))))
+
 (comment
 
   (def db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))
