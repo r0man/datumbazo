@@ -515,11 +515,11 @@
 (deftest test-cast-string-to-int
   (with-test-dbs [db]
     (when-not (= :mysql (:name db))
-      (is (= @(select db [`(cast "1" :integer)])
+      (is (= @(select db [`(cast "1" :int)])
              [(case (:subprotocol db)
-                "mysql" {(keyword "CAST('1' AS integer)") 1}
+                "mysql" {(keyword "CAST('1' AS int)") 1}
                 "postgresql" {:int4 1}
-                "sqlite" {(keyword "CAST(? AS integer)") 1})])))))
+                "sqlite" {(keyword "CAST(? AS int)") 1})])))))
 
 (deftest test-select-1
   (with-test-dbs [db]
