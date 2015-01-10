@@ -127,7 +127,7 @@
         (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver."))))))
 
 (defn- run-copy
-  [ast & {:keys [transaction?]}]
+  [ast & [opts]]
   ;; TODO: Get rid of sql-str
   (with-connection [connection (db ast)]
     (let [compiled (sql-str ast)]
@@ -135,37 +135,37 @@
         (.execute stmt)))))
 
 (defn- run-query
-  [ast & {:keys [transaction?]}]
+  [ast & [opts]]
   (let [compiled (sql ast)
-        identifiers #(sql-keyword (db ast) %1)
-        query #(jdbc/query %1 compiled :identifiers identifiers)]
-    (if transaction?
+        opts (merge {:identifiers #(sql-keyword (db ast) %1)} opts)
+        query #(apply jdbc/query %1 compiled (apply concat opts))]
+    (if (:transaction? opts)
       (jdbc/with-db-transaction [t-db (db ast)]
         (query t-db))
       (query (db ast)))))
 
 (defn- run-prepared
-  [ast & {:keys [transaction?]}]
+  [ast & [{:keys [transaction?] :as opts}]]
   (let [compiled (sql ast)]
     (->> (jdbc/execute! (db ast) compiled :transaction? transaction?)
          (map #(hash-map :count %1)))))
 
 (defn run*
   "Compile and run `stmt` against the database and return the rows."
-  [stmt & [{:keys [transaction?]}]]
+  [stmt & [opts]]
   (let [{:keys [op returning] :as ast} (ast stmt)]
     (try (cond
            (= :copy op)
-           (run-copy ast :transaction? transaction?)
+           (run-copy ast opts)
            (= :select op)
-           (run-query ast :transaction? transaction?)
+           (run-query ast opts)
            (and (= :with op)
                 (or (= :select (:op (:query ast)))
                     (:returning (:query ast))))
-           (run-query ast :transaction? transaction?)
+           (run-query ast opts)
            returning
-           (run-query ast :transaction? transaction?)
-           :else (run-prepared ast :transaction? transaction?))
+           (run-query ast opts)
+           :else (run-prepared ast opts))
          (catch Exception e
            (if (or (instance? SQLException e)
                    (instance? SQLException (.getCause e)))
