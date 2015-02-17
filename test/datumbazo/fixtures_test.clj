@@ -87,11 +87,11 @@
   (are [column expected]
     (is (= expected (serial-seq column)))
     {:table :continents :name :id}
-    :continents-id-seq
+    :continents_id_seq
     {:schema :public :table :continents :name :id}
-    :continents-id-seq
+    :continents_id_seq
     {:schema :twitter :table :users :name :id}
-    :twitter.users-id-seq))
+    :twitter.users_id_seq))
 
 (deftest test-tables
   (is (= [:continents :countries :twitter.tweets :twitter.tweets_users :twitter.users]

@@ -52,7 +52,7 @@
   (keyword (str (if (and (:schema column)
                          (not (contains? #{:public} (:schema column))))
                   (str (name (:schema column)) "."))
-                (name (:table column)) "-" (name (:name column)) "-seq")))
+                (name (:table column)) "_" (name (:name column)) "_seq")))
 
 (defn reset-serials
   "Reset the serial counters of all columns in `table`."
