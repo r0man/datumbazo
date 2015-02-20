@@ -190,6 +190,10 @@
   (result-set-read-column [val rsmeta idx]
     (decode-pgobject val))
 
+  org.postgis.PGgeometry
+  (result-set-read-column [val rsmeta idx]
+    (.getGeometry val))
+
   java.sql.Date
   (result-set-read-column [val rsmeta idx]
     (to-date val))
