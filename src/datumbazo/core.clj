@@ -43,9 +43,19 @@
   "Returns the columns of `table`."
   [table] (map (:column table) (:columns table)))
 
+(defn prefix
+  "Prefix `kw` with `namespace`."
+  [namespace kw]
+  (keyword (str (name namespace) "."
+                (name kw))))
+
 (defn column-keys
   "Returns the column keys of `table`."
-  [table] (map :name (columns table)))
+  [table & {:keys [prefix?]}]
+  (map #(if prefix?
+          (prefix (:name table) (:name %))
+          (:name %))
+       (columns table)))
 
 (defn select-columns
   "Select the columns of `table` from `row`."
