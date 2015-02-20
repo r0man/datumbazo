@@ -134,6 +134,12 @@
     (is (= [:id :user-id :retweeted :text :created-at :updated-at]
            (map :name columns)))))
 
+(deftest test-prefix
+  (are [x y expected]
+    (= (prefix x y) expected)
+    :a :b :a.b
+    :continents :id :continents.id))
+
 (deftest test-column-keys
   (is (= (column-keys continents-table)
          [:id :name :code :geometry]))
