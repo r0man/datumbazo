@@ -118,7 +118,7 @@
   "Write the fixtures for `tables` into `directory`."
   [db directory tables & opts]
   (doseq [table tables
-          :let [filename (str (apply file directory (split (replace (name table) #"-" "_") #"\.")) ".edn")]]
+          :let [filename (str (apply file directory (split (name table) #"\.")) ".edn")]]
     (apply write-fixture db table filename opts)))
 
 (defn load-fixtures
