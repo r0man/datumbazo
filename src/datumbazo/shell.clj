@@ -23,15 +23,15 @@
   [s]
   (let [split (remove blank? (split s #"/"))]
     (cond
-     (contains? #{"." ".." "/"} s)
-     s
-     (= 0 (count split))
-     "/"
-     (and (= 1 (count split))
-          (not (= \/ (first s))))
-     "."
-     (= \/ (first s))
-     (str "/" (join "/" (butlast split))))))
+      (contains? #{"." ".." "/"} s)
+      s
+      (= 0 (count split))
+      "/"
+      (and (= 1 (count split))
+           (not (= \/ (first s))))
+      "."
+      (= \/ (first s))
+      (str "/" (join "/" (butlast split))))))
 
 (defn log-lines [level lines]
   (doseq [line (split lines #"\n")] (logp level line)))
@@ -97,7 +97,7 @@
   [db table input output & {:as opts}]
   (let [{:keys [width height]} opts]
     (exec-checked-script
-     "Running shp2pgsql"
+     "Running raster2pgsql"
      ("raster2pgsql"
       ~(if-let [srid (:srid opts)]
          (format "-s %s" srid) "")
@@ -112,7 +112,7 @@
       ~(if-let [column (:column opts)]
          (format "-f %s" column) "")
       ~(if-let [no-data (:no-data opts)]
-         (format "-N %s" no-data) "")
+         (format "-N '%s'" no-data) "")
       ~(if (:no-transaction opts)
          "-e" "")
       ~(if (:regular-blocking opts)
