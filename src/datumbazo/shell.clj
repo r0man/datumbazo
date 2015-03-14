@@ -90,7 +90,7 @@
        (format "-s %s" srid) "")
     ~(if-let [encoding (:encoding opts)]
        (format "-W %s" encoding) "")
-    ~shape-file ~(sql-name db table) > ~sql-file)))
+    ~shape-file ~(sql-name db table) > ~(str sql-file))))
 
 (defn raster2pgsql
   "Run the raster2pgsql command."
@@ -112,13 +112,13 @@
       ~(if-let [column (:column opts)]
          (format "-f %s" column) "")
       ~(if-let [no-data (:no-data opts)]
-         (format "-N '%s'" no-data) "")
+         (format "-N %s" no-data) "")
       ~(if (:no-transaction opts)
          "-e" "")
       ~(if (:regular-blocking opts)
          "-r" "")
       ~(if (and width height)
-         (format "-t %sx%s" width height) "")
+         (format "-t %sx%s" width height) "-t auto")
       ~(if (:disable-max-extend opts)
          "-x" "")
       ~(if (:constraints opts)
@@ -130,6 +130,6 @@
       ~(if (:register opts)
          "-R" "")
       ~(if (sequential? input)
-         (join " " input)
-         input)
-      ~(sql-name db table) > ~output))))
+         (join " " (map str input))
+         (str input))
+      ~(sql-name db table) > ~(str output)))))

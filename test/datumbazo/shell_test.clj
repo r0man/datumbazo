@@ -1,8 +1,8 @@
 (ns datumbazo.shell-test
-  (:require [pallet.common.shell :refer [bash]])
-  (:use datumbazo.shell
-        datumbazo.test
-        clojure.test))
+  (:require [clojure.test :refer :all]
+            [datumbazo.shell :refer :all]
+            [datumbazo.test :refer :all]
+            [pallet.common.shell :refer [bash]]))
 
 (deftest test-basename
   (are [args expected]
@@ -72,7 +72,7 @@
     (with-redefs
       [bash (fn [script]
               (is (= (str "echo 'Running raster2pgsql...';\n{\n    # shell.clj:101\n"
-                          "raster2pgsql -c INPUT weather.nww3_dirpwsfc_2013_02_10 > OUTPUT\n } "
+                          "raster2pgsql -c -t auto INPUT weather.nww3_dirpwsfc_2013_02_10 > OUTPUT\n } "
                           "|| { echo '#> Running raster2pgsql : FAIL'; exit 1;} >&2 \necho '#> Running raster2pgsql : SUCCESS'\n") script))
               {:exit 0})]
       (raster2pgsql db :weather.nww3-dirpwsfc-2013-02-10 "INPUT" "OUTPUT"))))
