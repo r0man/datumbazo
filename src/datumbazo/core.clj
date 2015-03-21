@@ -1,7 +1,7 @@
 (ns datumbazo.core
   (:import java.sql.SQLException
            org.postgresql.PGConnection)
-  (:refer-clojure :exclude [distinct group-by])
+  (:refer-clojure :exclude [distinct group-by update])
   (:require [clojure.java.io :refer [reader]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]

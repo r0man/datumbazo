@@ -1,8 +1,11 @@
 language: clojure
 
+addons:
+  postgresql: "9.4"
+
 before_install: ./travis/before_install.sh
 before_script: ./travis/before_script.sh
 
 lein: lein2
-addons:
-  postgresql: "9.3"
+
+script: lein2 with-profile default:+1.7 test

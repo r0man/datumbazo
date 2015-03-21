@@ -1,5 +1,5 @@
 (ns datumbazo.util-test
-  (:refer-clojure :exclude [distinct group-by])
+  (:refer-clojure :exclude [distinct group-by update])
   (:use clojure.test
         datumbazo.util
         datumbazo.core

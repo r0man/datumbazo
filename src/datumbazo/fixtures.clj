@@ -1,6 +1,6 @@
 (ns datumbazo.fixtures
   (:gen-class)
-  (:refer-clojure :exclude [distinct group-by replace])
+  (:refer-clojure :exclude [distinct group-by replace update])
   (:require [clojure.instant :refer [read-instant-timestamp]]
             [clojure.java.io :refer [file make-parents resource writer]]
             [clojure.java.jdbc :as jdbc]

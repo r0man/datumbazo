@@ -1,5 +1,5 @@
 (ns datumbazo.core-test
-  (:refer-clojure :exclude [distinct group-by])
+  (:refer-clojure :exclude [distinct group-by update])
   (:require [clj-time.core :refer [now]]
             [clj-time.coerce :refer [to-timestamp]]
             [clojure.java.jdbc :as jdbc]
