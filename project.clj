@@ -17,11 +17,11 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [postgresql/postgresql "9.3-1102.jdbc41"]
                  [org.xerial/sqlite-jdbc "3.8.7"]
-                 [mysql/mysql-connector-java "5.1.34"]
+                 [mysql/mysql-connector-java "5.1.35"]
                  [slingshot "0.12.2"]
                  [sqlingvo "0.7.10"]]
   :profiles {:1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha5"]]}
-             :dev {:dependencies [[ch.qos.logback/logback-classic "1.1.2"]
+             :dev {:dependencies [[ch.qos.logback/logback-classic "1.1.3"]
                                   [com.mchange/c3p0 "0.9.5"]
                                   [com.jolbox/bonecp "0.8.0.RELEASE"]
                                   [validation-clj "0.5.6"]]}
