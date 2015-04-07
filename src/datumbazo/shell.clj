@@ -56,7 +56,7 @@
   (let [opts (merge db opts)]
     (exec-checked-script
      "Running psql"
-     ("export" ~(format "PGPASS=\"%s\"" (:password opts)))
+     ("export" ~(format "PGPASSWORD=\"%s\"" (:password opts)))
      ("psql"
       ~(if-let [command (:command opts)]
          (format "--command \"%s\"" command) "")

@@ -48,7 +48,7 @@
   (is (= 0 (:exit (psql db :file "/tmp/test-psql.sql"))))
   (with-redefs
     [bash (fn [script]
-            (is (= (str "echo 'Running psql...';\n{\n# shell.clj:59\nexport PGPASS=\"scotch\" && \\\n"
+            (is (= (str "echo 'Running psql...';\n{\n# shell.clj:59\nexport PGPASSWORD=\"scotch\" && \\\n"
                         "# shell.clj:60\npsql --command \"SELECT 1;\" --dbname datumbazo --host localhost --username tiger --quiet\n"
                         " } || { echo '#> Running psql : FAIL'; exit 1;} >&2 \necho '#> Running psql : SUCCESS'\n")
                    script))
