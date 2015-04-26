@@ -19,7 +19,7 @@
                  [org.xerial/sqlite-jdbc "3.8.7"]
                  [mysql/mysql-connector-java "5.1.35"]
                  [slingshot "0.12.2"]
-                 [sqlingvo "0.7.10"]]
+                 [sqlingvo "0.7.11"]]
   :profiles {:1.7 {:dependencies [[org.clojure/clojure "1.7.0-beta1"]]}
              :dev {:dependencies [[ch.qos.logback/logback-classic "1.1.3"]
                                   [com.mchange/c3p0 "0.9.5"]
