@@ -59,7 +59,7 @@
      ("export" ~(format "PGPASSWORD=\"%s\"" (:password opts)))
      ("psql"
       ~(if-let [command (:command opts)]
-         (format "--command \"%s\"" command) "")
+         (format "--command '%s'" command) "")
       ~(if-let [db (:name opts)]
          (format "--dbname %s" db) "")
       ~(if-let [file (:file opts)]
