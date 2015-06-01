@@ -52,29 +52,32 @@
 
 (defn psql
   "Run the psql command."
-  [db & {:as opts}]
-  (let [opts (merge db opts)]
-    (exec-checked-script
-     "Running psql"
-     ("export" ~(format "PGPASSWORD=\"%s\"" (:password opts)))
-     ("psql"
-      ~(if-let [command (:command opts)]
-         (format "--command '%s'" command) "")
-      ~(if-let [db (:name opts)]
-         (format "--dbname %s" db) "")
-      ~(if-let [file (:file opts)]
-         (format "--file %s" file) "")
-      ~(if-let [host (:host opts)]
-         (format "--host %s" host) "")
-      ~(if-let [port (:port opts)]
-         (format "--port %s" port) "")
-      ~(if-let [username (:user opts)]
-         (format "--username %s" username) "")
-      "--quiet"))))
+  [db & [opts]]
+  (exec-checked-script
+   "Running psql"
+   ("export" ~(format "PGPASSWORD=\"%s\"" (:password opts)))
+   ("psql"
+    ~(if-not (= (:on-error-stop opts) false)
+       "--variable ON_ERROR_STOP=1" "" )
+    ~(if-let [command (:command opts)]
+       (format "--command '%s'" command) "")
+    ~(if-let [db (:name db)]
+       (format "--dbname %s" db) "")
+    ~(if-let [file (:file opts)]
+       (format "--file %s" (str file)) "")
+    ~(if-let [host (:host db)]
+       (format "--host %s" host) "")
+    ~(if-let [port (:port db)]
+       (format "--port %s" port) "")
+    ~(if-let [user (:user db)]
+       (format "--username %s" user) "")
+    ~(if (:single-transaction opts)
+       "--single-transaction" "")
+    "--quiet")))
 
 (defn shp2pgsql
   "Run the shp2pgsql command."
-  [db table shape-file sql-file & {:as opts}]
+  [db table shape-file sql-file & [opts]]
   (exec-checked-script
    "Running shp2pgsql"
    ("shp2pgsql"
@@ -94,7 +97,7 @@
 
 (defn raster2pgsql
   "Run the raster2pgsql command."
-  [db table input output & {:as opts}]
+  [db table input output & [opts]]
   (let [{:keys [width height]} opts]
     (exec-checked-script
      "Running raster2pgsql"
@@ -133,3 +136,52 @@
          (join " " (map str input))
          (str input))
       ~(sql-name db table) > ~(str output)))))
+
+(defn pg-dump
+  "Run the pgdump command."
+  [db & [opts]]
+  (exec-checked-script
+   "Running pgdump"
+   ("export" ~(format "PGPASSWORD=\"%s\"" (:password db)))
+   ("pg_dump"
+    ~(if-let [db-name (:name db)]
+       (format "--dbname %s" db-name) "")
+    ~(if-let [host (:host db)]
+       (format "--host %s" host) "")
+    ~(if-let [port (:port db)]
+       (format "--port %s" port) "")
+    ~(if-let [user (:user db)]
+       (format "--username %s" user) "")
+    ~(if (:clean opts)
+       "--clean" "")
+    ~(if (:create opts)
+       "--create" "")
+    ~(if (:data-only opts)
+       "--data-only" "")
+    ~(if (:schema-only opts)
+       "--schema-only" "")
+    ~(if (:disable-triggers opts)
+       "--disable-triggers" "")
+    ~(if-let [schema (:schema db)]
+       (format "--schema %s" schema) "")
+    ~(if-let [exclude-schema (:exclude-schema db)]
+       (format "--exclude-schema %s" exclude-schema) "")
+    ~(if-let [table (:table opts)]
+       (format "--table %s" (name table)) "")
+    ~(if-let [file (:file opts)]
+       (format "--file '%s'" (str file)) ""))))
+
+(defn dump-table
+  "Export a database table via pgdump."
+  [db table filename & [opts]]
+  (->> {:clean (:clean opts true)
+        :disable-triggers (:disable-triggers opts true)
+        :file filename
+        :table table}
+       (merge opts)
+       (pg-dump db)))
+
+(defn exec-sql-file
+  "Execute the SQL in `filename` in database `db`."
+  [db filename & [opts]]
+  (psql db :file filename))
