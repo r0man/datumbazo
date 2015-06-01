@@ -1,6 +1,7 @@
 (ns datumbazo.meta-test
   (:require [clojure.set :refer [subset?]]
             [clojure.test :refer :all]
+            [datumbazo.core :refer [drop-table if-exists]]
             [datumbazo.meta :refer :all]
             [datumbazo.test :refer :all])
   (:import java.sql.DatabaseMetaData))
@@ -111,13 +112,24 @@
 
 (deftest test-tables
   (with-test-db [db]
+    @(drop-table db [:test] (if-exists true))
     (let [tables (tables db)]
       (is (not (empty? tables)))
       (is (every? #(keyword? (:schema %1)) tables))
       (is (every? #(keyword? (:name %1)) tables))
       (is (every? #(= :table (:type %1)) tables))
       (is (subset? (set (map :name tables))
-                   (set [:continents :countries :spatial-ref-sys :changes :dependencies :events :projects :tags :tweets :users :tweets-users]))))))
+                   #{:continents
+                     :countries
+                     :spatial-ref-sys
+                     :changes
+                     :dependencies
+                     :events
+                     :projects
+                     :tags
+                     :tweets
+                     :users
+                     :tweets-users})))))
 
 (deftest test-views
   (with-test-db [db]

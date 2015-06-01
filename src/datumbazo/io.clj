@@ -184,7 +184,7 @@
 
   org.postgresql.jdbc2.AbstractJdbc2Array
   (result-set-read-column [val rsmeta idx]
-    (seq (.getArray val)))
+    (vec (.getArray val)))
 
   org.postgresql.util.PGobject
   (result-set-read-column [val rsmeta idx]

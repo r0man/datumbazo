@@ -136,7 +136,7 @@
 
 (deftest test-prefix
   (are [x y expected]
-    (= (prefix x y) expected)
+      (= (prefix x y) expected)
     :a :b :a.b
     :continents :id :continents.id))
 
@@ -608,7 +608,7 @@
 (deftest test-select
   (with-test-db [db]
     (are [stmt expected]
-      (= (deref stmt) expected)
+        (= (deref stmt) expected)
       (select db [(as 1 :x)])
       [{:x 1}]
       (select db [:*]
@@ -709,6 +709,7 @@
 
 (deftest test-insert-fixed-columns-mixed-values
   (with-test-db [db]
+    @(drop-table db [:test] (if-exists true))
     @(create-table db :test
        (column :a :integer)
        (column :b :integer))
@@ -917,11 +918,31 @@
               {:avg 4866.6666666666666667M :sum 14600}
               {:avg 4866.6666666666666667M :sum 14600}])))))
 
+(deftest test-insert-array
+  (with-test-db [db]
+    @(drop-table db [:test] (if-exists true))
+    @(create-table db :test
+       (column :x :text :array? true))
+    (is (= @(insert db :test [:x]
+              (values [{:x [1 2]}
+                       {:x [3 4]}])
+              (returning :*))
+           [{:x ["1" "2"]}
+            {:x ["3" "4"]}]))))
+
+(deftest test-create-table-array-column
+  (with-test-db [db]
+    @(drop-table db [:test] (if-exists true))
+    @(create-table db :test
+       (column :x :text :array? true))))
+
 (comment
 
   (def db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))
 
-  @(select d [1 "2" '(+ 1 2) '(+ (now) (cast "1 day" :interval))])
+  @(select db [1 "2" '(+ 1 2) '(+ (now) (cast "1 day" :interval))])
+
+  @(select db [[1 2]])
 
   @(create-table db :countries
      (column :name :text)
