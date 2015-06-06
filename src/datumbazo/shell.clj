@@ -55,7 +55,7 @@
   [db & [opts]]
   (exec-checked-script
    "Running psql"
-   ("export" ~(format "PGPASSWORD=\"%s\"" (:password opts)))
+   ("export" ~(format "PGPASSWORD=\"%s\"" (:password db)))
    ("psql"
     ~(if-not (= (:on-error-stop opts) false)
        "--variable ON_ERROR_STOP=1" "" )
