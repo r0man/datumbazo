@@ -7,7 +7,7 @@ USER=tiger
 
 if [ ! -z "$1" ]; then DATABASE_NAME="$1"; fi
 
-dropdb -U $USER $DATABASE_NAME
+dropdb -U $USER $DATABASE_NAME || true
 createdb -U $USER -O $USER --template template0 --encoding "UTF8" $DATABASE_NAME
 psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-postgis-extension.sql
 psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-citext-extension.sql

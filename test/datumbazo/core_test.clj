@@ -286,6 +286,10 @@
 
 (deftest test-create-table-compound-primary-key
   (with-test-db [db]
+    @(create-table db :users
+       (column :id :serial :primary-key? true))
+    @(create-table db :spots
+       (column :id :serial :primary-key? true))
     (is (= @(create-table db :ratings
               (column :id :serial)
               (column :user-id :integer :not-null? true :references :users/id)
@@ -720,10 +724,18 @@
             {:a nil :b 3}
             {:a nil :b nil}]))))
 
+(defn create-companies-table [db]
+  (create-table db :companies
+    (column :id :serial :primary-key? true)))
+
+(defn create-exchanges-table [db]
+  (create-table db :exchanges
+    (column :id :serial :primary-key? true)))
+
 (defn create-quotes-table [db]
   (create-table db :quotes
     (column :id :serial :primary-key? true)
-    (column :exchange-id :integer :not-null? true :references :exchanged/id)
+    (column :exchange-id :integer :not-null? true :references :exchanges/id)
     (column :company-id :integer :references :companies/id)
     (column :symbol :citext :not-null? true :unique? true)
     (column :created-at :timestamp-with-time-zone :not-null? true :default '(now))
@@ -731,6 +743,12 @@
 
 (deftest test-insert-fixed-columns-mixed-values-2
   (with-test-db [db]
+    @(create-companies-table db)
+    @(insert db :companies [:id]
+       (values [{:id 5}]))
+    @(create-exchanges-table db)
+    @(insert db :exchanges [:id]
+       (values [{:id 2}]))
     @(create-quotes-table db)
     (is (= @(insert db :quotes [:id :exchange-id :company-id
                                 :symbol :created-at :updated-at]
