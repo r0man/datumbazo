@@ -4,24 +4,24 @@ BEGIN;
 
 CREATE TABLE twitter.users (
   id bigint PRIMARY KEY,
-  screen_name text NOT NULL,
+  "screen-name" text NOT NULL,
   name text NOT NULL,
   description text,
-  followers_count integer NOT NULL DEFAULT 0,
-  friends_count integer NOT NULL DEFAULT 0,
-  listed_count integer NOT NULL DEFAULT 0,
-  retweet_count integer NOT NULL DEFAULT 0,
-  statuses_count integer NOT NULL DEFAULT 0,
+  "followers-count" integer NOT NULL DEFAULT 0,
+  "friends-count" integer NOT NULL DEFAULT 0,
+  "listed-count" integer NOT NULL DEFAULT 0,
+  "retweet-count" integer NOT NULL DEFAULT 0,
+  "statuses-count" integer NOT NULL DEFAULT 0,
   verified boolean NOT NULL DEFAULT false,
-  possibly_sensitive boolean NOT NULL DEFAULT false,
+  "possibly-sensitive" boolean NOT NULL DEFAULT false,
   location text,
-  time_zone text,
+  "time-zone" text,
   lang varchar(2),
   url text,
-  profile_image_url text,
-  default_profile_image boolean NOT NULL DEFAULT true,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  updated_at timestamp with time zone NOT NULL DEFAULT now()
+  "profile-image-url" text,
+  "default-profile-image" boolean NOT NULL DEFAULT true,
+  "created-at" timestamp with time zone NOT NULL DEFAULT now(),
+  "updated-at" timestamp with time zone NOT NULL DEFAULT now()
 );
 
 COMMIT;

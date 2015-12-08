@@ -17,13 +17,14 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [org.postgresql/postgresql "9.4-1201-jdbc41"]
                  [org.xerial/sqlite-jdbc "3.8.11.2"]
-                 [mysql/mysql-connector-java "5.1.37"]
+                 [mysql/mysql-connector-java "5.1.38"]
                  [slingshot "0.12.2"]
-                 [sqlingvo "0.8.0"]]
+                 [sqlingvo "0.8.1"]]
   :profiles {:dev {:dependencies [[ch.qos.logback/logback-classic "1.1.3"]
                                   [com.mchange/c3p0 "0.9.5"]
                                   [com.jolbox/bonecp "0.8.0.RELEASE"]
-                                  [validation-clj "0.5.6"]]}
-             :test {:resource-paths ["test-resources"]}}
+                                  [funcool/clojure.jdbc "0.6.1"]
+                                  [validation-clj "0.5.6"]]
+                   :resource-paths ["test-resources"]}}
   :aliases {"test-ancient" ["test"]}
   :main ^{:skip-aot true} datumbazo.fixtures)

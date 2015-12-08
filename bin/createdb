@@ -4,6 +4,7 @@ set -e
 
 DATABASE_NAME="datumbazo"
 USER=tiger
+export PGPASSWORD="scotch"
 
 if [ ! -z "$1" ]; then DATABASE_NAME="$1"; fi
 

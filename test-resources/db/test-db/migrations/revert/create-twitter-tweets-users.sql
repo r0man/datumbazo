@@ -2,6 +2,6 @@
 
 BEGIN;
 
-DROP TABLE twitter.tweets_users;
+DROP TABLE "twitter"."tweets-users";
 
 COMMIT;

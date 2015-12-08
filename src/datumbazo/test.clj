@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [distinct group-by update])
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.test :refer :all]
+            [datumbazo.driver.core :refer [close-db open-db]]
             [datumbazo.core :refer :all]))
 
 (def connections
@@ -52,6 +53,14 @@
       {:depname "sales" :empno 3 :salary 4800 :enroll-date #inst "2007-08-01"}
       {:depname "develop" :empno 8 :salary 6000 :enroll-date #inst "2006-10-01"}
       {:depname "develop" :empno 11 :salary 5200 :enroll-date #inst "2007-08-15"}])))
+
+(defmacro with-backends [[db-sym] & body]
+  `(doseq [backend# ['clojure.java.jdbc 'jdbc.core]]
+     (if (find-ns backend#)
+       (let [db# (open-db (assoc ~db :backend backend#)), ~db-sym db#]
+         (try (testing (str "Testing backend " (str backend#)) ~@body)
+              (finally (close-db db#))))
+       (.println *err* (format "WARNING: Can't find %s backend, skipping tests." backend#)))))
 
 (defmacro with-test-table [db table & body]
   `(let [db# ~db table# ~table]
