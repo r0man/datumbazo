@@ -44,15 +44,15 @@
       (is (= [:id] (map :name columns))))
     (let [columns (columns db :schema :public :table :continents)]
       (is (= (set (map :column-name columns))
-             #{"freebase_guid" "id" "name" "geometry" "updated_at" "geonames_id"
-               "created_at" "code"})))
+             #{"freebase-guid" "id" "name" "geometry" "updated-at" "geonames-id"
+               "created-at" "code"})))
     (let [columns (columns db :schema :twitter :table :users)]
       (is (= (set (map :column-name columns))
-             #{"listed_count" "lang" "url" "friends_count" "id" "name" "verified"
-               "time_zone" "location" "updated_at" "profile_image_url"
-               "default_profile_image" "statuses_count" "created_at"
-               "followers_count" "possibly_sensitive" "screen_name" "description"
-               "retweet_count"})))
+             #{"listed-count" "lang" "url" "friends-count" "id" "name" "verified"
+               "time-zone" "location" "updated-at" "profile-image-url"
+               "default-profile-image" "statuses-count" "created-at"
+               "followers-count" "possibly-sensitive" "screen-name" "description"
+               "retweet-count"})))
     (let [columns (columns db :table :countries :name :continent-id)]
       (is (not (empty? columns)))
       (is (every? #(= :public (:schema %1)) columns))

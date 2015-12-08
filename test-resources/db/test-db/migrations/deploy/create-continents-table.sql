@@ -7,17 +7,17 @@ CREATE TABLE continents (
   name citext UNIQUE NOT NULL,
   code varchar(2) UNIQUE NOT NULL,
   geometry geometry(MULTIPOLYGON, 4326),
-  freebase_guid citext UNIQUE,
-  geonames_id integer UNIQUE,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  updated_at timestamp with time zone NOT NULL DEFAULT now()
+  "freebase-guid" citext UNIQUE,
+  "geonames-id" integer UNIQUE,
+  "created-at" timestamp with time zone NOT NULL DEFAULT now(),
+  "updated-at" timestamp with time zone NOT NULL DEFAULT now()
 );
 
-CREATE INDEX continents_name_fulltext_idx ON continents USING GIN(to_tsvector('english', name));
-CREATE INDEX continents_geometry_idx ON continents USING GIST(geometry);
+CREATE INDEX "continents-name-fulltext-idx" ON continents USING GIN(to_tsvector('english', name));
+CREATE INDEX "continents-geometry-idx" ON continents USING GIST(geometry);
 
-CREATE UNIQUE INDEX continents_code_idx ON continents (lower(code));
-CREATE UNIQUE INDEX continents_geonames_id_idx ON continents (geonames_id);
-CREATE UNIQUE INDEX continents_freebase_guid_idx ON continents (lower(freebase_guid));
+CREATE UNIQUE INDEX "continents-code-idx" ON continents (lower(code));
+CREATE UNIQUE INDEX "continents-geonames-id-idx" ON continents ("geonames-id");
+CREATE UNIQUE INDEX "continents-freebase-guid-idx" ON continents (lower("freebase-guid"));
 
 COMMIT;

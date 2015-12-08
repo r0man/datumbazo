@@ -85,7 +85,7 @@
 
 (deftest test-serial-seq
   (are [column expected]
-    (is (= expected (serial-seq column)))
+      (is (= expected (serial-seq column)))
     {:table :continents :name :id}
     :continents_id_seq
     {:schema :public :table :continents :name :id}
@@ -94,7 +94,7 @@
     :twitter.users_id_seq))
 
 (deftest test-tables
-  (is (= [:continents :countries :twitter.tweets :twitter.tweets_users :twitter.users]
+  (is (= [:continents :countries :twitter.tweets :twitter.tweets-users :twitter.users]
          (tables fixture-dir))))
 
 (deftest test-write-fixture

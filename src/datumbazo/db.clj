@@ -1,25 +1,14 @@
 (ns datumbazo.db
   (:require [clojure.string :refer [blank?]]
             [datumbazo.connection :refer [run*]]
+            [datumbazo.driver.core :refer [eval-db]]
             [datumbazo.util :as util]
+            [datumbazo.vendor :as vendor]
             [no.en.core :refer [parse-integer parse-query-params]]
             [sqlingvo.db :as db]))
 
 (def ^:private jdbc-url-regex
   #"(([^:]+):)?([^:]+)://(([^:]+):([^@]+)@)?(([^:/]+)(:([0-9]+))?((/([^?]*))(\?(.*))?))")
-
-(defn- format-server [spec]
-  (str (:host spec)
-       (if (:port spec)
-         (str ":" (:port spec)))))
-
-(defn- subname [spec]
-  (str "//" (:server-name spec)
-       (if-let [port (:server-port spec)]
-         (str ":" port))
-       "/" (:name spec)
-       (if-not (blank? (:query-string spec))
-         (str "?" (:query-string spec)))))
 
 (defn parse-url
   "Parse the database url `s` and return a Ring compatible map."
@@ -43,44 +32,8 @@
        :password (nth matches 6)})
     (throw (ex-info "Can't parse JDBC url %s." {:url url}))))
 
-(defmulti enhance-spec
-  (fn [spec]
-    (or (keyword (:subprotocol spec))
-        (:scheme spec))))
-
-(defmethod enhance-spec :mysql [spec]
-  (assoc (db/mysql spec)
-         :subname (subname spec)))
-
-(defmethod enhance-spec :oracle [spec]
-  (db/oracle
-   (assoc spec
-          :subprotocol "oracle:thin"
-          :subname (str ":" (:user spec) "/" (:password spec) "@"
-                        (format-server spec)
-                        ":" (:name spec)))))
-
-(defmethod enhance-spec :postgresql [spec]
-  (assoc (db/postgresql spec)
-         :subname (subname spec)))
-
-(defmethod enhance-spec :vertica [spec]
-  (assoc (db/vertica spec)
-         :subname (subname spec)))
-
-(defmethod enhance-spec :sqlite [spec]
-  (assoc (db/sqlite spec)
-         :subname (subname spec)))
-
-(defmethod enhance-spec :sqlserver [spec]
-  (db/sqlserver
-   (assoc spec
-          :subname (str "//" (format-server spec) ";"
-                        "database=" (:name spec) ";"
-                        "user=" (:user spec) ";"
-                        "password=" (:password spec)))))
-
 (defn new-db [spec]
-  (let [spec (if (map? spec) spec (parse-url spec))
-        db (enhance-spec spec)]
-    (assoc db :eval-fn #'run*)))
+  (let [spec (if (map? spec) spec (parse-url spec))]
+    (assoc (vendor/db-spec spec)
+           :backend 'clojure.java.jdbc
+           :eval-fn #'eval-db)))

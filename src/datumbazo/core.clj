@@ -6,8 +6,8 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [com.stuartsierra.component :as component]
-            [datumbazo.connection :as connection]
-            [datumbazo.connection :refer [run*]]
+            [datumbazo.connection :as connection :refer [run*]]
+            [datumbazo.driver :as driver]
             [datumbazo.db :as db]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
@@ -233,10 +233,10 @@
   "Update the `row` in the database `table`."
   [db table row & [opts]]
   (run1 (update db table (select-columns table row)
-          (where (primary-key-clause db table row))
-          (apply returning (remove #(= true (:hidden? %1)) (columns table)))
-          (prepare (partial io/encode-row db table))
-          (prepare (:prepare table)))))
+                (where (primary-key-clause db table row))
+                (apply returning (remove #(= true (:hidden? %1)) (columns table)))
+                (prepare (partial io/encode-row db table))
+                (prepare (:prepare table)))))
 
 (defmacro deftable
   "Define a database table."

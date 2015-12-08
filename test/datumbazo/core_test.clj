@@ -66,11 +66,9 @@
       ;;              "FROM \"ratings\" WHERE ((\"ratings\".\"user_id\" = ?) and (\"ratings\".\"spot_id\" = ?) and (\"ratings\".\"created_at\" = ?))")
       ;;         1 2 (to-timestamp time)]
       ;;        (sql (rating-by-pk* db {:user-id 1 :spot-id 2 :created-at time}))))
-      (is (= [(str "SELECT \"ratings\".\"user_id\", \"ratings\".\"spot_id\", \"ratings\".\"rating\", \"ratings\".\"created_at\", \"ratings\".\"updated_at\" "
-                   "FROM \"ratings\" WHERE ((\"ratings\".\"user_id\" = NULL) and (\"ratings\".\"spot_id\" = NULL) and (\"ratings\".\"created_at\" = NULL))")]
+      (is (= [(str "SELECT \"ratings\".\"user-id\", \"ratings\".\"spot-id\", \"ratings\".\"rating\", \"ratings\".\"created-at\", \"ratings\".\"updated-at\" "
+                   "FROM \"ratings\" WHERE ((\"ratings\".\"user-id\" = NULL) and (\"ratings\".\"spot-id\" = NULL) and (\"ratings\".\"created-at\" = NULL))")]
              (sql (rating-by-pk* db {:user-id 1 :spot-id 2 :created-at time})))))))
-
-;; (test-rating-by-pk)
 
 (deftable twitter-users
   "The Twitter users database table."
@@ -280,9 +278,6 @@
   (with-test-db [db]
     (let [[_ clause] ((update-clause db continents-table {:id 1}) nil)]
       (is (map? clause)))))
-
-;; ;; (deftest test-save-tweets-users
-;; ;;   #_(save-tweets-user db {:tweet-id 1 :user-id 1}))
 
 (deftest test-create-table-compound-primary-key
   (with-test-db [db]
@@ -510,17 +505,17 @@
 
 (deftest test-array-to-json
   (with-test-db [db]
-    (is (= [{:array-to-json [[1 5] [99 100]]}]
+    (is (= [{:array_to_json [[1 5] [99 100]]}]
            @(select db [`(array_to_json (cast "{{1,5},{99,100}}" ~(keyword "int[]")))])))))
 
 (deftest test-row-to-json
   (with-test-db [db]
-    (is (= [{:row-to-json {:f1 1, :f2 "foo"}}]
+    (is (= [{:row_to_json {:f1 1, :f2 "foo"}}]
            @(select db ['(row_to_json (row 1 "foo"))])))))
 
 (deftest test-to-json
   (with-test-db [db]
-    (is (= [{:to-json "Fred said \"Hi.\""}]
+    (is (= [{:to_json "Fred said \"Hi.\""}]
            @(select db ['(to_json "Fred said \"Hi.\"")])))))
 
 (deftest test-with
@@ -536,9 +531,9 @@
     (when-not (= :mysql (:name db))
       (is (= @(select db [`(cast "1" :int)])
              [(case (:subprotocol db)
-                "mysql" {(keyword "CAST('1' AS int)") 1}
+                "mysql" {(keyword "cast('1' as int)") 1}
                 "postgresql" {:int4 1}
-                "sqlite" {(keyword "CAST(? AS int)") 1})])))))
+                "sqlite" {(keyword "cast(? as int)") 1})])))))
 
 (deftest test-select-1
   (with-test-dbs [db]
@@ -551,7 +546,7 @@
   (with-test-dbs [db]
     (is (= @(select db [1 2 3])
            [(case (:subprotocol db)
-              "postgresql" {:?column? 1 :?column?-2 2 :?column?-3 3}
+              "postgresql" {:?column? 1 :?column?_2 2 :?column?_3 3}
               {:1 1 :2 2 :3 3})]))))
 
 (deftest test-select-1-as-n
@@ -954,11 +949,89 @@
     @(create-table db :test
        (column :x :text :array? true))))
 
+;; (deftest test-select
+;;   (with-backends [db]
+;;     (setup-countries db)
+;;     (is (= @(select db [:*]
+;;               (from :countries))
+;;            countries))))
+
+;; (deftest test-select-columns
+;;   (with-backends [db]
+;;     (setup-countries db)
+;;     (is (= @(select db [:id]
+;;               (from :countries))
+;;            (map #(select-keys % [:id]) countries)))))
+
+;; (deftest test-select-where-equals
+;;   (with-backends [db]
+;;     (setup-countries db)
+;;     (is (= @(select db [:id :name]
+;;               (from :countries)
+;;               (where '(= :name "Spain")))
+;;            [{:id 1 :name "Spain"}]))))
+
+;; (deftest test-insert
+;;   (with-backends [db]
+;;     (drop-countries db)
+;;     (create-countries db)
+;;     (is (= @(insert db :countries []
+;;               (values countries))
+;;            [{:count 4}]))))
+
+;; (deftest test-insert-returning
+;;   (with-backends [db]
+;;     (drop-countries db)
+;;     (create-countries db)
+;;     (is (= @(insert db :countries []
+;;               (values countries)
+;;               (returning :*))
+;;            countries))))
+
+;; (deftest test-insert-returning-column
+;;   (with-backends [db]
+;;     (drop-countries db)
+;;     (create-countries db)
+;;     (is (= @(insert db :countries []
+;;               (values countries)
+;;               (returning :id))
+;;            (map #(select-keys % [:id]) countries)))))
+
+(deftest test-except
+  (with-backends [db]
+    (is (= @(except
+             (select db [(as '(generate_series 1 3) :x)])
+             (select db [(as '(generate_series 3 4) :x)]))
+           [{:x 1} {:x 2}]))))
+
+(deftest test-union
+  (with-backends [db]
+    (is (= @(union
+             (select db [(as 1 :x)])
+             (select db [(as 1 :x)]))
+           [{:x 1}]))))
+
+(deftest test-union-all
+  (with-backends [db]
+    (is (= @(union
+             {:all true}
+             (select db [(as 1 :x)])
+             (select db [(as 1 :x)]))
+           [{:x 1} {:x 1}]))))
+
+(deftest test-intersect
+  (with-backends [db]
+    (is (= @(intersect
+             (select db [(as '(generate_series 1 2) :x)])
+             (select db [(as '(generate_series 2 3) :x)]))
+           [{:x 2}]))))
+
+
 (comment
 
-  (def db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))
+  (def my-db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))
 
-  @(select db [1 "2" '(+ 1 2) '(+ (now) (cast "1 day" :interval))])
+  @(select my-db [1 "2" '(+ 1 2) '(+ (now) (cast "1 day" :interval))])
 
   @(select db [[1 2]])
 
@@ -971,7 +1044,7 @@
 
   @(drop-table db [:countries])
 
-  @(select db [:*]
+  @(select my-db [:*]
      (from :countries))
 
   @(select db [(as '(+ :id 10) :id)
