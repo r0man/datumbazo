@@ -7,7 +7,7 @@
             [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [datumbazo.connection :as connection :refer [run*]]
-            [datumbazo.driver :as driver]
+            [datumbazo.driver.core :as driver]
             [datumbazo.db :as db]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
@@ -38,6 +38,12 @@
          ~db-sym component#]
      (try ~@body
           (finally (component/stop component#)))))
+
+(defmacro with-transaction
+  "Evaluate `body` within a database transaction."
+  [[db opts] & body]
+  `(let [f# (fn [db#] (let [~db db#] ~@body))]
+     (driver/apply-transaction ~db f# ~opts)))
 
 (defn columns
   "Returns the columns of `table`."
@@ -314,3 +320,10 @@
                       ~(format "Find the first %s by %s." (singular table-name) column-name)
                       [~'db & ~'args]
                       (first (apply ~(symbol (str table-name "-by-" column-name)) ~'db ~'args)))))))))
+
+
+(try
+  (doseq [ns '[datumbazo.driver.clojure
+               datumbazo.driver.funcool]]
+    (try (require ns)
+         (catch Exception _))))

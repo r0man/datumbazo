@@ -11,12 +11,16 @@
 
 (defn eval-db
   "Eval the `stmt` against a database."
-  [stmt]
+  [stmt & [opts]]
   (eval-db* (ast stmt)))
 
 (defmulti open-db
   "Open a connection to `db`."
   (fn [db] (:backend db)))
+
+(defmulti apply-transaction
+  "Open a connection to `db`."
+  (fn [db f & [opts]] (:backend db)))
 
 (defn row-count
   "Normalize into a record, with the count of affected rows."

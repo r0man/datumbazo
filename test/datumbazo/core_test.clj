@@ -1026,6 +1026,17 @@
              (select db [(as '(generate_series 2 3) :x)]))
            [{:x 2}]))))
 
+(deftest test-with-transaction
+  (with-backends [db {:rollback? false}]
+    @(create-table db :test-with-transaction
+       (column :x :int))
+    (try (with-transaction [db]
+           @(insert db :test-with-transaction []
+              (values {:x 1}))
+           (throw (ex-info "boom" {})))
+         (catch Exception e))
+    (is (empty? @(select db [:*] (from :test-with-transaction))))
+    @(drop-table db [:test-with-transaction])))
 
 (comment
 

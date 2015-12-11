@@ -3,11 +3,14 @@
             [datumbazo.driver.core :refer :all]
             [sqlingvo.compiler :refer [compile-stmt]]))
 
+(defmethod apply-transaction 'clojure.java.jdbc [db f & [opts]]
+  (jdbc/db-transaction* db f))
+
 (defmethod close-db 'clojure.java.jdbc [db]
   (.close (:connection db)))
 
 (defmethod eval-db* 'clojure.java.jdbc
-  [{:keys [db] :as ast}]
+  [{:keys [db] :as ast} & [opts]]
   (let [sql (compile-stmt db ast)]
     (case (:op ast)
       :except
