@@ -37,6 +37,13 @@
     (column :salary :int)
     (column :enroll-date :timestamp-with-time-zone)))
 
+(defmethod create-test-table :distributors [db table]
+  (create-table db table
+    (column :did :integer :primary-key? true)
+    (column :dname :text)
+    (column :zipcode :text)
+    (column :is-active :bool)))
+
 (defmulti insert-test-table
   (fn [db table] table))
 
@@ -53,6 +60,16 @@
       {:depname "sales" :empno 3 :salary 4800 :enroll-date #inst "2007-08-01T00:00:00Z"}
       {:depname "develop" :empno 8 :salary 6000 :enroll-date #inst "2006-10-01T00:00:00Z"}
       {:depname "develop" :empno 11 :salary 5200 :enroll-date #inst "2007-08-15T00:00:00Z"}])))
+
+(defmethod insert-test-table :distributors [db table]
+  (insert db table []
+    (values
+     [{:did 5 :dname "Gizmo Transglobal" :zipcode "1235"}
+      {:did 6 :dname "Associated Computing, Inc" :zipcode "2356"}
+      {:did 7 :dname "Redline GmbH" :zipcode "3456"}
+      {:did 8 :dname "Anvil Distribution" :zipcode "4567"}
+      {:did 9 :dname "Antwerp Design" :zipcode "5678"}
+      {:did 10 :dname "Conrad International" :zipcode "6789"}])))
 
 (defmacro with-backends [[db-sym opts] & body]
   `(doseq [backend# ['clojure.java.jdbc 'jdbc.core]]

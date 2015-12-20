@@ -17,9 +17,19 @@ select * from sqitch.projects;
 
 select * from sqitch.tags;
 
-select * from continents;
+DROP TABLE IF EXISTS distributors;
 
-SELECT countries.id, countries.name, continents AS continent
-  FROM countries
-  JOIN continents
-    ON continents.id = countries."continent-id";
+CREATE TABLE distributors (
+  did integer PRIMARY KEY,
+  dname text,
+  zipcode text
+);
+
+INSERT INTO "distributors" ("did", "dname")
+  VALUES (5, 'Gizmo Transglobal'), (6, 'Associated Computing, Inc')
+  ON CONFLICT ("did") DO UPDATE SET "dname" = EXCLUDED."dname";
+
+INSERT INTO distributors AS d (did, dname) VALUES (8, 'Anvil Distribution')
+    ON CONFLICT (did) DO UPDATE
+    SET dname = EXCLUDED.dname || ' (formerly ' || d.dname || ')'
+    WHERE d.zipcode <> '21201';
