@@ -18,7 +18,7 @@
 (defmethod eval-db* 'jdbc.core
   [{:keys [db] :as ast} & [opts]]
   (let [conn (:connection db)
-        sql (compile-stmt db ast)]
+        sql (compile-stmt ast)]
     (assert conn "No database connection!")
     (case (:op ast)
       :delete

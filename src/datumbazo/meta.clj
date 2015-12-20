@@ -5,7 +5,7 @@
             [clojure.string :refer [lower-case]]
             [datumbazo.connection :refer [with-connection]]
             [inflections.core :refer [hyphenate hyphenate-keys underscore]]
-            [sqlingvo.core :refer [sql-name]]))
+            [sqlingvo.util :refer [sql-name]]))
 
 (defn- hyphenate-keyword [k]
   (if k (keyword (hyphenate (name k)))))

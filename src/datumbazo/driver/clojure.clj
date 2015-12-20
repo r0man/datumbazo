@@ -11,7 +11,7 @@
 
 (defmethod eval-db* 'clojure.java.jdbc
   [{:keys [db] :as ast} & [opts]]
-  (let [sql (compile-stmt db ast)]
+  (let [sql (compile-stmt ast)]
     (case (:op ast)
       :except
       (jdbc/query db sql)

@@ -6,7 +6,8 @@
             [com.stuartsierra.component :as component]
             [datumbazo.util :as util]
             [no.en.core :refer [parse-integer]]
-            [sqlingvo.core :refer [ast sql sql-keyword]])
+            [sqlingvo.core :refer [ast sql]]
+            [sqlingvo.util :refer [sql-keyword]])
   (:import (java.sql Connection SQLException)))
 
 (defn start-transaction

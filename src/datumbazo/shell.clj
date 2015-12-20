@@ -8,7 +8,7 @@
             [pallet.stevedore :refer [checked-script with-script-language]]
             [pallet.stevedore.bash :refer :all]
             [slingshot.slingshot :refer [throw+]]
-            [sqlingvo.core :refer [sql-name]]))
+            [sqlingvo.util :refer [sql-name]]))
 
 (defn basename
   "Returns the basename of `s`."
@@ -130,6 +130,8 @@
          "-I" "")
       ~(if (:analyze opts)
          "-M" "")
+      ~(if (:padding opts)
+         "-P" "")
       ~(if (:register opts)
          "-R" "")
       ~(if (sequential? input)
