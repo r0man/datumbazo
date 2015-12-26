@@ -1105,6 +1105,24 @@
                   (do-nothing)))
              [{:count 0}])))))
 
+(deftest test-upsert-on-conflict-do-nothing-returning
+  (with-backends [db]
+    (with-test-table db :distributors
+      (is (= @(insert db :distributors [:did :dname]
+                (values [{:did 11 :dname "Upsert GmbH & Co. KG"}])
+                (on-conflict [:did]
+                  (do-nothing))
+                (returning :*))
+             [{:did 11,
+               :dname "Upsert GmbH & Co. KG",
+               :zipcode nil,
+               :is-active nil}]))
+      (is (empty? @(insert db :distributors [:did :dname]
+                     (values [{:did 11 :dname "Upsert GmbH & Co. KG"}])
+                     (on-conflict [:did]
+                       (do-nothing))
+                     (returning :*)))))))
+
 (deftest test-upsert-on-conflict-do-update-where
   (with-backends [db]
     (with-test-table db :distributors
@@ -1120,6 +1138,20 @@
              [{:did 8
                :dname "Anvil Distribution (formerly Anvil Distribution)"
                :zipcode "4567"
+               :is-active nil}])))))
+
+(deftest test-upsert-on-conflict-do-update-returning
+  (with-backends [db]
+    (with-test-table db :distributors
+      (is (= @(insert db (as :distributors :d) [:did :dname]
+                (values [{:did 8 :dname "Anvil Distribution"}])
+                (on-conflict [:did]
+                  (do-update {:dname '(:|| :EXCLUDED.dname " (formerly " :d.dname ")")})
+                  (where '(:<> :d.zipcode "21201")))
+                (returning :*))
+             [{:did 8,
+               :dname "Anvil Distribution (formerly Anvil Distribution)",
+               :zipcode "4567",
                :is-active nil}])))))
 
 (deftest test-upsert-on-conflict-where-do-nothing
