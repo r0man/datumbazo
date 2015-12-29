@@ -1026,6 +1026,16 @@
              (select db [(as '(generate_series 2 3) :x)]))
            [{:x 2}]))))
 
+(deftest test-select-array
+  (with-backends [db]
+    (is (= @(select db [[1 2]])
+           [{:array [1 2]}]))))
+
+(deftest test-select-regconfig
+  (with-backends [db]
+    (is (= @(select db [(as '(cast "english" :regconfig) :x)])
+           [{:x "english"}]))))
+
 (deftest test-with-transaction
   (with-backends [db {:rollback? false}]
     @(create-table db :test-with-transaction

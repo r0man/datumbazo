@@ -2,6 +2,7 @@
   (:require [jdbc.core :as jdbc]
             [jdbc.proto :as proto]
             [datumbazo.driver.core :refer :all]
+            [datumbazo.io :as io]
             [sqlingvo.compiler :refer [compile-stmt]])
   (:import sqlingvo.db.Database))
 
@@ -45,3 +46,63 @@
 
 (defmethod open-db 'jdbc.core [db]
   (assoc db :connection (jdbc/connection (into {} db))))
+
+(extend-protocol proto/ISQLResultSetReadColumn
+
+  org.postgresql.jdbc2.AbstractJdbc2Array
+  (from-sql-type [val conn metadata index]
+    (io/decode-array val))
+
+  org.postgresql.util.PGobject
+  (from-sql-type [val conn metadata index]
+    (io/decode-pgobject val))
+
+  org.postgis.PGgeometry
+  (from-sql-type [val conn metadata index]
+    (io/decode-pggeometry val))
+
+  java.sql.Date
+  (from-sql-type [val conn metadata index]
+    (io/decode-date val))
+
+  java.sql.Timestamp
+  (from-sql-type [val conn metadata index]
+    (io/decode-date val)))
+
+(extend-protocol proto/ISQLType
+
+  java.util.Date
+  (as-sql-type [date conn]
+    (io/encode-timestamp date))
+
+  org.joda.time.DateTime
+  (as-sql-type [date-time conn]
+    (io/encode-timestamp date-time))
+
+  org.postgis.LineString
+  (as-sql-type [geometry conn]
+    (io/encode-pggeometry geometry))
+
+  org.postgis.LinearRing
+  (as-sql-type [geometry conn]
+    (io/encode-pggeometry geometry))
+
+  org.postgis.MultiLineString
+  (as-sql-type [geometry conn]
+    (io/encode-pggeometry geometry))
+
+  org.postgis.MultiPoint
+  (as-sql-type [geometry conn]
+    (io/encode-pggeometry geometry))
+
+  org.postgis.MultiPolygon
+  (as-sql-type [geometry conn]
+    (io/encode-pggeometry geometry))
+
+  org.postgis.Point
+  (as-sql-type [geometry conn]
+    (io/encode-pggeometry geometry))
+
+  org.postgis.Polygon
+  (as-sql-type [geometry conn]
+    (io/encode-pggeometry geometry)))

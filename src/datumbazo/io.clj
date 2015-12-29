@@ -24,6 +24,16 @@
 
 ;; ENCODE
 
+(defn encode-pggeometry
+  "Encode a PGgeometry column."
+  [x]
+  (PGgeometry. x))
+
+(defn encode-timestamp
+  "Encode a timestamp column."
+  [x]
+  (to-timestamp x))
+
 (defmulti encode-column
   (fn [column value] (:type column)))
 
@@ -88,6 +98,21 @@
 
 ;; DECODE
 
+(defn decode-array
+  "Decode an array column."
+  [x]
+  (vec (.getArray x)))
+
+(defn decode-pggeometry
+  "Decode a PGgeometry column."
+  [x]
+  (.getGeometry x))
+
+(defn decode-date
+  "Decode a date column."
+  [x]
+  (to-date x))
+
 (defmulti decode-pgobject
   (fn [pgobject] (keyword (.getType pgobject))))
 
@@ -97,6 +122,9 @@
 (defmethod decode-pgobject :json [pgobject]
   (if-let [value (.getValue pgobject)]
     (json/read-str value :key-fn keyword)))
+
+(defmethod decode-pgobject :regconfig [pgobject]
+  (.getValue pgobject))
 
 (defmethod decode-pgobject :default [pgobject]
   pgobject)
@@ -179,63 +207,3 @@
   "To read an instant as an DateTime, bind *data-readers* to a map
   with this var as the value for the 'inst key."
   (partial i/parse-timestamp (i/validated construct-date-time)))
-
-(extend-protocol jdbc/IResultSetReadColumn
-
-  org.postgresql.jdbc2.AbstractJdbc2Array
-  (result-set-read-column [val rsmeta idx]
-    (vec (.getArray val)))
-
-  org.postgresql.util.PGobject
-  (result-set-read-column [val rsmeta idx]
-    (decode-pgobject val))
-
-  org.postgis.PGgeometry
-  (result-set-read-column [val rsmeta idx]
-    (.getGeometry val))
-
-  java.sql.Date
-  (result-set-read-column [val rsmeta idx]
-    (to-date val))
-
-  java.sql.Timestamp
-  (result-set-read-column [val rsmeta idx]
-    (to-date val)))
-
-(extend-protocol jdbc/ISQLValue
-
-  java.util.Date
-  (sql-value [date]
-    (to-timestamp date))
-
-  org.joda.time.DateTime
-  (sql-value [date-time]
-    (to-timestamp date-time))
-
-  org.postgis.LineString
-  (sql-value [geometry]
-    (PGgeometry. geometry))
-
-  org.postgis.LinearRing
-  (sql-value [geometry]
-    (PGgeometry. geometry))
-
-  org.postgis.MultiLineString
-  (sql-value [geometry]
-    (PGgeometry. geometry))
-
-  org.postgis.MultiPoint
-  (sql-value [geometry]
-    (PGgeometry. geometry))
-
-  org.postgis.MultiPolygon
-  (sql-value [geometry]
-    (PGgeometry. geometry))
-
-  org.postgis.Point
-  (sql-value [geometry]
-    (PGgeometry. geometry))
-
-  org.postgis.Polygon
-  (sql-value [geometry]
-    (PGgeometry. geometry)))
