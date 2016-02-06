@@ -41,7 +41,7 @@
 
 (extend-protocol jdbc/IResultSetReadColumn
 
-  org.postgresql.jdbc2.AbstractJdbc2Array
+  org.postgresql.jdbc.PgArray
   (result-set-read-column [val rsmeta idx]
     (io/decode-array val))
 

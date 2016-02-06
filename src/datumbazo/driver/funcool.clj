@@ -49,7 +49,7 @@
 
 (extend-protocol proto/ISQLResultSetReadColumn
 
-  org.postgresql.jdbc2.AbstractJdbc2Array
+  org.postgresql.jdbc.PgArray
   (from-sql-type [val conn metadata index]
     (io/decode-array val))
 

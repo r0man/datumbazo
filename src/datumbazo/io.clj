@@ -150,7 +150,7 @@
 (defmethod decode-column java.sql.Timestamp [value]
   (decode-time value))
 
-(defmethod decode-column org.postgresql.jdbc2.AbstractJdbc2Array [array]
+(defmethod decode-column org.postgresql.jdbc.PgArray [array]
   (map decode-column (.getArray array)))
 
 (defmethod decode-column :default [value]
