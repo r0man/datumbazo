@@ -9,7 +9,7 @@
                  [com.palletops/stevedore "0.8.0-beta.7"]
                  [com.stuartsierra/component "0.3.1"]
                  [commandline-clj "0.1.7"]
-                 [geo-clj "0.4.1"]
+                 [geo-clj "0.4.2"]
                  [inflections "0.10.0"]
                  [org.clojure/clojure "1.7.0"]
                  [org.clojure/data.json "0.2.6"]
