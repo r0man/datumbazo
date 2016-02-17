@@ -17,9 +17,9 @@ Database Kung Fu in Clojure.
 * Usage
 ** Imports
 
-   Datumbazo shadows some Clojure core functions. If you want to use
-   or refer to all symbols in the =datumbazo.core= namespace, you need
-   to exclude them.
+   The =datumbazo.core= namespace shadows some Clojure core
+   functions. If you want to use or refer to all symbols from that
+   namespace you need to exclude them.
 
    #+BEGIN_SRC clojure :exports code :results silent
   (refer-clojure :exclude '[distinct group-by update])
@@ -28,13 +28,17 @@ Database Kung Fu in Clojure.
 
 ** Database component
 
-   Make a new a database [[https://github.com/stuartsierra/component][component]].
+   You can make a new database [[https://github.com/stuartsierra/component][component]] from an URL with the =new-db=
+   function..
 
    #+BEGIN_SRC clojure :exports both :results silent
      (def db-spec (new-db "postgresql://tiger:scotch@localhost/datumbazo"))
    #+END_SRC
 
-   Open a connection to the database.
+   A database component can be started and stopped with the =start=
+   and =stop= functions from the [[https://github.com/stuartsierra/component][component]] library. This opens a
+   connection to the database and binds the updated component to the
+   =db= symbol.
 
    #+BEGIN_SRC clojure :exports both :results silent
      (require '[com.stuartsierra.component :as component])
@@ -54,7 +58,7 @@ Database Kung Fu in Clojure.
    #+RESULTS:
    : ({:?column? 1, :?column?_2 2, :?column?_3 3})
 
-   Call functions in an expression.
+   Select the result of a function call.
 
    #+BEGIN_SRC clojure :exports both :results verbatim
      @(select db ['(- (now) (cast "1 day" :interval))])
@@ -63,7 +67,7 @@ Database Kung Fu in Clojure.
    #+RESULTS:
    : ({:?column? #inst "2016-02-16T20:41:17.040-00:00"})
 
-   Query the information schema.
+   Select columns from the =information_schema.tables= table.
 
    #+BEGIN_SRC clojure :exports both :results verbatim
      @(select db [:table_catalog :table_schema :table_name]
@@ -76,7 +80,7 @@ Database Kung Fu in Clojure.
 
 ** Create table
 
-   Create a countries table with `name` and `code` columns.
+   Create a countries table with =name= and =code= columns.
 
    #+BEGIN_SRC clojure :exports both :results verbatim
      @(create-table db :countries
@@ -104,7 +108,8 @@ Database Kung Fu in Clojure.
 
 ** Order by
 
-   Select all countries ordered by name, in ascending order.
+   Select all countries ordered by the =name= column in ascending
+   order.
 
    #+BEGIN_SRC clojure :exports both :results verbatim
      @(select db [:*]
@@ -117,7 +122,8 @@ Database Kung Fu in Clojure.
 
 ** Where clauses
 
-   Select the country id and code by name.
+   Select the =id= and =code= columns of the =countries= table for all
+   rows whose =name= columns is equal to =Spain=.
 
    #+BEGIN_SRC clojure :exports both :results verbatim
      @(select db [:id :code]
