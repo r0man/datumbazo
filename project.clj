@@ -25,6 +25,7 @@
                                   [com.jolbox/bonecp "0.8.0.RELEASE"]
                                   [funcool/clojure.jdbc "0.6.1"]
                                   [validation-clj "0.5.6"]]
+                   :repl-options {:init-ns user}
                    :resource-paths ["test-resources"]}}
   :aliases {"test-ancient" ["test"]}
   :main ^{:skip-aot true} datumbazo.fixtures)
