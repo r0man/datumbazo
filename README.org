@@ -36,9 +36,9 @@ Database Kung Fu in Clojure.
    #+END_SRC
 
    A database component can be started and stopped with the =start=
-   and =stop= functions from the [[https://github.com/stuartsierra/component][component]] library. This opens a
-   connection to the database and binds the updated component to the
-   =db= symbol.
+   and =stop= functions from the [[https://github.com/stuartsierra/component][component]] library. The following code
+   opens a connection to the database and binds the updated component
+   to the =db= symbol.
 
    #+BEGIN_SRC clojure :exports both :results silent
      (require '[com.stuartsierra.component :as component])
