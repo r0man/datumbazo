@@ -2,20 +2,32 @@
 
 set -e
 
-DATABASE_NAME="datumbazo"
-USER=tiger
+export PGDATABASE="datumbazo"
+export PGHOST="localhost"
 export PGPASSWORD="scotch"
+export PGPORT="5432"
+export PGUSER="tiger"
 
-if [ ! -z "$1" ]; then DATABASE_NAME="$1"; fi
+# export PGDATABASE="datumbazo"
+# export PGHOST="localhost"
+# export PGPASSWORD="scotch"
+# export PGPORT="32778"
+# export PGUSER="postgres"
 
-dropdb -U $USER $DATABASE_NAME || true
-createdb -U $USER -O $USER --template template0 --encoding "UTF8" $DATABASE_NAME
-psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-postgis-extension.sql
-psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-citext-extension.sql
-psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-continents-table.sql
-psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-countries-table.sql
-psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-twitter-schema.sql
-psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-twitter-users-table.sql
-psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-twitter-tweets-table.sql
-psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-twitter-tweets-users.sql
-lein run "postgresql://tiger:scotch@localhost/datumbazo" test-resources/db/test-db/fixtures load
+if [ ! -z "$1" ]; then PGDATABASE="$1"; fi
+
+export PGURL="postgresql://$PGUSER:$PGPASSWORD@$PGHOST:$PGPORT/$PGDATABASE"
+echo $PGURL
+
+dropdb $PGDATABASE || true
+createdb --template template0 --encoding "UTF8" $PGDATABASE
+psql < test-resources/db/test-db/migrations/deploy/create-postgis-extension.sql
+psql < test-resources/db/test-db/migrations/deploy/create-citext-extension.sql
+psql < test-resources/db/test-db/migrations/deploy/create-continents-table.sql
+psql < test-resources/db/test-db/migrations/deploy/create-countries-table.sql
+psql < test-resources/db/test-db/migrations/deploy/create-twitter-schema.sql
+psql < test-resources/db/test-db/migrations/deploy/create-twitter-users-table.sql
+psql < test-resources/db/test-db/migrations/deploy/create-twitter-tweets-table.sql
+psql < test-resources/db/test-db/migrations/deploy/create-twitter-tweets-users.sql
+lein run $PGURL test-resources/db/test-db/fixtures load
+

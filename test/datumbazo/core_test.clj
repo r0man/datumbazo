@@ -1074,6 +1074,119 @@
                  :salary 5200
                  :enroll-date #inst "2007-08-01T00:00:00.000-00:00"}]))))))
 
+(deftest test-upsert-on-conflict-do-update
+  (with-backends [db]
+    (with-test-table db :distributors
+      (is (= @(insert db :distributors [:did :dname]
+                (values [{:did 5 :dname "Gizmo Transglobal"}
+                         {:did 6 :dname "Associated Computing, Inc"}])
+                (on-conflict [:did]
+                  (do-update {:dname :EXCLUDED.dname})))
+             [{:count 2}]))
+      (is (= @(select db [:*]
+                (from :distributors)
+                (where '(in :did (5 6)))
+                (order-by :did))
+             [{:did 5
+               :dname "Gizmo Transglobal"
+               :zipcode "1235"
+               :is-active nil}
+              {:did 6
+               :dname "Associated Computing, Inc"
+               :zipcode "2356"
+               :is-active nil}])))))
+
+(deftest test-upsert-on-conflict-do-nothing
+  (with-backends [db]
+    (with-test-table db :distributors
+      (is (= @(insert db :distributors [:did :dname]
+                (values [{:did 7 :dname "Redline GmbH"}])
+                (on-conflict [:did]
+                  (do-nothing)))
+             [{:count 0}])))))
+
+(deftest test-upsert-on-conflict-do-nothing-returning
+  (with-backends [db]
+    (with-test-table db :distributors
+      (is (= @(insert db :distributors [:did :dname]
+                (values [{:did 11 :dname "Upsert GmbH & Co. KG"}])
+                (on-conflict [:did]
+                  (do-nothing))
+                (returning :*))
+             [{:did 11,
+               :dname "Upsert GmbH & Co. KG",
+               :zipcode nil,
+               :is-active nil}]))
+      (is (empty? @(insert db :distributors [:did :dname]
+                     (values [{:did 11 :dname "Upsert GmbH & Co. KG"}])
+                     (on-conflict [:did]
+                       (do-nothing))
+                     (returning :*)))))))
+
+(deftest test-upsert-on-conflict-do-update-where
+  (with-backends [db]
+    (with-test-table db :distributors
+      (is (= @(insert db (as :distributors :d) [:did :dname]
+                (values [{:did 8 :dname "Anvil Distribution"}])
+                (on-conflict [:did]
+                  (do-update {:dname '(:|| :EXCLUDED.dname " (formerly " :d.dname ")")})
+                  (where '(:<> :d.zipcode "21201"))))
+             [{:count 1}]))
+      (is (= @(select db [:*]
+                (from :distributors)
+                (where `(= :did 8)))
+             [{:did 8
+               :dname "Anvil Distribution (formerly Anvil Distribution)"
+               :zipcode "4567"
+               :is-active nil}])))))
+
+(deftest test-upsert-on-conflict-do-update-returning
+  (with-backends [db]
+    (with-test-table db :distributors
+      (is (= @(insert db (as :distributors :d) [:did :dname]
+                (values [{:did 8 :dname "Anvil Distribution"}])
+                (on-conflict [:did]
+                  (do-update {:dname '(:|| :EXCLUDED.dname " (formerly " :d.dname ")")})
+                  (where '(:<> :d.zipcode "21201")))
+                (returning :*))
+             [{:did 8,
+               :dname "Anvil Distribution (formerly Anvil Distribution)",
+               :zipcode "4567",
+               :is-active nil}])))))
+
+(deftest test-upsert-on-conflict-where-do-nothing
+  (with-backends [db]
+    (with-test-table db :distributors
+      (is (= @(insert db :distributors [:did :dname]
+                (values [{:did 10 :dname "Conrad International"}])
+                (on-conflict [:did]
+                  (where '(= :is-active true))
+                  (do-nothing)))
+             [{:count 0}]))
+      (is (= @(select db [:*]
+                (from :distributors)
+                (where `(= :did 10)))
+             [{:did 10
+               :dname "Conrad International"
+               :zipcode "6789"
+               :is-active nil}])))))
+
+(deftest test-upsert-on-conflict-on-constraint-do-nothing
+  (with-backends [db]
+    (with-test-table db :distributors
+      (is (= @(insert db :distributors [:did :dname]
+                (values [{:did 9 :dname "Antwerp Design"}])
+                (on-conflict-on-constraint :distributors_pkey
+                  (do-nothing)))
+             [{:count 0}]))
+      (is (= @(select db [:*]
+                (from :distributors)
+                (where `(= :did 9)))
+             [{:did 9
+               :dname "Antwerp Design"
+               :zipcode "5678"
+               :is-active nil}])))))
+
 (comment
 
   (def my-db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))
