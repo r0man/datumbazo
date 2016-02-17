@@ -1,11 +1,10 @@
 (ns datumbazo.meta
-  (:import java.sql.DatabaseMetaData)
   (:refer-clojure :exclude [resultset-seq])
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.string :refer [lower-case]]
+  (:require [clojure.string :refer [lower-case]]
             [datumbazo.connection :refer [with-connection]]
-            [inflections.core :refer [hyphenate hyphenate-keys underscore]]
-            [sqlingvo.util :refer [sql-name]]))
+            [inflections.core :refer [hyphenate hyphenate-keys]]
+            [sqlingvo.util :refer [sql-name]])
+  (:import java.sql.DatabaseMetaData))
 
 (defn- hyphenate-keyword [k]
   (if k (keyword (hyphenate (name k)))))
@@ -25,9 +24,9 @@
   (with-metadata [metadata db]
     (->> (.getBestRowIdentifier
           metadata
-          (if catalog (sql-name db catalog))
-          (if schema (sql-name db schema))
-          (if table (sql-name db table))
+          (sql-name db catalog)
+          (sql-name db schema)
+          (sql-name db table)
           (condp = scope
             :temporary DatabaseMetaData/bestRowTemporary
             :transaction DatabaseMetaData/bestRowTransaction
@@ -36,8 +35,8 @@
           (not (nil? nullable)))
          (resultset-seq)
          (map #(assoc %1
-                 :name (hyphenate-keyword (:column-name %1))
-                 :type (hyphenate-keyword (lower-case (:type-name %1))))))))
+                      :name (hyphenate-keyword (:column-name %1))
+                      :type (hyphenate-keyword (lower-case (:type-name %1))))))))
 
 (defn catalogs
   "Retrieves the catalog names available in this database."
@@ -54,17 +53,17 @@
   (with-metadata [metadata db]
     (->> (.getColumns
           metadata
-          (if catalog (sql-name db catalog))
-          (if schema (sql-name db schema))
-          (if table (sql-name db table))
-          (if name (sql-name db name)))
+          (sql-name db catalog)
+          (sql-name db schema)
+          (sql-name db table)
+          (sql-name db name))
          (resultset-seq)
          (map #(assoc %1
-                 :catalog (hyphenate-keyword (:table-cat %1))
-                 :schema (hyphenate-keyword (:table-schem %1))
-                 :table (hyphenate-keyword (:table-name %1))
-                 :name (hyphenate-keyword (:column-name %1))
-                 :type (hyphenate-keyword (lower-case (:type-name %1))))))))
+                      :catalog (hyphenate-keyword (:table-cat %1))
+                      :schema (hyphenate-keyword (:table-schem %1))
+                      :table (hyphenate-keyword (:table-name %1))
+                      :name (hyphenate-keyword (:column-name %1))
+                      :type (hyphenate-keyword (lower-case (:type-name %1))))))))
 
 (defn indexes
   "Retrieves a description of the given table's primary key columns."
@@ -72,16 +71,16 @@
   (with-metadata [metadata db]
     (->> (.getIndexInfo
           metadata
-          (if catalog (sql-name db catalog))
-          (if schema (sql-name db schema))
-          (if table (sql-name db table))
+          (sql-name db catalog)
+          (sql-name db schema)
+          (sql-name db table)
           (= true unique)
           (= true approximate))
          (resultset-seq)
          (map #(assoc %1
-                 :catalog (hyphenate-keyword (:table-cat %1))
-                 :schema (hyphenate-keyword (:table-schem %1))
-                 :table (hyphenate-keyword (:table-name %1)))))))
+                      :catalog (hyphenate-keyword (:table-cat %1))
+                      :schema (hyphenate-keyword (:table-schem %1))
+                      :table (hyphenate-keyword (:table-name %1)))))))
 
 (defn primary-keys
   "Retrieves a description of the given table's primary key columns."
@@ -89,15 +88,15 @@
   (with-metadata [metadata db]
     (->> (.getPrimaryKeys
           metadata
-          (if catalog (sql-name db catalog))
-          (if schema (sql-name db schema))
-          (if table (sql-name db table)))
+          (sql-name db catalog)
+          (sql-name db schema)
+          (sql-name db table))
          (resultset-seq)
          (map #(assoc %1
-                 :catalog (hyphenate-keyword (:table-cat %1))
-                 :schema (hyphenate-keyword (:table-schem %1))
-                 :table (hyphenate-keyword (:table-name %1))
-                 :name (hyphenate-keyword (:column-name %1)))))))
+                      :catalog (hyphenate-keyword (:table-cat %1))
+                      :schema (hyphenate-keyword (:table-schem %1))
+                      :table (hyphenate-keyword (:table-name %1))
+                      :name (hyphenate-keyword (:column-name %1)))))))
 
 (defn unique-columns [db & {:keys [catalog schema table name entities]}]
   (let [indexes (indexes db :catalog catalog :schema schema :table table :name name :unique true :entities entities)
@@ -120,16 +119,16 @@
   (with-metadata [metadata db]
     (->> (.getTables
           metadata
-          (if catalog (sql-name db catalog))
-          (if schema (sql-name db schema))
-          (if name (sql-name db name))
+          (sql-name db catalog)
+          (sql-name db schema)
+          (sql-name db name)
           (into-array String (or types ["TABLE"])))
          (resultset-seq)
          (map #(assoc %1
-                 :catalog (hyphenate-keyword (:table-cat %1))
-                 :schema (hyphenate-keyword (:table-schem %1))
-                 :name (hyphenate-keyword (:table-name %1))
-                 :type (hyphenate-keyword (lower-case (:table-type %1))))))))
+                      :catalog (hyphenate-keyword (:table-cat %1))
+                      :schema (hyphenate-keyword (:table-schem %1))
+                      :name (hyphenate-keyword (:table-name %1))
+                      :type (hyphenate-keyword (lower-case (:table-type %1))))))))
 
 (defn views
   "Retrieves a description of the database views matching `catalog`,
