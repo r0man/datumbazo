@@ -5,6 +5,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [upper-case]]
             [clojure.java.io :refer [file]]
+            [inflections.core :refer [hyphenate underscore]]
             [validation.core :refer :all]
             [datumbazo.test :refer :all]
             [datumbazo.validation :refer [new-record? uniqueness-of]]
@@ -1047,6 +1048,31 @@
          (catch Exception e))
     (is (empty? @(select db [:*] (from :test-with-transaction))))
     @(drop-table db [:test-with-transaction])))
+
+(deftest test-sql-name
+  (with-backends [db]
+    (let [db (assoc db :sql-name underscore)]
+      (with-test-table db :empsalary
+        (is (= @(select db [:*]
+                  (from :empsalary)
+                  (where '(= :empno 10)))
+               [{:depname "develop"
+                 :empno 10
+                 :salary 5200
+                 :enroll_date #inst "2007-08-01T00:00:00.000-00:00"}]))))))
+
+(deftest test-sql-name-and-keyword
+  (with-backends [db]
+    (let [db (assoc db :sql-name underscore)
+          db (assoc db :sql-keyword hyphenate)]
+      (with-test-table db :empsalary
+        (is (= @(select db [:*]
+                  (from :empsalary)
+                  (where '(= :empno 10)))
+               [{:depname "develop"
+                 :empno 10
+                 :salary 5200
+                 :enroll-date #inst "2007-08-01T00:00:00.000-00:00"}]))))))
 
 (comment
 
