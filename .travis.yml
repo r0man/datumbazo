@@ -1,5 +1,8 @@
 language: clojure
+jdk:
+  - oraclejdk8
 addons:
+  mariadb: "10.1"
   postgresql: "9.4"
 before_install: ./travis/before_install.sh
 before_script: ./travis/before_script.sh

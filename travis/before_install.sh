@@ -1,23 +1,13 @@
 #!/usr/bin/env bash
 set -x
-# sudo /etc/init.d/postgresql stop
-# sudo cp /etc/postgresql/9.2/main/pg_hba.conf ./
-# sudo apt-get remove postgresql postgresql-9.1 postgresql-9.2 -qq --purge
-# source /etc/lsb-release
-# # echo "deb http://apt.postgresql.org/pub/repos/apt/ $DISTRIB_CODENAME-pgdg main" > pgdg.list
-# # sudo mv pgdg.list /etc/apt/sources.list.d/
-# # wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | sudo apt-key add -
-# sudo apt-get update
-# sudo apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" install postgresql-9.3 postgresql-contrib-9.3 -qq
-# ls -l /etc/init.d/postgresql*
-# sudo /etc/init.d/postgresql stop
-# sudo cp ./pg_hba.conf /etc/postgresql/9.3/main
-# sudo /etc/init.d/postgresql start
-psql -c 'create database test;' -U postgres
-sudo apt-add-repository -y ppa:ubuntugis/ubuntugis-unstable
-sudo apt-get update
-sudo apt-get install -qq libgeos-dev libproj-dev postgresql-9.3-postgis
-psql -d test -c 'CREATE EXTENSION postgis;' -U postgres
-psql --version
-# psql -d test -c 'SELECT version();' -U postgres
-psql -d test -c 'SELECT PostGIS_version();' -U postgres
+PG_VER=9.5
+sudo service postgresql stop 
+sudo apt-get -y -qq --purge remove postgresql libpq-dev libpq5 postgresql-client-common postgresql-common 
+sudo rm -rf /var/lib/postgresql 
+sudo apt-get update -qq
+sudo apt-cache search postgis 
+sudo apt-get -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::="--force-confnew" install postgresql-${PG_VER} postgresql-contrib-${PG_VER} postgresql-server-dev-${PG_VER} postgresql-${PG_VER}-postgis-2.2 postgresql-${PG_VER}-postgis-scripts postgis
+echo "local all all trust" | sudo tee /etc/postgresql/${PG_VER}/main/pg_hba.conf 
+echo "host all all 127.0.0.1/32 trust" | sudo tee -a /etc/postgresql/${PG_VER}/main/pg_hba.conf 
+echo "host all all ::1/128 trust" | sudo tee -a /etc/postgresql/${PG_VER}/main/pg_hba.conf 
+sudo service postgresql restart 

@@ -888,30 +888,30 @@
                             (from :empsalary))
                           :ss))
                 (where '(< pos 3)))
-             [{:enroll-date #inst "2006-09-30T22:00:00.000-00:00"
-               :salary 6000
+             [{:depname "develop"
                :empno 8
-               :depname "develop"}
-              {:enroll-date #inst "2007-07-31T22:00:00.000-00:00"
-               :salary 5200
+               :salary 6000
+               :enroll-date #inst "2006-10-01T00:00:00.000-00:00"}
+              {:depname "develop"
                :empno 10
-               :depname "develop"}
-              {:enroll-date #inst "2006-12-22T23:00:00.000-00:00"
-               :salary 3900
+               :salary 5200
+               :enroll-date #inst "2007-08-01T00:00:00.000-00:00"}
+              {:depname "personnel"
                :empno 2
-               :depname "personnel"}
-              {:enroll-date #inst "2007-12-09T23:00:00.000-00:00"
-               :salary 3500
+               :salary 3900
+               :enroll-date #inst "2006-12-23T00:00:00.000-00:00"}
+              {:depname "personnel"
                :empno 5
-               :depname "personnel"}
-              {:enroll-date #inst "2006-09-30T22:00:00.000-00:00"
-               :salary 5000
+               :salary 3500
+               :enroll-date #inst "2007-12-10T00:00:00.000-00:00"}
+              {:depname "sales"
                :empno 1
-               :depname "sales"}
-              {:enroll-date #inst "2007-07-31T22:00:00.000-00:00"
-               :salary 4800
+               :salary 5000
+               :enroll-date #inst "2006-10-01T00:00:00.000-00:00"}
+              {:depname "sales"
                :empno 3
-               :depname "sales"}])))))
+               :salary 4800
+               :enroll-date #inst "2007-08-01T00:00:00.000-00:00"}])))))
 
 (deftest test-window-alias
   (with-test-db [db]
