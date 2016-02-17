@@ -35,7 +35,7 @@
     (column :depname :varchar)
     (column :empno :bigint)
     (column :salary :int)
-    (column :enroll-date :date)))
+    (column :enroll-date :timestamp-with-time-zone)))
 
 (defmulti insert-test-table
   (fn [db table] table))
@@ -43,16 +43,16 @@
 (defmethod insert-test-table :empsalary [db table]
   (insert db table []
     (values
-     [{:depname "develop" :empno 10 :salary 5200 :enroll-date #inst "2007-08-01"}
-      {:depname "sales" :empno 1 :salary 5000 :enroll-date #inst "2006-10-01"}
-      {:depname "personnel" :empno 5 :salary 3500 :enroll-date #inst "2007-12-10"}
-      {:depname "sales" :empno 4 :salary 4800 :enroll-date #inst "2007-08-08"}
-      {:depname "personnel" :empno 2 :salary 3900 :enroll-date #inst "2006-12-23"}
-      {:depname "develop" :empno 7 :salary 4200 :enroll-date #inst "2008-01-01"}
-      {:depname "develop" :empno 9 :salary 4500 :enroll-date #inst "2008-01-01"}
-      {:depname "sales" :empno 3 :salary 4800 :enroll-date #inst "2007-08-01"}
-      {:depname "develop" :empno 8 :salary 6000 :enroll-date #inst "2006-10-01"}
-      {:depname "develop" :empno 11 :salary 5200 :enroll-date #inst "2007-08-15"}])))
+     [{:depname "develop" :empno 10 :salary 5200 :enroll-date #inst "2007-08-01T00:00:00Z"}
+      {:depname "sales" :empno 1 :salary 5000 :enroll-date #inst "2006-10-01T00:00:00Z"}
+      {:depname "personnel" :empno 5 :salary 3500 :enroll-date #inst "2007-12-10T00:00:00Z"}
+      {:depname "sales" :empno 4 :salary 4800 :enroll-date #inst "2007-08-08T00:00:00Z"}
+      {:depname "personnel" :empno 2 :salary 3900 :enroll-date #inst "2006-12-23T00:00:00Z"}
+      {:depname "develop" :empno 7 :salary 4200 :enroll-date #inst "2008-01-01T00:00:00Z"}
+      {:depname "develop" :empno 9 :salary 4500 :enroll-date #inst "2008-01-01T00:00:00Z"}
+      {:depname "sales" :empno 3 :salary 4800 :enroll-date #inst "2007-08-01T00:00:00Z"}
+      {:depname "develop" :empno 8 :salary 6000 :enroll-date #inst "2006-10-01T00:00:00Z"}
+      {:depname "develop" :empno 11 :salary 5200 :enroll-date #inst "2007-08-15T00:00:00Z"}])))
 
 (defmacro with-backends [[db-sym opts] & body]
   `(doseq [backend# ['clojure.java.jdbc 'jdbc.core]]
