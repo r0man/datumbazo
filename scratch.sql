@@ -1,3 +1,6 @@
+select "facebook-url" from users;
+
+
 
 select '[1,2,3]'::json -> 2;
 
