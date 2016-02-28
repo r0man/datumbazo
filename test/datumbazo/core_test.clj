@@ -1187,6 +1187,12 @@
                :zipcode "5678"
                :is-active nil}])))))
 
+(deftest test-explain
+  (with-backends [db]
+    (is (= @(explain db (select db [1]))
+           [{(keyword "query plan")
+             "Result  (cost=0.00..0.01 rows=1 width=0)"}]))))
+
 (comment
 
   (def my-db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))

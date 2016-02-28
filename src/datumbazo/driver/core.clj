@@ -32,6 +32,8 @@
         (execute db sql))
       :except
       (fetch db sql)
+      :explain
+      (fetch db sql)
       :insert
       (if (:returning ast)
         (fetch db sql)
