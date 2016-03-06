@@ -116,18 +116,12 @@
 (defmulti decode-pgobject
   (fn [pgobject] (keyword (.getType pgobject))))
 
-(defmethod decode-pgobject :citext [pgobject]
-  (.getValue pgobject))
-
 (defmethod decode-pgobject :json [pgobject]
   (if-let [value (.getValue pgobject)]
     (json/read-str value :key-fn keyword)))
 
-(defmethod decode-pgobject :regconfig [pgobject]
-  (.getValue pgobject))
-
 (defmethod decode-pgobject :default [pgobject]
-  pgobject)
+  (.getValue pgobject))
 
 (defmulti decode-column class)
 
