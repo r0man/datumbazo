@@ -8,7 +8,8 @@
             [pallet.stevedore :refer [checked-script with-script-language]]
             [pallet.stevedore.bash :refer :all]
             [slingshot.slingshot :refer [throw+]]
-            [sqlingvo.util :refer [sql-name]]))
+            [sqlingvo.util :refer [sql-name]]
+            [clojure.tools.logging :as log]))
 
 (defn basename
   "Returns the basename of `s`."
@@ -48,7 +49,10 @@
   script fails."
   [name & script]
   `(with-script-language :pallet.stevedore.bash/bash
-     (exec-checked-script* (checked-script ~name ~@script))))
+     (let [script# (checked-script ~name ~@script)]
+       (log/debug "Executing script:")
+       (log/debug script#)
+       (exec-checked-script* script#))))
 
 (defn psql
   "Run the psql command."

@@ -60,11 +60,12 @@
   (with-test-db [db]
     (with-redefs
       [bash (fn [script]
-              (is (= (str "echo 'Running raster2pgsql...';\n{\n    # shell.clj:"
-                          "104\nraster2pgsql -c -t auto INPUT weather.nww3-dirp"
-                          "wsfc-2013-02-10 > OUTPUT\n } || { echo '#> Running r"
-                          "aster2pgsql : FAIL'; exit 1;} >&2 \necho '#> Running"
-                          " raster2pgsql : SUCCESS'\n") script))
+              (is (= (str "echo 'Running raster2pgsql...';\n{\n    # "
+                          "shell.clj:108\nraster2pgsql -c -t auto INPUT "
+                          "weather.nww3-dirpwsfc-2013-02-10 > OUTPUT\n } "
+                          "|| { echo '#> Running raster2pgsql : FAIL'; "
+                          "exit 1;} >&2 \necho '#> Running raster2pgsql : "
+                          "SUCCESS'\n") script))
               {:exit 0})]
       (raster2pgsql db :weather.nww3-dirpwsfc-2013-02-10 "INPUT" "OUTPUT"))))
 
