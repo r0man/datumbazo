@@ -67,7 +67,7 @@
   (let [stmts (slurp-sql "test-resources/stmts-simple.sql")]
     (is (= ["DROP TABLE x" "DROP TABLE y"] stmts)))
   (let [stmts (slurp-sql "test-resources/stmts-raster.sql")]
-    (is (= 2 (count stmts)))))
+    (is (= 3 (count stmts)))))
 
 (deftest test-exec-sql-file
   (with-test-db [db]

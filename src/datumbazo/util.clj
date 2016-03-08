@@ -122,7 +122,7 @@
          (doall))))
 
 (defn exec-sql-file
-  "Slurp `file` and execute each"
+  "Slurp `file` and execute each line as a statement."
   [db file]
   (with-open [reader (reader file)]
     (doseq [statement (line-seq reader)
