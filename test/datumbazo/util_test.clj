@@ -73,7 +73,7 @@
   (with-test-db [db]
     @(drop-table db [:akw-dirpwsfc-2013-02-10t06]
        (if-exists true))
-    (exec-sql-file db "test-resources/stmts-raster.sql")))
+    (is (exec-sql-file db "test-resources/stmts-raster.sql"))))
 
 (deftest test-exec-sql-file-select
   (with-test-db [db]

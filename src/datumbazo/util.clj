@@ -3,8 +3,10 @@
   (:import java.io.File)
   (:require [clojure.java.io :refer [file reader]]
             [clojure.java.jdbc :as jdbc]
+            [datumbazo.driver.core :as driver]
             [clojure.string :refer [blank? split replace trim]]
-            [no.en.core :refer [parse-integer]]))
+            [no.en.core :refer [parse-integer]]
+            [clojure.string :as str]))
 
 (defn absolute-path
   "Returns the absolute path of `path."
@@ -121,11 +123,22 @@
          (map #(replace %1 #";$" ""))
          (doall))))
 
+(defn- parse-command
+  "Parse the SQL statement `s` and return the type of SQL command as a
+  keyword."
+  [s]
+  (some-> (re-matches #"\s*([^ ]+).*" (str s))
+          (nth 1 nil)
+          (str/lower-case)
+          (keyword)))
+
 (defn exec-sql-file
   "Slurp `file` and execute each line as a statement."
   [db file]
   (with-open [reader (reader file)]
     (doseq [statement (line-seq reader)
             :let [statement (replace statement #";$" "")]]
-      (jdbc/db-do-commands db false  statement))
+      (case (parse-command statement)
+        :select (driver/fetch db [statement])
+        (driver/execute db [statement])))
     file))
