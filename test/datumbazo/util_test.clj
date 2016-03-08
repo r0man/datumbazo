@@ -28,8 +28,7 @@
     (is (every? edn-file? files))))
 
 (deftest test-format-server
-  (are [server expected]
-    (is (= expected (format-server server)))
+  (are [server expected] (= expected (format-server server))
     {:host "example.com"}
     "example.com"
     {:host "example.com" :port 123}
@@ -44,8 +43,7 @@
   (is (= "database" (path-replace "src/database" "src"))))
 
 (deftest test-parse-params
-  (are [params expected]
-    (is (= expected (parse-params params)))
+  (are [params expected] (= expected (parse-params params))
     nil {}
     "" {}
     "a=1" {:a "1"}
@@ -53,13 +51,12 @@
 
 (deftest test-parse-schema
   (are [schema expected]
-    (do (is (= expected (parse-schema schema)))
-        (is (= expected (parse-schema (qualified-name schema)))))
+      (do (is (= expected (parse-schema schema)))
+          (is (= expected (parse-schema (qualified-name schema)))))
     :public {:name :public}))
 
 (deftest test-qualified-name
-  (are [arg expected]
-    (is (= expected (qualified-name arg)))
+  (are [arg expected] (= expected (qualified-name arg))
     nil ""
     "" ""
     "continents" "continents"
@@ -77,3 +74,9 @@
     @(drop-table db [:akw-dirpwsfc-2013-02-10t06]
        (if-exists true))
     (exec-sql-file db "test-resources/stmts-raster.sql")))
+
+(deftest test-exec-sql-file-select
+  (with-test-db [db]
+    (let [file "/tmp/test-exec-sql-file-select.sql"]
+      (spit file "SELECT * from countries;")
+      (is (= (exec-sql-file db file) file)))))

@@ -22,10 +22,10 @@
    (fn [memo key]
      (let [value (get m key)]
        (cond
-        (nil? value) memo
-        (map? value)
-        (assoc memo key (compact-map value))
-        :else (assoc memo key value))))
+         (nil? value) memo
+         (map? value)
+         (assoc memo key (compact-map value))
+         :else (assoc memo key value))))
    {} (keys m)))
 
 (defn edn-file?
@@ -54,9 +54,9 @@
 
 (defn immigrate
   "Create a public var in this namespace for each public var in the
-namespaces named by ns-names. The created vars have the same name, root
-binding, and metadata as the original except that their :ns metadata
-value is this namespace."
+  namespaces named by ns-names. The created vars have the same name, root
+  binding, and metadata as the original except that their :ns metadata
+  value is this namespace."
   [& ns-names]
   (doseq [ns ns-names]
     (require ns)
@@ -121,6 +121,11 @@ value is this namespace."
          (map #(replace %1 #";$" ""))
          (doall))))
 
-(defn exec-sql-file [db file]
-  (doseq [statement (slurp-sql file)]
-    (jdbc/db-do-commands db false statement)))
+(defn exec-sql-file
+  "Slurp `file` and execute each"
+  [db file]
+  (with-open [reader (reader file)]
+    (doseq [statement (line-seq reader)
+            :let [statement (replace statement #";$" "")]]
+      (jdbc/db-do-commands db false  statement))
+    file))
