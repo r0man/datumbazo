@@ -142,3 +142,12 @@
         :select (driver/fetch db [statement])
         (driver/execute db [statement])))
     file))
+
+(defn throw-sql-ex-info
+  "Throw `e` with `sql` and the next exception in `ex-data`."
+  [e sql]
+  (throw (ex-info
+          (.getMessage e)
+          {:next (.getNextException e)
+           :sql sql}
+          (.getCause e))))

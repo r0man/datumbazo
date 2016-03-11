@@ -3,6 +3,7 @@
             [jdbc.proto :as proto]
             [datumbazo.driver.core :refer :all]
             [datumbazo.io :as io]
+            [datumbazo.util :as util]
             [sqlingvo.compiler :refer [compile-stmt]]
             [clojure.string :as str])
   (:import sqlingvo.db.Database))
@@ -19,10 +20,15 @@
 
 (defmethod fetch 'jdbc.core [db sql & [opts]]
   (let [opts (merge {:identifiers (or (:sql-keyword db) str/lower-case)} opts)]
-    (jdbc/fetch (:connection db) sql opts)))
+    (try
+      (jdbc/fetch (:connection db) sql opts)
+      (catch Exception e
+        (util/throw-sql-ex-info e sql)))))
 
 (defmethod execute 'jdbc.core [db sql & [opts]]
-  (row-count (jdbc/execute (:connection db) sql)))
+  (try (row-count (jdbc/execute (:connection db) sql))
+       (catch Exception e
+         (util/throw-sql-ex-info e sql))))
 
 (defmethod open-db 'jdbc.core [db]
   (assoc db :connection (jdbc/connection (into {} db))))

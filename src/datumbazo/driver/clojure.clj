@@ -3,7 +3,8 @@
             [datumbazo.driver.core :refer :all]
             [datumbazo.io :as io]
             [sqlingvo.compiler :refer [compile-stmt]]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [datumbazo.util :as util]))
 
 (defn- assert-connection [db]
   (assert (or (:connection db)
@@ -19,11 +20,17 @@
 (defmethod fetch 'clojure.java.jdbc [db sql & [opts]]
   (assert-connection db)
   (let [opts {:identifiers (or (:sql-keyword db) str/lower-case)}]
-    (apply jdbc/query db sql (apply concat opts))))
+    (try
+      (apply jdbc/query db sql (apply concat opts))
+      (catch Exception e
+        (util/throw-sql-ex-info e sql)))))
 
 (defmethod execute 'clojure.java.jdbc [db sql & [opts]]
   (assert-connection db)
-  (row-count (jdbc/execute! db sql)))
+  (try
+    (row-count (jdbc/execute! db sql))
+    (catch Exception e
+      (util/throw-sql-ex-info e sql))))
 
 (defmethod open-db 'clojure.java.jdbc [db]
   (assoc db :connection (jdbc/get-connection db)))
