@@ -10,7 +10,7 @@
                  [com.stuartsierra/component "0.3.1"]
                  [commandline-clj "0.1.7"]
                  [geo-clj "0.5.0"]
-                 [inflections "0.12.0"]
+                 [inflections "0.12.1"]
                  [org.clojure/clojure "1.8.0"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/java.jdbc "0.4.2"]
