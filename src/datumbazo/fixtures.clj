@@ -144,15 +144,15 @@
   (System/exit 0))
 
 (defn -main [& args]
-  (with-commandline [[db-url directory command] args]
+  (with-commandline [[opts [db-url directory command]] args]
     [[h help "Print this help."]]
-    (when (or help (nil? db-url) (nil? directory))
+    (when (or (:help opts) (nil? db-url) (nil? directory))
       (show-help))
     (with-db [db db-url]
       (let [tables (tables directory)]
         (case (keyword command)
           :delete (delete-fixtures db tables)
-          :dump (dump-fixtures db tables)
+          :dump (dump-fixtures db directory tables)
           :load (load-fixtures db directory)
           (show-help))
         nil))))
