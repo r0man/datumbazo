@@ -23,32 +23,33 @@
 
 (defn eval-db
   "Eval the `stmt` against a database."
-  [{:keys [db] :as ast} & [opts]]
-  (let [sql (sql ast)]
+  [stmt & [opts]]
+  (let [{:keys [db] :as ast} (ast stmt)
+        sql (sql ast)]
     (case (:op ast)
       :delete
       (if (:returning ast)
-        (fetch db sql)
-        (execute db sql))
+        (fetch db sql opts)
+        (execute db sql opts))
       :except
-      (fetch db sql)
+      (fetch db sql opts)
       :explain
-      (fetch db sql)
+      (fetch db sql opts)
       :insert
       (if (:returning ast)
-        (fetch db sql)
-        (execute db sql))
+        (fetch db sql opts)
+        (execute db sql opts))
       :intersect
-      (fetch db sql)
+      (fetch db sql opts)
       :select
-      (fetch db sql)
+      (fetch db sql opts)
       :union
-      (fetch db sql)
+      (fetch db sql opts)
       :update
       (if (:returning ast)
-        (fetch db sql)
-        (execute db sql))
-      (execute db sql))))
+        (fetch db sql opts)
+        (execute db sql opts))
+      (execute db sql opts))))
 
 (defn row-count
   "Normalize into a record, with the count of affected rows."

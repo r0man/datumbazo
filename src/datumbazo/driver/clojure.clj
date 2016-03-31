@@ -19,7 +19,8 @@
 
 (defmethod fetch 'clojure.java.jdbc [db sql & [opts]]
   (assert-connection db)
-  (let [opts {:identifiers (or (:sql-keyword db) str/lower-case)}]
+  (let [identifiers (or (:sql-keyword db) str/lower-case)
+        opts (merge {:identifiers identifiers} opts)]
     (try
       (apply jdbc/query db sql (apply concat opts))
       (catch Exception e
