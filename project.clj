@@ -1,4 +1,4 @@
-(defproject datumbazo "0.8.16-SNAPSHOT"
+(defproject datumbazo "0.9.0-SNAPSHOT"
   :description "Clojure Database Kung-Foo"
   :url "https://github.com/r0man/datumbazo"
   :min-lein-version "2.0.0"
@@ -8,7 +8,7 @@
   :dependencies [[clj-time "0.11.0"]
                  [com.palletops/stevedore "0.8.0-beta.7"]
                  [com.stuartsierra/component "0.3.1"]
-                 [commandline-clj "0.2.0"]
+                 [commandline-clj "0.2.1"]
                  [geo-clj "0.5.0"]
                  [inflections "0.12.1"]
                  [org.clojure/clojure "1.8.0"]

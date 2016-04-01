@@ -1,9 +1,8 @@
 (ns datumbazo.test
   (:refer-clojure :exclude [distinct group-by update])
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.test :refer :all]
-            [datumbazo.driver.core :refer [close-db open-db]]
-            [datumbazo.core :refer :all]))
+  (:require [clojure.test :refer :all]
+            [datumbazo.core :refer :all]
+            [datumbazo.driver.core :as driver]))
 
 (def connections
   {:mysql "mysql://tiger:scotch@localhost/datumbazo"
@@ -13,10 +12,11 @@
 (def db (new-db (:postgresql connections)))
 
 (defmacro with-test-db
-  [[db-sym connection] & body]
-  `(let [db# (new-db (or ~connection ~(:postgresql connections)))]
-     (with-db [~db-sym (assoc db# :test true)]
-       ~@body)))
+  [[db-sym config] & body]
+  `(with-db [~db-sym ~config]
+     (with-transaction [~db-sym ~db-sym]
+       ~@body
+       (driver/rollback! ~db-sym))))
 
 (defmacro with-test-dbs
   [[db-sym vendors] & body]
@@ -74,13 +74,24 @@
 (defmacro with-backends [[db-sym opts] & body]
   `(doseq [backend# ['clojure.java.jdbc 'jdbc.core]]
      (if (find-ns backend#)
-       (let [db# (open-db (assoc ~db :backend backend#)), ~db-sym db#]
-         (try (testing (str "Testing backend " (str backend#))
-                (if (:rollback? ~opts)
-                  (with-transaction [~db-sym ]~@body)
-                  (do ~@body)))
-              (finally (close-db db#))))
+       (let [db# (new-db ~(:postgresql connections))]
+         (with-db [~db-sym (merge db# {:backend backend# :test true} ~opts)]
+           (if (:test ~db-sym)
+             (with-transaction [~db-sym ~db-sym]
+               ~@body
+               (driver/rollback! ~db-sym))
+             (do ~@body))))
        (.println *err* (format "WARNING: Can't find %s backend, skipping tests." backend#)))))
+
+(deftest test-with-backends
+  (with-backends [db]
+    (when (= (:backend db) 'jdbc.core)
+      (is (:connection db))
+      (is @(select db [1])))))
+
+(deftest test-with-backends-pool
+  (with-backends [db {:pool :c3p0}]
+    (is (:datasource db))))
 
 (defmacro with-test-table [db table & body]
   `(let [db# ~db table# ~table]

@@ -50,14 +50,14 @@
   (is (zero? (:exit (psql db {:command "SELECT 1;"})))))
 
 (deftest test-shp2pgsql
-  (with-test-db [db]
+  (with-backends [db]
     (is (= 0 (:exit (shp2pgsql
                      db :natural-earth.ports
                      "test-resources/ne_10m_ports/ne_10m_ports.dbf"
                      "/tmp/test-shp2pgsql.sql"))))))
 
 (deftest test-raster2pgsql
-  (with-test-db [db]
+  (with-backends [db]
     (with-redefs
       [bash (fn [script]
               (is (= (str "echo 'Running raster2pgsql...';\n{\n    # "
@@ -70,14 +70,14 @@
       (raster2pgsql db :weather.nww3-dirpwsfc-2013-02-10 "INPUT" "OUTPUT"))))
 
 (deftest test-dump-table
-  (with-test-db [db]
+  (with-backends [db]
     (let [file (io/file "/tmp/test-dump-table.sql" )]
       (is (zero? (:exit (dump-table db :continents file))))
       (is (.exists file))
       (is (.delete file)))))
 
 (deftest test-exec-sql-file
-  (with-test-db [db]
+  (with-backends [db]
     (let [file (io/file "/tmp/test-exec-sql-file.sql" )]
       (dump-table db :countries file)
       (is (zero? (:exit (exec-sql-file db file))))

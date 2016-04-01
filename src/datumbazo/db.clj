@@ -1,11 +1,7 @@
 (ns datumbazo.db
-  (:require [clojure.string :refer [blank?]]
-            [datumbazo.connection :refer [run*]]
-            [datumbazo.driver.core :refer [eval-db]]
-            [datumbazo.util :as util]
+  (:require [datumbazo.driver.core :refer [eval-db]]
             [datumbazo.vendor :as vendor]
-            [no.en.core :refer [parse-integer parse-query-params]]
-            [sqlingvo.db :as db]))
+            [no.en.core :refer [parse-integer parse-query-params]]))
 
 (def ^:private jdbc-url-regex
   #"(([^:]+):)?([^:]+)://(([^:]+):([^@]+)@)?(([^:/]+)(:([0-9]+))?((/([^?]*))(\?(.*))?))")
@@ -32,8 +28,10 @@
        :password (nth matches 6)})
     (throw (ex-info "Can't parse JDBC url %s." {:url url}))))
 
-(defn new-db [spec]
-  (let [spec (if (map? spec) spec (parse-url spec))]
-    (assoc (vendor/db-spec spec)
-           :backend 'clojure.java.jdbc
-           :eval-fn #'eval-db)))
+(defn new-db
+  "Return a new database from `spec`."
+  [spec]
+  (->> (if (map? spec) spec (parse-url spec))
+       (merge {:backend 'clojure.java.jdbc
+               :eval-fn #'eval-db})
+       (vendor/db-spec)))

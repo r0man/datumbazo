@@ -1,22 +1,16 @@
 (ns datumbazo.core
-  (:import java.sql.SQLException
-           org.postgresql.PGConnection)
   (:refer-clojure :exclude [distinct group-by update])
-  (:require [clojure.java.io :refer [reader]]
-            [clojure.java.jdbc :as jdbc]
-            [clojure.string :as str]
-            [com.stuartsierra.component :as component]
-            [datumbazo.connection :as connection :refer [run*]]
-            [datumbazo.driver.core :as driver]
+  (:require [com.stuartsierra.component :as component]
+            [datumbazo.connection :as connection]
             [datumbazo.db :as db]
+            [datumbazo.driver.core :as driver]            
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [compact-map immigrate]]
-            [inflections.core :refer [hyphenate singular]]
+            [inflections.core :refer [singular]]
             [no.en.core :refer [parse-integer]]
             sqlingvo.core
-            [sqlingvo.expr :refer [parse-table parse-expr]]
-            [sqlingvo.util :refer [concat-in]]))
+            [sqlingvo.expr :refer [parse-table]]))
 
 (immigrate 'sqlingvo.core)
 
@@ -115,7 +109,7 @@
   database connection."
   [stmt & [opts]]
   (let [ast (ast stmt)]
-    (->> (run* (apply-preparation ast) opts)
+    (->> (driver/eval-db (apply-preparation ast) opts)
          ((if (= :delete (:op ast))
             identity
             #(apply-transformation ast %1))))))
@@ -221,19 +215,19 @@
   "Insert `row` into the database `table`."
   [db table row & [opts]]
   (run1 (sqlingvo.core/insert db table []
-          (values (select-columns table row))
-          (apply returning (remove #(= true (:hidden? %1)) (columns table)))
-          (prepare (partial io/encode-row db table))
-          (prepare (:prepare table)))))
+                              (values (select-columns table row))
+                              (apply returning (remove #(= true (:hidden? %1)) (columns table)))
+                              (prepare (partial io/encode-row db table))
+                              (prepare (:prepare table)))))
 
 (defn insert-rows
   "Insert `rows` into the database `table`."
   [db table rows & [opts]]
   (run (sqlingvo.core/insert db table []
-         (values (map #(select-columns table %) rows))
-         (apply returning (remove #(= true (:hidden? %1)) (columns table)))
-         (prepare (partial io/encode-row db table))
-         (prepare (:prepare table)))))
+                             (values (map #(select-columns table %) rows))
+                             (apply returning (remove #(= true (:hidden? %1)) (columns table)))
+                             (prepare (partial io/encode-row db table))
+                             (prepare (:prepare table)))))
 
 (defn update-row
   "Update the `row` in the database `table`."
@@ -301,7 +295,7 @@
          (defn ~(symbol (str "save-" singular#))
            ~(format "Save the %s row to the database." singular#)
            [~'db ~'row & ~'opts]
-           (jdbc/with-db-transaction
+           (with-transaction
              [~'db ~'db]
              (or (apply ~(symbol (str "update-" singular#)) ~'db ~'row ~'opts)
                  (apply ~(symbol (str "insert-" singular#)) ~'db ~'row ~'opts))))

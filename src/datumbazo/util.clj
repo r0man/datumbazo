@@ -1,12 +1,9 @@
 (ns datumbazo.util
   (:refer-clojure :exclude [replace])
-  (:import java.io.File)
   (:require [clojure.java.io :refer [file reader]]
-            [clojure.java.jdbc :as jdbc]
-            [datumbazo.driver.core :as driver]
-            [clojure.string :refer [blank? split replace trim]]
-            [no.en.core :refer [parse-integer]]
-            [clojure.string :as str]))
+            [clojure.string :as str :refer [blank? replace split]]
+            [datumbazo.driver.core :as driver])
+  (:import java.io.File))
 
 (defn absolute-path
   "Returns the absolute path of `path."

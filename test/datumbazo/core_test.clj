@@ -8,6 +8,7 @@
             [inflections.core :refer [hyphenate underscore]]
             [validation.core :refer :all]
             [datumbazo.test :refer :all]
+            [datumbazo.driver.core :as driver]
             [datumbazo.validation :refer [new-record? uniqueness-of]]
             [slingshot.slingshot :refer [try+]])
   (:use clojure.test
@@ -16,10 +17,13 @@
 
 (defvalidate continent
   (presence-of :name)
-  (uniqueness-of db :continents :name :if new-record?)
+  ;; TODO: Provide db via state
+  ;; (uniqueness-of :continents :name :if new-record?)
   (presence-of :code)
   (exact-length-of :code 2)
-  (uniqueness-of db :continents :code :if new-record?))
+  ;; TODO: Provide db via state
+  ;; (uniqueness-of :continents :code :if new-record?)
+  )
 
 (deftable continents
   "The continents database table."
@@ -51,17 +55,17 @@
   (primary-key :nick))
 
 (deftest test-continent-by-pk*
-  (with-test-db [db]
+  (with-backends [db]
     (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = 1)"]
            (sql (continent-by-pk* db {:id 1}))))))
 
 (deftest test-continent-by-pk
-  (with-test-db [db]
+  (with-backends [db]
     (is (empty? (continent-by-pk db {:id 1})))))
 
 ;; TODO: Create table
 (deftest test-rating-by-pk
-  (with-test-db [db]
+  (with-backends [db]
     (let [time (now)]
       ;; (is (= [(str "SELECT \"ratings\".\"user_id\", \"ratings\".\"spot_id\", \"ratings\".\"rating\", \"ratings\".\"created_at\", \"ratings\".\"updated_at\" "
       ;;              "FROM \"ratings\" WHERE ((\"ratings\".\"user_id\" = ?) and (\"ratings\".\"spot_id\" = ?) and (\"ratings\".\"created_at\" = ?))")
@@ -196,15 +200,16 @@
       (is (= :text (:type column))))))
 
 (deftest test-drop-continents
-  (with-test-db [db]
-    (is (= "Drop the continents database table."
-           (:doc (meta #'drop-continents))))
-    (drop-countries db)
-    (is (= 0 (drop-continents db)))
-    (is (= 0 (drop-continents db (if-exists true))))))
+  (with-backends [db]
+    (when (= (:backend db) 'jdbc.core)
+      (is (= "Drop the continents database table."
+             (:doc (meta #'drop-continents))))
+      (drop-countries db)
+      (is (= 0 (drop-continents db)))
+      (is (= 0 (drop-continents db (if-exists true)))))))
 
 (deftest test-delete-continents
-  (with-test-db [db]
+  (with-backends [db]
     (is (= "Delete all rows in the continents database table."
            (:doc (meta #'delete-continents))))
     (is (= 7 (delete-continents db)))
@@ -212,7 +217,7 @@
     (is (= 0 (count-all db :continents)))))
 
 (deftest test-delete-continent
-  (with-test-db [db]
+  (with-backends [db]
     (is (= "Delete the continent from the database table."
            (:doc (meta #'delete-continent))))
     (let [europe (europe db)]
@@ -220,20 +225,14 @@
       (is (= 0 (delete-continent db europe))))))
 
 (deftest test-delete-countries
-  (with-test-db [db]
+  (with-backends [db]
     (is (= "Delete all rows in the countries database table."
            (:doc (meta #'delete-countries))))
     (is (= 0 (delete-countries db)))
     (is (= 0 (count-all db :countries)))))
 
 (deftest test-insert-continent
-  (with-test-db [db]
-    (try+
-     (insert-continent db {})
-     (catch [:type :validation.core/error] {:keys [errors record]}
-       (is (= {} record))
-       (is (= ["can't be blank."] (:name errors)))
-       (is (= ["has the wrong length (should be 2 characters)." "can't be blank."] (:code errors)))))
+  (with-backends [db]
     (let [europe (europe db)]
       (delete-continent db europe)
       (let [row (insert-continent db europe)]
@@ -242,8 +241,17 @@
         (is (= "EU" (:code row)))
         (is (thrown? Exception (insert-continent db row)))))))
 
+(deftest test-insert-continent-error
+  (with-backends [db]
+    (try+
+     (insert-continent db {})
+     (catch [:type :validation.core/error] {:keys [errors record]}
+       (is (= {} record))
+       (is (= ["can't be blank."] (:name errors)))
+       (is (= ["has the wrong length (should be 2 characters)." "can't be blank."] (:code errors)))))))
+
 (deftest test-insert-continents
-  (with-test-db [db]
+  (with-backends [db]
     (let [continents [(africa db) (europe db)]]
       (delete-continents db)
       (let [rows (insert-continents db continents)]
@@ -257,31 +265,31 @@
           (is (= "EU" (:code row))))))))
 
 (deftest test-update-columns-best-row-identifiers
-  (with-test-db [db]
+  (with-backends [db]
     (is (= {:id 1} (update-columns-best-row-identifiers db continents-table {:id 1 :name "Europe"})))
     (is (= {:user-id 8841372 :tweet-id 285415218434154496}
            (update-columns-best-row-identifiers db tweets-users-table {:user-id 8841372 :tweet-id 285415218434154496})))))
 
 (deftest test-update-columns-unique-columns
-  (with-test-db [db]
+  (with-backends [db]
     (is (= {:id 1 :name "Europe"} (update-columns-unique-columns db continents-table {:id 1 :name "Europe"})))
     (is (= {:user-id 8841372 :tweet-id 285415218434154496}
            (update-columns-unique-columns db tweets-users-table {:user-id 8841372 :tweet-id 285415218434154496})))))
 
 (deftest test-where-clause-columns
-  (with-test-db [db]
+  (with-backends [db]
     (is (= {:id 1} (where-clause-columns db continents-table {:id 1})))
     (is (= {:name "Europe"} (where-clause-columns db continents-table {:name "Europe"})))
     (is (= {:user-id 8841372 :tweet-id 285415218434154496}
            (where-clause-columns db tweets-users-table {:user-id 8841372 :tweet-id 285415218434154496})))))
 
 (deftest test-update-clause
-  (with-test-db [db]
+  (with-backends [db]
     (let [[_ clause] ((update-clause db continents-table {:id 1}) nil)]
       (is (map? clause)))))
 
 (deftest test-create-table-compound-primary-key
-  (with-test-db [db]
+  (with-backends [db]
     @(create-table db :users
        (column :id :serial :primary-key? true))
     @(create-table db :spots
@@ -297,7 +305,7 @@
            [{:count 0}]))))
 
 (deftest test-save-continent
-  (with-test-db [db]
+  (with-backends [db]
     (let [row (save-continent db (europe db))]
       (is (number? (:id row)))
       (is (= "Europe" (:name row)))
@@ -307,7 +315,7 @@
       )))
 
 (deftest test-truncate-continents
-  (with-test-db [db]
+  (with-backends [db]
     (is (= "Truncate the continents database table."
            (:doc (meta #'truncate-continents))))
     (is (= 0 (truncate-continents db (cascade true))))
@@ -315,14 +323,14 @@
     (is (= 0 (count-all db :continents)))))
 
 (deftest test-truncate-countries
-  (with-test-db [db]
+  (with-backends [db]
     (is (= "Truncate the countries database table."
            (:doc (meta #'truncate-countries))))
     (is (= 0 (truncate-countries db)))
     (is (= 0 (count-all db :countries)))))
 
 (deftest test-update-continent
-  (with-test-db [db]
+  (with-backends [db]
     (try+
      (update-continent db {})
      (catch [:type :validation.core/error] {:keys [errors record]}
@@ -347,21 +355,21 @@
         (is (= "EU" (:code continent)))))))
 
 (deftest test-continents
-  (with-test-db [db]
+  (with-backends [db]
     (is (= 7 (count (continents db))))
     (is (= [(africa db)] (continents db {:page 1 :per-page 1 :order-by :name})))
     (is (= [(antarctica db)] (continents db {:page 2 :per-page 1 :order-by :name})))))
 
 (deftest test-countries
-  (with-test-db [db]
+  (with-backends [db]
     (is (= 0 (count (countries db))))))
 
 (deftest test-countries-by-continent-id
-  (with-test-db [db]
+  (with-backends [db]
     (is (empty? (countries-by-continent-id db (:id (europe db)))))))
 
 (deftest test-continent-by-id
-  (with-test-db [db]
+  (with-backends [db]
     (is (nil? (continent-by-id db nil)))
     (is (nil? (continent-by-id db -1)))
     (is (= (europe db) (continent-by-id db (:id (europe db)))))
@@ -369,13 +377,13 @@
     (is (= (europe db) (continent-by-id db (str (:id (europe db)) "-europe"))))))
 
 (deftest test-continent-by-name
-  (with-test-db [db]
+  (with-backends [db]
     (is (nil? (continent-by-name db nil)))
     (is (nil? (continent-by-name db "unknown")))
     (is (= (europe db) (continent-by-name db (:name (europe db)))))))
 
 (deftest test-continents-by-id
-  (with-test-db [db]
+  (with-backends [db]
     (is (empty? (continents-by-id db -1)))
     (is (empty? (continents-by-id db "-1")))
     (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"id\" = -1)"]
@@ -384,7 +392,7 @@
     (is (= [(europe db)] (continents-by-id db (str (:id (europe db))))))))
 
 (deftest test-continents-by-name
-  (with-test-db [db]
+  (with-backends [db]
     (is (empty? (continents-by-name db nil)))
     (is (= [(continent-by-name db "Europe")] (continents-by-name db "Europe")))
     (is (= ["SELECT \"continents\".\"id\", \"continents\".\"name\", \"continents\".\"code\" FROM \"continents\" WHERE (\"continents\".\"name\" = ?)" (citext "Europe")]
@@ -394,11 +402,11 @@
            (continents-by-name db (upper-case (:name (europe db))))))))
 
 (deftest test-twitter-users
-  (with-test-db [db]
+  (with-backends [db]
     (is (= 33 (count (twitter-users db))))))
 
 (deftest test-twitter-tweets
-  (with-test-db [db]
+  (with-backends [db]
     (is (= 23 (count (twitter-tweets db))))))
 
 (deftest test-twitter-users-table
@@ -427,7 +435,7 @@
       (is (= :bigint (:type column))))))
 
 (deftest test-save-twitter-user
-  (with-test-db [db]
+  (with-backends [db]
     (let [user (->> {:created-at #inst "2011-02-22T06:29:06.000-00:00"
                      :default-profile-image false
                      :description ""
@@ -449,11 +457,11 @@
              (dissoc (save-twitter-user db user) :updated-at))))))
 
 (deftest test-count-all
-  (with-test-db [db]
+  (with-backends [db]
     (is (= 7 (count-all db :continents)))))
 
 (deftest test-insert-twitter-user
-  (with-test-db [db]
+  (with-backends [db]
     (let [user (->> {:listed-count 0,
                      :default-profile-image true,
                      :time-zone nil,
@@ -477,7 +485,7 @@
       (is (= 9 (:id user))))))
 
 (deftest test-validation
-  (with-test-db [db]
+  (with-backends [db]
     (let [continent {}]
       (try+
        (insert-continent db continent)
@@ -493,34 +501,34 @@
          (is (= errors (:errors (meta record)))))))))
 
 (deftest test-array
-  (with-test-db [db]
+  (with-backends [db]
     (is (= [{:array [1 2]}]
            @(select db [[1 2]])))))
 
 (deftest test-array-concat
-  (with-test-db [db]
+  (with-backends [db]
     (is (= [{:?column? [1 2 3 4 5 6]}]
            @(select db ['(|| [1 2] [3 4] [5 6])])))))
 
 ;; PostgreSQL JSON Support Functions
 
 (deftest test-array-to-json
-  (with-test-db [db]
+  (with-backends [db]
     (is (= [{:array_to_json [[1 5] [99 100]]}]
            @(select db [`(array_to_json (cast "{{1,5},{99,100}}" ~(keyword "int[]")))])))))
 
 (deftest test-row-to-json
-  (with-test-db [db]
+  (with-backends [db]
     (is (= [{:row_to_json {:f1 1, :f2 "foo"}}]
            @(select db ['(row_to_json (row 1 "foo"))])))))
 
 (deftest test-to-json
-  (with-test-db [db]
+  (with-backends [db]
     (is (= [{:to_json "Fred said \"Hi.\""}]
            @(select db ['(to_json "Fred said \"Hi.\"")])))))
 
 (deftest test-with
-  (with-test-db [db]
+  (with-backends [db]
     (is (= @(with db [:x (select db [:*] (from :continents))]
               (select db [:*] (from :x)))
            @(select db [:*] (from :continents))))))
@@ -596,17 +604,17 @@
            [{:count 0}]))))
 
 (deftest test-delete
-  (with-test-db [db]
+  (with-backends [db]
     (is (= @(delete db :countries)
            [{:count 0}]))))
 
 (deftest test-drop-table
-  (with-test-db [db]
+  (with-backends [db]
     (is (= @(drop-table db [:countries])
            [{:count 0}]))))
 
 (deftest test-select
-  (with-test-db [db]
+  (with-backends [db]
     (are [stmt expected]
         (= (deref stmt) expected)
       (select db [(as 1 :x)])
@@ -626,7 +634,7 @@
        {:name "South America"}])))
 
 (deftest test-truncate
-  (with-test-db [db]
+  (with-backends [db]
     (is (= @(truncate db [:countries])
            [{:count 0}]))))
 
@@ -655,7 +663,7 @@
     (is (= db (new-db db)))))
 
 (deftest test-select-1-as-a-2-as-b-3-as-c
-  (with-test-db [db]
+  (with-backends [db]
     (is (= [{:a 1 :b 2 :c 3}]
            @(select db [(as 1 :a)
                         (as 2 :b)
@@ -665,19 +673,19 @@
 ;; CAST
 
 (deftest test-cast-int-as-text
-  (with-test-db [db]
+  (with-backends [db]
     (is (= [{:text "1"}]
            @(select db [(as `(cast 1 :text) :text)])))))
 
 (deftest test-deref-select
-  (with-test-db [db]
+  (with-backends [db]
     (is (= @(select db [(as 1 :a)
                         (as 2 :b)
                         (as 3 :c)])
            [{:a 1 :b 2 :c 3}]))))
 
 (deftest test-deref-create-table
-  (with-test-db [db]
+  (with-backends [db]
     (let [table :test-deref-create-table]
       (is (= @(create-table db table
                 (column :a :integer)
@@ -686,7 +694,7 @@
       @(drop-table db [table]))))
 
 (deftest test-deref-drop-table
-  (with-test-db [db]
+  (with-backends [db]
     (let [table :test-deref-drop-table]
       @(create-table db table
          (column :a :integer))
@@ -697,7 +705,7 @@
              [{:count 0}])))))
 
 (deftest test-deref-insert
-  (with-test-db [db]
+  (with-backends [db]
     (let [table :test-deref-insert]
       @(create-table db table
          (column :a :integer)
@@ -708,7 +716,7 @@
       @(drop-table db [table]))))
 
 (deftest test-insert-fixed-columns-mixed-values
-  (with-test-db [db]
+  (with-backends [db]
     @(drop-table db [:test] (if-exists true))
     @(create-table db :test
        (column :a :integer)
@@ -738,7 +746,7 @@
     (column :updated-at :timestamp-with-time-zone :not-null? true :default '(now))))
 
 (deftest test-insert-fixed-columns-mixed-values-2
-  (with-test-db [db]
+  (with-backends [db]
     @(create-companies-table db)
     @(insert db :companies [:id]
        (values [{:id 5}]))
@@ -774,12 +782,12 @@
              :id 6}]))))
 
 (deftest test-create-test-table
-  (with-test-db [db]
+  (with-backends [db]
     (is (= @(create-test-table db :empsalary)
            [{:count 0}]))))
 
 (deftest test-insert-test-table
-  (with-test-db [db]
+  (with-backends [db]
     @(create-test-table db :empsalary)
     (is (= @(insert-test-table db :empsalary)
            [{:count 10}]))))
@@ -787,7 +795,7 @@
 ;; Window functions: http://www.postgresql.org/docs/9.4/static/tutorial-window.html
 
 (deftest test-compare-salaries
-  (with-test-db [db]
+  (with-backends [db]
     (with-test-table db :empsalary
       (is (= @(select db [:depname :empno :salary '(over (avg :salary) (partition-by :depname))]
                 (from :empsalary))
@@ -833,7 +841,7 @@
                :depname "sales"}])))))
 
 (deftest test-rank-over-order-by
-  (with-test-db [db]
+  (with-backends [db]
     (with-test-table db :empsalary
       (is (= @(select db [:depname :empno :salary '(over (rank) (partition-by :depname (order-by (desc :salary))))]
                 (from :empsalary))
@@ -849,7 +857,7 @@
               {:rank 2 :salary 4800 :empno 3 :depname "sales"}])))))
 
 (deftest test-window-over-empty
-  (with-test-db [db]
+  (with-backends [db]
     (with-test-table db :empsalary
       (is (= @(select db [:salary '(over (sum :salary))]
                 (from :empsalary))
@@ -865,7 +873,7 @@
               {:sum 47100 :salary 5200}])))))
 
 (deftest test-window-sum-over-order-by
-  (with-test-db [db]
+  (with-backends [db]
     (with-test-table db :empsalary
       (is (= @(select db [:salary '(over (sum :salary) (order-by :salary))]
                 (from :empsalary))
@@ -881,7 +889,7 @@
               {:sum 47100 :salary 6000}])))))
 
 (deftest test-window-rank-over-partition-by
-  (with-test-db [db]
+  (with-backends [db]
     (with-test-table db :empsalary
       (is (= @(select db [:depname :empno :salary :enroll-date]
                 (from (as (select db [:depname :empno :salary :enroll-date
@@ -915,7 +923,7 @@
                :enroll-date #inst "2007-08-01T00:00:00.000-00:00"}])))))
 
 (deftest test-window-alias
-  (with-test-db [db]
+  (with-backends [db]
     (with-test-table db :empsalary
       (is (= @(select db ['(over (sum :salary) :w)
                           '(over (avg :salary) :w)]
@@ -933,7 +941,7 @@
               {:avg 4866.6666666666666667M :sum 14600}])))))
 
 (deftest test-insert-array
-  (with-test-db [db]
+  (with-backends [db]
     @(drop-table db [:test] (if-exists true))
     @(create-table db :test
        (column :x :text :array? true))
@@ -945,10 +953,10 @@
             {:x ["3" "4"]}]))))
 
 (deftest test-create-table-array-column
-  (with-test-db [db]
-    @(drop-table db [:test] (if-exists true))
-    @(create-table db :test
-       (column :x :text :array? true))))
+  (with-backends [db]
+    (is @(drop-table db [:test] (if-exists true)))
+    (is @(create-table db :test
+           (column :x :text :array? true)))))
 
 ;; (deftest test-select
 ;;   (with-backends [db]
@@ -1038,16 +1046,36 @@
            [{:x "english"}]))))
 
 (deftest test-with-transaction
-  (with-backends [db {:rollback? false}]
-    @(create-table db :test-with-transaction
-       (column :x :int))
-    (try (with-transaction [db]
-           @(insert db :test-with-transaction []
-              (values {:x 1}))
-           (throw (ex-info "boom" {})))
-         (catch Exception e))
-    (is (empty? @(select db [:*] (from :test-with-transaction))))
-    @(drop-table db [:test-with-transaction])))
+  (with-backends [db {:test false}]
+    (try
+      @(create-table db :test-with-transaction
+         (column :x :int))
+      (try (with-transaction [db]
+             @(insert db :test-with-transaction []
+                (values {:x 1}))
+             (throw (ex-info "boom" {})))
+           (catch Exception e))
+      (is (empty? @(select db [:*] (from :test-with-transaction))))
+      (finally
+        @(drop-table db [:test-with-transaction]
+           (if-exists true))))))
+
+(deftest test-with-nested-transaction
+  (with-backends [db]
+    (with-transaction [db]
+      ;; TODO: How does this work in clojure.java.jdbc?
+      (when (= (:backend db) 'jdbc.core)
+        @(drop-table db [:test-with-nested-transaction]
+           (if-exists true))
+        @(create-table db :test-with-nested-transaction
+           (column :x :int))
+        (try (with-transaction [db]
+               @(insert db :test-with-nested-transaction []
+                  (values {:x 1}))
+               (throw (ex-info "boom" {})))
+             (catch Exception e))
+        (is (empty? @(select db [:*] (from :test-with-nested-transaction))))
+        @(drop-table db [:test-with-nested-transaction])))))
 
 (deftest test-sql-name
   (with-backends [db]

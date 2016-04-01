@@ -1,7 +1,7 @@
 (ns datumbazo.meta
   (:refer-clojure :exclude [resultset-seq])
   (:require [clojure.string :refer [lower-case]]
-            [datumbazo.connection :refer [with-connection]]
+            [datumbazo.driver.core :as driver]
             [inflections.core :refer [hyphenate hyphenate-keys]]
             [sqlingvo.util :refer [sql-name]])
   (:import java.sql.DatabaseMetaData))
@@ -14,9 +14,8 @@
        (map #(hyphenate-keys (merge {} %1)))))
 
 (defmacro with-metadata [[metadata-sym db] & body]
-  `(with-connection [connection# ~db]
-     (let [~metadata-sym (.getMetaData connection#)]
-       ~@body)))
+  `(let [~metadata-sym (.getMetaData (driver/connection ~db))]
+     ~@body))
 
 (defn best-row-identifiers
   "Retrieves a description of a table's optimal set of columns that uniquely identifies a row."

@@ -3,11 +3,12 @@
             [clojure.test :refer :all]
             [datumbazo.core :refer [drop-table if-exists]]
             [datumbazo.meta :refer :all]
-            [datumbazo.test :refer :all])
+            [datumbazo.test :refer :all]
+            [datumbazo.driver.core :as driver])
   (:import java.sql.DatabaseMetaData))
 
 (deftest test-best-row-identifiers
-  (with-test-db [db]
+  (with-backends [db]
     (let [columns (best-row-identifiers db :table :continents)]
       (is (= [:id] (map :name columns)))
       (is (not (empty? columns)))
@@ -20,13 +21,13 @@
       (is (every? #(keyword? (:type %1)) columns)))))
 
 (deftest test-catalogs
-  (with-test-db [db]
+  (with-backends [db]
     (let [catalogs (catalogs db)]
       (is (not (empty? catalogs)))
       (is (every? #(keyword (:name %1)) catalogs)))))
 
 (deftest test-columns
-  (with-test-db [db]
+  (with-backends [db]
     (let [columns (columns db :table :continents)]
       (is (not (empty? columns)))
       (is (every? #(= :public (:schema %1)) columns))
@@ -62,7 +63,7 @@
       (is (= [:continent-id] (map :name columns))))))
 
 (deftest test-columns-c3p0
-  (with-test-db [db "c3p0:postgresql://tiger:scotch@localhost/datumbazo"]
+  (with-backends [db {:pool :c3p0}]
     (let [columns (columns db :table :continents)]
       (is (not (empty? columns)))
       (is (every? #(= :public (:schema %1)) columns))
@@ -73,12 +74,12 @@
              (map :name columns))))))
 
 (deftest test-indexes
-  (with-test-db [db]
+  (with-backends [db]
     (let [columns (indexes db :table :continents)]
       (is (not (empty? columns))))))
 
 (deftest test-unique-columns
-  (with-test-db [db]
+  (with-backends [db]
     (let [columns (unique-columns db :table :continents)]
       (is (not (empty? columns)))
       (is (every? #(= :public (:schema %1)) columns))
@@ -88,7 +89,7 @@
       (is (= [:id :name :code :freebase-guid :geonames-id] (map :name columns))))))
 
 (deftest test-primary-keys
-  (with-test-db [db]
+  (with-backends [db]
     (let [columns (primary-keys db :table :continents)]
       (is (not (empty? columns)))
       (is (every? #(= :public (:schema %1)) columns))
@@ -103,7 +104,7 @@
       (is (= [:tweet-id :user-id] (map :name columns))))))
 
 (deftest test-schemas
-  (with-test-db [db]
+  (with-backends [db]
     (let [schemas (schemas db)]
       (is (not (empty? schemas)))
       (is (every? #(keyword (:name %1)) schemas))
@@ -111,7 +112,7 @@
                        (set (map :name schemas))))))))
 
 (deftest test-tables
-  (with-test-db [db]
+  (with-backends [db]
     @(drop-table db [:test] (if-exists true))
     (let [tables (tables db)]
       (is (not (empty? tables)))
@@ -132,7 +133,7 @@
                      :tweets-users})))))
 
 (deftest test-views
-  (with-test-db [db]
+  (with-backends [db]
     (let [views (views db)]
       (is (not (empty? views)))
       (is (every? #(keyword? (:schema %1)) views))

@@ -1,20 +1,15 @@
 (ns datumbazo.io
-  (:import java.io.Writer
-           org.joda.time.DateTime
-           org.joda.time.DateTimeZone
-           org.postgresql.util.PGobject
-           org.postgis.PGgeometry)
-  (:require [clojure.instant :as i]
-            [clojure.java.jdbc :as jdbc]
-            [clojure.edn :as edn]
+  (:require [clj-time.coerce :refer [to-date to-sql-date to-timestamp]]
             [clojure.data.json :as json]
-            [clj-time.coerce :refer [to-date-time to-date to-sql-date to-timestamp]]
+            [clojure.edn :as edn]
+            [clojure.instant :as i]
             [datumbazo.meta :as meta]
-            [datumbazo.util :refer :all]
             [no.en.core :refer [parse-double parse-integer parse-long]]
-            [sqlingvo.compiler]
-            [sqlingvo.expr :refer [parse-table]]
-            geo.postgis))
+            [sqlingvo.expr :refer [parse-table]])
+  (:import java.io.Writer
+           [org.joda.time DateTime DateTimeZone]
+           org.postgis.PGgeometry
+           org.postgresql.util.PGobject))
 
 (defn citext [s]
   (if s
