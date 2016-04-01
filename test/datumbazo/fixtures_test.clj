@@ -12,21 +12,21 @@
   (str fixture-dir "/continents.edn"))
 
 (deftest test-enable-triggers
-  (with-test-db [db]
+  (with-backends [db]
     (enable-triggers db :continents)
     (enable-triggers db :twitter.users)))
 
 (deftest test-disable-triggers
-  (with-test-db [db]
+  (with-backends [db]
     (disable-triggers db :continents)
     (enable-triggers db :twitter.users)))
 
 (deftest test-delete-fixtures
-  (with-test-db [db]
+  (with-backends [db]
     (delete-fixtures db (tables fixture-dir))))
 
 (deftest test-dump-fixtures
-  (with-test-db [db]
+  (with-backends [db]
     (dump-fixtures db "/tmp/test-dump-fixtures" [:continents :twitter.users])
     (is (.exists (file "/tmp/test-dump-fixtures/continents.edn")))
     (is (.exists (file "/tmp/test-dump-fixtures/twitter/users.edn")))))
@@ -61,13 +61,13 @@
       (is (= :twitter.tweets (:table fixture))))))
 
 (deftest test-load-fixtures
-  (with-test-db [db]
+  (with-backends [db]
     (delete-fixtures db (tables fixture-dir))
     (let [fixtures (load-fixtures db fixture-dir)]
       (is (= 5 (count fixtures))))))
 
 (deftest test-read-fixture
-  (with-test-db [db]
+  (with-backends [db]
     (delete-continents db)
     (let [fixture (read-fixture db :continents fixture-file)]
       (is (= :continents (:table fixture)))
@@ -79,7 +79,7 @@
     (is (= 7 (count records)))))
 
 (deftest test-reset-serials
-  (with-test-db [db]
+  (with-backends [db]
     (reset-serials db :continents)
     (reset-serials db :twitter.users)))
 
@@ -98,7 +98,7 @@
          (tables fixture-dir))))
 
 (deftest test-write-fixture
-  (with-test-db [db]
+  (with-backends [db]
     (let [fixture (write-fixture db :continents "/tmp/test-write-fixture/continents.edn")]
       (is (= :continents (:table fixture)))
       (is (= "/tmp/test-write-fixture/continents.edn" (:file fixture)))

@@ -13,12 +13,24 @@
   "Execute `sql` and return rows."
   (fn [db sql & [opts]] (:backend db)))
 
+(defmulti connection
+  "Get the connection."
+  (fn [db & [opts]] (:backend db)))
+
 (defmulti execute
   "Execute `sql` and return the number of affected rows."
   (fn [db sql & [opts]] (:backend db)))
 
 (defmulti open-db
   "Open a connection to `db`."
+  (fn [db] (:backend db)))
+
+(defmulti prepare-statement
+  "Return a prepared statement for `sql`."
+  (fn [db sql & [opts]] (:backend db)))
+
+(defmulti rollback!
+  "Rollback the current `db` transaction."
   (fn [db] (:backend db)))
 
 (defn eval-db

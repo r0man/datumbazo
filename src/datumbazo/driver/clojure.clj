@@ -1,21 +1,22 @@
 (ns datumbazo.driver.clojure
   (:require [clojure.java.jdbc :as jdbc]
+            [clojure.string :as str]
             [datumbazo.driver.core :refer :all]
             [datumbazo.io :as io]
-            [sqlingvo.compiler :refer [compile-stmt]]
-            [clojure.string :as str]
             [datumbazo.util :as util]))
 
 (defn- assert-connection [db]
-  (assert (or (:connection db)
-              (:datasource  db))
-          "No database connection or datasource!"))
+  (when-not (or (:connection db) (:datasource  db))
+    (throw (ex-info "No database connection or datasource!" {:db db}))))
 
 (defmethod apply-transaction 'clojure.java.jdbc [db f & [opts]]
-  (jdbc/db-transaction* db f))
+  (apply jdbc/db-transaction* db f (apply concat opts)))
 
 (defmethod close-db 'clojure.java.jdbc [db]
   (.close (:connection db)))
+
+(defmethod connection 'clojure.java.jdbc [db & [opts]]
+  (jdbc/get-connection db))
 
 (defmethod fetch 'clojure.java.jdbc [db sql & [opts]]
   (assert-connection db)
@@ -35,6 +36,16 @@
 
 (defmethod open-db 'clojure.java.jdbc [db]
   (assoc db :connection (jdbc/get-connection db)))
+
+(defmethod prepare-statement 'clojure.java.jdbc [db sql & [opts]]
+  (assert-connection db)
+  (let [opts (apply concat opts)
+        prepared (apply jdbc/prepare-statement (connection db) (first sql) opts)]
+    (dorun (map-indexed (fn [i v] (jdbc/set-parameter v prepared (inc i))) (rest sql)))
+    prepared))
+
+(defmethod rollback! 'clojure.java.jdbc [db]
+  (jdbc/db-set-rollback-only! db))
 
 (extend-protocol jdbc/IResultSetReadColumn
 

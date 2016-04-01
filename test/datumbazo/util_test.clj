@@ -1,9 +1,9 @@
 (ns datumbazo.util-test
   (:refer-clojure :exclude [distinct group-by update])
-  (:use clojure.test
-        datumbazo.util
-        datumbazo.core
-        datumbazo.test))
+  (:require [clojure.test :refer :all]
+            [datumbazo.core :refer :all]
+            [datumbazo.test :refer :all]
+            [datumbazo.util :refer :all]))
 
 (deftest test-absolute-path
   (is (string? (absolute-path ""))))
@@ -70,13 +70,16 @@
     (is (= 3 (count stmts)))))
 
 (deftest test-exec-sql-file
-  (with-test-db [db]
-    @(drop-table db [:akw-dirpwsfc-2013-02-10t06]
-       (if-exists true))
-    (is (exec-sql-file db "test-resources/stmts-raster.sql"))))
+  (with-backends [db]
+    (try
+      @(drop-table db [:akw_dirpwsfc_2013_02_10t06]
+         (if-exists true))
+      (is (exec-sql-file db "test-resources/stmts-raster.sql"))
+      (finally
+        @(drop-table db [:akw_dirpwsfc_2013_02_10t06])))))
 
 (deftest test-exec-sql-file-select
-  (with-test-db [db]
+  (with-backends [db]
     (let [file "/tmp/test-exec-sql-file-select.sql"]
       (spit file "SELECT * from countries;")
       (is (= (exec-sql-file db file) file)))))

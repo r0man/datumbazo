@@ -1,12 +1,10 @@
 (ns datumbazo.driver.funcool
-  (:require [jdbc.core :as jdbc]
-            [jdbc.proto :as proto]
+  (:require [clojure.string :as str]
             [datumbazo.driver.core :refer :all]
             [datumbazo.io :as io]
             [datumbazo.util :as util]
-            [sqlingvo.compiler :refer [compile-stmt]]
-            [clojure.string :as str])
-  (:import sqlingvo.db.Database))
+            [jdbc.core :as jdbc]
+            [jdbc.proto :as proto]))
 
 (defmethod apply-transaction 'jdbc.core [db f & [opts]]
   (jdbc/atomic-apply
@@ -18,8 +16,12 @@
 (defmethod close-db 'jdbc.core [db]
   (.close (:connection db)))
 
+(defmethod connection 'jdbc.core [db & [opts]]
+  (proto/connection (:connection db)))
+
 (defmethod fetch 'jdbc.core [db sql & [opts]]
-  (let [opts (merge {:identifiers (or (:sql-keyword db) str/lower-case)} opts)]
+  (let [identifiers (or (:sql-keyword db) str/lower-case)
+        opts (merge {:identifiers identifiers} opts)]
     (try
       (jdbc/fetch (:connection db) sql opts)
       (catch Exception e
@@ -32,6 +34,15 @@
 
 (defmethod open-db 'jdbc.core [db]
   (assoc db :connection (jdbc/connection (into {} db))))
+
+(defmethod open-db 'jdbc.core [db]
+  (assoc db :connection (jdbc/connection (or (:datasource db) (into {} db)))))
+
+(defmethod prepare-statement 'jdbc.core [db sql & [opts]]
+  (proto/prepared-statement sql (connection db) opts))
+
+(defmethod rollback! 'jdbc.core [db]
+  (jdbc/set-rollback! (:connection db)))
 
 (extend-protocol proto/ISQLResultSetReadColumn
 

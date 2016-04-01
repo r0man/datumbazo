@@ -1,13 +1,12 @@
 (ns datumbazo.validation-test
   (:require [clojure.test :refer :all]
             [datumbazo.core :refer [run1]]
-            [datumbazo.test :refer [with-test-db]]
+            [datumbazo.test :refer [db with-test-db]]
             [datumbazo.validation :refer :all]
-            [sqlingvo.core :refer [sql]]
-            [validation.core :refer :all]))
+            [sqlingvo.core :refer [sql]]))
 
 (deftest test-uniqueness-of
-  (with-test-db [db]
+  (with-test-db [db db]
     (with-redefs [run1 (fn [stmt]
                          (is (= ["SELECT \"nick\" FROM \"users\" WHERE (\"nick\" = ?) LIMIT 1" "Bob"]
                                 (sql stmt)))

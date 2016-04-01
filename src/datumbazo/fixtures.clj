@@ -3,11 +3,11 @@
   (:refer-clojure :exclude [distinct group-by replace update])
   (:require [clojure.instant :refer [read-instant-timestamp]]
             [clojure.java.io :refer [file make-parents resource writer]]
-            [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [blank? join replace split]]
             [clojure.tools.logging :refer [infof]]
             [commandline.core :refer [print-help with-commandline]]
             [datumbazo.core :refer :all :exclude [join]]
+            [datumbazo.driver.core :as driver]
             [datumbazo.io :refer [encode-rows decode-row]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [edn-file-seq path-split path-replace]]
@@ -93,22 +93,22 @@
   [db table filename & {:keys [entities identifiers]}]
   (make-parents filename)
   (with-open [writer (writer filename)]
-    (let [rows @(select db [*] (from table))]
+    (let [rows (seq @(select db [*] (from table)))]
       (clojure.pprint/pprint rows writer)
       {:file filename :table table :records (count rows)})))
 
 (defn deferred-constraints [db]
-  (jdbc/execute! db ["SET CONSTRAINTS ALL DEFERRED"]))
+  (driver/execute db ["SET CONSTRAINTS ALL DEFERRED"]))
 
 (defn enable-triggers
   "Enable triggers on the database `table`."
   [db table & {:keys [entities]}]
-  (jdbc/execute! db [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " ENABLE TRIGGER ALL")]))
+  (driver/execute db [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " ENABLE TRIGGER ALL")]))
 
 (defn disable-triggers
   "Disable triggers on the database `table`."
   [db table & {:keys [entities]}]
-  (jdbc/execute! db [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " DISABLE TRIGGER ALL")]))
+  (driver/execute db [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " DISABLE TRIGGER ALL")]))
 
 (defn delete-fixtures [db tables]
   (infof "Deleting fixtures from database.")
@@ -126,7 +126,7 @@
   "Load all database fixtures from `directory`."
   [db directory & opts]
   (let [fixtures (fixture-seq directory)]
-    (jdbc/with-db-transaction
+    (with-transaction
       [db db]
       (apply deferred-constraints db opts)
       (doall (map #(apply disable-triggers db %1 opts) (map :table fixtures)))
