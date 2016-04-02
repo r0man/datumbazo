@@ -3,7 +3,8 @@
   (:require [clojure.test :refer :all]
             [datumbazo.core :refer :all]
             [datumbazo.test :refer :all]
-            [datumbazo.util :refer :all]))
+            [datumbazo.util :refer :all]
+            [clojure.java.io :as io]))
 
 (deftest test-absolute-path
   (is (string? (absolute-path ""))))
@@ -83,3 +84,10 @@
     (let [file "/tmp/test-exec-sql-file-select.sql"]
       (spit file "SELECT * from countries;")
       (is (= (exec-sql-file db file) file)))))
+
+(deftest test-sql-stmt-seq
+  (is (= (sql-stmt-seq (io/reader "test-resources/stmts-multiline.sql"))
+         ["SELECT 1;"
+          "CREATE TABLE x (   id INTEGER);"
+          "SELECT * FROM x;"
+          "DROP x;"])))
