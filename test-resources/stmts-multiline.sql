@@ -1,0 +1,7 @@
+SELECT 1;
+
+CREATE TABLE x (
+  id INTEGER
+);
+SELECT * FROM x;
+DROP x;

@@ -129,11 +129,26 @@
           (str/lower-case)
           (keyword)))
 
+(defn sql-stmt-seq
+  "Return a seq of SQL statements from `reader`."
+  [reader]
+  (let [pattern #"[^;]*;\s*"]
+    (reduce
+     (fn [stmts stmt]
+       (if (re-matches pattern (str (last stmts)))
+         (conj stmts stmt)
+         (conj (vec (butlast stmts)) (str (last stmts) stmt))))
+     []
+     (->> (line-seq reader)
+          (remove str/blank?)
+          (partition-by #(re-matches pattern (str %)))
+          (map #(str/join " " %))))))
+
 (defn exec-sql-file
   "Slurp `file` and execute each line as a statement."
   [db file]
   (with-open [reader (reader file)]
-    (doseq [statement (line-seq reader)
+    (doseq [statement (sql-stmt-seq reader)
             :let [statement (replace statement #";$" "")]]
       (case (parse-command statement)
         :select (driver/fetch db [statement])
