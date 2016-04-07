@@ -24,15 +24,6 @@
   [spec]
   (db/new-db spec))
 
-(defmacro with-db
-  "Start a database connection using `config` bind it to `db-sym`,
-  evaluate `body` and close the database connection again."
-  [[db-sym config] & body]
-  `(let [component# (component/start (new-db ~config))
-         ~db-sym component#]
-     (try ~@body
-          (finally (component/stop component#)))))
-
 (defmacro with-transaction
   "Start a new transaction on `db` connection, bind it to `db-sym` and
   evaluate `body` within the transaction."
@@ -44,6 +35,20 @@
                   (driver/rollback! db#))
                 result#))]
      (driver/apply-transaction ~db f# ~opts)))
+
+(defmacro with-db
+  "Start a database connection using `config` bind it to `db-sym`,
+  evaluate `body` and close the database connection again."
+  [[db-sym config & [opts]] & body]
+  `(let [db# (merge (new-db ~config) ~opts)
+         component# (component/start db#)
+         ~db-sym component#]
+     (try
+       (if (:rollback? component#)
+         (with-transaction [~db-sym ~db-sym {:rollback? true}]
+           ~@body)
+         (do ~@body ))
+       (finally (component/stop component#)))))
 
 (defn columns
   "Returns the columns of `table`."

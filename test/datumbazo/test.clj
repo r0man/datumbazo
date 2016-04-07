@@ -12,11 +12,9 @@
 (def db (new-db (:postgresql connections)))
 
 (defmacro with-test-db
-  [[db-sym config] & body]
-  `(with-db [~db-sym ~config]
-     (with-transaction [~db-sym ~db-sym]
-       ~@body
-       (driver/rollback! ~db-sym))))
+  [[db-sym config & [opts]] & body]
+  `(with-db [~db-sym ~config (assoc ~opts :rollback? true)]
+     ~@body))
 
 (defmacro with-test-dbs
   [[db-sym vendors] & body]
