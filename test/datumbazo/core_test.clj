@@ -1050,7 +1050,7 @@
     (try
       @(create-table db :test-with-transaction
          (column :x :int))
-      (try (with-transaction [db]
+      (try (with-transaction [db db]
              @(insert db :test-with-transaction []
                 (values {:x 1}))
              (throw (ex-info "boom" {})))
@@ -1060,9 +1060,22 @@
         @(drop-table db [:test-with-transaction]
            (if-exists true))))))
 
+(deftest test-with-transaction-rollback
+  (with-backends [db {:test false}]
+    (try
+      @(create-table db :test-with-transaction-rollback
+         (column :x :int))
+      (with-transaction [db db {:rollback? true}]
+        @(insert db :test-with-transaction-rollback []
+           (values {:x 1})))
+      (is (empty? @(select db [:*] (from :test-with-transaction-rollback))))
+      (finally
+        @(drop-table db [:test-with-transaction-rollback]
+           (if-exists true))))))
+
 (deftest test-with-nested-transaction
   (with-backends [db]
-    (with-transaction [db]
+    (with-transaction [db db]
       ;; TODO: How does this work in clojure.java.jdbc?
       (when (= (:backend db) 'jdbc.core)
         @(drop-table db [:test-with-nested-transaction]

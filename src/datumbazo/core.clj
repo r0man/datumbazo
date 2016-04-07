@@ -3,7 +3,7 @@
   (:require [com.stuartsierra.component :as component]
             [datumbazo.connection :as connection]
             [datumbazo.db :as db]
-            [datumbazo.driver.core :as driver]            
+            [datumbazo.driver.core :as driver]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [compact-map immigrate]]
@@ -34,9 +34,15 @@
           (finally (component/stop component#)))))
 
 (defmacro with-transaction
-  "Evaluate `body` within a database transaction."
-  [[db opts] & body]
-  `(let [f# (fn [db#] (let [~db db#] ~@body))]
+  "Start a new transaction on `db` connection, bind it to `db-sym` and
+  evaluate `body` within the transaction."
+  [[db-sym db & [opts]] & body]
+  `(let [f# (fn [db#]
+              (let [~db-sym db#
+                    result# (do ~@body)]
+                (when (:rollback? ~opts)
+                  (driver/rollback! db#))
+                result#))]
      (driver/apply-transaction ~db f# ~opts)))
 
 (defn columns
