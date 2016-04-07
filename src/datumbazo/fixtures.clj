@@ -47,13 +47,15 @@
   (binding [*data-readers* (merge *data-readers* *readers*)]
     (read-string (slurp filename))))
 
-(defn serial-seq
-  "Returns the default serial name of column."
-  [column]
-  (keyword (str (if (and (:schema column)
-                         (not (contains? #{:public} (:schema column))))
-                  (str (name (:schema column)) "."))
-                (name (:table column)) "_" (name (:name column)) "_seq")))
+(defn serial-sequence
+  "Return the serial sequence for `column` in `db`."
+  [db column]
+  (select db [`(pg_get_serial_sequence
+                ~(if (:schema column)
+                   (str (sql-name db (:schema column)) "."
+                        (sql-name db (:table column)))
+                   (sql-name db (:table column)))
+                ~(sql-name db (:name column)))]))
 
 (defn reset-serials
   "Reset the serial counters of all columns in `table`."
@@ -61,9 +63,10 @@
   (let [table (parse-table table)]
     (doseq [column (meta/columns db :schema (or (:schema table) :public) :table (:name table))
             :when (contains? #{:bigserial :serial} (:type column))]
-      (first @(select db [`(setval ~(sql-name db (serial-seq column))
-                                   ~(select db [`(max ~(:name column))]
-                                      (from table)))])))))
+      (first @(select db [`(setval
+                            ~(serial-sequence db column)
+                            ~(select db [`(max ~(:name column))]
+                               (from table)))])))))
 
 (defn- find-column-keys [db table]
   (let [table (parse-table table)]

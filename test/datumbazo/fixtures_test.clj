@@ -60,6 +60,13 @@
              (:file fixture)))
       (is (= :twitter.tweets (:table fixture))))))
 
+(deftest test-serial-sequence
+  (with-backends [db]
+    (is (= @(serial-sequence db {:table "continents" :name "id"})
+           [{:pg_get_serial_sequence "public.continents_id_seq"}]))
+    (is (= @(serial-sequence db {:table :continents :name :id})
+           [{:pg_get_serial_sequence "public.continents_id_seq"}]))))
+
 (deftest test-load-fixtures
   (with-backends [db]
     (delete-fixtures db (tables fixture-dir))
@@ -82,16 +89,6 @@
   (with-backends [db]
     (reset-serials db :continents)
     (reset-serials db :twitter.users)))
-
-(deftest test-serial-seq
-  (are [column expected]
-      (is (= expected (serial-seq column)))
-    {:table :continents :name :id}
-    :continents_id_seq
-    {:schema :public :table :continents :name :id}
-    :continents_id_seq
-    {:schema :twitter :table :users :name :id}
-    :twitter.users_id_seq))
 
 (deftest test-tables
   (is (= [:continents :countries :twitter.tweets :twitter.tweets-users :twitter.users]
