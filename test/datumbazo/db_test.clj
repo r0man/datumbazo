@@ -23,8 +23,9 @@
     (is (= "scotch" (:password spec)))
     (is (= "datumbazo" (:name spec)))
     (is (= "/datumbazo" (:uri spec)))
-    (is (= {:profileSQL "true"} (:params spec)))
+    (is (= {:profileSQL "true"} (:query-params spec)))
     (is (= "mysql" (:subprotocol spec)))
+    (is (= :mysql (:scheme spec)))
     (is (= "//localhost/datumbazo?profileSQL=true" (:subname spec)))
     (is (= "tiger" (:user spec))) ; MySQL needs :user key
     (is (= "scotch" (:password spec)))))
@@ -40,8 +41,9 @@
     (is (= "scotch" (:password spec)))
     (is (= "datumbazo" (:name spec)))
     (is (= "/datumbazo" (:uri spec)))
-    (is (nil? (:params spec)))
+    (is (nil? (:query-params spec)))
     (is (= "oracle:thin" (:subprotocol spec)))
+    (is (= :oracle (:scheme spec)))
     (is (= ":tiger/scotch@localhost:datumbazo" (:subname spec)))))
 
 (deftest test-new-db-postgresql
@@ -55,8 +57,9 @@
     (is (= "scotch" (:password spec)))
     (is (= "datumbazo" (:name spec)))
     (is (= "/datumbazo" (:uri spec)))
-    (is (= {:ssl "true"} (:params spec)))
+    (is (= {:ssl "true"} (:query-params spec)))
     (is (= "postgresql" (:subprotocol spec)))
+    (is (= :postgresql (:scheme spec)))
     (is (= "//localhost:5432/datumbazo?ssl=true" (:subname spec)))
     (is (= "tiger" (:user spec)))
     (is (= "scotch" (:password spec)))))
@@ -66,8 +69,9 @@
     (is (instance? sqlingvo.db.Database spec))
     (is (= "org.sqlite.JDBC" (:classname spec)))
     (is (= :jdbc (:pool spec)))
-    (is (nil? (:params spec)))
+    (is (nil? (:query-params spec)))
     (is (= "sqlite" (:subprotocol spec)))
+    (is (= :sqlite (:scheme spec)))
     (is (= "//tmp/datumbazo.sqlite" (:subname spec)))))
 
 (deftest test-new-db-sqlserver
@@ -81,7 +85,7 @@
     (is (= "scotch" (:password spec)))
     (is (= "datumbazo" (:name spec)))
     (is (= "/datumbazo" (:uri spec)))
-    (is (nil? (:params spec)))
+    (is (nil? (:query-params spec)))
     (is (= "sqlserver" (:subprotocol spec)))
     (is (= "//localhost;database=datumbazo;user=tiger;password=scotch" (:subname spec)))))
 
@@ -97,8 +101,9 @@
     (is (= "scotch" (:password spec)))
     (is (= "datumbazo" (:name spec)))
     (is (= "/datumbazo" (:uri spec)))
-    (is (nil? (:params spec)))
+    (is (nil? (:query-params spec)))
     (is (= "vertica" (:subprotocol spec)))
+    (is (= :vertica (:scheme spec)))
     (is (= "//localhost/datumbazo" (:subname spec)))))
 
 (deftest test-new-db-with-db
@@ -115,7 +120,7 @@
     (is (= 5432 (:port spec)))
     (is (= "datumbazo" (:name spec)))
     (is (= "/datumbazo" (:uri spec)))
-    (is (nil? (:params spec)))
+    (is (nil? (:query-params spec)))
     (is (= "postgresql" (:subprotocol spec))))
   (let [spec (parse-url "postgresql://tiger:scotch@localhost:5432/datumbazo?a=1&b=2")]
     (is (= :jdbc (:pool spec)))
@@ -125,7 +130,7 @@
     (is (= 5432 (:port spec)))
     (is (= "datumbazo" (:name spec)))
     (is (= "/datumbazo" (:uri spec)))
-    (is (= {:a "1" :b "2"} (:params spec)))
+    (is (= {:a "1" :b "2"} (:query-params spec)))
     (is (= "postgresql" (:subprotocol spec))))
   (let [spec (parse-url "c3p0:postgresql://localhost/datumbazo")]
     (is (= :c3p0 (:pool spec)))
@@ -134,5 +139,5 @@
     (is (nil?  (:port spec)))
     (is (= "datumbazo" (:name spec)))
     (is (= "/datumbazo" (:uri spec)))
-    (is (nil? (:params spec)))
+    (is (nil? (:query-params spec)))
     (is (= "postgresql" (:subprotocol spec)))))

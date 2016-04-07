@@ -647,7 +647,7 @@
     (is (= "localhost" (:host db)))
     (is (= 5432 (:port db)))
     (is (= "datumbazo" (:name db)))
-    (is (= {:ssl "true"} (:params db)))
+    (is (= {:ssl "true"} (:query-params db)))
     (is (= db (new-db db)))))
 
 (deftest test-with-db

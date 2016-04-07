@@ -27,18 +27,18 @@
          (.setPassword (:password db))
          (.setDefaultAutoCommit (not (true? (:test db))))))))
 
-(defmethod connect :c3p0 [{:keys [params] :as db}]
+(defmethod connect :c3p0 [{:keys [query-params] :as db}]
   (connect-datasource
    db (doto (util/invoke-constructor "com.mchange.v2.c3p0.ComboPooledDataSource")
         (.setJdbcUrl (str "jdbc:" (name (:subprotocol db)) ":" (:subname db)))
         (.setUser (:user db))
         (.setPassword (:password db))
-        (.setAcquireRetryAttempts (parse-integer (or (:acquire-retry-attempts params) 30)))
-        (.setInitialPoolSize (parse-integer (or (:initial-pool-size params) 3)))
-        (.setMaxIdleTime (parse-integer (or (:max-idle-time params) (* 3 60 60))))
-        (.setMaxIdleTimeExcessConnections (parse-integer (or (:max-idle-time-excess-connections params) (* 30 60))))
-        (.setMaxPoolSize (parse-integer (or (:max-pool-size params) 15)))
-        (.setMinPoolSize (parse-integer (or (:min-pool-size params) 3))))))
+        (.setAcquireRetryAttempts (parse-integer (or (:acquire-retry-attempts query-params) 30)))
+        (.setInitialPoolSize (parse-integer (or (:initial-pool-size query-params) 3)))
+        (.setMaxIdleTime (parse-integer (or (:max-idle-time query-params) (* 3 60 60))))
+        (.setMaxIdleTimeExcessConnections (parse-integer (or (:max-idle-time-excess-connections query-params) (* 30 60))))
+        (.setMaxPoolSize (parse-integer (or (:max-pool-size query-params) 15)))
+        (.setMinPoolSize (parse-integer (or (:min-pool-size query-params) 3))))))
 
 (defmethod connect :default [db]
   (if (:connection db)

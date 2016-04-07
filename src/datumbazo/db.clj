@@ -16,9 +16,11 @@
           query-string (nth matches 15)]
       {:name database
        :host server-name
+       :scheme (keyword (nth matches 3))
        :server-name server-name
        :server-port server-port
        :params (parse-query-params query-string)
+       :query-params (parse-query-params query-string)
        :pool (keyword (or (nth matches 2) :jdbc))
        :port server-port
        :query-string query-string
