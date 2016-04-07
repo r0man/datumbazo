@@ -24,8 +24,7 @@
        (doto (util/invoke-constructor "com.jolbox.bonecp.BoneCPConfig")
          (.setJdbcUrl (str "jdbc:" (name (:subprotocol db)) ":" (:subname db)))
          (.setUsername (:user db))
-         (.setPassword (:password db))
-         (.setDefaultAutoCommit (not (true? (:test db))))))))
+         (.setPassword (:password db))))))
 
 (defmethod connect :c3p0 [{:keys [query-params] :as db}]
   (connect-datasource

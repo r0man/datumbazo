@@ -75,8 +75,8 @@
   `(doseq [backend# ['clojure.java.jdbc 'jdbc.core]]
      (if (find-ns backend#)
        (let [db# (new-db ~(:postgresql connections))]
-         (with-db [~db-sym (merge db# {:backend backend# :test true} ~opts)]
-           (if (:test ~db-sym)
+         (with-db [~db-sym (merge db# {:backend backend# :rollback? true} ~opts)]
+           (if (:rollback? ~db-sym)
              (with-transaction [~db-sym ~db-sym]
                ~@body
                (driver/rollback! ~db-sym))

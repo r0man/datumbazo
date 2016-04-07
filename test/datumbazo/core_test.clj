@@ -1046,7 +1046,7 @@
            [{:x "english"}]))))
 
 (deftest test-with-transaction
-  (with-backends [db {:test false}]
+  (with-backends [db {:rollback? false}]
     (try
       @(create-table db :test-with-transaction
          (column :x :int))
@@ -1061,7 +1061,7 @@
            (if-exists true))))))
 
 (deftest test-with-transaction-rollback
-  (with-backends [db {:test false}]
+  (with-backends [db {:rollback? false}]
     (try
       @(create-table db :test-with-transaction-rollback
          (column :x :int))
