@@ -43,12 +43,8 @@
   `(let [db# (merge (new-db ~config) ~opts)
          component# (component/start db#)
          ~db-sym component#]
-     (try
-       (if (:rollback? component#)
-         (with-transaction [~db-sym ~db-sym {:rollback? true}]
-           ~@body)
-         (do ~@body ))
-       (finally (component/stop component#)))))
+     (try ~@body
+          (finally (component/stop component#)))))
 
 (defn columns
   "Returns the columns of `table`."

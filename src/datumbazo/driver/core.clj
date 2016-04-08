@@ -5,6 +5,14 @@
   "Apply `f` within a database transaction"
   (fn [db f & [opts]] (:backend db)))
 
+(defmulti begin
+  "Begin a `db` transaction."
+  (fn [db & [opts]] (:backend db)))
+
+(defmulti commit
+  "Commit a `db` transaction."
+  (fn [db & [opts]] (:backend db)))
+
 (defmulti close-db
   "Close the connection to `db`."
   (fn [db] (:backend db)))

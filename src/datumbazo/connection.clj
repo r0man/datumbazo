@@ -85,6 +85,11 @@
 (extend-type sqlingvo.db.Database
   component/Lifecycle
   (start [db]
-    (connect db))
+    (let [db (connect db)]
+      (if (:rollback? db)
+        (driver/begin db)
+        db)))
   (stop [db]
+    (when (:rollback? db)
+      (driver/rollback! db))
     (disconnect db)))

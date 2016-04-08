@@ -3,7 +3,8 @@
   (:require [clojure.java.io :refer [file reader]]
             [clojure.string :as str :refer [blank? replace split]]
             [datumbazo.driver.core :as driver])
-  (:import java.io.File))
+  (:import java.io.File
+           java.sql.SQLException))
 
 (defn absolute-path
   "Returns the absolute path of `path."
@@ -160,6 +161,7 @@
   [e sql]
   (throw (ex-info
           (.getMessage e)
-          {:next (.getNextException e)
+          {:next (if (instance? SQLException e)
+                   (.getNextException e))
            :sql sql}
           (.getCause e))))
