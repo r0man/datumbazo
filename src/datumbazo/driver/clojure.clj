@@ -9,8 +9,37 @@
   (when-not (or (:connection db) (:datasource  db))
     (throw (ex-info "No database connection or datasource!" {:db db}))))
 
+(defmethod begin 'clojure.java.jdbc
+  [db & [{:keys [isolation read-only?]}]]
+  (assert-connection db)
+  ;; Taken from clojure.java.jdbc/db-transaction*
+  (if (zero? (jdbc/get-level db))
+    (let [con (jdbc/db-find-connection db)]
+      (let [nested-db (#'jdbc/inc-level db)]
+        (io!
+         (when isolation
+           (.setTransactionIsolation con (isolation #'jdbc/isolation-levels)))
+         (when read-only?
+           (.setReadOnly con true))
+         (.setAutoCommit con false)
+         nested-db)))
+    (do
+      (when (and isolation
+                 (let [con (jdbc/db-find-connection db)]
+                   (not= (isolation #'jdbc/isolation-levels)
+                         (.getTransactionIsolation con))))
+        (let [msg "Nested transactions may not have different isolation levels"]
+          (throw (IllegalStateException. msg))))
+      (#'jdbc/inc-level db))))
+
 (defmethod apply-transaction 'clojure.java.jdbc [db f & [opts]]
   (apply jdbc/db-transaction* db f (apply concat opts)))
+
+(defmethod commit 'clojure.java.jdbc [db & [opts]]
+  (if (jdbc/db-is-rollback-only db)
+    (.rollback (connection db))
+    (.commit (connection db)))
+  db)
 
 (defmethod close-db 'clojure.java.jdbc [db]
   (.close (:connection db)))

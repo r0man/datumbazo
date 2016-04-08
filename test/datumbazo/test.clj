@@ -74,11 +74,7 @@
      (if (find-ns backend#)
        (let [db# (new-db ~(:postgresql connections))]
          (with-db [~db-sym (merge db# {:backend backend# :rollback? true} ~opts)]
-           (if (:rollback? ~db-sym)
-             (with-transaction [~db-sym ~db-sym]
-               ~@body
-               (driver/rollback! ~db-sym))
-             (do ~@body))))
+           ~@body))
        (.println *err* (format "WARNING: Can't find %s backend, skipping tests." backend#)))))
 
 (deftest test-with-backends

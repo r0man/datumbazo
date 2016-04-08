@@ -4,7 +4,18 @@
             [datumbazo.io :as io]
             [datumbazo.util :as util]
             [jdbc.core :as jdbc]
-            [jdbc.proto :as proto]))
+            [jdbc.proto :as proto]
+            [jdbc.impl :as impl]))
+
+(defn- tx-strategy [db & [opts]]
+  (or (:strategy opts)
+      (-> db :connection meta :tx-strategy)
+      jdbc/*default-tx-strategy*))
+
+(defmethod begin 'jdbc.core [db & [opts]]
+  (let [connection (:connection db)
+        tx-strategy (tx-strategy db)]
+    (assoc db :connection (proto/begin! tx-strategy connection opts))))
 
 (defmethod apply-transaction 'jdbc.core [db f & [opts]]
   (jdbc/atomic-apply
@@ -15,6 +26,11 @@
 
 (defmethod close-db 'jdbc.core [db]
   (.close (:connection db)))
+
+(defmethod commit 'jdbc.core [db & [opts]]
+  (let [connection (:connection db)
+        tx-strategy (tx-strategy db)]
+    (assoc db :connection (proto/commit! tx-strategy connection opts))))
 
 (defmethod connection 'jdbc.core [db & [opts]]
   (proto/connection (:connection db)))
