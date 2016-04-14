@@ -13,7 +13,7 @@
                  [inflections "0.12.1"]
                  [org.clojure/clojure "1.8.0"]
                  [org.clojure/data.json "0.2.6"]
-                 [org.clojure/java.jdbc "0.5.0"]
+                 [org.clojure/java.jdbc "0.5.8"]
                  [org.clojure/tools.logging "0.3.1"]
                  [org.postgresql/postgresql "9.4.1208"]
                  [org.xerial/sqlite-jdbc "3.8.11.2"]
