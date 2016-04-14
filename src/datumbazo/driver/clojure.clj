@@ -33,7 +33,7 @@
       (#'jdbc/inc-level db))))
 
 (defmethod apply-transaction 'clojure.java.jdbc [db f & [opts]]
-  (apply jdbc/db-transaction* db f (apply concat opts)))
+  (jdbc/db-transaction* db f opts))
 
 (defmethod commit 'clojure.java.jdbc [db & [opts]]
   (if (jdbc/db-is-rollback-only db)
@@ -52,7 +52,7 @@
   (let [identifiers (or (:sql-keyword db) str/lower-case)
         opts (merge {:identifiers identifiers} opts)]
     (try
-      (apply jdbc/query db sql (apply concat opts))
+      (jdbc/query db sql opts)
       (catch Exception e
         (util/throw-sql-ex-info e sql)))))
 
@@ -68,8 +68,7 @@
 
 (defmethod prepare-statement 'clojure.java.jdbc [db sql & [opts]]
   (assert-connection db)
-  (let [opts (apply concat opts)
-        prepared (apply jdbc/prepare-statement (connection db) (first sql) opts)]
+  (let [prepared (jdbc/prepare-statement (connection db) (first sql) opts)]
     (dorun (map-indexed (fn [i v] (jdbc/set-parameter v prepared (inc i))) (rest sql)))
     prepared))
 
