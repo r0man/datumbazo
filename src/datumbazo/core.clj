@@ -1,6 +1,7 @@
 (ns datumbazo.core
   (:refer-clojure :exclude [distinct group-by update])
   (:require [com.stuartsierra.component :as component]
+            [datumbazo.associations :as associations]
             [datumbazo.connection :as connection]
             [datumbazo.db :as db]
             [datumbazo.driver.core :as driver]
@@ -9,8 +10,14 @@
             [datumbazo.util :refer [compact-map immigrate]]
             [inflections.core :refer [singular]]
             [no.en.core :refer [parse-integer]]
+            [potemkin :refer [import-vars]]
             sqlingvo.core
             [sqlingvo.expr :refer [parse-table]]))
+
+(import-vars
+ [datumbazo.associations
+  belongs-to
+  has-many])
 
 (immigrate 'sqlingvo.core)
 
@@ -92,7 +99,7 @@
   (let [prepare (concat (:prepare ast) (:prepare (:table ast)))
         prepare (if (empty? prepare) identity (apply comp prepare))]
     (case (:op ast)
-      :insert (update-in ast [:values] #(map (fn [row] (lift-row (:table ast) row prepare)) %1))
+      :insert (update-in ast [:values :values] #(map (fn [row] (lift-row (:table ast) row prepare)) %1))
       :update (update-in ast [:row] #(lift-row (:table ast) % prepare))
       ast)))
 
@@ -221,20 +228,22 @@
 (defn insert-row
   "Insert `row` into the database `table`."
   [db table row & [opts]]
-  (run1 (sqlingvo.core/insert db table []
-                              (values (select-columns table row))
-                              (apply returning (remove #(= true (:hidden? %1)) (columns table)))
-                              (prepare (partial io/encode-row db table))
-                              (prepare (:prepare table)))))
+  (run1 (sqlingvo.core/insert
+            db table []
+          (values [(select-columns table row)])
+          (apply returning (remove #(= true (:hidden? %1)) (columns table)))
+          (prepare (partial io/encode-row db table))
+          (prepare (:prepare table)))))
 
 (defn insert-rows
   "Insert `rows` into the database `table`."
   [db table rows & [opts]]
-  (run (sqlingvo.core/insert db table []
-                             (values (map #(select-columns table %) rows))
-                             (apply returning (remove #(= true (:hidden? %1)) (columns table)))
-                             (prepare (partial io/encode-row db table))
-                             (prepare (:prepare table)))))
+  (run (sqlingvo.core/insert
+           db table []
+         (values (map #(select-columns table %) rows))
+         (apply returning (remove #(= true (:hidden? %1)) (columns table)))
+         (prepare (partial io/encode-row db table))
+         (prepare (:prepare table)))))
 
 (defn update-row
   "Update the `row` in the database `table`."
@@ -247,37 +256,37 @@
 
 (defmacro deftable
   "Define a database table."
-  [table-name doc & body]
-  (let [table# (eval `(second ((table ~(keyword table-name) ~@body) {})))
-        singular# (singular (str table-name))
-        symbol# (symbol (str table-name "-table"))]
+  [table-sym doc & body]
+  (let [table# (eval `(second ((table ~(keyword table-sym) ~@body) {})))
+        singular# (singular (str table-sym))
+        symbol# (symbol (str table-sym "-table"))]
     `(do (def ~symbol#
-           (second ((table ~(keyword table-name) ~@body) {})))
+           (second ((table ~(keyword table-sym) ~@body) {})))
 
-         (defquery ~table-name
-           ~(format "Select %s from the database table." table-name)
+         (defquery ~table-sym
+           ~(format "Select %s from the database table." table-sym)
            [~'db & [~'opts]]
            (select-rows ~'db ~symbol# ~'opts))
 
-         (defquery1 ~(symbol (str (singular table-name)  "-by-pk"))
-           ~(format "Find the %s by primary key." (singular table-name))
+         (defquery1 ~(symbol (str (singular table-sym)  "-by-pk"))
+           ~(format "Find the %s by primary key." (singular table-sym))
            [~'db ~'row & [~'opts]]
-           (compose (~(symbol (str table-name "*")) ~'db)
+           (compose (~(symbol (str table-sym "*")) ~'db)
                     (where (primary-key-clause ~'db ~symbol# ~'row))))
 
-         (defn ~(symbol (str "drop-" table-name))
-           ~(format "Drop the %s database table." table-name)
+         (defn ~(symbol (str "drop-" table-sym))
+           ~(format "Drop the %s database table." table-sym)
            [~'db & ~'body]
            (:count (run1 (apply drop-table ~'db [~symbol#] ~'body))))
 
-         (defn ~(symbol (str "delete-" table-name))
-           ~(format "Delete all rows in the %s database table." table-name)
+         (defn ~(symbol (str "delete-" table-sym))
+           ~(format "Delete all rows in the %s database table." table-sym)
            [~'db & ~'body] (:count (run1 (apply delete ~'db ~symbol# ~'body))))
 
          (defn ~(symbol (str "delete-" singular#))
            ~(format "Delete the %s from the database table." singular#)
            [~'db ~'row] (:count (run1 (delete ~'db  ~symbol#
-                                        (from ~(keyword table-name))
+                                        (from ~(keyword table-sym))
                                         (where `(= :id ~(:id ~'row)))))))
 
          (defn ~(symbol (str "insert-" singular#))
@@ -285,13 +294,13 @@
            [~'db ~'row & ~'opts]
            (insert-row ~'db ~symbol# ~'row ~'opts))
 
-         (defn ~(symbol (str "insert-" (str table-name)))
+         (defn ~(symbol (str "insert-" (str table-sym)))
            ~(format "Insert the %s rows into the database." singular#)
            [~'db ~'rows & ~'opts]
            (insert-rows ~'db ~symbol# ~'rows ~'opts))
 
-         (defn ~(symbol (str "truncate-" table-name))
-           ~(format "Truncate the %s database table." table-name)
+         (defn ~(symbol (str "truncate-" table-sym))
+           ~(format "Truncate the %s database table." table-sym)
            [~'db & ~'body] (:count (run1 (apply truncate ~'db [~symbol#] ~'body))))
 
          (defn ~(symbol (str "update-" singular#))
@@ -307,20 +316,21 @@
              (or (apply ~(symbol (str "update-" singular#)) ~'db ~'row ~'opts)
                  (apply ~(symbol (str "insert-" singular#)) ~'db ~'row ~'opts))))
 
-         ~@(for [column (vals (:column table#)) :let [column-name (name (:name column))]]
+         ~@(for [column (vals (:column table#))
+                 :let [column-name (name (:name column))]]
              (do
-               `(do (defquery ~(symbol (str table-name "-by-" column-name))
-                      ~(format "Find all %s by %s." table-name column-name)
+               `(do (defquery ~(symbol (str table-sym "-by-" column-name))
+                      ~(format "Find all %s by %s." table-sym column-name)
                       [~'db ~'value & [~'opts]]
                       (let [column# (first (meta/columns ~'db :schema (or ~(:schema table#) :public) :table ~(:name table#) :name ~(:name column)))]
                         (fn [stmt#]
                           ((chain-state [(where `(= ~(keyword (str (name (:table column#)) "." (name (:name column#))))
                                                     ~(io/encode-column column# ~'value)))])
-                           (ast (~(symbol (str table-name "*")) ~'db ~'opts))))))
-                    (defn ~(symbol (str (singular table-name) "-by-" column-name))
-                      ~(format "Find the first %s by %s." (singular table-name) column-name)
+                           (ast (~(symbol (str table-sym "*")) ~'db ~'opts))))))
+                    (defn ~(symbol (str (singular table-sym) "-by-" column-name))
+                      ~(format "Find the first %s by %s." (singular table-sym) column-name)
                       [~'db & ~'args]
-                      (first (apply ~(symbol (str table-name "-by-" column-name)) ~'db ~'args)))))))))
+                      (first (apply ~(symbol (str table-sym "-by-" column-name)) ~'db ~'args)))))))))
 
 
 (try

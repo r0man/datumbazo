@@ -2,7 +2,6 @@
   :name "Africa",
   :code "AF",
   :geometry nil,
-  :freebase-guid "#9202a8c04000641f8000000000c70e81",
   :geonames-id 6255146,
   :created-at #inst "2012-10-06T18:22:58.640-00:00",
   :updated-at #inst "2012-10-06T18:22:58.640-00:00"}
@@ -10,7 +9,6 @@
   :name "Antarctica",
   :code "AN",
   :geometry nil,
-  :freebase-guid "#9202a8c04000641f80000000000041bc",
   :geonames-id 6255152,
   :created-at #inst "2012-10-06T18:22:58.640-00:00",
   :updated-at #inst "2012-10-06T18:22:58.640-00:00"}
@@ -18,7 +16,6 @@
   :name "Asia",
   :code "AS",
   :geometry nil,
-  :freebase-guid "#9202a8c04000641f8000000000004011",
   :geonames-id 6255147,
   :created-at #inst "2012-10-06T18:22:58.640-00:00",
   :updated-at #inst "2012-10-06T18:22:58.640-00:00"}
@@ -26,7 +23,6 @@
   :name "Europe",
   :code "EU",
   :geometry nil,
-  :freebase-guid "#9202a8c04000641f800000000001413e",
   :geonames-id 6255148,
   :created-at #inst "2012-10-06T18:22:58.640-00:00",
   :updated-at #inst "2012-10-06T18:22:58.640-00:00"}
@@ -34,7 +30,6 @@
   :name "North America",
   :code "NA",
   :geometry nil,
-  :freebase-guid "#9202a8c04000641f800000000002a5c4",
   :geonames-id 6255149,
   :created-at #inst "2012-10-06T18:22:58.640-00:00",
   :updated-at #inst "2012-10-06T18:22:58.640-00:00"}
@@ -42,7 +37,6 @@
   :name "Oceania",
   :code "OC",
   :geometry nil,
-  :freebase-guid "#9202a8c04000641f80000000009ac6c0",
   :geonames-id 6255151,
   :created-at #inst "2012-10-06T18:22:58.640-00:00",
   :updated-at #inst "2012-10-06T18:22:58.640-00:00"}
@@ -50,7 +44,6 @@
   :name "South America",
   :code "SA",
   :geometry nil,
-  :freebase-guid "#9202a8c04000641f800000000003507d",
   :geonames-id 6255150,
   :created-at #inst "2012-10-06T18:22:58.640-00:00",
   :updated-at #inst "2012-10-06T18:22:58.640-00:00"})

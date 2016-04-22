@@ -7,7 +7,6 @@ CREATE TABLE continents (
   name citext UNIQUE NOT NULL,
   code varchar(2) UNIQUE NOT NULL,
   geometry geometry(MULTIPOLYGON, 4326),
-  "freebase-guid" citext UNIQUE,
   "geonames-id" integer UNIQUE,
   "created-at" timestamp with time zone NOT NULL DEFAULT now(),
   "updated-at" timestamp with time zone NOT NULL DEFAULT now()
@@ -18,6 +17,5 @@ CREATE INDEX "continents-geometry-idx" ON continents USING GIST(geometry);
 
 CREATE UNIQUE INDEX "continents-code-idx" ON continents (lower(code));
 CREATE UNIQUE INDEX "continents-geonames-id-idx" ON continents ("geonames-id");
-CREATE UNIQUE INDEX "continents-freebase-guid-idx" ON continents (lower("freebase-guid"));
 
 COMMIT;

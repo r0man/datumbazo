@@ -34,7 +34,7 @@
       (is (every? #(= :continents (:table %1)) columns))
       (is (every? #(keyword? (:name %1)) columns))
       (is (every? #(keyword? (:type %1)) columns))
-      (is (= [:id :name :code :geometry :freebase-guid :geonames-id :created-at :updated-at]
+      (is (= [:id :name :code :geometry :geonames-id :created-at :updated-at]
              (map :name columns))))
     (let [columns (columns db :table :countries :name :id)]
       (is (not (empty? columns)))
@@ -45,7 +45,7 @@
       (is (= [:id] (map :name columns))))
     (let [columns (columns db :schema :public :table :continents)]
       (is (= (set (map :column-name columns))
-             #{"freebase-guid" "id" "name" "geometry" "updated-at" "geonames-id"
+             #{"id" "name" "geometry" "updated-at" "geonames-id"
                "created-at" "code"})))
     (let [columns (columns db :schema :twitter :table :users)]
       (is (= (set (map :column-name columns))
@@ -70,7 +70,7 @@
       (is (every? #(= :continents (:table %1)) columns))
       (is (every? #(keyword? (:name %1)) columns))
       (is (every? #(keyword? (:type %1)) columns))
-      (is (= [:id :name :code :geometry :freebase-guid :geonames-id :created-at :updated-at]
+      (is (= [:id :name :code :geometry :geonames-id :created-at :updated-at]
              (map :name columns))))))
 
 (deftest test-indexes
@@ -86,7 +86,7 @@
       (is (every? #(= :continents (:table %1)) columns))
       (is (every? #(keyword? (:name %1)) columns))
       (is (every? #(keyword? (:type %1)) columns))
-      (is (= [:id :name :code :freebase-guid :geonames-id] (map :name columns))))))
+      (is (= [:id :name :code :geonames-id] (map :name columns))))))
 
 (deftest test-primary-keys
   (with-backends [db]

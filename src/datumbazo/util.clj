@@ -2,13 +2,36 @@
   (:refer-clojure :exclude [replace])
   (:require [clojure.java.io :refer [file reader]]
             [clojure.string :as str :refer [blank? replace split]]
-            [datumbazo.driver.core :as driver])
+            [datumbazo.callbacks :as callback]
+            [datumbazo.driver.core :as driver]
+            [schema.core :as s]
+            [inflections.core :as infl]
+            [sqlingvo.core :as sql])
   (:import java.io.File
-           java.sql.SQLException))
+           java.sql.SQLException
+           [java.util List Map]
+           sqlingvo.db.Database))
+
+(defmulti table-by-class
+  "Return the table definition for `class`."
+  (fn [class] class))
 
 (defn absolute-path
   "Returns the absolute path of `path."
   [path] (.getAbsolutePath (file path)))
+
+(defn class-symbol
+  "Convert `table` into the type symbol."
+  [table]
+  (-> (infl/singular (-> table :name name))
+      (infl/capitalize)
+      (symbol)))
+
+(s/defn columns-by-class :- #{Map}
+  "Return the columns of a table by it's `class`."
+  [class :- Class]
+  (let [table (table-by-class class)]
+    (set (map (:column table) (:columns table)))))
 
 (defn current-user
   "Returns the USER environment variable."
@@ -51,6 +74,22 @@
   (str (:host url)
        (if (:port url)
          (str ":" (:port url)))))
+
+(defmulti make-instance
+  "Make a new instance of `class` using `attrs`."
+  (fn [class attrs & [db]] class))
+
+(defmethod make-instance :default
+  [class attrs & [db]]
+  (throw (ex-info (str "Can't make instance of " class ".")
+                  {:attrs attrs
+                   :class class
+                   :db db})))
+
+(s/defn make-instances :- [Map]
+  "Convert all `records` into instances of `class`."
+  [db :- Database class :- Class records :- [Map]]
+  (map #(make-instance class % db (meta %)) records))
 
 (defn immigrate
   "Create a public var in this namespace for each public var in the
@@ -130,6 +169,13 @@
           (str/lower-case)
           (keyword)))
 
+(s/defn resolve-class :- Class
+  "Require the namespace of `class` and resolve the `class` in it."
+  [class :- s/Str]
+  (when-let [[_ ns class] (re-matches #"(.+)\.([^.]+)" class)]
+    (require (symbol ns))
+    (ns-resolve (symbol ns) (symbol class))))
+
 (defn sql-stmt-seq
   "Return a seq of SQL statements from `reader`."
   [reader]
@@ -165,3 +211,30 @@
                    (.getNextException e))
            :sql sql}
           (.getCause e))))
+
+(defn fetch-batch
+  "Return a lazy seq that fetches the result set of `stmt` in batches
+  of `size`."
+  [stmt & [{:keys [size]}]]
+  (letfn [(next-batch [offset limit]
+            (lazy-seq
+             (let [result @(sql/select
+                               (-> stmt sql/ast :db) [:*]
+                             (sql/from (sql/as stmt (keyword (gensym 'batch-))))
+                             (sql/offset offset)
+                             (sql/limit limit))
+                   result-size (count result)]
+               (cond
+                 (= result-size limit)
+                 (concat result (next-batch (+ offset limit) limit))
+                 (< result-size limit)
+                 result
+                 :else nil))))]
+    (next-batch 0 (or size 3))))
+
+(defn table-keyword
+  "Return the schema qualified `table` keyword."
+  [table]
+  (keyword (str (if-let [schema (:schema table)]
+                  (str (name schema) "."))
+                (-> table :name name))))

@@ -2,7 +2,10 @@
   (:refer-clojure :exclude [distinct group-by update])
   (:require [clojure.test :refer :all]
             [datumbazo.core :refer :all]
-            [datumbazo.driver.core :as driver]))
+            [datumbazo.driver.core :as driver]
+            [schema.core :as s]))
+
+(s/set-fn-validation! true)
 
 (def connections
   {:mysql "mysql://tiger:scotch@localhost/datumbazo"

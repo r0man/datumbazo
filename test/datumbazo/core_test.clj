@@ -228,7 +228,7 @@
   (with-backends [db]
     (is (= "Delete all rows in the countries database table."
            (:doc (meta #'delete-countries))))
-    (is (= 0 (delete-countries db)))
+    (is (= 2 (delete-countries db)))
     (is (= 0 (count-all db :countries)))))
 
 (deftest test-insert-continent
@@ -362,11 +362,12 @@
 
 (deftest test-countries
   (with-backends [db]
-    (is (= 0 (count (countries db))))))
+    (is (= 2 (count (countries db))))))
 
 (deftest test-countries-by-continent-id
   (with-backends [db]
-    (is (empty? (countries-by-continent-id db (:id (europe db)))))))
+    (is (= (countries-by-continent-id db (:id (europe db)))
+           (countries-by-name db "Spain")))))
 
 (deftest test-continent-by-id
   (with-backends [db]
@@ -606,7 +607,7 @@
 (deftest test-delete
   (with-backends [db]
     (is (= @(delete db :countries)
-           [{:count 0}]))))
+           [{:count 2}]))))
 
 (deftest test-drop-table
   (with-backends [db]
@@ -711,7 +712,7 @@
          (column :a :integer)
          (column :b :integer))
       (is (= @(insert db table [:a :b]
-                (values {:a 1 :b 2}))
+                (values [{:a 1 :b 2}]))
              [{:count 1}]))
       @(drop-table db [table]))))
 
@@ -1052,7 +1053,7 @@
          (column :x :int))
       (try (with-transaction [db db]
              @(insert db :test-with-transaction []
-                (values {:x 1}))
+                (values [{:x 1}]))
              (throw (ex-info "boom" {})))
            (catch Exception e))
       (is (empty? @(select db [:*] (from :test-with-transaction))))
@@ -1067,7 +1068,7 @@
          (column :x :int))
       (with-transaction [db db {:rollback? true}]
         @(insert db :test-with-transaction-rollback []
-           (values {:x 1})))
+           (values [{:x 1}])))
       (is (empty? @(select db [:*] (from :test-with-transaction-rollback))))
       (finally
         @(drop-table db [:test-with-transaction-rollback]
@@ -1233,6 +1234,13 @@
     (is (= @(explain db (select db [1]))
            [{(keyword "query plan")
              "Result  (cost=0.00..0.01 rows=1 width=0)"}]))))
+
+(deftest test-values
+  (with-backends [db]
+    (is (= @(values db [[1 "one"] [2 "two"] [3 "three"]])
+           [{:column1 1 :column2 "one"}
+            {:column1 2 :column2 "two"}
+            {:column1 3 :column2 "three"}]))))
 
 (comment
 

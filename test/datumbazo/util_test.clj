@@ -91,3 +91,10 @@
           "CREATE TABLE x (   id INTEGER);"
           "SELECT * FROM x;"
           "DROP x;"])))
+
+(deftest test-fetch-batch
+  (with-backends [db]
+    (let [query (select db [:*]
+                  (from :continents)
+                  (order-by :name))]
+      (is (= (fetch-batch query) @query)))))

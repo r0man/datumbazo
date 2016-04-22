@@ -69,6 +69,8 @@
       (if (:returning ast)
         (fetch db sql opts)
         (execute db sql opts))
+      :values
+      (fetch db sql opts)      
       (execute db sql opts))))
 
 (defn row-count
