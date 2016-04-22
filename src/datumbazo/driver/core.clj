@@ -13,8 +13,8 @@
   "Commit a `db` transaction."
   (fn [db & [opts]] (:backend db)))
 
-(defmulti close-db
-  "Close the connection to `db`."
+(defmulti close-connection
+  "Close the current database connection to `db`."
   (fn [db] (:backend db)))
 
 (defmulti fetch
@@ -22,16 +22,17 @@
   (fn [db sql & [opts]] (:backend db)))
 
 (defmulti connection
-  "Get the connection."
+  "Get the current `db` connection."
   (fn [db & [opts]] (:backend db)))
 
 (defmulti execute
   "Execute `sql` and return the number of affected rows."
   (fn [db sql & [opts]] (:backend db)))
 
-(defmulti open-db
-  "Open a connection to `db`."
-  (fn [db] (:backend db)))
+(defmulti open-connection
+  "Open a database connection to `db`. Assoc the connection under
+  the :connection in `db` and return `db`."
+  (fn [db & [opts]] (:backend db)))
 
 (defmulti prepare-statement
   "Return a prepared statement for `sql`."
@@ -70,7 +71,7 @@
         (fetch db sql opts)
         (execute db sql opts))
       :values
-      (fetch db sql opts)      
+      (fetch db sql opts)
       (execute db sql opts))))
 
 (defn row-count

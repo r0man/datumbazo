@@ -17,7 +17,7 @@
                  [potemkin "0.4.3"]
                  [prismatic/schema "1.1.0"]
                  [slingshot "0.12.2"]
-                 [sqlingvo "0.8.9"]]
+                 [sqlingvo "0.8.10"]]
   :profiles {:dev {:dependencies [[ch.qos.logback/logback-classic "1.1.7"]
                                   [com.jolbox/bonecp "0.8.0.RELEASE"]
                                   [com.mchange/c3p0 "0.9.5.2"]

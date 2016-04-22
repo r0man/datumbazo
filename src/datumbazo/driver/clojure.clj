@@ -6,7 +6,7 @@
             [datumbazo.util :as util]))
 
 (defn- assert-connection [db]
-  (when-not (or (:connection db) (:datasource  db))
+  (when-not (connection db)
     (throw (ex-info "No database connection or datasource!" {:db db}))))
 
 (defmethod begin 'clojure.java.jdbc
@@ -41,11 +41,15 @@
     (.commit (connection db)))
   db)
 
-(defmethod close-db 'clojure.java.jdbc [db]
-  (.close (:connection db)))
+(defmethod close-connection 'clojure.java.jdbc [db]
+  (when (and (:rollback db) (jdbc/db-is-rollback-only db))
+    (.rollback (connection db)))
+  (when-let [connection (:connection db)]
+    (.close connection))
+  (assoc db :connection nil))
 
 (defmethod connection 'clojure.java.jdbc [db & [opts]]
-  (jdbc/get-connection db))
+  (:connection db))
 
 (defmethod fetch 'clojure.java.jdbc [db sql & [opts]]
   (assert-connection db)
@@ -63,8 +67,12 @@
     (catch Exception e
       (util/throw-sql-ex-info e sql))))
 
-(defmethod open-db 'clojure.java.jdbc [db]
-  (assoc db :connection (jdbc/get-connection db)))
+(defmethod open-connection 'clojure.java.jdbc [db & [opts]]
+  (let [db (assoc db :connection (jdbc/get-connection db))]
+    (if (or (:rollback? db)
+            (:rollback? opts))
+      (-> (begin db) (rollback!))
+      db)))
 
 (defmethod prepare-statement 'clojure.java.jdbc [db sql & [opts]]
   (assert-connection db)
@@ -73,7 +81,8 @@
     prepared))
 
 (defmethod rollback! 'clojure.java.jdbc [db]
-  (jdbc/db-set-rollback-only! db))
+  (jdbc/db-set-rollback-only! db)
+  db)
 
 (extend-protocol jdbc/IResultSetReadColumn
 

@@ -1,110 +1,178 @@
 (ns datumbazo.db-test
   (:require [datumbazo.db :refer :all]
-            [clojure.test :refer :all]))
-
-(deftest test-new-db-bonecp
-  (let [url "postgresql://localhost/datumbazo"]
-    (is (= (new-db (str "bonecp:" url))
-           (assoc (new-db url) :pool :bonecp)))))
-
-(deftest test-new-db-c3p0
-  (let [url "postgresql://localhost/datumbazo"]
-    (is (= (new-db (str "c3p0:" url))
-           (assoc (new-db url) :pool :c3p0)))))
+            [clojure.test :refer :all]
+            [com.stuartsierra.component :as component])
+  (:import com.zaxxer.hikari.HikariDataSource
+           com.mchange.v2.c3p0.ComboPooledDataSource
+           com.jolbox.bonecp.BoneCPDataSource
+           java.sql.Connection))
 
 (deftest test-new-db-mysql
-  (let [spec (new-db "mysql://tiger:scotch@localhost/datumbazo?profileSQL=true")]
-    (is (instance? sqlingvo.db.Database spec))
-    (is (= "com.mysql.jdbc.Driver" (:classname spec)))
-    (is (= :jdbc (:pool spec)))
-    (is (= "localhost" (:host spec)))
-    (is (nil? (:port spec)))
-    (is (= "tiger" (:user spec)))
-    (is (= "scotch" (:password spec)))
-    (is (= "datumbazo" (:name spec)))
-    (is (= "/datumbazo" (:uri spec)))
-    (is (= {:profileSQL "true"} (:query-params spec)))
-    (is (= "mysql" (:subprotocol spec)))
-    (is (= :mysql (:scheme spec)))
-    (is (= "//localhost/datumbazo?profileSQL=true" (:subname spec)))
-    (is (= "tiger" (:user spec))) ; MySQL needs :user key
-    (is (= "scotch" (:password spec)))))
+  (let [db (new-db "mysql://tiger:scotch@localhost/datumbazo?profileSQL=true")]
+    (is (instance? sqlingvo.db.Database db))
+    (is (nil? (:db-pool db)))
+    (is (= "com.mysql.jdbc.Driver" (:classname db)))
+    (is (= :jdbc (:pool db)))
+    (is (= "localhost" (:host db)))
+    (is (nil? (:port db)))
+    (is (= "tiger" (:user db)))
+    (is (= "scotch" (:password db)))
+    (is (= "datumbazo" (:name db)))
+    (is (= "/datumbazo" (:uri db)))
+    (is (= {:profileSQL "true"} (:query-params db)))
+    (is (= "mysql" (:subprotocol db)))
+    (is (= :mysql (:scheme db)))
+    (is (= "//localhost/datumbazo?profileSQL=true" (:subname db)))
+    (is (= "tiger" (:user db))) ; MySQL needs :user key
+    (is (= "scotch" (:password db)))))
 
 (deftest test-new-db-oracle
-  (let [spec (new-db "oracle://tiger:scotch@localhost/datumbazo")]
-    (is (instance? sqlingvo.db.Database spec))
-    (is (= "oracle.jdbc.driver.OracleDriver" (:classname spec)))
-    (is (= :jdbc (:pool spec)))
-    (is (= "localhost" (:host spec)))
-    (is (nil? (:port spec)))
-    (is (= "tiger" (:user spec)))
-    (is (= "scotch" (:password spec)))
-    (is (= "datumbazo" (:name spec)))
-    (is (= "/datumbazo" (:uri spec)))
-    (is (nil? (:query-params spec)))
-    (is (= "oracle:thin" (:subprotocol spec)))
-    (is (= :oracle (:scheme spec)))
-    (is (= ":tiger/scotch@localhost:datumbazo" (:subname spec)))))
+  (let [db (new-db "oracle://tiger:scotch@localhost/datumbazo")]
+    (is (instance? sqlingvo.db.Database db))
+    (is (nil? (:db-pool db)))
+    (is (= "oracle.jdbc.driver.OracleDriver" (:classname db)))
+    (is (= :jdbc (:pool db)))
+    (is (= "localhost" (:host db)))
+    (is (nil? (:port db)))
+    (is (= "tiger" (:user db)))
+    (is (= "scotch" (:password db)))
+    (is (= "datumbazo" (:name db)))
+    (is (= "/datumbazo" (:uri db)))
+    (is (nil? (:query-params db)))
+    (is (= "oracle" (:subprotocol db)))
+    (is (= :oracle (:scheme db)))
+    (is (= ":tiger/scotch@localhost:datumbazo" (:subname db)))))
 
 (deftest test-new-db-postgresql
-  (let [spec (new-db "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
-    (is (instance? sqlingvo.db.Database spec))
-    (is (= "org.postgresql.Driver" (:classname spec)))
-    (is (= :jdbc (:pool spec)))
-    (is (= "localhost" (:host spec)))
-    (is (= 5432 (:port spec)))
-    (is (= "tiger" (:user spec)))
-    (is (= "scotch" (:password spec)))
-    (is (= "datumbazo" (:name spec)))
-    (is (= "/datumbazo" (:uri spec)))
-    (is (= {:ssl "true"} (:query-params spec)))
-    (is (= "postgresql" (:subprotocol spec)))
-    (is (= :postgresql (:scheme spec)))
-    (is (= "//localhost:5432/datumbazo?ssl=true" (:subname spec)))
-    (is (= "tiger" (:user spec)))
-    (is (= "scotch" (:password spec)))))
+  (let [db (new-db "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
+    (is (instance? sqlingvo.db.Database db))
+    (is (nil? (:db-pool db)))
+    (is (= "org.postgresql.Driver" (:classname db)))
+    (is (= :jdbc (:pool db)))
+    (is (= "localhost" (:host db)))
+    (is (= 5432 (:port db)))
+    (is (= "tiger" (:user db)))
+    (is (= "scotch" (:password db)))
+    (is (= "datumbazo" (:name db)))
+    (is (= "/datumbazo" (:uri db)))
+    (is (= {:ssl "true"} (:query-params db)))
+    (is (= "postgresql" (:subprotocol db)))
+    (is (= :postgresql (:scheme db)))
+    (is (= "//localhost:5432/datumbazo?ssl=true" (:subname db)))
+    (is (= "tiger" (:user db)))
+    (is (= "scotch" (:password db)))))
+
+(deftest test-new-db-postgresql-c3p0
+  (let [db (new-db "c3p0:postgresql://tiger:scotch@localhost:5432/datumbazo")]
+    (is (instance? sqlingvo.db.Database db))
+    (is (= "org.postgresql.Driver" (:classname db)))
+    (is (= :c3p0 (:pool db)))
+    (is (= "localhost" (:host db)))
+    (is (= 5432 (:port db)))
+    (is (= "tiger" (:user db)))
+    (is (= "scotch" (:password db)))
+    (is (= "datumbazo" (:name db)))
+    (is (= "/datumbazo" (:uri db)))
+    (is (empty? (:query-params db)))
+    (is (= "postgresql" (:subprotocol db)))
+    (is (= :postgresql (:scheme db)))
+    (is (= "//localhost:5432/datumbazo" (:subname db)))
+    (is (= "tiger" (:user db)))
+    (is (= "scotch" (:password db)))
+    (let [started (component/start db)]
+      (is (instance? ComboPooledDataSource (:datasource started)))
+      (is (instance? Connection (.getConnection (:datasource started))))
+      (component/stop started))))
+
+(deftest test-new-db-bonecp
+  (let [db (new-db "bonecp:postgresql://tiger:scotch@localhost:5432/datumbazo")]
+    (is (instance? sqlingvo.db.Database db))
+    (is (= "org.postgresql.Driver" (:classname db)))
+    (is (= :bonecp (:pool db)))
+    (is (= "localhost" (:host db)))
+    (is (= 5432 (:port db)))
+    (is (= "tiger" (:user db)))
+    (is (= "scotch" (:password db)))
+    (is (= "datumbazo" (:name db)))
+    (is (= "/datumbazo" (:uri db)))
+    (is (empty? (:query-params db)))
+    (is (= "postgresql" (:subprotocol db)))
+    (is (= :postgresql (:scheme db)))
+    (is (= "//localhost:5432/datumbazo" (:subname db)))
+    (is (= "tiger" (:user db)))
+    (is (= "scotch" (:password db)))
+    (let [started (component/start db)]
+      (is (instance? BoneCPDataSource (:datasource started)))
+      (is (instance? Connection (.getConnection (:datasource started))))
+      (component/stop started))))
+
+(deftest test-new-db-hikaricp
+  (let [db (new-db "hikaricp:postgresql://tiger:scotch@localhost:5432/datumbazo")]
+    (is (instance? sqlingvo.db.Database db))
+    (is (nil? (:datasource db)))
+    (is (= "org.postgresql.Driver" (:classname db)))
+    (is (= :hikaricp (:pool db)))
+    (is (= "localhost" (:host db)))
+    (is (= 5432 (:port db)))
+    (is (= "tiger" (:user db)))
+    (is (= "scotch" (:password db)))
+    (is (= "datumbazo" (:name db)))
+    (is (= "/datumbazo" (:uri db)))
+    (is (empty? (:query-params db)))
+    (is (= "postgresql" (:subprotocol db)))
+    (is (= :postgresql (:scheme db)))
+    (is (= "//localhost:5432/datumbazo" (:subname db)))
+    (is (= "tiger" (:user db)))
+    (is (= "scotch" (:password db)))
+    (let [started (component/start db)]
+      (is (instance? HikariDataSource (:datasource started)))
+      (is (instance? Connection (.getConnection (:datasource started))))
+      (component/stop started))))
 
 (deftest test-new-db-sqlite
-  (let [spec (new-db "sqlite://tmp/datumbazo.sqlite")]
-    (is (instance? sqlingvo.db.Database spec))
-    (is (= "org.sqlite.JDBC" (:classname spec)))
-    (is (= :jdbc (:pool spec)))
-    (is (nil? (:query-params spec)))
-    (is (= "sqlite" (:subprotocol spec)))
-    (is (= :sqlite (:scheme spec)))
-    (is (= "//tmp/datumbazo.sqlite" (:subname spec)))))
+  (let [db (new-db "sqlite://tmp/datumbazo.sqlite")]
+    (is (instance? sqlingvo.db.Database db))
+    (is (nil? (:db-pool db)))
+    (is (= "org.sqlite.JDBC" (:classname db)))
+    (is (= :jdbc (:pool db)))
+    (is (nil? (:query-params db)))
+    (is (= "sqlite" (:subprotocol db)))
+    (is (= :sqlite (:scheme db)))
+    (is (= "//tmp/datumbazo.sqlite" (:subname db)))))
 
 (deftest test-new-db-sqlserver
-  (let [spec (new-db "sqlserver://tiger:scotch@localhost/datumbazo")]
-    (is (instance? sqlingvo.db.Database spec))
-    (is (= "com.microsoft.sqlserver.jdbc.SQLServerDriver" (:classname spec)))
-    (is (= :jdbc (:pool spec)))
-    (is (= "localhost" (:host spec)))
-    (is (nil? (:port spec)))
-    (is (= "tiger" (:user spec)))
-    (is (= "scotch" (:password spec)))
-    (is (= "datumbazo" (:name spec)))
-    (is (= "/datumbazo" (:uri spec)))
-    (is (nil? (:query-params spec)))
-    (is (= "sqlserver" (:subprotocol spec)))
-    (is (= "//localhost;database=datumbazo;user=tiger;password=scotch" (:subname spec)))))
+  (let [db (new-db "sqlserver://tiger:scotch@localhost/datumbazo")]
+    (is (instance? sqlingvo.db.Database db))
+    (is (nil? (:db-pool db)))
+    (is (= "com.microsoft.sqlserver.jdbc.SQLServerDriver" (:classname db)))
+    (is (= :jdbc (:pool db)))
+    (is (= "localhost" (:host db)))
+    (is (nil? (:port db)))
+    (is (= "tiger" (:user db)))
+    (is (= "scotch" (:password db)))
+    (is (= "datumbazo" (:name db)))
+    (is (= "/datumbazo" (:uri db)))
+    (is (nil? (:query-params db)))
+    (is (= "sqlserver" (:subprotocol db)))
+    (is (= "//localhost;database=datumbazo;user=tiger;password=scotch" (:subname db)))))
 
 (deftest test-new-db-vertica
-  (let [spec (new-db "vertica://tiger:scotch@localhost/datumbazo")]
-    (is (instance? sqlingvo.db.Database spec))
-    (is (= "vertica" (:subprotocol spec)))
-    (is (= "com.vertica.jdbc.Driver" (:classname spec)))
-    (is (= :jdbc (:pool spec)))
-    (is (= "localhost" (:host spec)))
-    (is (nil? (:port spec)))
-    (is (= "tiger" (:user spec)))
-    (is (= "scotch" (:password spec)))
-    (is (= "datumbazo" (:name spec)))
-    (is (= "/datumbazo" (:uri spec)))
-    (is (nil? (:query-params spec)))
-    (is (= "vertica" (:subprotocol spec)))
-    (is (= :vertica (:scheme spec)))
-    (is (= "//localhost/datumbazo" (:subname spec)))))
+  (let [db (new-db "vertica://tiger:scotch@localhost/datumbazo")]
+    (is (instance? sqlingvo.db.Database db))
+    (is (nil? (:db-pool db)))
+    (is (= "vertica" (:subprotocol db)))
+    (is (= "com.vertica.jdbc.Driver" (:classname db)))
+    (is (= :jdbc (:pool db)))
+    (is (= "localhost" (:host db)))
+    (is (nil? (:port db)))
+    (is (= "tiger" (:user db)))
+    (is (= "scotch" (:password db)))
+    (is (= "datumbazo" (:name db)))
+    (is (= "/datumbazo" (:uri db)))
+    (is (nil? (:query-params db)))
+    (is (= "vertica" (:subprotocol db)))
+    (is (= :vertica (:scheme db)))
+    (is (= "//localhost/datumbazo" (:subname db)))))
 
 (deftest test-new-db-with-db
   (let [url "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true"]
@@ -114,30 +182,58 @@
 (deftest test-parse-url
   (doseq [url [nil "" "x"]]
     (is (thrown? clojure.lang.ExceptionInfo (parse-url url))))
-  (let [spec (parse-url "postgresql://localhost:5432/datumbazo")]
-    (is (= :jdbc (:pool spec)))
-    (is (= "localhost" (:host spec)))
-    (is (= 5432 (:port spec)))
-    (is (= "datumbazo" (:name spec)))
-    (is (= "/datumbazo" (:uri spec)))
-    (is (nil? (:query-params spec)))
-    (is (= "postgresql" (:subprotocol spec))))
-  (let [spec (parse-url "postgresql://tiger:scotch@localhost:5432/datumbazo?a=1&b=2")]
-    (is (= :jdbc (:pool spec)))
-    (is (= "tiger" (:user spec)))
-    (is (= "scotch" (:password spec)))
-    (is (= "localhost" (:host spec)))
-    (is (= 5432 (:port spec)))
-    (is (= "datumbazo" (:name spec)))
-    (is (= "/datumbazo" (:uri spec)))
-    (is (= {:a "1" :b "2"} (:query-params spec)))
-    (is (= "postgresql" (:subprotocol spec))))
-  (let [spec (parse-url "c3p0:postgresql://localhost/datumbazo")]
-    (is (= :c3p0 (:pool spec)))
-    (is (= "localhost" (:host spec)))
-    (is (nil? (:port spec)))
-    (is (nil?  (:port spec)))
-    (is (= "datumbazo" (:name spec)))
-    (is (= "/datumbazo" (:uri spec)))
-    (is (nil? (:query-params spec)))
-    (is (= "postgresql" (:subprotocol spec)))))
+  (let [db (parse-url "postgresql://localhost:5432/datumbazo")]
+    (is (= :jdbc (:pool db)))
+    (is (= "localhost" (:host db)))
+    (is (= 5432 (:port db)))
+    (is (= "datumbazo" (:name db)))
+    (is (= "/datumbazo" (:uri db)))
+    (is (nil? (:query-params db)))
+    (is (= "postgresql" (:subprotocol db))))
+  (let [db (parse-url "postgresql://tiger:scotch@localhost:5432/datumbazo?a=1&b=2")]
+    (is (= :jdbc (:pool db)))
+    (is (= "tiger" (:user db)))
+    (is (= "scotch" (:password db)))
+    (is (= "localhost" (:host db)))
+    (is (= 5432 (:port db)))
+    (is (= "datumbazo" (:name db)))
+    (is (= "/datumbazo" (:uri db)))
+    (is (= {:a "1" :b "2"} (:query-params db)))
+    (is (= "postgresql" (:subprotocol db))))
+  (let [db (parse-url "c3p0:postgresql://localhost/datumbazo")]
+    (is (= :c3p0 (:pool db)))
+    (is (= "localhost" (:host db)))
+    (is (nil? (:port db)))
+    (is (nil?  (:port db)))
+    (is (= "datumbazo" (:name db)))
+    (is (= "/datumbazo" (:uri db)))
+    (is (nil? (:query-params db)))
+    (is (= "postgresql" (:subprotocol db)))))
+
+(deftest test-subname-mysql
+  (let [db (parse-url "mysql://tiger:scotch@localhost/datumbazo?profileSQL=true")]
+    (is (= "//localhost/datumbazo?profileSQL=true" (subname db)))))
+
+(deftest test-subname-oracle
+  (let [db (parse-url "oracle://tiger:scotch@localhost/datumbazo")]
+    (is (= ":tiger/scotch@localhost:datumbazo" (subname db)))))
+
+(deftest test-subname-postgresql
+  (let [db (parse-url "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
+    (is (= "//localhost:5432/datumbazo?ssl=true" (subname db)))))
+
+(deftest test-subname-c3p0-postgresql
+  (let [db (parse-url "c3p0:postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
+    (is (= "//localhost:5432/datumbazo?ssl=true" (subname db)))))
+
+(deftest test-subname-sqlite
+  (let [db (parse-url "sqlite://tmp/datumbazo.sqlite")]
+    (is (= "//tmp/datumbazo.sqlite" (subname db)))))
+
+(deftest test-subname-sqlserver
+  (let [db (parse-url "sqlserver://tiger:scotch@localhost/datumbazo")]
+    (is (= "//localhost;database=datumbazo;user=tiger;password=scotch" (subname db)))))
+
+(deftest test-subname-vertica
+  (let [db (parse-url "vertica://tiger:scotch@localhost/datumbazo")]
+    (is (= "//localhost/datumbazo" (subname db)))))

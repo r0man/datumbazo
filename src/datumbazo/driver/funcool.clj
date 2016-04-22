@@ -24,8 +24,12 @@
      (f (assoc db :connection connection)))
    opts))
 
-(defmethod close-db 'jdbc.core [db]
-  (.close (:connection db)))
+(defmethod close-connection 'jdbc.core [db]
+  (when (some-> db :connection meta :rollback deref)
+    (.rollback (connection db)))
+  (when-let [connection (:connection db)]
+    (.close connection))
+  (assoc db :connection nil))
 
 (defmethod commit 'jdbc.core [db & [opts]]
   (let [connection (:connection db)
@@ -33,7 +37,7 @@
     (assoc db :connection (proto/commit! tx-strategy connection opts))))
 
 (defmethod connection 'jdbc.core [db & [opts]]
-  (proto/connection (:connection db)))
+  (some-> db :connection proto/connection))
 
 (defmethod fetch 'jdbc.core [db sql & [opts]]
   (let [identifiers (or (:sql-keyword db) str/lower-case)
@@ -48,17 +52,22 @@
        (catch Exception e
          (util/throw-sql-ex-info e sql))))
 
-(defmethod open-db 'jdbc.core [db]
-  (assoc db :connection (jdbc/connection (into {} db))))
-
-(defmethod open-db 'jdbc.core [db]
-  (assoc db :connection (jdbc/connection (or (:datasource db) (into {} db)))))
+(defmethod open-connection 'jdbc.core [db & [opts]]
+  (let [db (->> (if-let [datasource (:datasource db)]
+                  (jdbc/connection datasource)
+                  (jdbc/connection db))
+                (assoc db :connection))]
+    (if (or (:rollback? db)
+            (:rollback? opts))
+      (-> (begin db) (rollback!))
+      db)))
 
 (defmethod prepare-statement 'jdbc.core [db sql & [opts]]
   (proto/prepared-statement sql (connection db) opts))
 
 (defmethod rollback! 'jdbc.core [db]
-  (jdbc/set-rollback! (:connection db)))
+  (jdbc/set-rollback! (:connection db))
+  db)
 
 (extend-protocol proto/ISQLResultSetReadColumn
 

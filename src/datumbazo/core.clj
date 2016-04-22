@@ -2,7 +2,6 @@
   (:refer-clojure :exclude [distinct group-by update])
   (:require [com.stuartsierra.component :as component]
             [datumbazo.associations :as associations]
-            [datumbazo.connection :as connection]
             [datumbazo.db :as db]
             [datumbazo.driver.core :as driver]
             [datumbazo.io :as io]
@@ -12,7 +11,15 @@
             [no.en.core :refer [parse-integer]]
             [potemkin :refer [import-vars]]
             sqlingvo.core
-            [sqlingvo.expr :refer [parse-table]]))
+            [sqlingvo.expr :refer [parse-table]]
+            [clojure.string :as str]))
+
+(import-vars
+ [datumbazo.db
+  parse-url]
+ [datumbazo.associations
+  belongs-to
+  has-many])
 
 (import-vars
  [datumbazo.associations
@@ -44,7 +51,7 @@
      (driver/apply-transaction ~db f# ~opts)))
 
 (defmacro with-db
-  "Start a database connection using `config` bind it to `db-sym`,
+  "Start a database component using `config` bind it to `db-sym`,
   evaluate `body` and close the database connection again."
   [[db-sym config & [opts]] & body]
   `(let [db# (merge (new-db ~config) ~opts)
@@ -52,6 +59,26 @@
          ~db-sym component#]
      (try ~@body
           (finally (component/stop component#)))))
+
+(defmacro with-connection
+  "Start a database component using `config` bind it to `db-sym`,
+  evaluate `body` and close the database connection again."
+  [[db-sym db & [opts]] & body]
+  `(let [db# (driver/open-connection ~db ~opts)
+         ~db-sym db#]
+     (try
+       ~@body
+       (finally
+         (driver/close-connection db#)))))
+
+(defn sql-str
+  "Prepare `stmt` using the database and return the raw SQL as a string."
+  [stmt]
+  (let [ast (ast stmt)]
+    (with-open [stmt (driver/prepare-statement (:db ast) (sql ast))]
+      (if (.startsWith (str stmt) (str/replace (first (sql ast)) #"\?.*" ""))
+        (str stmt)
+        (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver."))))))
 
 (defn columns
   "Returns the columns of `table`."

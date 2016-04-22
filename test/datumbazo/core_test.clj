@@ -126,11 +126,6 @@
 (defn save-europe []
   (save-continent db europe))
 
-(deftest test-with-db
-  (with-db [db "postgresql://tiger:scotch@localhost:5432/datumbazo"]
-    (is (instance? sqlingvo.db.Database db))
-    (is (:connection db))))
-
 (deftest test-columns
   (let [columns (columns twitter-tweets-table)]
     (is (= 6 (count columns)))
@@ -654,7 +649,7 @@
 (deftest test-with-db
   (with-db [db "postgresql://tiger:scotch@localhost:5432/datumbazo"]
     (is (instance? sqlingvo.db.Database db))
-    (is (instance? java.sql.Connection (:connection db)))
+    (is (nil? (:connection db)))
     (is (= "postgresql" (:subprotocol db)))
     (is (= "tiger" (:user db)))
     (is (= "scotch" (:password db)))
@@ -662,6 +657,12 @@
     (is (= 5432 (:port db)))
     (is (= "datumbazo" (:name db)))
     (is (= db (new-db db)))))
+
+(deftest test-with-connection
+  (with-db [db "postgresql://tiger:scotch@localhost:5432/datumbazo"]
+    (with-connection [db db]
+      (is (instance? sqlingvo.db.Database db))
+      (is (instance? java.sql.Connection (:connection db))))))
 
 (deftest test-select-1-as-a-2-as-b-3-as-c
   (with-backends [db]
@@ -1241,6 +1242,10 @@
            [{:column1 1 :column2 "one"}
             {:column1 2 :column2 "two"}
             {:column1 3 :column2 "three"}]))))
+
+(deftest test-sql-str
+  (with-backends [db]
+    (is (= "SELECT 1, 'a'" (sql-str (select db [1 "a"]))))))
 
 (comment
 

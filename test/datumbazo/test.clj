@@ -16,8 +16,9 @@
 
 (defmacro with-test-db
   [[db-sym config & [opts]] & body]
-  `(with-db [~db-sym ~config (assoc ~opts :rollback? true)]
-     ~@body))
+  `(with-db [db# ~config (assoc ~opts :rollback? true)]
+     (with-connection [~db-sym db#]
+       ~@body)))
 
 (defmacro with-test-dbs
   [[db-sym vendors] & body]
@@ -76,8 +77,9 @@
   `(doseq [backend# ['clojure.java.jdbc 'jdbc.core]]
      (if (find-ns backend#)
        (let [db# (new-db ~(:postgresql connections))]
-         (with-db [~db-sym (merge db# {:backend backend# :rollback? true} ~opts)]
-           ~@body))
+         (with-db [db# (merge db# {:backend backend# :rollback? true} ~opts)]
+           (with-connection [~db-sym db#]
+             ~@body)))
        (.println *err* (format "WARNING: Can't find %s backend, skipping tests." backend#)))))
 
 (deftest test-with-backends
