@@ -75,28 +75,28 @@
                :eval-fn #'driver/eval-db})
        (db/db)))
 
-;; (extend-type sqlingvo.db.Database
-;;   component/Lifecycle
-;;   (start [db]
-;;     (let [db (start-db db)]
-;;       (if (:rollback? db)
-;;         (driver/begin db)
-;;         db)))
-;;   (stop [db]
-;;     (when (:rollback? db)
-;;       (driver/rollback! db))
-;;     (stop-db db)))
-
 (extend-type sqlingvo.db.Database
   component/Lifecycle
   (start [db]
-    (if (:pool db)
-      (pool/assoc-pool db)
-      db))
+    (cond-> db
+      (:pool db) (pool/assoc-pool)
+      (:rollback? db) (driver/open-connection)))
   (stop [db]
+    (when (:rollback? db)
+      (driver/close-connection db))
     (when-let [datasource (:datasource db)]
       (.close datasource))
-    (assoc db :datasource nil)))
+    (assoc db :connection nil :datasource nil)))
+
+(defmacro with-db
+  "Start a database component using `config` bind it to `db-sym`,
+  evaluate `body` and close the database connection again."
+  [[db-sym config & [opts]] & body]
+  `(let [db# (merge (new-db ~config) ~opts)
+         component# (component/start db#)
+         ~db-sym component#]
+     (try ~@body
+          (finally (component/stop component#)))))
 
 (defn- load-connection-pools
   "Load connection pool support."
@@ -105,8 +105,6 @@
                datumbazo.pool.c3p0
                datumbazo.pool.hikaricp]
           :let [product (str/capitalize (last (str/split (name ns) #"\.")))]]
-    (try (require ns)
-         (catch Exception e
-           (log/infof "Can't load %s connection pool support. %s" product (.getMessage e))))))
+    (try (require ns) (catch Exception e))))
 
 (load-connection-pools)

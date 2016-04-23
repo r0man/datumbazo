@@ -1,10 +1,12 @@
 (ns datumbazo.db-test
-  (:require [datumbazo.db :refer :all]
-            [clojure.test :refer :all]
-            [com.stuartsierra.component :as component])
-  (:import com.zaxxer.hikari.HikariDataSource
+  (:require [clojure.test :refer :all]
+            [com.stuartsierra.component :as component]
+            [datumbazo.db :refer :all]
+            [datumbazo.test :refer :all])
+  (:import com.jolbox.bonecp.BoneCPDataSource
            com.mchange.v2.c3p0.ComboPooledDataSource
-           com.jolbox.bonecp.BoneCPDataSource
+           com.zaxxer.hikari.HikariDataSource
+           javax.sql.DataSource
            java.sql.Connection))
 
 (deftest test-new-db-mysql
@@ -237,3 +239,13 @@
 (deftest test-subname-vertica
   (let [db (parse-url "vertica://tiger:scotch@localhost/datumbazo")]
     (is (= "//localhost/datumbazo" (subname db)))))
+
+(deftest test-with-db
+  (with-db [db (:postgresql connections)]
+    (is (nil? (:connection db))))
+  (with-db [db (:postgresql connections) {:rollback? true}]
+    (is (instance? Connection (:connection db))))
+  (doseq [pool [:bonecp :c3p0 :hikaricp]]
+    (with-db [db (:postgresql connections) {:rollback? true :pool pool}]
+      (is (instance? DataSource (:datasource db)))
+      (is (instance? Connection (:connection db))))))

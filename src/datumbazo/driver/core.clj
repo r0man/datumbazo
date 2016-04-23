@@ -81,3 +81,32 @@
     (if (sequential? result)
       (first result)
       result)}])
+
+(defn with-connection*
+  "Open a database connection, call `f` with the connected `db` as
+  it's first argument and close the connection again. Does not open a
+  new connection if `db` is already connected."
+  [db f & [opts]]
+  (if (connection db)
+    (f db)
+    (let [db (open-connection db opts)]
+      (try (f db)
+           (finally (close-connection db))))))
+
+(defmacro with-connection
+  "Open a database connection, bind the connected `db` to `db-sym` and
+  evaluate `body`."
+  [[db-sym db & [opts]] & body]
+  `(with-connection* ~db (fn [~db-sym] ~@body) ~opts))
+
+(defmacro with-transaction
+  "Start a new transaction on `db` connection, bind it to `db-sym` and
+  evaluate `body` within the transaction."
+  [[db-sym db & [opts]] & body]
+  `(let [f# (fn [db#]
+              (let [~db-sym db#
+                    result# (do ~@body)]
+                (when (:rollback? ~opts)
+                  (rollback! db#))
+                result#))]
+     (apply-transaction ~db f# ~opts)))

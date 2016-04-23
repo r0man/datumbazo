@@ -15,16 +15,16 @@
             [clojure.string :as str]))
 
 (import-vars
+ [datumbazo.associations
+  belongs-to
+  has-many]
  [datumbazo.db
-  parse-url]
- [datumbazo.associations
-  belongs-to
-  has-many])
-
-(import-vars
- [datumbazo.associations
-  belongs-to
-  has-many])
+  new-db
+  parse-url
+  with-db]
+ [datumbazo.driver.core
+  with-connection
+  with-transaction])
 
 (immigrate 'sqlingvo.core)
 
@@ -32,44 +32,6 @@
 (def ^:dynamic *per-page* 25)
 
 (declare run)
-
-(defn new-db
-  "Return a new database component."
-  [spec]
-  (db/new-db spec))
-
-(defmacro with-transaction
-  "Start a new transaction on `db` connection, bind it to `db-sym` and
-  evaluate `body` within the transaction."
-  [[db-sym db & [opts]] & body]
-  `(let [f# (fn [db#]
-              (let [~db-sym db#
-                    result# (do ~@body)]
-                (when (:rollback? ~opts)
-                  (driver/rollback! db#))
-                result#))]
-     (driver/apply-transaction ~db f# ~opts)))
-
-(defmacro with-db
-  "Start a database component using `config` bind it to `db-sym`,
-  evaluate `body` and close the database connection again."
-  [[db-sym config & [opts]] & body]
-  `(let [db# (merge (new-db ~config) ~opts)
-         component# (component/start db#)
-         ~db-sym component#]
-     (try ~@body
-          (finally (component/stop component#)))))
-
-(defmacro with-connection
-  "Start a database component using `config` bind it to `db-sym`,
-  evaluate `body` and close the database connection again."
-  [[db-sym db & [opts]] & body]
-  `(let [db# (driver/open-connection ~db ~opts)
-         ~db-sym db#]
-     (try
-       ~@body
-       (finally
-         (driver/close-connection db#)))))
 
 (defn sql-str
   "Prepare `stmt` using the database and return the raw SQL as a string."
