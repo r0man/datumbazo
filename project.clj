@@ -9,7 +9,7 @@
                  [com.palletops/stevedore "0.8.0-beta.7"]
                  [com.stuartsierra/component "0.3.1"]
                  [commandline-clj "0.2.1"]
-                 [geo-clj "0.5.0"]
+                 [geo-clj "0.5.0" :exclusions [noencore]]
                  [inflections "0.12.1"]
                  [org.clojure/clojure "1.8.0"]
                  [org.clojure/data.json "0.2.6"]
@@ -31,4 +31,5 @@
                    :repl-options {:init-ns user}
                    :resource-paths ["test-resources"]}}
   :aliases {"test-ancient" ["test"]}
-  :main ^{:skip-aot true} datumbazo.fixtures)
+  :main ^{:skip-aot true} datumbazo.fixtures
+  :pedantic? :abort)
