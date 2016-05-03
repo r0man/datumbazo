@@ -1,45 +1,13 @@
 (ns datumbazo.db
-  (:require [datumbazo.driver.core :as driver]
+  (:require [com.stuartsierra.component :as component]
+            [datumbazo.driver.core :as driver]
             [datumbazo.pool.core :as pool]
-            [no.en.core :refer [parse-integer parse-query-params]]
-            [clojure.string :as str]
-            [clojure.tools.logging :as log]
-            [sqlingvo.db :as db]
-            [com.stuartsierra.component :as component]))
+            [no.en.core :as noencore]
+            [sqlingvo.db :as db]))
 
 (def ^:private jdbc-url-regex
   "The regular expression to match JDBC urls."
   #"(([^:]+):)?([^:]+)://(([^:]+):([^@]+)@)?(([^:/]+)(:([0-9]+))?((/([^?]*))(\?(.*))?))")
-
-(defn- format-server [db-spec]
-  (str (:host db-spec)
-       (if (:port db-spec)
-         (str ":" (:port db-spec)))))
-
-(defmulti subname
-  "Return the JDBC subname for `db-spec`."
-  (fn [db-spec]
-    (keyword (or (:subprotocol db-spec)
-                 (:scheme db-spec)))))
-
-(defmethod subname :oracle [db-spec]
-  (str ":" (:user db-spec) "/" (:password db-spec) "@"
-       (format-server db-spec)
-       ":" (:name db-spec)))
-
-(defmethod subname :sqlserver [db-spec]
-  (str "//" (format-server db-spec) ";"
-       "database=" (:name db-spec) ";"
-       "user=" (:user db-spec) ";"
-       "password=" (:password db-spec)))
-
-(defmethod subname :default [db-spec]
-  (str "//" (:server-name db-spec)
-       (if-let [port (:server-port db-spec)]
-         (str ":" port))
-       "/" (:name db-spec)
-       (if-not (str/blank? (:query-string db-spec))
-         (str "?" (:query-string db-spec)))))
 
 (defn parse-url
   "Parse the database `url` and return a Ring compatible map."
@@ -47,25 +15,23 @@
   (if-let [matches (re-matches jdbc-url-regex (str url))]
     (let [database (nth matches 13)
           server-name (nth matches 8)
-          server-port (parse-integer (nth matches 10))
+          server-port (noencore/parse-integer (nth matches 10))
           query-string (nth matches 15)]
-      (as-> {:name database
-             :host server-name
-             :scheme (keyword (nth matches 3))
-             :server-name server-name
-             :server-port server-port
-             :params (parse-query-params query-string)
-             :query-params (parse-query-params query-string)
-             :pool (keyword (or (nth matches 2) :jdbc))
-             :port server-port
-             :query-string query-string
-             :uri (nth matches 12)
-             :subprotocol (nth matches 3)
-             :user (nth matches 5)
-             :password (nth matches 6)}
-          db-spec
-        (assoc db-spec :subname (subname db-spec))))
+      {:name database
+       :password (nth matches 6)
+       :pool (keyword (nth matches 2))
+       :query-params (noencore/parse-query-params query-string)
+       :scheme (keyword (nth matches 3))
+       :server-name server-name
+       :server-port server-port
+       :user (nth matches 5)})
     (throw (ex-info "Can't parse JDBC url %s." {:url url}))))
+
+(defn format-url
+  "Format the `db` spec as a URL."
+  [db]
+  (let [spec (assoc db :uri (str "/" (:name db)))]
+    (noencore/format-url spec)))
 
 (defn new-db
   "Return a new database from `spec`."
@@ -80,13 +46,13 @@
   (start [db]
     (cond-> db
       (:pool db) (pool/assoc-pool)
-      (:rollback? db) (driver/open-connection)))
+      (:rollback? db) (driver/open-test-connection)))
   (stop [db]
     (when (:rollback? db)
-      (driver/close-connection db))
+      (driver/close-test-connection db))
     (when-let [datasource (:datasource db)]
       (.close datasource))
-    (assoc db :connection nil :datasource nil)))
+    (assoc db :connection nil :test-connection nil :datasource nil)))
 
 (defmacro with-db
   "Start a database component using `config` bind it to `db-sym`,
@@ -97,14 +63,3 @@
          ~db-sym component#]
      (try ~@body
           (finally (component/stop component#)))))
-
-(defn- load-connection-pools
-  "Load connection pool support."
-  []
-  (doseq [ns '[datumbazo.pool.bonecp
-               datumbazo.pool.c3p0
-               datumbazo.pool.hikaricp]
-          :let [product (str/capitalize (last (str/split (name ns) #"\.")))]]
-    (try (require ns) (catch Exception e))))
-
-(load-connection-pools)

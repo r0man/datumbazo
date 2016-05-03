@@ -66,7 +66,7 @@
       (first @(select db [`(setval
                             ~(serial-sequence db column)
                             ~(select db [`(max ~(:name column))]
-                               (from table)))])))))
+                                     (from table)))])))))
 
 (defn- find-column-keys [db table]
   (let [table (parse-table table)]
@@ -84,8 +84,8 @@
                 (concat result
                         ;; TDOD: Find insert columns and do not rely on first row.
                         @(insert db table columns
-                           (values (encode-rows db table rows))
-                           (returning *))))
+                                 (values (encode-rows db table rows))
+                                 (returning *))))
               [] (partition batch-size batch-size nil (slurp-rows filename)))
         result (assoc {:table table :file filename} :records rows)]
     (reset-serials db table)
@@ -152,10 +152,11 @@
     (when (or (:help opts) (nil? db-url) (nil? directory))
       (show-help))
     (with-db [db db-url]
-      (let [tables (tables directory)]
-        (case (keyword command)
-          :delete (delete-fixtures db tables)
-          :dump (dump-fixtures db directory tables)
-          :load (load-fixtures db directory)
-          (show-help))
-        nil))))
+      (with-connection [db db]
+        (let [tables (tables directory)]
+          (case (keyword command)
+            :delete (delete-fixtures db tables)
+            :dump (dump-fixtures db directory tables)
+            :load (load-fixtures db directory)
+            (show-help))
+          nil)))))

@@ -1,11 +1,11 @@
 (ns datumbazo.pool.bonecp
-  (:require [datumbazo.pool.core :refer [db-pool]])
+  (:require [datumbazo.pool.core :refer [db-pool]]
+            [datumbazo.vendor :refer [jdbc-url]])
   (:import [com.jolbox.bonecp BoneCPConfig BoneCPDataSource]))
 
-(defmethod db-pool :bonecp [db-spec & [opts]]
-  (let [{:keys [subprotocol subname user password]} db-spec
-        config (BoneCPConfig.)]
-    (.setJdbcUrl config (str "jdbc:" subprotocol ":" subname))
-    (.setUsername config user)
-    (.setPassword config password)
+(defmethod db-pool :bonecp [db & [opts]]
+  (let [config (BoneCPConfig.)]
+    (.setJdbcUrl config (jdbc-url db))
+    (.setUsername config (:user db))
+    (.setPassword config (:password db))
     (BoneCPDataSource. config)))

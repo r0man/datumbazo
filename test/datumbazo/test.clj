@@ -20,6 +20,14 @@
      (with-connection [~db-sym db#]
        ~@body)))
 
+;; (with-db [db (:postgresql connections) {:rollback? true}]
+;;   (with-connection [db db]
+;;     @(select db [1])))
+
+;; (with-db [db (:postgresql connections)]
+;;   (with-connection [db db]
+;;     @(select db [1])))
+
 (defmacro with-test-dbs
   [[db-sym vendors] & body]
   `(do ~@(for [[db# url#] connections

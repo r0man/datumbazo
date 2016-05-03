@@ -5,7 +5,8 @@
             [datumbazo.util :as util]
             [jdbc.core :as jdbc]
             [jdbc.proto :as proto]
-            [jdbc.impl :as impl]))
+            [jdbc.impl :as impl]
+            [datumbazo.db :refer [format-url]]))
 
 (defn- tx-strategy [db & [opts]]
   (or (:strategy opts)
@@ -13,11 +14,13 @@
       jdbc/*default-tx-strategy*))
 
 (defmethod begin 'jdbc.core [db & [opts]]
+  {:pre [(connected? db)]}
   (let [connection (:connection db)
         tx-strategy (tx-strategy db)]
     (assoc db :connection (proto/begin! tx-strategy connection opts))))
 
 (defmethod apply-transaction 'jdbc.core [db f & [opts]]
+  {:pre [(connected? db)]}
   (jdbc/atomic-apply
    (:connection db)
    (fn [connection]
@@ -25,6 +28,7 @@
    opts))
 
 (defmethod close-connection 'jdbc.core [db]
+  {:pre [(connected? db)]}
   (when (some-> db :connection meta :rollback deref)
     (.rollback (connection db)))
   (when-let [connection (:connection db)]
@@ -32,6 +36,7 @@
   (assoc db :connection nil))
 
 (defmethod commit 'jdbc.core [db & [opts]]
+  {:pre [(connected? db)]}
   (let [connection (:connection db)
         tx-strategy (tx-strategy db)]
     (assoc db :connection (proto/commit! tx-strategy connection opts))))
@@ -40,6 +45,7 @@
   (some-> db :connection proto/connection))
 
 (defmethod fetch 'jdbc.core [db sql & [opts]]
+  {:pre [(connected? db)]}
   (let [identifiers (or (:sql-keyword db) str/lower-case)
         opts (merge {:identifiers identifiers} opts)]
     (try
@@ -48,6 +54,7 @@
         (util/throw-sql-ex-info e sql)))))
 
 (defmethod execute 'jdbc.core [db sql & [opts]]
+  {:pre [(connected? db)]}
   (try (row-count (jdbc/execute (:connection db) sql))
        (catch Exception e
          (util/throw-sql-ex-info e sql))))
@@ -55,7 +62,7 @@
 (defmethod open-connection 'jdbc.core [db & [opts]]
   (let [db (->> (if-let [datasource (:datasource db)]
                   (jdbc/connection datasource)
-                  (jdbc/connection db))
+                  (jdbc/connection (format-url db)))
                 (assoc db :connection))]
     (if (or (:rollback? db)
             (:rollback? opts))
@@ -63,9 +70,11 @@
       db)))
 
 (defmethod prepare-statement 'jdbc.core [db sql & [opts]]
+  {:pre [(connected? db)]}
   (proto/prepared-statement sql (connection db) opts))
 
 (defmethod rollback! 'jdbc.core [db]
+  {:pre [(connected? db)]}
   (jdbc/set-rollback! (:connection db))
   db)
 

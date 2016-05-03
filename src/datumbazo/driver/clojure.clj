@@ -1,17 +1,14 @@
 (ns datumbazo.driver.clojure
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
+            [datumbazo.db :refer [format-url]]
             [datumbazo.driver.core :refer :all]
             [datumbazo.io :as io]
             [datumbazo.util :as util]))
 
-(defn- assert-connection [db]
-  (when-not (connection db)
-    (throw (ex-info "No database connection or datasource!" {:db db}))))
-
 (defmethod begin 'clojure.java.jdbc
   [db & [{:keys [isolation read-only?]}]]
-  (assert-connection db)
+  {:pre [(connected? db)]}
   ;; Taken from clojure.java.jdbc/db-transaction*
   (if (zero? (jdbc/get-level db))
     (let [con (jdbc/db-find-connection db)]
@@ -33,15 +30,18 @@
       (#'jdbc/inc-level db))))
 
 (defmethod apply-transaction 'clojure.java.jdbc [db f & [opts]]
+  {:pre [(connected? db)]}
   (jdbc/db-transaction* db f opts))
 
 (defmethod commit 'clojure.java.jdbc [db & [opts]]
+  {:pre [(connected? db)]}
   (if (jdbc/db-is-rollback-only db)
     (.rollback (connection db))
     (.commit (connection db)))
   db)
 
 (defmethod close-connection 'clojure.java.jdbc [db]
+  {:pre [(connected? db)]}
   (when (and (:rollback db) (jdbc/db-is-rollback-only db))
     (.rollback (connection db)))
   (when-let [connection (:connection db)]
@@ -52,7 +52,7 @@
   (:connection db))
 
 (defmethod fetch 'clojure.java.jdbc [db sql & [opts]]
-  (assert-connection db)
+  {:pre [(connected? db)]}
   (let [identifiers (or (:sql-keyword db) str/lower-case)
         opts (merge {:identifiers identifiers} opts)]
     (try
@@ -61,21 +61,25 @@
         (util/throw-sql-ex-info e sql)))))
 
 (defmethod execute 'clojure.java.jdbc [db sql & [opts]]
-  (assert-connection db)
+  {:pre [(connected? db)]}
   (try
     (row-count (jdbc/execute! db sql))
     (catch Exception e
       (util/throw-sql-ex-info e sql))))
 
 (defmethod open-connection 'clojure.java.jdbc [db & [opts]]
-  (let [db (assoc db :connection (jdbc/get-connection db))]
+  (let [connection (jdbc/get-connection
+                    (if (:datasource db)
+                      (select-keys db [:datasource])
+                      (format-url db)))
+        db (assoc db :connection connection)]
     (if (or (:rollback? db)
             (:rollback? opts))
       (-> (begin db) (rollback!))
       db)))
 
 (defmethod prepare-statement 'clojure.java.jdbc [db sql & [opts]]
-  (assert-connection db)
+  {:pre [(connected? db)]}
   (let [prepared (jdbc/prepare-statement (connection db) (first sql) opts)]
     (dorun (map-indexed (fn [i v] (jdbc/set-parameter v prepared (inc i))) (rest sql)))
     prepared))

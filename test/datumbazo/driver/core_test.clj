@@ -16,7 +16,7 @@
 
 (deftest test-with-connection-rollback
   (with-db [db (:postgresql connections) {:rollback? true}]
-    (let [connection (d/connection db)]
-      (is (instance? Connection (d/connection db)))
+    (let [connection (:test-connection db)]
+      (is (instance? Connection connection))
       (d/with-connection [db db]
         (is (= (d/connection db) connection))))))

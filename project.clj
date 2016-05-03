@@ -15,14 +15,14 @@
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.logging "0.3.1"]
                  [potemkin "0.4.3"]
-                 [prismatic/schema "1.1.0"]
+                 [prismatic/schema "1.1.1"]
                  [slingshot "0.12.2"]
                  [sqlingvo "0.8.11"]]
   :profiles {:dev {:dependencies [[ch.qos.logback/logback-classic "1.1.7"]
                                   [com.jolbox/bonecp "0.8.0.RELEASE"]
                                   [com.mchange/c3p0 "0.9.5.2"]
-                                  [com.zaxxer/HikariCP "2.4.5"]
-                                  [funcool/clojure.jdbc "0.7.0"]
+                                  [com.zaxxer/HikariCP "2.4.6"]
+                                  [funcool/clojure.jdbc "0.8.0"]
                                   [mysql/mysql-connector-java "5.1.38"]
                                   [org.clojure/java.jdbc "0.5.8"]
                                   [org.postgresql/postgresql "9.4.1208"]
@@ -31,5 +31,4 @@
                    :repl-options {:init-ns user}
                    :resource-paths ["test-resources"]}}
   :aliases {"test-ancient" ["test"]}
-  :main ^{:skip-aot true} datumbazo.fixtures
-  :pedantic? :abort)
+  :main ^{:skip-aot true} datumbazo.fixtures)

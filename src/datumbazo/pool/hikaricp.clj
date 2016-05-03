@@ -1,15 +1,15 @@
 (ns datumbazo.pool.hikaricp
-  (:require [datumbazo.pool.core :refer [db-pool]])
+  (:require [datumbazo.pool.core :refer [db-pool]]
+            [datumbazo.vendor :refer [jdbc-url]])
   (:import [com.zaxxer.hikari HikariConfig HikariDataSource]))
 
-(defmethod db-pool :hikaricp [db-spec & [opts]]
-  (let [{:keys [subprotocol subname user password]} db-spec
-        {:keys [connection-timeout idle-timeout max-lifetime
+(defmethod db-pool :hikaricp [db & [opts]]
+  (let [{:keys [connection-timeout idle-timeout max-lifetime
                 maximum-pool-size minimum-idle]} opts
         config (HikariConfig.)]
-    (.setJdbcUrl config (str "jdbc:" subprotocol ":" subname))
-    (.setUsername config user)
-    (.setPassword config password)
+    (.setJdbcUrl config (jdbc-url db))
+    (.setUsername config (:user db))
+    (.setPassword config (:password db))
     (when connection-timeout
       (.setConnectionTimeout config connection-timeout))
     (when idle-timeout

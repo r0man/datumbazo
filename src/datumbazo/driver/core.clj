@@ -1,5 +1,6 @@
 (ns datumbazo.driver.core
-  (:require [sqlingvo.core :refer [ast sql]]))
+  (:require [sqlingvo.core :refer [ast sql]]
+            [clojure.set :as set]))
 
 (defmulti apply-transaction
   "Apply `f` within a database transaction"
@@ -74,6 +75,11 @@
       (fetch db sql opts)
       (execute db sql opts))))
 
+(defn connected?
+  "Returns true if `db` is connected, otherwise false."
+  [db]
+  (some? (connection db)))
+
 (defn row-count
   "Normalize into a record, with the count of affected rows."
   [result]
@@ -89,6 +95,32 @@
   [db f & [opts]]
   (if (connection db)
     (f db)
+    (let [db (open-connection db opts)]
+      (try (f db)
+           (finally (close-connection db))))))
+
+(defn with-connection*
+  "Open a database connection, call `f` with the connected `db` as
+  it's first argument and close the connection again. Does not open a
+  new connection if `db` is already connected."
+  [db f & [opts]]
+  (if-let [connection (:test-connection db)]
+    (f (assoc db :connection connection))
+    (let [db (open-connection db opts)]
+      (try (f db)
+           (finally (close-connection db))))))
+
+(defn with-connection*
+  "Open a database connection, call `f` with the connected `db` as
+  it's first argument and close the connection again. Does not open a
+  new connection if `db` is already connected."
+  [db f & [opts]]
+  (cond
+    (:connection db)
+    (f db)
+    (:test-connection db)
+    (f (assoc db :connection (:test-connection db)))
+    :else
     (let [db (open-connection db opts)]
       (try (f db)
            (finally (close-connection db))))))
@@ -110,3 +142,15 @@
                   (rollback! db#))
                 result#))]
      (apply-transaction ~db f# ~opts)))
+
+(defn open-test-connection
+  "Open the connection used for testing."
+  [db]
+  (-> (open-connection db)
+      (set/rename-keys {:connection :test-connection})))
+
+(defn close-test-connection
+  "Close the connection used for testing."
+  [db]
+  (-> (set/rename-keys db {:test-connection :connection})
+      (close-connection)))

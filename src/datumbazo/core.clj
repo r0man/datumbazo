@@ -4,6 +4,7 @@
             [datumbazo.associations :as associations]
             [datumbazo.db :as db]
             [datumbazo.driver.core :as driver]
+            [datumbazo.pool.core :as pool]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [compact-map immigrate]]
@@ -321,6 +322,8 @@
                       [~'db & ~'args]
                       (first (apply ~(symbol (str table-sym "-by-" column-name)) ~'db ~'args)))))))))
 
+
+(pool/load-connection-pools)
 
 (try
   (doseq [ns '[datumbazo.driver.clojure
