@@ -11,11 +11,32 @@
   (:import [java.util List Map]
            sqlingvo.db.Database))
 
+(s/defn ^:private primary-key-columns :- #{Map}
+  "Return the primary key columns of `class`."
+  [class :- Class]
+  (let [table (util/table-by-class class)]
+    (->> (vals (:column table))
+         (filter :primary-key?)
+         (set))))
+
 (s/defn ^:private select-columns :- [Map]
   "Return a seq of `records` that only have the table column keys."
   [class :- Class records :- [Map]]
   (let [keys (map :name (util/columns-by-class class))]
     (map #(select-keys % keys) records)))
+
+(s/defn delete-records :- [Map]
+  "Delete `records` of `class` from `db`."
+  [db :- Database class :- Class records :- [Map]]
+  (let [records (util/make-instances db class records)
+        records (callback/call-before-delete records)
+        table (util/table-by-class class)
+        pk (first (primary-key-columns class))]
+    (assert pk (str "No primary key found for " class))
+    (->> @(sql/delete db (util/table-keyword table)
+            (sql/where `(in ~(:name pk) ~(map :id records)))
+            (sql/returning :*))
+         (callback/call-after-delete))))
 
 (s/defn insert-records :- [Map]
   "Insert `records` of `class` into `db`."
@@ -28,14 +49,6 @@
             (sql/returning :*))
          (util/make-instances db class)
          (callback/call-after-create))))
-
-(s/defn ^:private primary-key-columns :- #{Map}
-  "Return the primary key columns of `class`."
-  [class :- Class]
-  (let [table (util/table-by-class class)]
-    (->> (vals (:column table))
-         (filter :primary-key?)
-         (set))))
 
 (s/defn ^:private update-column :- s/Keyword
   "Return the qualified update column."
@@ -160,6 +173,14 @@
      [~'db ~'records]
      (insert-records ~'db ~(util/class-symbol table) ~'records)))
 
+(defn- define-delete
+  "Define a function that deletes records in `table`."
+  [table]
+  `(defn ~'delete!
+     "Delete `records` from `db`."
+     [~'db ~'records]
+     (delete-records ~'db ~(util/class-symbol table) ~'records)))
+
 (defn- define-update
   "Define a function that updates records in `table`."
   [table]
@@ -198,6 +219,7 @@
 (defn define-record [table]
   `(do ~(define-class table)
        ~(define-instance? table)
+       ~(define-delete table)
        ~(define-insert table)
        ~(define-update table)
        ~(define-find-all table)

@@ -88,6 +88,15 @@
       (is (continent? continent))
       (is (= continent (continents/by-name db "Europe"))))))
 
+(deftest test-delete!
+  (with-backends [db]
+    (is (empty? (countries/delete! db [])))
+    (let [country (countries/by-name db "Spain")
+          [deleted] (countries/delete! db [country])]
+      (is (nil? (countries/by-name db (:name country))))
+      (is (= deleted country))
+      (is (= (countries/delete! db [country]) [])))))
+
 (deftest test-insert!
   (with-backends [db]
     (let [attrs {:name "Gondwana"

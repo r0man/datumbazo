@@ -23,6 +23,9 @@
 (defcallback after-validation
   "Called after a record has been validated.")
 
+(defcallback before-delete
+  "Called before a record is deleted from the database.")
+
 (defcallback before-save
   "Called before a record is saved to the database.")
 
@@ -31,6 +34,9 @@
 
 (defcallback after-create
   "Called after a record has been created in the database.")
+
+(defcallback after-delete
+  "Called after a record has been deleted from the database.")
 
 (defcallback after-save
   "Called after a record has been saved to the database.")

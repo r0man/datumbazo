@@ -1,7 +1,7 @@
 (ns datumbazo.continents-test
   (:require [clojure.test :refer :all]
             [datumbazo.continents :as continents :refer [continent?]]
-            [datumbazo.countries :refer [country?]] 
+            [datumbazo.countries :refer [country?]]
             [datumbazo.util :refer [make-instance]]
             [datumbazo.test :refer :all])
   (:import datumbazo.continents.Continent
@@ -63,6 +63,15 @@
           countries (:countries continent)]
       (is (= (map :name countries) ["Indonesia"]))
       (is (every? country? countries)))))
+
+(deftest test-delete!
+  (with-backends [db]
+    (is (empty? (continents/delete! db [])))
+    (let [continent (continents/by-name db "Asia")
+          [deleted] (continents/delete! db [continent])]
+      (is (nil? (continents/by-name db (:name continent))))
+      (is (= deleted continent))
+      (is (= (continents/delete! db [continent]) [])))))
 
 (deftest test-insert!
   (with-backends [db]
