@@ -2,17 +2,29 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [datumbazo.db :refer [format-url]]
-            [datumbazo.driver.core :refer :all]
+            [datumbazo.driver.core :as d]
             [datumbazo.io :as io]
             [datumbazo.util :as util]))
 
-(defmethod begin 'clojure.java.jdbc
-  [db & [{:keys [isolation read-only?]}]]
-  {:pre [(connected? db)]}
+(defrecord Driver [connection])
+
+(defmethod d/find-driver 'clojure.java.jdbc
+  [db & [opts]]
+  (map->Driver db))
+
+(defn- connected?
+  "Return true if `driver` is connected, otherwise false."
+  [driver]
+  (:connection driver))
+
+(defn- begin
+  "Begin a new database transaction."
+  [driver & [{:keys [isolation read-only?]}]]
+  {:pre [(connected? driver)]}
   ;; Taken from clojure.java.jdbc/db-transaction*
-  (if (zero? (jdbc/get-level db))
-    (let [con (jdbc/db-find-connection db)]
-      (let [nested-db (#'jdbc/inc-level db)]
+  (if (zero? (jdbc/get-level driver))
+    (let [con (jdbc/db-find-connection driver)]
+      (let [nested-db (#'jdbc/inc-level driver)]
         (io!
          (when isolation
            (.setTransactionIsolation con (isolation #'jdbc/isolation-levels)))
@@ -22,71 +34,110 @@
          nested-db)))
     (do
       (when (and isolation
-                 (let [con (jdbc/db-find-connection db)]
+                 (let [con (jdbc/db-find-connection driver)]
                    (not= (isolation #'jdbc/isolation-levels)
                          (.getTransactionIsolation con))))
         (let [msg "Nested transactions may not have different isolation levels"]
           (throw (IllegalStateException. msg))))
-      (#'jdbc/inc-level db))))
+      (#'jdbc/inc-level driver))))
 
-(defmethod apply-transaction 'clojure.java.jdbc [db f & [opts]]
-  {:pre [(connected? db)]}
-  (jdbc/db-transaction* db f opts))
+(defn- connect
+  "Connect to the database."
+  [driver & [opts]]
+  (->> (jdbc/get-connection
+        (if (:datasource driver)
+          (select-keys driver [:datasource])
+          (format-url driver)))
+       (assoc driver :connection)))
 
-(defmethod commit 'clojure.java.jdbc [db & [opts]]
-  {:pre [(connected? db)]}
-  (if (jdbc/db-is-rollback-only db)
-    (.rollback (connection db))
-    (.commit (connection db)))
-  db)
+(defn- connection
+  "Return the current database connection."
+  [driver]
+  (:connection driver))
 
-(defmethod close-connection 'clojure.java.jdbc [db]
-  {:pre [(connected? db)]}
-  (when (and (:rollback db) (jdbc/db-is-rollback-only db))
-    (.rollback (connection db)))
-  (when-let [connection (:connection db)]
+(defn commit
+  "Commit the currenbt database transaction."
+  [driver & [opts]]
+  {:pre [(connected? driver)]}
+  (if (jdbc/db-is-rollback-only driver)
+    (.rollback (:connection driver))
+    (.commit (:connection driver)))
+  driver)
+
+(defn- disconnect
+  "Disconnect from the database."
+  [driver]
+  {:pre [(connected? driver)]}
+  (when-let [connection (:connection driver)]
     (.close connection))
-  (assoc db :connection nil))
+  (assoc driver :connection nil))
 
-(defmethod connection 'clojure.java.jdbc [db & [opts]]
-  (:connection db))
-
-(defmethod fetch 'clojure.java.jdbc [db sql & [opts]]
-  {:pre [(connected? db)]}
-  (let [identifiers (or (:sql-keyword db) str/lower-case)
+(defn- fetch
+  "Query the database and fetch the result."
+  [driver sql & [opts]]
+  {:pre [(connected? driver)]}
+  (let [identifiers (or (:sql-keyword driver) str/lower-case)
         opts (merge {:identifiers identifiers} opts)]
     (try
-      (jdbc/query db sql opts)
+      (jdbc/query driver sql opts)
       (catch Exception e
         (util/throw-sql-ex-info e sql)))))
 
-(defmethod execute 'clojure.java.jdbc [db sql & [opts]]
-  {:pre [(connected? db)]}
+(defn- execute
+  "Execute a SQL statement against the database."
+  [driver sql & [opts]]
+  {:pre [(connected? driver)]}
   (try
-    (row-count (jdbc/execute! db sql))
+    (d/row-count (jdbc/execute! driver sql))
     (catch Exception e
       (util/throw-sql-ex-info e sql))))
 
-(defmethod open-connection 'clojure.java.jdbc [db & [opts]]
-  (let [connection (jdbc/get-connection
-                    (if (:datasource db)
-                      (select-keys db [:datasource])
-                      (format-url db)))
-        db (assoc db :connection connection)]
-    (if (or (:rollback? db)
-            (:rollback? opts))
-      (-> (begin db) (rollback!))
-      db)))
-
-(defmethod prepare-statement 'clojure.java.jdbc [db sql & [opts]]
-  {:pre [(connected? db)]}
-  (let [prepared (jdbc/prepare-statement (connection db) (first sql) opts)]
+(defn- prepare-statement
+  "Return a prepared statement for the `sql` statement."
+  [driver sql & [opts]]
+  {:pre [(connected? driver)]}
+  (let [prepared (jdbc/prepare-statement (connection driver) (first sql) opts)]
     (dorun (map-indexed (fn [i v] (jdbc/set-parameter v prepared (inc i))) (rest sql)))
     prepared))
 
-(defmethod rollback! 'clojure.java.jdbc [db]
-  (jdbc/db-set-rollback-only! db)
-  db)
+(defn- rollback!
+  "Mark the current database transaction for rollback."
+  [driver & [opts]]
+  (jdbc/db-set-rollback-only! driver)
+  driver)
+
+(extend-protocol d/IConnection
+  Driver
+  (-connect [driver opts]
+    (connect driver opts))
+  (-connection [driver]
+    (connection driver))
+  (-disconnect [driver]
+    (disconnect driver)))
+
+(extend-protocol d/IExecute
+  Driver
+  (-execute [driver sql opts]
+    (execute driver sql opts)))
+
+(extend-protocol d/IFetch
+  Driver
+  (-fetch [driver sql opts]
+    (fetch driver sql opts)))
+
+(extend-protocol d/IPrepareStatement
+  Driver
+  (-prepare-statement [driver sql opts]
+    (prepare-statement driver sql opts)))
+
+(extend-protocol d/ITransaction
+  Driver
+  (-begin [driver opts]
+    (begin driver opts))
+  (-commit [driver opts]
+    (commit driver opts))
+  (-rollback [driver opts]
+    (rollback! driver opts)))
 
 (extend-protocol jdbc/IResultSetReadColumn
 

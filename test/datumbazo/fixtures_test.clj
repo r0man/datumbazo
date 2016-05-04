@@ -1,9 +1,9 @@
 (ns datumbazo.fixtures-test
-  (:require [clojure.java.io :refer [file resource]])
-  (:use clojure.test
-        datumbazo.core-test
-        datumbazo.test
-        datumbazo.fixtures))
+  (:require [clojure.java.io :refer [file resource]]
+            [clojure.test :refer :all]
+            [datumbazo.core-test :refer :all]
+            [datumbazo.fixtures :refer :all]
+            [datumbazo.test :refer :all]))
 
 (def fixture-dir
   "test-resources/db/test-db/fixtures")

@@ -151,11 +151,6 @@
     (is (= "vertica" (:subprotocol db)))
     (is (= :vertica (:scheme db)))))
 
-(deftest test-new-db-with-db
-  (let [url "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true"]
-    (is (= (new-db (new-db url))
-           (new-db url)))))
-
 (deftest test-parse-url
   (doseq [url [nil "" "x"]]
     (is (thrown? clojure.lang.ExceptionInfo (parse-url url))))
@@ -192,10 +187,8 @@
 
 (deftest test-with-db
   (with-db [db (:postgresql connections)]
-    (is (nil? (:connection db))))
-  (with-db [db (:postgresql connections) {:rollback? true}]
-    (is (instance? Connection (:test-connection db))))
+    (is (:driver db)))
   (doseq [pool [:bonecp :c3p0 :hikaricp]]
-    (with-db [db (:postgresql connections) {:rollback? true :pool pool}]
-      (is (instance? DataSource (:datasource db)))
-      (is (instance? Connection (:test-connection db))))))
+    (with-db [db (:postgresql connections) {:pool pool}]
+      (is (:driver db))
+      (is (instance? DataSource (:datasource db))))))

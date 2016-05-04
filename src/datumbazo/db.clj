@@ -1,6 +1,7 @@
 (ns datumbazo.db
   (:require [com.stuartsierra.component :as component]
             [datumbazo.driver.core :as driver]
+            [datumbazo.driver.test :as test-driver]
             [datumbazo.pool.core :as pool]
             [no.en.core :as noencore]
             [sqlingvo.db :as db]))
@@ -33,32 +34,41 @@
   (let [spec (assoc db :uri (str "/" (:name db)))]
     (noencore/format-url spec)))
 
+(defn- assoc-driver [db]
+  (->> (if (:test? db)
+         (test-driver/driver db)
+         (driver/find-driver db))
+       (assoc db :driver)))
+
 (defn new-db
   "Return a new database from `spec`."
-  [spec]
-  (->> (if (map? spec) spec (parse-url spec))
-       (merge {:backend 'clojure.java.jdbc
-               :eval-fn #'driver/eval-db})
-       (db/db)))
+  [spec & [opts]]
+  (-> (merge {:backend 'clojure.java.jdbc
+              :eval-fn #'driver/execute}
+             (if (map? spec)
+               spec
+               (parse-url spec)))
+      (db/db)
+      (merge opts)
+      (assoc-driver)))
 
 (extend-type sqlingvo.db.Database
   component/Lifecycle
   (start [db]
     (cond-> db
       (:pool db) (pool/assoc-pool)
-      (:rollback? db) (driver/open-test-connection)))
+      true (update :driver component/start)))
   (stop [db]
-    (when (:rollback? db)
-      (driver/close-test-connection db))
     (when-let [datasource (:datasource db)]
       (.close datasource))
-    (assoc db :connection nil :test-connection nil :datasource nil)))
+    (-> (update db :driver component/stop)
+        (assoc :datasource nil))))
 
 (defmacro with-db
   "Start a database component using `config` bind it to `db-sym`,
   evaluate `body` and close the database connection again."
   [[db-sym config & [opts]] & body]
-  `(let [db# (merge (new-db ~config) ~opts)
+  `(let [db# (new-db ~config ~opts)
          component# (component/start db#)
          ~db-sym component#]
      (try ~@body

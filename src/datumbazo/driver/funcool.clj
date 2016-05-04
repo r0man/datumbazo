@@ -1,82 +1,131 @@
 (ns datumbazo.driver.funcool
   (:require [clojure.string :as str]
-            [datumbazo.driver.core :refer :all]
+            [datumbazo.db :refer [format-url]]
+            [datumbazo.driver.core :as d]
             [datumbazo.io :as io]
             [datumbazo.util :as util]
             [jdbc.core :as jdbc]
-            [jdbc.proto :as proto]
-            [jdbc.impl :as impl]
-            [datumbazo.db :refer [format-url]]))
+            [jdbc.proto :as proto]))
 
-(defn- tx-strategy [db & [opts]]
+(defrecord Driver [connection])
+
+(defmethod d/find-driver 'jdbc.core
+  [db & [opts]]
+  (map->Driver db))
+
+(defn- connected?
+  "Return true if `driver` is connected, otherwise false."
+  [driver]
+  (:connection driver))
+
+(defn- tx-strategy [driver & [opts]]
   (or (:strategy opts)
-      (-> db :connection meta :tx-strategy)
+      (-> driver :connection meta :tx-strategy)
       jdbc/*default-tx-strategy*))
 
-(defmethod begin 'jdbc.core [db & [opts]]
-  {:pre [(connected? db)]}
-  (let [connection (:connection db)
-        tx-strategy (tx-strategy db)]
-    (assoc db :connection (proto/begin! tx-strategy connection opts))))
+(defn- begin
+  "Begin a new database transaction."
+  [driver & [opts]]
+  {:pre [(connected? driver)]}
+  (->> (proto/begin!
+        (tx-strategy driver)
+        (:connection driver)
+        opts)
+       (assoc driver :connection)))
 
-(defmethod apply-transaction 'jdbc.core [db f & [opts]]
-  {:pre [(connected? db)]}
-  (jdbc/atomic-apply
-   (:connection db)
-   (fn [connection]
-     (f (assoc db :connection connection)))
-   opts))
+(defn- connect
+  "Connect to the database."
+  [driver & [opts]]
+  (->> (if-let [datasource (:datasource driver)]
+         (jdbc/connection datasource)
+         (jdbc/connection (format-url driver)))
+       (assoc driver :connection)))
 
-(defmethod close-connection 'jdbc.core [db]
-  {:pre [(connected? db)]}
-  (when (some-> db :connection meta :rollback deref)
-    (.rollback (connection db)))
-  (when-let [connection (:connection db)]
+(defn- commit
+  "Commit the currenbt database transaction."
+  [driver & [opts]]
+  {:pre [(connected? driver)]}
+  (let [connection (:connection driver)
+        tx-strategy (tx-strategy driver)]
+    (assoc driver :connection (proto/commit! tx-strategy connection opts))))
+
+(defn- connection
+  "Return the current database connection."
+  [driver]
+  (some-> driver :connection proto/connection))
+
+(defn- disconnect
+  "Disconnect from the database."
+  [driver & [opts]]
+  {:pre [(connected? driver)]}
+  (when-let [connection (d/-connection driver)]
     (.close connection))
-  (assoc db :connection nil))
+  (assoc driver :connection nil))
 
-(defmethod commit 'jdbc.core [db & [opts]]
-  {:pre [(connected? db)]}
-  (let [connection (:connection db)
-        tx-strategy (tx-strategy db)]
-    (assoc db :connection (proto/commit! tx-strategy connection opts))))
-
-(defmethod connection 'jdbc.core [db & [opts]]
-  (some-> db :connection proto/connection))
-
-(defmethod fetch 'jdbc.core [db sql & [opts]]
-  {:pre [(connected? db)]}
-  (let [identifiers (or (:sql-keyword db) str/lower-case)
+(defn- fetch
+  "Query the database and fetch the result."
+  [driver sql & [opts]]
+  {:pre [(connected? driver)]}
+  (let [identifiers (or (:sql-keyword driver) str/lower-case)
         opts (merge {:identifiers identifiers} opts)]
     (try
-      (jdbc/fetch (:connection db) sql opts)
+      (jdbc/fetch (:connection driver) sql opts)
       (catch Exception e
         (util/throw-sql-ex-info e sql)))))
 
-(defmethod execute 'jdbc.core [db sql & [opts]]
-  {:pre [(connected? db)]}
-  (try (row-count (jdbc/execute (:connection db) sql))
+(defn- execute
+  "Execute a SQL statement against the database."
+  [driver sql & [opts]]
+  {:pre [(connected? driver)]}
+  (try (d/row-count (jdbc/execute (:connection driver) sql))
        (catch Exception e
          (util/throw-sql-ex-info e sql))))
 
-(defmethod open-connection 'jdbc.core [db & [opts]]
-  (let [db (->> (if-let [datasource (:datasource db)]
-                  (jdbc/connection datasource)
-                  (jdbc/connection (format-url db)))
-                (assoc db :connection))]
-    (if (or (:rollback? db)
-            (:rollback? opts))
-      (-> (begin db) (rollback!))
-      db)))
+(defn- prepare-statement
+  "Return a prepared statement for the `sql` statement."
+  [driver sql & [opts]]
+  {:pre [(connected? driver)]}
+  (proto/prepared-statement sql (d/-connection driver) opts))
 
-(defmethod prepare-statement 'jdbc.core [db sql & [opts]]
-  {:pre [(connected? db)]}
-  (proto/prepared-statement sql (connection db) opts))
+(defn- rollback!
+  "Mark the current database transaction for rollback."
+  [driver & [opts]]
+  {:pre [(connected? driver)]}
+  (jdbc/set-rollback! (:connection driver))
+  driver)
 
-(defmethod rollback! 'jdbc.core [db]
-  {:pre [(connected? db)]}
-  (jdbc/set-rollback! (:connection db))
-  db)
+(extend-protocol d/IConnection
+  Driver
+  (-connect [driver opts]
+    (connect driver opts))
+  (-connection [driver]
+    (connection driver))
+  (-disconnect [driver]
+    (disconnect driver)))
+
+(extend-protocol d/IExecute
+  Driver
+  (-execute [driver sql opts]
+    (execute driver sql opts)))
+
+(extend-protocol d/IFetch
+  Driver
+  (-fetch [driver sql opts]
+    (fetch driver sql opts)))
+
+(extend-protocol d/IPrepareStatement
+  Driver
+  (-prepare-statement [driver sql opts]
+    (prepare-statement driver sql opts)))
+
+(extend-protocol d/ITransaction
+  Driver
+  (-begin [driver opts]
+    (begin driver opts))
+  (-commit [driver opts]
+    (commit driver opts))
+  (-rollback [driver opts]
+    (rollback! driver opts)))
 
 (extend-protocol proto/ISQLResultSetReadColumn
 

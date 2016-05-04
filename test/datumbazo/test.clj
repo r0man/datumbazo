@@ -16,17 +16,9 @@
 
 (defmacro with-test-db
   [[db-sym config & [opts]] & body]
-  `(with-db [db# ~config (assoc ~opts :rollback? true)]
+  `(with-db [db# ~config (assoc ~opts :test? true)]
      (with-connection [~db-sym db#]
        ~@body)))
-
-;; (with-db [db (:postgresql connections) {:rollback? true}]
-;;   (with-connection [db db]
-;;     @(select db [1])))
-
-;; (with-db [db (:postgresql connections)]
-;;   (with-connection [db db]
-;;     @(select db [1])))
 
 (defmacro with-test-dbs
   [[db-sym vendors] & body]
@@ -81,20 +73,21 @@
       {:did 9 :dname "Antwerp Design" :zipcode "5678"}
       {:did 10 :dname "Conrad International" :zipcode "6789"}])))
 
+(defmacro with-drivers [[db-sym db opts] & body]
+  `(doseq [driver# ['clojure.java.jdbc 'jdbc.core]]
+     (if (find-ns driver#)
+       (with-db [~db-sym ~db (merge {:backend driver# :test? true} ~opts)]
+         ~@body)
+       (.println *err* (format "WARNING: Can't find %s driver, skipping tests." driver#)))))
+
 (defmacro with-backends [[db-sym opts] & body]
-  `(doseq [backend# ['clojure.java.jdbc 'jdbc.core]]
-     (if (find-ns backend#)
-       (let [db# (new-db ~(:postgresql connections))]
-         (with-db [db# (merge db# {:backend backend# :rollback? true} ~opts)]
-           (with-connection [~db-sym db#]
-             ~@body)))
-       (.println *err* (format "WARNING: Can't find %s backend, skipping tests." backend#)))))
+  `(with-drivers [db# ~(:postgresql connections) ~opts]
+     (with-connection [~db-sym db#]
+       ~@body)))
 
 (deftest test-with-backends
   (with-backends [db]
-    (when (= (:backend db) 'jdbc.core)
-      (is (:connection db))
-      (is @(select db [1])))))
+    (is @(select db [1]))))
 
 (deftest test-with-backends-pool
   (with-backends [db {:pool :c3p0}]

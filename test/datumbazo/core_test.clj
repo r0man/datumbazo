@@ -11,6 +11,7 @@
             [datumbazo.driver.core :as driver]
             [datumbazo.validation :refer [new-record? uniqueness-of]]
             [slingshot.slingshot :refer [try+]])
+  (:import datumbazo.driver.clojure.Driver)
   (:use clojure.test
         datumbazo.core
         datumbazo.io))
@@ -637,32 +638,32 @@
 (deftest test-new-db
   (let [db (new-db "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
     (is (instance? sqlingvo.db.Database db))
+    (is (instance? datumbazo.driver.clojure.Driver (:driver db)))
     (is (= "postgresql" (:subprotocol db)))
     (is (= "tiger" (:user db)))
     (is (= "scotch" (:password db)))
     (is (= "localhost" (:server-name db)))
     (is (= 5432 (:server-port db)))
     (is (= "datumbazo" (:name db)))
-    (is (= {:ssl "true"} (:query-params db)))
-    (is (= db (new-db db)))))
+    (is (= {:ssl "true"} (:query-params db)))))
 
 (deftest test-with-db
   (with-db [db "postgresql://tiger:scotch@localhost:5432/datumbazo"]
     (is (instance? sqlingvo.db.Database db))
+    (is (instance? datumbazo.driver.clojure.Driver (:driver db)))
     (is (nil? (:connection db)))
     (is (= "postgresql" (:subprotocol db)))
     (is (= "tiger" (:user db)))
     (is (= "scotch" (:password db)))
     (is (= "localhost" (:server-name db)))
     (is (= 5432 (:server-port db)))
-    (is (= "datumbazo" (:name db)))
-    (is (= db (new-db db)))))
+    (is (= "datumbazo" (:name db)))))
 
 (deftest test-with-connection
   (with-db [db "postgresql://tiger:scotch@localhost:5432/datumbazo"]
     (with-connection [db db]
       (is (instance? sqlingvo.db.Database db))
-      (is (instance? java.sql.Connection (:connection db))))))
+      (is (instance? java.sql.Connection (connection db))))))
 
 (deftest test-select-1-as-a-2-as-b-3-as-c
   (with-backends [db]
@@ -670,7 +671,6 @@
            @(select db [(as 1 :a)
                         (as 2 :b)
                         (as 3 :c)])))))
-
 
 ;; CAST
 
@@ -1048,49 +1048,37 @@
            [{:x "english"}]))))
 
 (deftest test-with-transaction
-  (with-backends [db {:rollback? false}]
-    (try
+  (with-drivers [db db {:test? false}]
+    (with-connection [db db]
       @(create-table db :test-with-transaction
          (column :x :int))
       (try (with-transaction [db db]
              @(insert db :test-with-transaction []
                 (values [{:x 1}]))
              (throw (ex-info "boom" {})))
-           (catch Exception e))
+           (catch Exception e)))
+    (with-connection [db db]
       (is (empty? @(select db [:*] (from :test-with-transaction))))
-      (finally
-        @(drop-table db [:test-with-transaction]
-           (if-exists true))))))
-
-(deftest test-with-transaction-rollback
-  (with-backends [db {:rollback? false}]
-    (try
-      @(create-table db :test-with-transaction-rollback
-         (column :x :int))
-      (with-transaction [db db {:rollback? true}]
-        @(insert db :test-with-transaction-rollback []
-           (values [{:x 1}])))
-      (is (empty? @(select db [:*] (from :test-with-transaction-rollback))))
-      (finally
-        @(drop-table db [:test-with-transaction-rollback]
-           (if-exists true))))))
+      @(drop-table db [:test-with-transaction]
+         (if-exists true)))))
 
 (deftest test-with-nested-transaction
-  (with-backends [db]
-    (with-transaction [db db]
-      ;; TODO: How does this work in clojure.java.jdbc?
-      (when (= (:backend db) 'jdbc.core)
-        @(drop-table db [:test-with-nested-transaction]
-           (if-exists true))
-        @(create-table db :test-with-nested-transaction
-           (column :x :int))
-        (try (with-transaction [db]
-               @(insert db :test-with-nested-transaction []
-                  (values {:x 1}))
-               (throw (ex-info "boom" {})))
-             (catch Exception e))
-        (is (empty? @(select db [:*] (from :test-with-nested-transaction))))
-        @(drop-table db [:test-with-nested-transaction])))))
+  (with-drivers [db db {:test? false}]
+    (with-connection [db db]
+      (with-transaction [db db]
+        ;; TODO: How does this work in clojure.java.jdbc?
+        (when (= (:backend db) 'jdbc.core)
+          @(drop-table db [:test-with-nested-transaction]
+             (if-exists true))
+          @(create-table db :test-with-nested-transaction
+             (column :x :int))
+          (try (with-transaction [db]
+                 @(insert db :test-with-nested-transaction []
+                    (values {:x 1}))
+                 (throw (ex-info "boom" {})))
+               (catch Exception e))
+          (is (empty? @(select db [:*] (from :test-with-nested-transaction))))
+          @(drop-table db [:test-with-nested-transaction]))))))
 
 (deftest test-sql-name
   (with-backends [db]
@@ -1105,17 +1093,15 @@
                  :enroll_date #inst "2007-08-01T00:00:00.000-00:00"}]))))))
 
 (deftest test-sql-name-and-keyword
-  (with-backends [db]
-    (let [db (assoc db :sql-name underscore)
-          db (assoc db :sql-keyword hyphenate)]
-      (with-test-table db :empsalary
-        (is (= @(select db [:*]
-                  (from :empsalary)
-                  (where '(= :empno 10)))
-               [{:depname "develop"
-                 :empno 10
-                 :salary 5200
-                 :enroll-date #inst "2007-08-01T00:00:00.000-00:00"}]))))))
+  (with-backends [db {:sql-name underscore :sql-keyword hyphenate}]
+    (with-test-table db :empsalary
+      (is (= @(select db [:*]
+                (from :empsalary)
+                (where '(= :empno 10)))
+             [{:depname "develop"
+               :empno 10
+               :salary 5200
+               :enroll-date #inst "2007-08-01T00:00:00.000-00:00"}])))))
 
 (deftest test-upsert-on-conflict-do-update
   (with-backends [db]

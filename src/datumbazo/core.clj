@@ -1,19 +1,18 @@
 (ns datumbazo.core
   (:refer-clojure :exclude [distinct group-by update])
-  (:require [com.stuartsierra.component :as component]
-            [datumbazo.associations :as associations]
-            [datumbazo.db :as db]
+  (:require [clojure.string :as str]
+            [datumbazo.associations]
+            [datumbazo.db]
             [datumbazo.driver.core :as driver]
-            [datumbazo.pool.core :as pool]
             [datumbazo.io :as io]
             [datumbazo.meta :as meta]
+            [datumbazo.pool.core :as pool]
             [datumbazo.util :refer [compact-map immigrate]]
             [inflections.core :refer [singular]]
             [no.en.core :refer [parse-integer]]
             [potemkin :refer [import-vars]]
-            sqlingvo.core
-            [sqlingvo.expr :refer [parse-table]]
-            [clojure.string :as str]))
+            [sqlingvo.core]
+            [sqlingvo.expr :refer [parse-table]]))
 
 (import-vars
  [datumbazo.associations
@@ -24,6 +23,13 @@
   parse-url
   with-db]
  [datumbazo.driver.core
+  begin
+  commit
+  connect
+  connection
+  disconnect
+  prepare-statement
+  rollback
   with-connection
   with-transaction])
 
@@ -38,7 +44,7 @@
   "Prepare `stmt` using the database and return the raw SQL as a string."
   [stmt]
   (let [ast (ast stmt)]
-    (with-open [stmt (driver/prepare-statement (:db ast) (sql ast))]
+    (with-open [stmt (prepare-statement (:db ast) (sql ast))]
       (if (.startsWith (str stmt) (str/replace (first (sql ast)) #"\?.*" ""))
         (str stmt)
         (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver."))))))
@@ -113,7 +119,7 @@
   database connection."
   [stmt & [opts]]
   (let [ast (ast stmt)]
-    (->> (driver/eval-db (apply-preparation ast) opts)
+    (->> (driver/execute (apply-preparation ast) opts)
          ((if (= :delete (:op ast))
             identity
             #(apply-transformation ast %1))))))

@@ -1,11 +1,10 @@
 (ns datumbazo.io-test
+  (:require [clj-time.core :refer [date-time]]
+            [clojure.test :refer :all]
+            [datumbazo.io :refer :all])
   (:import java.util.Date
            org.joda.time.DateTime
-           org.joda.time.DateTimeZone
-           org.postgresql.util.PGobject)
-  (:require [clj-time.core :refer [date-time]])
-  (:use datumbazo.io
-        clojure.test))
+           org.postgresql.util.PGobject))
 
 (deftest test-citext
   (is (nil? (citext nil)))

@@ -1,84 +1,108 @@
 (ns datumbazo.driver.core
-  (:require [sqlingvo.core :refer [ast sql]]
-            [clojure.set :as set]))
+  (:require [sqlingvo.core :refer [ast sql]]))
 
-(defmulti apply-transaction
-  "Apply `f` within a database transaction"
-  (fn [db f & [opts]] (:backend db)))
+(defprotocol IConnection
+  (-connect [driver opts])
+  (-connection [driver])
+  (-disconnect [driver]))
 
-(defmulti begin
-  "Begin a `db` transaction."
-  (fn [db & [opts]] (:backend db)))
+(defprotocol IFetch
+  (-fetch [driver sql opts]))
 
-(defmulti commit
-  "Commit a `db` transaction."
-  (fn [db & [opts]] (:backend db)))
+(defprotocol IExecute
+  (-execute [driver sql opts]))
 
-(defmulti close-connection
-  "Close the current database connection to `db`."
-  (fn [db] (:backend db)))
+(defprotocol IPrepareStatement
+  (-prepare-statement [driver sql opts]))
 
-(defmulti fetch
-  "Execute `sql` and return rows."
-  (fn [db sql & [opts]] (:backend db)))
+(defprotocol ITransaction
+  (-begin [driver opts])
+  (-commit [driver opts])
+  (-rollback [driver opts]))
 
-(defmulti connection
-  "Get the current `db` connection."
-  (fn [db & [opts]] (:backend db)))
+(declare connected? connection)
 
-(defmulti execute
-  "Execute `sql` and return the number of affected rows."
-  (fn [db sql & [opts]] (:backend db)))
+(defn begin
+  "Begin a new `db` transaction."
+  [db & [opts]]
+  {:pre [(connected? db)]}
+  (update db :driver #(-begin % opts)))
 
-(defmulti open-connection
-  "Open a database connection to `db`. Assoc the connection under
-  the :connection in `db` and return `db`."
-  (fn [db & [opts]] (:backend db)))
+(defn commit
+  "Commit the current `db` transaction."
+  [db & [opts]]
+  {:pre [(connected? db)]}
+  (update db :driver #(-commit % opts)))
 
-(defmulti prepare-statement
-  "Return a prepared statement for `sql`."
-  (fn [db sql & [opts]] (:backend db)))
-
-(defmulti rollback!
-  "Rollback the current `db` transaction."
-  (fn [db] (:backend db)))
-
-(defn eval-db
-  "Eval the `stmt` against a database."
-  [stmt & [opts]]
-  (let [{:keys [db] :as ast} (ast stmt)
-        sql (sql ast)]
-    (case (:op ast)
-      :delete
-      (if (:returning ast)
-        (fetch db sql opts)
-        (execute db sql opts))
-      :except
-      (fetch db sql opts)
-      :explain
-      (fetch db sql opts)
-      :insert
-      (if (:returning ast)
-        (fetch db sql opts)
-        (execute db sql opts))
-      :intersect
-      (fetch db sql opts)
-      :select
-      (fetch db sql opts)
-      :union
-      (fetch db sql opts)
-      :update
-      (if (:returning ast)
-        (fetch db sql opts)
-        (execute db sql opts))
-      :values
-      (fetch db sql opts)
-      (execute db sql opts))))
+(defn connect
+  "Connect to `db` using `opts`."
+  [db & [opts]]
+  (update db :driver #(-connect % opts)))
 
 (defn connected?
   "Returns true if `db` is connected, otherwise false."
   [db]
   (some? (connection db)))
+
+(defn connection
+  "Return the current connection to `db`."
+  [db]
+  (-connection (:driver db)))
+
+(defn disconnect
+  "Disconnect from `db`."
+  [db & [opts]]
+  {:pre [(connected? db)]}
+  (update db :driver -disconnect))
+
+(defmulti find-driver
+  "Find the driver for `db`."
+  (fn [db & [opts]] (:backend db)))
+
+(defn prepare-statement
+  "Return a prepared statement for `sql`."
+  [db sql & [opts]]
+  {:pre [(connected? db)]}
+  (-prepare-statement (:driver db) sql opts))
+
+(defn rollback
+  "Rollback the current `db` transaction."
+  [db & [opts]]
+  {:pre [(connected? db)]}
+  (update db :driver #(-rollback % opts)))
+
+(defn execute
+  "Execute `stmt` against a database."
+  [stmt & [opts]]
+  (let [{:keys [db] :as ast} (ast stmt)
+        driver (:driver db)
+        sql (sql ast)]
+    (case (:op ast)
+      :delete
+      (if (:returning ast)
+        (-fetch driver sql opts)
+        (-execute driver sql opts))
+      :except
+      (-fetch driver sql opts)
+      :explain
+      (-fetch driver sql opts)
+      :insert
+      (if (:returning ast)
+        (-fetch driver sql opts)
+        (-execute driver sql opts))
+      :intersect
+      (-fetch driver sql opts)
+      :select
+      (-fetch driver sql opts)
+      :union
+      (-fetch driver sql opts)
+      :update
+      (if (:returning ast)
+        (-fetch driver sql opts)
+        (-execute driver sql opts))
+      :values
+      (-fetch driver sql opts)
+      (-execute driver sql opts))))
 
 (defn row-count
   "Normalize into a record, with the count of affected rows."
@@ -90,67 +114,34 @@
 
 (defn with-connection*
   "Open a database connection, call `f` with the connected `db` as
-  it's first argument and close the connection again. Does not open a
-  new connection if `db` is already connected."
+  argument and close the connection again."
   [db f & [opts]]
-  (if (connection db)
-    (f db)
-    (let [db (open-connection db opts)]
-      (try (f db)
-           (finally (close-connection db))))))
+  (let [db (connect db opts)]
+    (try (f db)
+         (finally (disconnect db)))))
 
-(defn with-connection*
-  "Open a database connection, call `f` with the connected `db` as
-  it's first argument and close the connection again. Does not open a
-  new connection if `db` is already connected."
+(defn with-transaction*
+  "Start a new `db` transaction call `f` with `db` as argument and
+  commit the transaction. If `f` throws any exception the transaction
+  gets rolled back."
   [db f & [opts]]
-  (if-let [connection (:test-connection db)]
-    (f (assoc db :connection connection))
-    (let [db (open-connection db opts)]
-      (try (f db)
-           (finally (close-connection db))))))
-
-(defn with-connection*
-  "Open a database connection, call `f` with the connected `db` as
-  it's first argument and close the connection again. Does not open a
-  new connection if `db` is already connected."
-  [db f & [opts]]
-  (cond
-    (:connection db)
-    (f db)
-    (:test-connection db)
-    (f (assoc db :connection (:test-connection db)))
-    :else
-    (let [db (open-connection db opts)]
-      (try (f db)
-           (finally (close-connection db))))))
+  (try
+    (let [db (begin db opts)
+          ret (f db)]
+      (commit db opts)
+      ret)
+    (catch Throwable t
+      (rollback db)
+      (throw t))))
 
 (defmacro with-connection
-  "Open a database connection, bind the connected `db` to `db-sym` and
-  evaluate `body`."
+  "Open a database connection, bind the connected `db` to `db-sym`,
+  evaluate `body` and close the connection again."
   [[db-sym db & [opts]] & body]
   `(with-connection* ~db (fn [~db-sym] ~@body) ~opts))
 
 (defmacro with-transaction
-  "Start a new transaction on `db` connection, bind it to `db-sym` and
-  evaluate `body` within the transaction."
+  "Start a new `db` transaction, bind `db` to `db-sym` and evaluate
+  `body` within the transaction."
   [[db-sym db & [opts]] & body]
-  `(let [f# (fn [db#]
-              (let [~db-sym db#
-                    result# (do ~@body)]
-                (when (:rollback? ~opts)
-                  (rollback! db#))
-                result#))]
-     (apply-transaction ~db f# ~opts)))
-
-(defn open-test-connection
-  "Open the connection used for testing."
-  [db]
-  (-> (open-connection db)
-      (set/rename-keys {:connection :test-connection})))
-
-(defn close-test-connection
-  "Close the connection used for testing."
-  [db]
-  (-> (set/rename-keys db {:test-connection :connection})
-      (close-connection)))
+  `(with-transaction* ~db (fn [~db-sym] ~@body) ~opts))

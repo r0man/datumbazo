@@ -10,13 +10,4 @@
   (with-db [db (:postgresql connections)]
     (d/with-connection [db db]
       (let [connection (d/connection db)]
-        (is (instance? Connection connection))
-        (d/with-connection [db db]
-          (is (= (d/connection db) connection)))))))
-
-(deftest test-with-connection-rollback
-  (with-db [db (:postgresql connections) {:rollback? true}]
-    (let [connection (:test-connection db)]
-      (is (instance? Connection connection))
-      (d/with-connection [db db]
-        (is (= (d/connection db) connection))))))
+        (is (instance? Connection connection))))))

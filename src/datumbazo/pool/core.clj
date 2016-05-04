@@ -6,7 +6,8 @@
   (fn [db & [opts]] (:pool db)))
 
 (defmethod db-pool :default [db & [opts]]
-  (throw (ex-info (str "Unsupported connection pool: " (:pool db)) db)))
+  (throw (ex-info (str "Unsupported connection pool: " (:pool db))
+                  (into {} db))))
 
 (defn assoc-pool
   "Assoc a database connection pool onto `db`."

@@ -198,8 +198,8 @@
     (doseq [statement (sql-stmt-seq reader)
             :let [statement (replace statement #";$" "")]]
       (case (parse-command statement)
-        :select (driver/fetch db [statement])
-        (driver/execute db [statement])))
+        :select (driver/-fetch (:driver db) [statement] nil)
+        (driver/-execute (:driver db) [statement] nil)))
     file))
 
 (defn throw-sql-ex-info

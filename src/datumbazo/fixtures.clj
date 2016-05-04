@@ -66,7 +66,7 @@
       (first @(select db [`(setval
                             ~(serial-sequence db column)
                             ~(select db [`(max ~(:name column))]
-                                     (from table)))])))))
+                               (from table)))])))))
 
 (defn- find-column-keys [db table]
   (let [table (parse-table table)]
@@ -84,8 +84,8 @@
                 (concat result
                         ;; TDOD: Find insert columns and do not rely on first row.
                         @(insert db table columns
-                                 (values (encode-rows db table rows))
-                                 (returning *))))
+                           (values (encode-rows db table rows))
+                           (returning *))))
               [] (partition batch-size batch-size nil (slurp-rows filename)))
         result (assoc {:table table :file filename} :records rows)]
     (reset-serials db table)
@@ -101,17 +101,17 @@
       {:file filename :table table :records (count rows)})))
 
 (defn deferred-constraints [db]
-  (driver/execute db ["SET CONSTRAINTS ALL DEFERRED"]))
+  (driver/-execute (:driver db) ["SET CONSTRAINTS ALL DEFERRED"] nil))
 
 (defn enable-triggers
   "Enable triggers on the database `table`."
   [db table & {:keys [entities]}]
-  (driver/execute db [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " ENABLE TRIGGER ALL")]))
+  (driver/-execute (:driver db) [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " ENABLE TRIGGER ALL")] nil))
 
 (defn disable-triggers
   "Disable triggers on the database `table`."
   [db table & {:keys [entities]}]
-  (driver/execute db [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " DISABLE TRIGGER ALL")]))
+  (driver/-execute (:driver db) [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " DISABLE TRIGGER ALL")] nil))
 
 (defn delete-fixtures [db tables]
   (infof "Deleting fixtures from database.")
