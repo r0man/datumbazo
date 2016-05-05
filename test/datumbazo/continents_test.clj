@@ -57,6 +57,54 @@
               :created-at #inst "2012-10-06T18:22:58.640-00:00"
               :updated-at #inst "2012-10-06T18:22:58.640-00:00"})))))
 
+(deftest test-callbacks-all
+  (with-test-db [db db]
+    (continents/reset-counters)
+    (let [rows (continents/all db)]
+      (is (every? #(= (continents/counters-for %)
+                      {:after-initialize 1
+                       :after-find 1})
+                  rows)))))
+
+(deftest test-callbacks-by-name
+  (with-test-db [db db]
+    (continents/reset-counters)
+    (let [continent (continents/by-name db "Europe")]
+      (is (= (continents/counters-for continent)
+             {:after-initialize 1
+              :after-find 1})))))
+
+(deftest test-callbacks-delete!
+  (with-test-db [db db]
+    (let [continent (continents/by-name db "Europe")]
+      (continents/reset-counters)
+      (continents/delete! db [continent])
+      (is (= (continents/counters-for continent)
+             {:after-initialize 2
+              :before-delete 1
+              :after-delete 1})))))
+
+(deftest test-callbacks-insert!
+  (with-test-db [db db]
+    (continents/reset-counters)
+    (let [[continent] (continents/insert! db [{:name "Gondwana" :code "GD"}])]
+      (is (= (continents/counters-for continent)
+             {:after-initialize 1
+              :after-create 1}))
+      (is (= (continents/counters-for (assoc continent :id nil))
+             {:after-initialize 1
+              :before-create 1})))))
+
+(deftest test-callbacks-update!
+  (with-test-db [db db]
+    (let [continent (continents/by-name db "Europe")]
+      (continents/reset-counters)
+      (continents/update! db [continent])
+      (is (= (continents/counters-for continent)
+             {:after-initialize 2
+              :before-update 1
+              :after-update 1})))))
+
 (deftest test-has-many-countries
   (with-backends [db]
     (let [continent (continents/by-name db "Asia")

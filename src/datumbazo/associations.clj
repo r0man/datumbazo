@@ -63,8 +63,7 @@
   IAssociation
   (fetch [association record]
     (let [class (util/resolve-class (:class-name association))]
-      (->> @(sql/select
-                (.db record) [:*]
+      (->> @(sql/select (.db record) [:*]
               (sql/from (:table association))
               (sql/where `(= ~(:primary-key association)
                              ~(get record (:foreign-key association)))))
@@ -76,8 +75,7 @@
   (fetch [association record]
     (let [class (util/resolve-class (:class-name association))]
       (->> (util/fetch-batch
-            (sql/select
-                (.db record) [:*]
+            (sql/select (.db record) [:*]
               (sql/from (:name association))
               (sql/where `(= ~(keyword (str (name (:name association)) "."
                                             (name (:foreign-key association))))

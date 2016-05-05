@@ -36,6 +36,7 @@
     (->> @(sql/delete db (util/table-keyword table)
             (sql/where `(in ~(:name pk) ~(map :id records)))
             (sql/returning :*))
+         (util/make-instances db class)
          (callback/call-after-delete))))
 
 (s/defn insert-records :- [Map]
@@ -93,7 +94,9 @@
 (s/defn update-records :- [Map]
   "Update `records` of `class` in `db`."
   [db :- Database class :- Class records :- [Map]]
-  (let [table (util/table-by-class class)
+  (let [records (util/make-instances db class records)
+        records (callback/call-before-update records)
+        table (util/table-by-class class)
         columns (util/columns-by-class class)
         values (update-values class records)]
     (->> @(sql/update db (util/table-keyword table)
@@ -101,7 +104,8 @@
             (sql/from (sql/as (sql/values values) :update (map :name columns)))
             (sql/where (update-condition class))
             (sql/returning :*))
-         (util/make-instances db class))))
+         (util/make-instances db class)
+         (callback/call-after-update))))
 
 (defn row-get [record column default-value]
   (let [table (util/table-by-class (class record))]

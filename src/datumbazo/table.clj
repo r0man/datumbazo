@@ -36,6 +36,5 @@
   [table-name doc & body]
   (let [table# (eval `(second ((table ~(keyword table-name) ~@body) {})))]
     `(do ~(record/define-record table#)
-         ;; ~(define-class table#)
          ~(define-table-by-class table#)
          ~(define-truncate table#))))
