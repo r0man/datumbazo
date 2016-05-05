@@ -7,6 +7,9 @@
   (:import datumbazo.continents.Continent
            java.util.Date))
 
+(def new-continent
+  {:name "Gondwana" :code "GD"})
+
 (deftest test-continent?
   (is (continent? (make-instance Continent {:a 1})))
   (is (not (continent? {}))))
@@ -87,7 +90,7 @@
 (deftest test-callbacks-insert!
   (with-test-db [db db]
     (continents/reset-counters)
-    (let [[continent] (continents/insert! db [{:name "Gondwana" :code "GD"}])]
+    (let [[continent] (continents/insert! db [new-continent])]
       (is (= (continents/counters-for continent)
              {:after-initialize 1
               :after-create 1}))
@@ -104,6 +107,25 @@
              {:after-initialize 2
               :before-update 1
               :after-update 1})))))
+
+(deftest test-callbacks-save!
+  (with-test-db [db db]
+    (let [continent (continents/by-name db "Europe")]
+      (continents/reset-counters)
+      (let [[continent] (continents/save! db [new-continent])]
+        (is (= (continents/counters-for continent)
+               {:after-initialize 1
+                :after-save 1}))
+        (is (= (continents/counters-for (empty continent))
+               {:after-initialize 1
+                :before-save 1}))
+        (is (= (continents/save! db [continent]) [continent]))
+        (is (= (continents/counters-for continent)
+               {:after-initialize 3
+                :after-save 2
+                :before-save 1}))
+        (is (= (continents/save! db [new-continent]) [continent]))
+        (is (= (continents/save! db [new-continent]) [continent]))))))
 
 (deftest test-has-many-countries
   (with-backends [db]
@@ -123,7 +145,7 @@
 
 (deftest test-insert!
   (with-backends [db]
-    (let [[continent] (continents/insert! db [{:name "Gondwana" :code "GD"}])]
+    (let [[continent] (continents/insert! db [new-continent])]
       (is (continent? continent))
       (is (pos? (:id continent)))
       (is (= (:name continent) "Gondwana"))
@@ -140,6 +162,23 @@
       (is (= (:code updated) (:code continent)))
       (is (instance? Date (:created-at updated)))
       (is (instance? Date (:updated-at updated))))))
+
+(deftest test-save!
+  (with-backends [db]
+    (let [[continent] (continents/save! db [new-continent])]
+      (is (continent? continent))
+      (is (pos? (:id continent)))
+      (is (= (:name continent) "Gondwana"))
+      (is (= (:code continent) "GD"))
+      (is (instance? Date (:created-at continent)))
+      (is (instance? Date (:updated-at continent)))
+      (let [[continent] (continents/save! db [continent])]
+        (is (continent? continent))
+        (is (pos? (:id continent)))
+        (is (= (:name continent) "Gondwana"))
+        (is (= (:code continent) "GD"))
+        (is (instance? Date (:created-at continent)))
+        (is (instance? Date (:updated-at continent)))))))
 
 (deftest test-truncate!
   (with-backends [db]

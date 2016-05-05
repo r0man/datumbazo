@@ -19,6 +19,14 @@
          (filter :primary-key?)
          (set))))
 
+(s/defn ^:private unique-key-columns :- #{Map}
+  "Return the unique key columns of `class`."
+  [class :- Class]
+  (let [table (util/table-by-class class)]
+    (->> (vals (:column table))
+         (filter :unique?)
+         (set))))
+
 (s/defn ^:private select-columns :- [Map]
   "Return a seq of `records` that only have the table column keys."
   [class :- Class records :- [Map]]
@@ -107,6 +115,43 @@
          (util/make-instances db class)
          (callback/call-after-update))))
 
+(s/defn ^:private on-conflict-clause :- [s/Keyword]
+  "Return the ON CONFLICT clause for an insert statement."
+  [class :- Class]
+  ;; TODO: Be more clever. Handle multiple PKs and unique constraints.
+  (if-let [column (or (first (unique-key-columns class))
+                      (first (primary-key-columns class)))]
+    [(:name column)]
+    (throw (ex-info (str "Can't guess ON CONFLICT clause, because "
+                         class " has no primary key nor a unique constraint declared.")
+                    {:class class}))))
+
+(s/defn ^:private do-update-clause ; :- Map
+  "Return the DO UPDATE clause for an insert statement."
+  [class :- Class]
+  (let [exclude (or (first (unique-key-columns class))
+                    (first (primary-key-columns class)))]
+    (->> (for [column (util/columns-by-class class)
+               :when (not= (:name column) (:name exclude))
+               :when (not (#{:bigserial :serial} (:type column)))
+               :let [column-kw (:name column)]]
+           [column-kw (keyword (str "EXCLUDED." (name column-kw)))])
+         (into {}))))
+
+(s/defn save-records :- [Map]
+  "Save `records` of `class` to `db`."
+  [db :- Database class :- Class records :- [Map]]
+  (let [records (util/make-instances db class records)
+        records (callback/call-before-save records)
+        table (util/table-by-class class)]
+    (->> @(sql/insert db (util/table-keyword table) []
+            (sql/values (select-columns class records))
+            (sql/on-conflict (on-conflict-clause class)
+              (sql/do-update (do-update-clause class)))
+            (sql/returning :*))
+         (util/make-instances db class)
+         (callback/call-after-save))))
+
 (defn row-get [record column default-value]
   (let [table (util/table-by-class (class record))]
     (if-let [association (-> table :associations column)]
@@ -193,6 +238,14 @@
      [~'db ~'records]
      (update-records ~'db ~(util/class-symbol table) ~'records)))
 
+(defn- define-save
+  "Define a function that saves records to `table`."
+  [table]
+  `(defn ~'save!
+     "Save `records` to `db`."
+     [~'db ~'records]
+     (save-records ~'db ~(util/class-symbol table) ~'records)))
+
 (defn- define-instance?
   "Define a function that checks if a record is an instance of a class."
   [table]
@@ -226,6 +279,7 @@
        ~(define-delete table)
        ~(define-insert table)
        ~(define-update table)
+       ~(define-save table)
        ~(define-find-all table)
        ~(define-make-instance table)
        ~@(for [column# (vals (:column table))]

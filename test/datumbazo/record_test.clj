@@ -31,3 +31,40 @@
             "Find all rows in `db`."
             [db & [opts]]
             (datumbazo.record/find-all db Continent opts)))))
+
+(deftest test-on-conflict-clause
+  (is (= (#'datumbazo.record/on-conflict-clause Continent)
+         [:name])))
+
+(deftest test-do-update-clause
+  (is (= (#'datumbazo.record/do-update-clause Continent)
+         {:created-at :EXCLUDED.created-at,
+          :code :EXCLUDED.code,
+          :updated-at :EXCLUDED.updated-at})))
+
+(deftest test-primary-key-columns
+  (is (= (#'datumbazo.record/primary-key-columns Continent)
+         #{{:schema nil,
+            :table :continents,
+            :primary-key? true,
+            :default nil,
+            :name :id,
+            :type :serial,
+            :op :column}})))
+
+(deftest test-unique-key-columns
+  (is (= (#'datumbazo.record/unique-key-columns Continent)
+         #{{:schema nil
+            :table :continents
+            :default nil
+            :name :name
+            :type :varchar
+            :op :column
+            :unique? true}
+           {:schema nil
+            :table :continents
+            :default nil
+            :name :code
+            :type :varchar
+            :op :column
+            :unique? true}})))
