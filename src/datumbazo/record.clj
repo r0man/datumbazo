@@ -11,6 +11,39 @@
   (:import [java.util List Map]
            sqlingvo.db.Database))
 
+(defmulti select-class
+  "Return the SELECT statement for `class`. This statement will be
+  used by all the finder functions that are generated for `class`."
+  (s/fn [db :- Database class :- Class & [opts]]
+    class))
+
+(defmulti delete-records
+  "Delete `records` of `class` in `db`."
+  (s/fn [db :- Database class :- Class records :- [Map] & [opts]]
+    class))
+
+(defmulti insert-records
+  "Insert `records` of `class` into `db`."
+  (s/fn [db :- Database class :- Class records :- [Map] & [opts]]
+    class))
+
+(defmulti update-records
+  "Update `records` of `class` in `db`."
+  (s/fn [db :- Database class :- Class records :- [Map] & [opts]]
+    class))
+
+(defmulti save-records
+  "Save `records` of `class` to `db`."
+  (s/fn [db :- Database class :- Class records :- [Map] & [opts]]
+    class))
+
+(s/defmethod select-class :default
+  [db :- Database class :- Class & [opts]]
+  (let [table (util/table-by-class class)
+        columns (util/columns-by-class class)]
+    (sql/select db (map #(util/column-keyword % true) columns)
+      (sql/from (util/table-keyword table)))))
+
 (s/defn ^:private primary-key-columns :- #{Map}
   "Return the primary key columns of `class`."
   [class :- Class]
@@ -33,9 +66,15 @@
   (let [keys (map :name (util/columns-by-class class))]
     (map #(select-keys % keys) records)))
 
-(s/defn delete-records :- [Map]
-  "Delete `records` of `class` from `db`."
-  [db :- Database class :- Class records :- [Map]]
+(s/defn ^:private returning-clause
+  "Return a RETURNING clause for `class`."
+  [class]
+  (->> (util/columns-by-class class)
+       (map #(util/column-keyword % true))
+       (apply sql/returning)))
+
+(s/defmethod delete-records :default
+  [db :- Database class :- Class records :- [Map] & [opts]]
   (let [records (util/make-instances db class records)
         records (callback/call-before-delete records)
         table (util/table-by-class class)
@@ -43,19 +82,18 @@
     (assert pk (str "No primary key found for " class))
     (->> @(sql/delete db (util/table-keyword table)
             (sql/where `(in ~(:name pk) ~(map :id records)))
-            (sql/returning :*))
+            (returning-clause class))
          (util/make-instances db class)
          (callback/call-after-delete))))
 
-(s/defn insert-records :- [Map]
-  "Insert `records` of `class` into `db`."
-  [db :- Database class :- Class records :- [Map]]
+(s/defmethod insert-records :default
+  [db :- Database class :- Class records :- [Map] & [opts]]
   (let [records (util/make-instances db class records)
         records (callback/call-before-create records)
         table (util/table-by-class class)]
     (->> @(sql/insert db (util/table-keyword table) []
             (sql/values (select-columns class records))
-            (sql/returning :*))
+            (returning-clause class))
          (util/make-instances db class)
          (callback/call-after-create))))
 
@@ -84,7 +122,7 @@
   "Return the update condition for `class`."
   [class :- Class]
   (->> (for [column (primary-key-columns class)]
-         (list '= (keyword (str (name (:table column)) "." (name (:name column))))
+         (list '= (util/column-keyword column true)
                (update-column column)))
        (concat ['and])))
 
@@ -99,9 +137,8 @@
              (util/columns-by-class class))
        records))
 
-(s/defn update-records :- [Map]
-  "Update `records` of `class` in `db`."
-  [db :- Database class :- Class records :- [Map]]
+(s/defmethod update-records :default
+  [db :- Database class :- Class records :- [Map] & [opts]]
   (let [records (util/make-instances db class records)
         records (callback/call-before-update records)
         table (util/table-by-class class)
@@ -111,7 +148,7 @@
             (update-expression class records)
             (sql/from (sql/as (sql/values values) :update (map :name columns)))
             (sql/where (update-condition class))
-            (sql/returning :*))
+            (returning-clause class))
          (util/make-instances db class)
          (callback/call-after-update))))
 
@@ -138,9 +175,8 @@
            [column-kw (keyword (str "EXCLUDED." (name column-kw)))])
          (into {}))))
 
-(s/defn save-records :- [Map]
-  "Save `records` of `class` to `db`."
-  [db :- Database class :- Class records :- [Map]]
+(s/defmethod save-records :default
+  [db :- Database class :- Class records :- [Map] & [opts]]
   (let [records (util/make-instances db class records)
         records (callback/call-before-save records)
         table (util/table-by-class class)]
@@ -148,15 +184,19 @@
             (sql/values (select-columns class records))
             (sql/on-conflict (on-conflict-clause class)
               (sql/do-update (do-update-clause class)))
-            (sql/returning :*))
+            (returning-clause class))
          (util/make-instances db class)
          (callback/call-after-save))))
 
 (defn row-get [record column default-value]
-  (let [table (util/table-by-class (class record))]
-    (if-let [association (-> table :associations column)]
+  (let [table (util/table-by-class (class record))
+        association (-> table :associations column)]
+    (cond
+      (contains? (.attrs record) column)
+      (get (.attrs record) column default-value)
+      association
       (associations/fetch association record)
-      (get (.attrs record) column default-value))))
+      :else nil)))
 
 (defn- define-class
   "Define a map-like class for the rows in `table`."
@@ -178,13 +218,12 @@
        (~'with-meta [~'this ~'meta-data]
         (new ~class ~'db ~'attrs ~'meta-data)))))
 
-(defn find-all
-  [db class & [opts]]
-  (let [table (util/table-by-class class)]
-    (->> @(sql/select db [:*]
-            (sql/from (util/table-keyword table)))
-         (util/make-instances db class)
-         (callback/call-after-find))))
+(s/defn find-all
+  "Select all rows of `class`."
+  [db :- Database class :- Class & [opts]]
+  (->> @(select-class db class)
+       (util/make-instances db class)
+       (callback/call-after-find)))
 
 (defn- coerce-unique [column rows]
   (if (or (:unique? column)
@@ -194,14 +233,15 @@
     rows))
 
 (defn find-by-column
-  [db class column value & [opts]]
-  (let [table (util/table-by-class class)]
-    (->> @(sql/select db [:*]
-            (sql/from (util/table-keyword table))
-            (sql/where `(= ~column ~value)))
+  [db class column-kw value & [opts]]
+  (let [table (util/table-by-class class)
+        column (get (:column table) column-kw)]
+    (->> @(sql/compose
+           (select-class db class)
+           (sql/where `(= ~(util/column-keyword column true) ~value)))
          (util/make-instances db class)
          (callback/call-after-find)
-         (coerce-unique (get (:column table) column)))))
+         (coerce-unique column))))
 
 (defn- define-find-by-column
   "Return the definition for a function that returns rows by a column."
@@ -219,32 +259,32 @@
   [table]
   `(defn ~'insert!
      "Insert `records` into the `db`."
-     [~'db ~'records]
-     (insert-records ~'db ~(util/class-symbol table) ~'records)))
+     [~'db ~'records & [~'opts]]
+     (insert-records ~'db ~(util/class-symbol table) ~'records ~'opts)))
 
 (defn- define-delete
   "Define a function that deletes records in `table`."
   [table]
   `(defn ~'delete!
      "Delete `records` from `db`."
-     [~'db ~'records]
-     (delete-records ~'db ~(util/class-symbol table) ~'records)))
+     [~'db ~'records & [~'opts]]
+     (delete-records ~'db ~(util/class-symbol table) ~'records ~'opts)))
 
 (defn- define-update
   "Define a function that updates records in `table`."
   [table]
   `(defn ~'update!
      "Update `records` in the `db`."
-     [~'db ~'records]
-     (update-records ~'db ~(util/class-symbol table) ~'records)))
+     [~'db ~'records & [~'opts]]
+     (update-records ~'db ~(util/class-symbol table) ~'records ~'opts)))
 
 (defn- define-save
   "Define a function that saves records to `table`."
   [table]
   `(defn ~'save!
      "Save `records` to `db`."
-     [~'db ~'records]
-     (save-records ~'db ~(util/class-symbol table) ~'records)))
+     [~'db ~'records & [~'opts]]
+     (save-records ~'db ~(util/class-symbol table) ~'records ~'opts)))
 
 (defn- define-instance?
   "Define a function that checks if a record is an instance of a class."

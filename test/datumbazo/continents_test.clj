@@ -55,8 +55,6 @@
              {:id 12
               :name "Europe"
               :code "EU"
-              :geometry nil
-              :geonames-id 6255148
               :created-at #inst "2012-10-06T18:22:58.640-00:00"
               :updated-at #inst "2012-10-06T18:22:58.640-00:00"})))))
 

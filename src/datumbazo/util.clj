@@ -267,3 +267,10 @@
   (keyword (str (if-let [schema (:schema table)]
                   (str (name schema) "."))
                 (-> table :name name))))
+
+(defn column-keyword
+  "Return the column as keyword."
+  [column & [include-table?]]
+  (keyword (str (when include-table?
+                  (str (name (:table column)) "."))
+                (name (:name column)))))

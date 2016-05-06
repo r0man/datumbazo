@@ -12,7 +12,7 @@
            (~callback [~'record] ~'record))
          (defn ~(symbol (str "call-" callback))
            [~'records]
-           (map #(~callback %) ~'records)))))
+           (mapv #(~callback %) ~'records)))))
 
 (defcallback after-create
   "Called after a record has been created in the database.")

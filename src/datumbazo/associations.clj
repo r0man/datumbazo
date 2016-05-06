@@ -62,8 +62,9 @@
 (extend-type BelongsTo
   IAssociation
   (fetch [association record]
-    (let [class (util/resolve-class (:class-name association))]
-      (->> @(sql/select (.db record) [:*]
+    (let [class (util/resolve-class (:class-name association))
+          columns (util/columns-by-class class)]
+      (->> @(sql/select (.db record) (map #(util/column-keyword % true) columns)
               (sql/from (:table association))
               (sql/where `(= ~(:primary-key association)
                              ~(get record (:foreign-key association)))))
@@ -73,9 +74,10 @@
 (extend-type HasMany
   IAssociation
   (fetch [association record]
-    (let [class (util/resolve-class (:class-name association))]
+    (let [class (util/resolve-class (:class-name association))
+          columns (util/columns-by-class class)]
       (->> (util/fetch-batch
-            (sql/select (.db record) [:*]
+            (sql/select (.db record) (map #(util/column-keyword % true) columns)
               (sql/from (:name association))
               (sql/where `(= ~(keyword (str (name (:name association)) "."
                                             (name (:foreign-key association))))
