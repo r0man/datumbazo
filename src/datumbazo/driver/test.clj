@@ -1,6 +1,6 @@
 (ns datumbazo.driver.test
   (:require [com.stuartsierra.component :as component]
-            [datumbazo.driver.core :refer :all]))
+            [datumbazo.driver.core :as d]))
 
 (defrecord Driver [driver connected?])
 
@@ -9,53 +9,62 @@
   database that happen between the component's start and stop
   life-cycle."
   [db]
-  (->Driver (find-driver db) (atom false)))
+  (->Driver (d/find-driver db) false))
 
-(extend-protocol IConnection
+(defn- connected?
+  "Returns true if `driver` is connected, otherwise false."
+  [driver]
+  (:connected? driver))
+
+(extend-protocol d/IConnection
   Driver
   (-connect [driver opts]
-    (when-not @(:connected? driver)
-      (reset! (:connected? driver) true))
-    driver)
+    {:pre [(not (connected? driver))]}
+    (assoc driver :connected? true))
   (-connection [driver]
-    (when @(:connected? driver)
-      (-connection (:driver driver))))
+    (when (connected? driver)
+      (d/-connection (:driver driver))))
   (-disconnect [driver]
-    (when @(:connected? driver)
-      (reset! (:connected? driver) false))
-    driver))
+    {:pre [(connected? driver)]}
+    (assoc driver :connected? false)))
 
-(extend-protocol IExecute
+(extend-protocol d/IExecute
   Driver
   (-execute [driver sql opts]
-    (-execute (:driver driver) sql opts)))
+    {:pre [(connected? driver)]}
+    (d/-execute (:driver driver) sql opts)))
 
-(extend-protocol IFetch
+(extend-protocol d/IFetch
   Driver
   (-fetch [driver sql opts]
-    (-fetch (:driver driver) sql opts)))
+    {:pre [(connected? driver)]}
+    (d/-fetch (:driver driver) sql opts)))
 
-(extend-protocol IPrepareStatement
+(extend-protocol d/IPrepareStatement
   Driver
   (-prepare-statement [driver sql opts]
-    (-prepare-statement (:driver driver) sql opts)))
+    {:pre [(connected? driver)]}
+    (d/-prepare-statement (:driver driver) sql opts)))
 
-(extend-protocol ITransaction
+(extend-protocol d/ITransaction
   Driver
   (-begin [driver opts]
-    (-begin (:driver driver) opts))
+    {:pre [(connected? driver)]}
+    (d/-begin (:driver driver) opts))
   (-commit [driver opts]
-    (-commit (:driver driver) opts))
+    {:pre [(connected? driver)]}
+    (d/-commit (:driver driver) opts))
   (-rollback [driver opts]
-    (-rollback (:driver driver) opts)))
+    {:pre [(connected? driver)]}
+    (d/-rollback (:driver driver) opts)))
 
 (extend-protocol component/Lifecycle
   Driver
   (start [driver]
-    (->> (-> (-connect (:driver driver) nil)
-             (-begin nil)
-             (-rollback nil))
+    (->> (-> (d/-connect (:driver driver) nil)
+             (d/-begin nil)
+             (d/-rollback nil))
          (assoc driver :driver )))
   (stop [driver]
-    (some-> driver :driver -connection .rollback)
-    (assoc driver :driver (-disconnect (:driver driver)))))
+    (some-> driver :driver d/-connection .rollback)
+    (assoc driver :driver (d/-disconnect (:driver driver)))))

@@ -11,6 +11,7 @@
 
 (deftest test-begin
   (with-db [db db {:backend backend}]
+    (is (thrown? AssertionError (begin db)))
     (with-connection [db db]
       (is (.getAutoCommit (connection db)))
       (let [db (begin db)]

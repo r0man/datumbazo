@@ -81,14 +81,14 @@
   [db table row]
   (let [table (parse-table table)]
     (encode-columns
-     (meta/columns db :schema (:schema table) :table (:name table))
+     (meta/columns db {:schema (:schema table) :table (:name table)})
      row)))
 
 (defn encode-rows
   "Encode the columns of `rows` into database types."
   [db table rows]
   (let [table (parse-table table)
-        columns (meta/columns db :schema (:schema table) :table (:name table))]
+        columns (meta/columns db {:schema (:schema table) :table (:name table)})]
     (map (partial encode-columns columns) rows)))
 
 ;; DECODE

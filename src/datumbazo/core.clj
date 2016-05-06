@@ -18,20 +18,20 @@
  [datumbazo.associations
   belongs-to
   has-many]
- [datumbazo.db
-  new-db
-  parse-url
-  with-db]
- [datumbazo.driver.core
+ [datumbazo.connection
   begin
   commit
   connect
   connection
   disconnect
+  execute
   prepare-statement
   rollback
   with-connection
-  with-transaction])
+  with-transaction]
+ [datumbazo.db
+  new-db
+  with-db])
 
 (immigrate 'sqlingvo.core)
 
@@ -119,7 +119,7 @@
   database connection."
   [stmt & [opts]]
   (let [ast (ast stmt)]
-    (->> (driver/execute (apply-preparation ast) opts)
+    (->> (execute (apply-preparation ast) opts)
          ((if (= :delete (:op ast))
             identity
             #(apply-transformation ast %1))))))
@@ -181,12 +181,12 @@
               (run1 query#)))))))
 
 (defn update-columns-best-row-identifiers [db table row]
-  (let [columns (meta/best-row-identifiers db :schema (or (:schema table) :public) :table (:name table) :nullable false)
+  (let [columns (meta/best-row-identifiers db {:schema (or (:schema table) :public) :table (:name table) :nullable false})
         row (compact-map (select-keys row (map :name columns)))]
     (if-not (empty? row) row)))
 
 (defn update-columns-unique-columns [db table row]
-  (let [columns (meta/unique-columns db :schema (or (:schema table) :public) :table (:name table) :nullable false)
+  (let [columns (meta/unique-columns db {:schema (or (:schema table) :public) :table (:name table) :nullable false})
         row (compact-map (select-keys row (map :name columns)))]
     (if-not (empty? row) row)))
 
@@ -318,7 +318,7 @@
                `(do (defquery ~(symbol (str table-sym "-by-" column-name))
                       ~(format "Find all %s by %s." table-sym column-name)
                       [~'db ~'value & [~'opts]]
-                      (let [column# (first (meta/columns ~'db :schema (or ~(:schema table#) :public) :table ~(:name table#) :name ~(:name column)))]
+                      (let [column# (first (meta/columns ~'db {:schema (or ~(:schema table#) :public) :table ~(:name table#) :name ~(:name column)}))]
                         (fn [stmt#]
                           ((chain-state [(where `(= ~(keyword (str (name (:table column#)) "." (name (:name column#))))
                                                     ~(io/encode-column column# ~'value)))])
@@ -329,10 +329,5 @@
                       (first (apply ~(symbol (str table-sym "-by-" column-name)) ~'db ~'args)))))))))
 
 
+(driver/load-drivers)
 (pool/load-connection-pools)
-
-(try
-  (doseq [ns '[datumbazo.driver.clojure
-               datumbazo.driver.funcool]]
-    (try (require ns)
-         (catch Exception _))))

@@ -151,40 +151,6 @@
     (is (= "vertica" (:subprotocol db)))
     (is (= :vertica (:scheme db)))))
 
-(deftest test-parse-url
-  (doseq [url [nil "" "x"]]
-    (is (thrown? clojure.lang.ExceptionInfo (parse-url url))))
-  (let [db (parse-url "mysql://localhost:5432/datumbazo")]
-    (is (nil? (:pool db)))
-    (is (= "localhost" (:server-name db)))
-    (is (= 5432 (:server-port db)))
-    (is (= "datumbazo" (:name db)))
-    (is (nil? (:query-params db)))
-    (is (= :mysql (:scheme db))))
-  (let [db (parse-url "postgresql://tiger:scotch@localhost:5432/datumbazo?a=1&b=2")]
-    (is (nil? (:pool db)))
-    (is (= "tiger" (:user db)))
-    (is (= "scotch" (:password db)))
-    (is (= "localhost" (:server-name db)))
-    (is (= 5432 (:server-port db)))
-    (is (= "datumbazo" (:name db)))
-    (is (= {:a "1" :b "2"} (:query-params db)))
-    (is (= :postgresql (:scheme db))))
-  (let [db (parse-url "c3p0:postgresql://localhost/datumbazo")]
-    (is (= :c3p0 (:pool db)))
-    (is (= "localhost" (:server-name db)))
-    (is (nil? (:server-port db)))
-    (is (= "datumbazo" (:name db)))
-    (is (nil? (:query-params db)))
-    (is (= :postgresql (:scheme db)))))
-
-(deftest test-format-url
-  (let [url "postgresql://tiger:scotch@localhost/datumbazo?a=1&b=2"]
-    (is (= (format-url (parse-url url)) url)))
-  (let [url "postgresql://tiger:scotch@localhost:5432/datumbazo?a=1&b=2"]
-    (is (= (format-url (parse-url "postgresql://tiger:scotch@localhost:5432/datumbazo?a=1&b=2"))
-           "postgresql://tiger:scotch@localhost/datumbazo?a=1&b=2"))))
-
 (deftest test-with-db
   (with-db [db (:postgresql connections)]
     (is (:driver db)))

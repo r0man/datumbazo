@@ -3,6 +3,7 @@
   (:require [clojure.java.io :refer [file reader]]
             [clojure.string :as str :refer [blank? replace split]]
             [datumbazo.callbacks :as callback]
+            [no.en.core :as noencore]
             [datumbazo.driver.core :as driver]
             [schema.core :as s]
             [inflections.core :as infl]
@@ -11,6 +12,34 @@
            java.sql.SQLException
            [java.util List Map]
            sqlingvo.db.Database))
+
+(def ^:private jdbc-url-regex
+  "The regular expression to match JDBC urls."
+  #"(([^:]+):)?([^:]+)://(([^:]+):([^@]+)@)?(([^:/]+)(:([0-9]+))?((/([^?]*))(\?(.*))?))")
+
+(defn parse-url
+  "Parse the database `url` and return a Ring compatible map."
+  [url]
+  (if-let [matches (re-matches jdbc-url-regex (str url))]
+    (let [database (nth matches 13)
+          server-name (nth matches 8)
+          server-port (noencore/parse-integer (nth matches 10))
+          query-string (nth matches 15)]
+      {:name database
+       :password (nth matches 6)
+       :pool (keyword (nth matches 2))
+       :query-params (noencore/parse-query-params query-string)
+       :scheme (keyword (nth matches 3))
+       :server-name server-name
+       :server-port server-port
+       :user (nth matches 5)})
+    (throw (ex-info "Can't parse JDBC url %s." {:url url}))))
+
+(defn format-url
+  "Format the `db` spec as a URL."
+  [db]
+  (let [spec (assoc db :uri (str "/" (:name db)))]
+    (noencore/format-url spec)))
 
 (defmulti table-by-class
   "Return the table definition for `class`."

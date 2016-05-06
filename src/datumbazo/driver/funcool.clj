@@ -1,6 +1,5 @@
 (ns datumbazo.driver.funcool
   (:require [clojure.string :as str]
-            [datumbazo.db :refer [format-url]]
             [datumbazo.driver.core :as d]
             [datumbazo.io :as io]
             [datumbazo.util :as util]
@@ -38,7 +37,7 @@
   [driver & [opts]]
   (->> (if-let [datasource (:datasource driver)]
          (jdbc/connection datasource)
-         (jdbc/connection (format-url driver)))
+         (jdbc/connection (util/format-url driver)))
        (assoc driver :connection)))
 
 (defn- commit

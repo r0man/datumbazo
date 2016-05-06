@@ -9,12 +9,12 @@
 
 (deftest test-best-row-identifiers
   (with-backends [db]
-    (let [columns (best-row-identifiers db :table :continents)]
+    (let [columns (best-row-identifiers db {:table :continents})]
       (is (= [:id] (map :name columns)))
       (is (not (empty? columns)))
       (is (every? #(keyword? (:name %1)) columns))
       (is (every? #(keyword? (:type %1)) columns)))
-    (let [columns (best-row-identifiers db :table :tweets-users)]
+    (let [columns (best-row-identifiers db {:table :tweets-users})]
       (is (= [:tweet-id :user-id] (map :name columns)))
       (is (not (empty? columns)))
       (is (every? #(keyword? (:name %1)) columns))
@@ -28,7 +28,7 @@
 
 (deftest test-columns
   (with-backends [db]
-    (let [columns (columns db :table :continents)]
+    (let [columns (columns db {:table :continents})]
       (is (not (empty? columns)))
       (is (every? #(= :public (:schema %1)) columns))
       (is (every? #(= :continents (:table %1)) columns))
@@ -36,25 +36,25 @@
       (is (every? #(keyword? (:type %1)) columns))
       (is (= [:id :name :code :geometry :geonames-id :created-at :updated-at]
              (map :name columns))))
-    (let [columns (columns db :table :countries :name :id)]
+    (let [columns (columns db {:table :countries :name :id})]
       (is (not (empty? columns)))
       (is (every? #(= :public (:schema %1)) columns))
       (is (every? #(= :countries (:table %1)) columns))
       (is (every? #(keyword? (:name %1)) columns))
       (is (every? #(keyword? (:type %1)) columns))
       (is (= [:id] (map :name columns))))
-    (let [columns (columns db :schema :public :table :continents)]
+    (let [columns (columns db {:schema :public :table :continents})]
       (is (= (set (map :column-name columns))
              #{"id" "name" "geometry" "updated-at" "geonames-id"
                "created-at" "code"})))
-    (let [columns (columns db :schema :twitter :table :users)]
+    (let [columns (columns db {:schema :twitter :table :users})]
       (is (= (set (map :column-name columns))
              #{"listed-count" "lang" "url" "friends-count" "id" "name" "verified"
                "time-zone" "location" "updated-at" "profile-image-url"
                "default-profile-image" "statuses-count" "created-at"
                "followers-count" "possibly-sensitive" "screen-name" "description"
                "retweet-count"})))
-    (let [columns (columns db :table :countries :name :continent-id)]
+    (let [columns (columns db {:table :countries :name :continent-id})]
       (is (not (empty? columns)))
       (is (every? #(= :public (:schema %1)) columns))
       (is (every? #(= :countries (:table %1)) columns))
@@ -64,7 +64,7 @@
 
 (deftest test-columns-c3p0
   (with-backends [db {:pool :c3p0}]
-    (let [columns (columns db :table :continents)]
+    (let [columns (columns db {:table :continents})]
       (is (not (empty? columns)))
       (is (every? #(= :public (:schema %1)) columns))
       (is (every? #(= :continents (:table %1)) columns))
@@ -75,12 +75,12 @@
 
 (deftest test-indexes
   (with-backends [db]
-    (let [columns (indexes db :table :continents)]
+    (let [columns (indexes db {:table :continents})]
       (is (not (empty? columns))))))
 
 (deftest test-unique-columns
   (with-backends [db]
-    (let [columns (unique-columns db :table :continents)]
+    (let [columns (unique-columns db {:table :continents})]
       (is (not (empty? columns)))
       (is (every? #(= :public (:schema %1)) columns))
       (is (every? #(= :continents (:table %1)) columns))
@@ -90,13 +90,13 @@
 
 (deftest test-primary-keys
   (with-backends [db]
-    (let [columns (primary-keys db :table :continents)]
+    (let [columns (primary-keys db {:table :continents})]
       (is (not (empty? columns)))
       (is (every? #(= :public (:schema %1)) columns))
       (is (every? #(= :continents (:table %1)) columns))
       (is (every? #(keyword? (:name %1)) columns))
       (is (= [:id] (map :name columns))))
-    (let [columns (primary-keys db :table :tweets-users)]
+    (let [columns (primary-keys db {:table :tweets-users})]
       (is (not (empty? columns)))
       (is (every? #(= :twitter (:schema %1)) columns))
       (is (every? #(= :tweets-users (:table %1)) columns))

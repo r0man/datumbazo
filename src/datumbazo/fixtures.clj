@@ -61,7 +61,7 @@
   "Reset the serial counters of all columns in `table`."
   [db table & {:keys [entities]}]
   (let [table (parse-table table)]
-    (doseq [column (meta/columns db :schema (or (:schema table) :public) :table (:name table))
+    (doseq [column (meta/columns db {:schema (or (:schema table) :public) :table (:name table)})
             :when (contains? #{:bigserial :serial} (:type column))]
       (first @(select db [`(setval
                             ~(serial-sequence db column)
@@ -70,7 +70,7 @@
 
 (defn- find-column-keys [db table]
   (let [table (parse-table table)]
-    (->> (meta/columns db :schema (or (:schema table) :public) :table (:name table))
+    (->> (meta/columns db {:schema (or (:schema table) :public) :table (:name table)})
          (map (comp #(sql-keyword db %) :column-name)))))
 
 (defn read-fixture

@@ -1,7 +1,6 @@
 (ns datumbazo.driver.clojure
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
-            [datumbazo.db :refer [format-url]]
             [datumbazo.driver.core :as d]
             [datumbazo.io :as io]
             [datumbazo.util :as util]))
@@ -47,7 +46,7 @@
   (->> (jdbc/get-connection
         (if (:datasource driver)
           (select-keys driver [:datasource])
-          (format-url driver)))
+          (util/format-url driver)))
        (assoc driver :connection)))
 
 (defn- connection
