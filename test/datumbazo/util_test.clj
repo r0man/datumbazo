@@ -111,7 +111,7 @@
     (is (= :mysql (:scheme db))))
   (let [db (parse-url "postgresql://tiger:scotch@localhost:5432/datumbazo?a=1&b=2")]
     (is (nil? (:pool db)))
-    (is (= "tiger" (:user db)))
+    (is (= "tiger" (:username db)))
     (is (= "scotch" (:password db)))
     (is (= "localhost" (:server-name db)))
     (is (= 5432 (:server-port db)))

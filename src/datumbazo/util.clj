@@ -32,7 +32,7 @@
        :scheme (keyword (nth matches 3))
        :server-name server-name
        :server-port server-port
-       :user (nth matches 5)})
+       :username (nth matches 5)})
     (throw (ex-info "Can't parse JDBC url %s." {:url url}))))
 
 (defn format-url

@@ -8,7 +8,7 @@
                 maximum-pool-size minimum-idle]} opts
         config (HikariConfig.)]
     (.setJdbcUrl config (jdbc-url db))
-    (.setUsername config (:user db))
+    (.setUsername config (:username db))
     (.setPassword config (:password db))
     (when connection-timeout
       (.setConnectionTimeout config connection-timeout))

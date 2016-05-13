@@ -73,8 +73,8 @@
        (format "--host %s" host) "")
     ~(if-let [port (:port db)]
        (format "--port %s" port) "")
-    ~(if-let [user (:user db)]
-       (format "--username %s" user) "")
+    ~(if-let [username (:username db)]
+       (format "--username %s" username) "")
     ~(if (:single-transaction opts)
        "--single-transaction" "")
     "--quiet")))
@@ -156,8 +156,8 @@
        (format "--host %s" host) "")
     ~(if-let [port (:port db)]
        (format "--port %s" port) "")
-    ~(if-let [user (:user db)]
-       (format "--username %s" user) "")
+    ~(if-let [username (:username db)]
+       (format "--username %s" username) "")
     ~(if (:clean opts)
        "--clean" "")
     ~(if (:create opts)

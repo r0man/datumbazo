@@ -1,4 +1,4 @@
-(defproject datumbazo "0.9.11-SNAPSHOT"
+(defproject datumbazo "0.10.0-SNAPSHOT"
   :description "Clojure Database Kung-Foo"
   :url "https://github.com/r0man/datumbazo"
   :min-lein-version "2.0.0"
@@ -10,7 +10,8 @@
                  [com.stuartsierra/component "0.3.1"]
                  [commandline-clj "0.2.1"]
                  [geo-clj "0.5.0" :exclusions [noencore]]
-                 [inflections "0.12.1"]
+                 [noencore "0.3.0"]
+                 [inflections "0.12.2"]
                  [org.clojure/clojure "1.8.0"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.logging "0.3.1"]
@@ -24,7 +25,7 @@
                                   [com.zaxxer/HikariCP "2.4.6"]
                                   [funcool/clojure.jdbc "0.8.0"]
                                   [mysql/mysql-connector-java "5.1.38"]
-                                  [org.clojure/java.jdbc "0.5.8"]
+                                  [org.clojure/java.jdbc "0.6.1"]
                                   [org.postgresql/postgresql "9.4.1208"]
                                   [org.xerial/sqlite-jdbc "3.8.11.2"]
                                   [validation-clj "0.5.6"]]

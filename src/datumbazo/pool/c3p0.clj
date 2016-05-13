@@ -9,7 +9,7 @@
                 min-pool-size]} opts
         datasource (ComboPooledDataSource.)]
     (.setJdbcUrl datasource (jdbc-url db))
-    (.setUser datasource (:user db))
+    (.setUser datasource (:username db))
     (.setPassword datasource (:password db))
     (when acquire-retry-attempts
       (.setAcquireRetryAttempts datasource acquire-retry-attempts))

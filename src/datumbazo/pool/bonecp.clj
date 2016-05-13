@@ -6,6 +6,6 @@
 (defmethod db-pool :bonecp [db & [opts]]
   (let [config (BoneCPConfig.)]
     (.setJdbcUrl config (jdbc-url db))
-    (.setUsername config (:user db))
+    (.setUsername config (:username db))
     (.setPassword config (:password db))
     (BoneCPDataSource. config)))

@@ -15,14 +15,14 @@
          (str ":" port))))
 
 (defmethod subname :oracle [db]
-  (str ":" (:user db) "/" (:password db) "@"
+  (str ":" (:username db) "/" (:password db) "@"
        (format-server db)
        ":" (:name db)))
 
 (defmethod subname :sqlserver [db]
   (str "//" (format-server db) ";"
        "database=" (:name db) ";"
-       "user=" (:user db) ";"
+       "user=" (:username db) ";"
        "password=" (:password db)))
 
 (defmethod subname :default [db]
