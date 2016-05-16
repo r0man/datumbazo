@@ -79,7 +79,7 @@
   (with-test-db [db db]
     (let [continent (continents/by-name db "Europe")]
       (continents/reset-counters)
-      (continents/delete! db [continent])
+      (continents/delete! db continent)
       (is (= (continents/counters-for continent)
              {:after-initialize 2
               :before-delete 1
@@ -88,7 +88,7 @@
 (deftest test-callbacks-insert!
   (with-test-db [db db]
     (continents/reset-counters)
-    (let [[continent] (continents/insert! db [new-continent])]
+    (let [continent (continents/insert! db new-continent)]
       (is (= (continents/counters-for continent)
              {:after-initialize 1
               :after-create 1}))
@@ -100,7 +100,7 @@
   (with-test-db [db db]
     (let [continent (continents/by-name db "Europe")]
       (continents/reset-counters)
-      (continents/update! db [continent])
+      (continents/update! db continent)
       (is (= (continents/counters-for continent)
              {:after-initialize 2
               :before-update 1
@@ -110,20 +110,20 @@
   (with-test-db [db db]
     (let [continent (continents/by-name db "Europe")]
       (continents/reset-counters)
-      (let [[continent] (continents/save! db [new-continent])]
+      (let [continent (continents/save! db new-continent)]
         (is (= (continents/counters-for continent)
                {:after-initialize 1
                 :after-save 1}))
         (is (= (continents/counters-for (empty continent))
                {:after-initialize 1
                 :before-save 1}))
-        (is (= (continents/save! db [continent]) [continent]))
+        (is (= (continents/save! db continent) continent))
         (is (= (continents/counters-for continent)
                {:after-initialize 3
                 :after-save 2
                 :before-save 1}))
-        (is (= (continents/save! db [new-continent]) [continent]))
-        (is (= (continents/save! db [new-continent]) [continent]))))))
+        (is (= (continents/save! db new-continent) continent))
+        (is (= (continents/save! db new-continent) continent))))))
 
 (deftest test-has-many-countries
   (with-backends [db]
@@ -134,16 +134,16 @@
 
 (deftest test-delete!
   (with-backends [db]
-    (is (empty? (continents/delete! db [])))
+    ;; (is (empty? (continents/delete! db nil)))
     (let [continent (continents/by-name db "Asia")
-          [deleted] (continents/delete! db [continent])]
+          deleted (continents/delete! db continent)]
       (is (nil? (continents/by-name db (:name continent))))
       (is (= deleted continent))
-      (is (= (continents/delete! db [continent]) [])))))
+      (is (nil? (continents/delete! db continent))))))
 
 (deftest test-insert!
   (with-backends [db]
-    (let [[continent] (continents/insert! db [new-continent])]
+    (let [continent (continents/insert! db new-continent)]
       (is (continent? continent))
       (is (pos? (:id continent)))
       (is (= (:name continent) "Gondwana"))
@@ -154,7 +154,7 @@
 (deftest test-update!
   (with-backends [db]
     (let [continent (continents/by-name db "Asia")
-          [updated] (continents/update! db [(assoc continent :name "ASIA")]) ]
+          updated (continents/update! db (assoc continent :name "ASIA")) ]
       (is (= (:id updated) (:id continent)))
       (is (= (:name updated) "ASIA"))
       (is (= (:code updated) (:code continent)))
@@ -163,14 +163,14 @@
 
 (deftest test-save!
   (with-backends [db]
-    (let [[continent] (continents/save! db [new-continent])]
+    (let [continent (continents/save! db new-continent)]
       (is (continent? continent))
       (is (pos? (:id continent)))
       (is (= (:name continent) "Gondwana"))
       (is (= (:code continent) "GD"))
       (is (instance? Date (:created-at continent)))
       (is (instance? Date (:updated-at continent)))
-      (let [[continent] (continents/save! db [continent])]
+      (let [continent (continents/save! db continent)]
         (is (continent? continent))
         (is (pos? (:id continent)))
         (is (= (:name continent) "Gondwana"))

@@ -90,12 +90,12 @@
 
 (deftest test-delete!
   (with-backends [db]
-    (is (empty? (countries/delete! db [])))
+    ;; (is (empty? (countries/delete! db [])))
     (let [country (countries/by-name db "Spain")
-          [deleted] (countries/delete! db [country])]
+          deleted (countries/delete! db country)]
       (is (nil? (countries/by-name db (:name country))))
       (is (= deleted country))
-      (is (= (countries/delete! db [country]) [])))))
+      (is (nil? (countries/delete! db country))))))
 
 (deftest test-insert!
   (with-backends [db]
@@ -104,7 +104,7 @@
                  :iso-3166-1-alpha-2 "gd"
                  :iso-3166-1-alpha-3 "gnd"
                  :iso-3166-1-numeric 2}
-          [country] (countries/insert! db [attrs])]
+          country (countries/insert! db attrs)]
       (is (country? country))
       (is (pos? (:id country)))
       (is (= (:name country) "Gondwana"))
@@ -117,7 +117,7 @@
 (deftest test-update!
   (with-backends [db]
     (let [country (countries/by-name db "Spain")
-          [updated] (countries/update! db [(assoc country :name "SPAIN")]) ]
+          updated (countries/update! db (assoc country :name "SPAIN")) ]
       (is (= (:id updated) (:id country)))
       (is (= (:name updated) "SPAIN"))
       (is (instance? Date (:created-at updated)))

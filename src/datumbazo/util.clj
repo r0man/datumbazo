@@ -53,7 +53,7 @@
   "Convert `table` into the type symbol."
   [table]
   (-> (infl/singular (-> table :name name))
-      (infl/capitalize)
+      (infl/camel-case)
       (symbol)))
 
 (s/defn columns-by-class :- #{Map}

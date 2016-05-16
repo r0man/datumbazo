@@ -3,6 +3,7 @@
   (:require [clojure.set :as set]
             [datumbazo.associations :as associations]
             [datumbazo.callbacks :as callback]
+            [datumbazo.connection :refer [connected?]]
             [datumbazo.util :as util]
             [inflections.core :as infl]
             [potemkin.collections :refer [def-map-type]]
@@ -257,34 +258,58 @@
 (defn- define-insert
   "Define a function that inserts records into `table`."
   [table]
-  `(defn ~'insert!
-     "Insert `records` into the `db`."
-     [~'db ~'records & [~'opts]]
-     (insert-records ~'db ~(util/class-symbol table) ~'records ~'opts)))
+  `(do (s/defn ~'insert-all!
+         "Insert all `records` into the `db`."
+         [~'db :- Database ~'records & [~'opts]]
+         {:pre [(connected? ~'db)]}
+         (insert-records ~'db ~(util/class-symbol table) ~'records ~'opts))
+       (s/defn ~'insert!
+         "Insert `record` into the `db`."
+         [~'db :- Database ~'record & [~'opts]]
+         {:pre [(connected? ~'db)]}
+         (first (~'insert-all! ~'db [~'record] ~'opts)))))
 
 (defn- define-delete
   "Define a function that deletes records in `table`."
   [table]
-  `(defn ~'delete!
-     "Delete `records` from `db`."
-     [~'db ~'records & [~'opts]]
-     (delete-records ~'db ~(util/class-symbol table) ~'records ~'opts)))
+  `(do (s/defn ~'delete-all!
+         "Delete all `records` from `db`."
+         [~'db :- Database ~'records & [~'opts]]
+         {:pre [(connected? ~'db)]}
+         (delete-records ~'db ~(util/class-symbol table) ~'records ~'opts))
+       (s/defn ~'delete!
+         "Delete the `record` from `db`."
+         [~'db :- Database ~'record & [~'opts]]
+         {:pre [(connected? ~'db)]}
+         (first (~'delete-all! ~'db [~'record] ~'opts)))))
 
 (defn- define-update
   "Define a function that updates records in `table`."
   [table]
-  `(defn ~'update!
-     "Update `records` in the `db`."
-     [~'db ~'records & [~'opts]]
-     (update-records ~'db ~(util/class-symbol table) ~'records ~'opts)))
+  `(do (s/defn ~'update-all!
+         "Update all `records` in the `db`."
+         [~'db :- Database ~'records & [~'opts]]
+         {:pre [(connected? ~'db)]}
+         (update-records ~'db ~(util/class-symbol table) ~'records ~'opts))
+       (s/defn ~'update!
+         "Update `record` in the `db`."
+         [~'db :- Database ~'record & [~'opts]]
+         {:pre [(connected? ~'db)]}
+         (first (~'update-all! ~'db [~'record] ~'opts)))))
 
 (defn- define-save
   "Define a function that saves records to `table`."
   [table]
-  `(defn ~'save!
-     "Save `records` to `db`."
-     [~'db ~'records & [~'opts]]
-     (save-records ~'db ~(util/class-symbol table) ~'records ~'opts)))
+  `(do (s/defn ~'save-all!
+         "Save all `records` to `db`."
+         [~'db :- Database ~'records & [~'opts]]
+         {:pre [(connected? ~'db)]}
+         (save-records ~'db ~(util/class-symbol table) ~'records ~'opts))
+       (s/defn ~'save!
+         "Save `record` to `db`."
+         [~'db :- Database ~'record & [~'opts]]
+         {:pre [(connected? ~'db)]}
+         (first (~'save-all! ~'db [~'record] ~'opts)))))
 
 (defn- define-instance?
   "Define a function that checks if a record is an instance of a class."
@@ -299,9 +324,10 @@
   "Return the definition for a function that returns all rows."
   [table & [opts]]
   (let [table-kw (-> table :name name keyword)]
-    `(defn ~'all
+    `(s/defn ~'all
        "Find all rows in `db`."
-       [~'db & [~'opts]]
+       [~'db :- Database & [~'opts]]
+       {:pre [(connected? ~'db)]}
        (find-all ~'db ~(util/class-symbol table) ~'opts))))
 
 (defn define-make-instance

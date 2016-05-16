@@ -35,19 +35,20 @@
 
 (defn belongs-to
   "Add a belongs to association to a table."
-  [association & {:keys [foreign-key primary-key]}]
+  [association & {:keys [foreign-key primary-key schema]}]
   (fn [table]
     (let [node (map->BelongsTo
                 {:class-name (class-name association)
                  :foreign-key (or foreign-key (infl/foreign-key association "-"))
                  :name association
                  :primary-key (or primary-key :id)
+                 :schema schema
                  :table (keyword (infl/plural association))})]
       [node (assoc-in table [:associations association] node)])))
 
 (defn has-many
   "Add a has many association to a table."
-  [association & {:keys [batch-size dependent foreign-key primary-key]}]
+  [association & {:keys [batch-size dependent foreign-key primary-key schema]}]
   (fn [table]
     (let [node (map->HasMany
                 {:batch-size (or batch-size 100)
@@ -56,6 +57,7 @@
                  :foreign-key (or foreign-key (infl/foreign-key (:name table) "-"))
                  :name association
                  :primary-key (or primary-key :id)
+                 :schema schema
                  :table (keyword association)})]
       [node (assoc-in table [:associations association] node)])))
 
@@ -65,9 +67,12 @@
     (let [class (util/resolve-class (:class-name association))
           columns (util/columns-by-class class)]
       (->> @(sql/select (.db record) (map #(util/column-keyword % true) columns)
-              (sql/from (:table association))
-              (sql/where `(= ~(:primary-key association)
-                             ~(get record (:foreign-key association)))))
+                        (sql/from
+                         (util/table-keyword
+                          {:schema (:schema association)
+                           :name (:table association)}))
+                        (sql/where `(= ~(:primary-key association)
+                                       ~(get record (:foreign-key association)))))
            (util/make-instances (.db record) class)
            (first)))))
 
@@ -75,12 +80,13 @@
   IAssociation
   (fetch [association record]
     (let [class (util/resolve-class (:class-name association))
+          table (util/table-by-class class)
           columns (util/columns-by-class class)]
       (->> (util/fetch-batch
             (sql/select (.db record) (map #(util/column-keyword % true) columns)
-              (sql/from (:name association))
-              (sql/where `(= ~(keyword (str (name (:name association)) "."
-                                            (name (:foreign-key association))))
-                             ~(:id record))))
+                        (sql/from (util/table-keyword table))
+                        (sql/where `(= ~(keyword (str (name (:name association)) "."
+                                                      (name (:foreign-key association))))
+                                       ~(:id record))))
             {:size (:batch-size association)})
            (util/make-instances (.db record) class)))))

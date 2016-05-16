@@ -18,6 +18,12 @@
   (is (= {:a 1} (compact-map {:a 1 :b nil})))
   (is (= {:a 1 :c {:d 1}} (compact-map {:a 1 :b nil :c {:d 1 :e nil}}))))
 
+(deftest test-class-symbol
+  (are [name expected]
+      (= (class-symbol {:name name}) expected)
+    "tweets" 'Tweet
+    "hash-tags" 'HashTag))
+
 (deftest test-edn-file?
   (is (not (edn-file? "NOT-EXISTING")))
   (is (not (edn-file? "src")))

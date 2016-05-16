@@ -12,7 +12,7 @@
    :postgresql "postgresql://tiger:scotch@localhost/datumbazo"
    :sqlite "sqlite://tmp/datumbazo.db"})
 
-(def db (new-db (:postgresql connections)))
+(def db (new-db (:postgresql connections) {:backend 'jdbc.core}))
 
 (defmacro with-test-db
   [[db-sym config & [opts]] & body]
