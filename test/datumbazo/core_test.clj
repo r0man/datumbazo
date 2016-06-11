@@ -725,7 +725,7 @@
        (column :b :integer))
     (is (= @(insert db :test [:a :b]
               (values [{:a 1 :b 2} {:b 3} {:c 3}])
-              (returning *))
+              (returning :*))
            [{:a 1 :b 2}
             {:a nil :b 3}
             {:a nil :b nil}]))))
@@ -769,7 +769,7 @@
                         :symbol "SPY"
                         :exchange-id 2
                         :id 6}])
-              (returning *))
+              (returning :*))
            [{:updated-at #inst "2012-11-02T18:22:59.688-00:00",
              :created-at #inst "2012-11-02T18:22:59.688-00:00",
              :symbol "MSFT",

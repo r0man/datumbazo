@@ -85,7 +85,7 @@
                         ;; TDOD: Find insert columns and do not rely on first row.
                         @(insert db table columns
                            (values (encode-rows db table rows))
-                           (returning *))))
+                           (returning :*))))
               [] (partition batch-size batch-size nil (slurp-rows filename)))
         result (assoc {:table table :file filename} :records rows)]
     (reset-serials db table)
@@ -96,7 +96,7 @@
   [db table filename & {:keys [entities identifiers]}]
   (make-parents filename)
   (with-open [writer (writer filename)]
-    (let [rows (seq @(select db [*] (from table)))]
+    (let [rows (seq @(select db [:*] (from table)))]
       (clojure.pprint/pprint rows writer)
       {:file filename :table table :records (count rows)})))
 

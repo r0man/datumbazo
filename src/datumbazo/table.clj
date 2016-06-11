@@ -20,7 +20,7 @@
   (let [class (util/class-symbol table)]
     `(defmethod datumbazo.util/table-by-class ~class
        [~'class]
-       ~table)))
+       (quote ~table))))
 
 (defn- define-truncate
   "Define a function that truncates `table`."
