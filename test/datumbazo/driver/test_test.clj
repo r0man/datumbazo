@@ -61,20 +61,14 @@
 
 (deftest test-fetch
   (with-drivers [db db]
-    (is (thrown? AssertionError @(select db [1])))
-    (with-connection [db db]
-      (is (= @(select db [1])
-             [{:?column? 1}])))))
+    (is (= @(select db [1])
+           [{:?column? 1}]))))
 
 (deftest test-execute
   (with-drivers [db db]
-    (is (thrown? AssertionError
-                 @(create-table db :test-execute
-                    (column :id :serial))))
-    (with-connection [db db]
-      (is (= @(create-table db :test-execute
-                (column :id :serial))
-             [{:count 0}])))))
+    (is (= @(create-table db :test-execute
+              (column :id :serial))
+           [{:count 0}]))))
 
 (deftest test-rollback
   (with-drivers [db db]

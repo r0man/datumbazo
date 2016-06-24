@@ -52,47 +52,15 @@
   {:pre [(connected? db)]}
   (update db :driver #(driver/-rollback % opts)))
 
-(s/defn execute
-  "Execute `stmt` against a database."
-  [stmt & [opts]]
-  (let [{:keys [db] :as ast} (ast stmt)
-        driver (:driver db)
-        sql (sql ast)]
-    (assert (connected? db))
-    (case (:op ast)
-      :delete
-      (if (:returning ast)
-        (driver/-fetch driver sql opts)
-        (driver/-execute driver sql opts))
-      :except
-      (driver/-fetch driver sql opts)
-      :explain
-      (driver/-fetch driver sql opts)
-      :insert
-      (if (:returning ast)
-        (driver/-fetch driver sql opts)
-        (driver/-execute driver sql opts))
-      :intersect
-      (driver/-fetch driver sql opts)
-      :select
-      (driver/-fetch driver sql opts)
-      :union
-      (driver/-fetch driver sql opts)
-      :update
-      (if (:returning ast)
-        (driver/-fetch driver sql opts)
-        (driver/-execute driver sql opts))
-      :values
-      (driver/-fetch driver sql opts)
-      (driver/-execute driver sql opts))))
-
 (s/defn with-connection*
   "Open a database connection, call `f` with the connected `db` as
   argument and close the connection again."
   [db :- Database f & [opts]]
-  (let [db (connect db opts)]
-    (try (f db)
-         (finally (disconnect db)))))
+  (if (connected? db)
+    (f db)
+    (let [db (connect db opts)]
+      (try (f db)
+           (finally (disconnect db))))))
 
 (defmacro with-connection
   "Open a database connection, bind the connected `db` to `db-sym`,
@@ -120,3 +88,37 @@
   `body` within the transaction."
   [[db-sym db & [opts]] & body]
   `(with-transaction* ~db (fn [~db-sym] ~@body) ~opts))
+
+(s/defn execute
+  "Execute `stmt` against a database."
+  [stmt & [opts]]
+  (let [{:keys [db] :as ast} (ast stmt)]
+    (with-connection [db db]
+      (let [driver (:driver db)
+            sql (sql ast)]
+        (case (:op ast)
+          :delete
+          (if (:returning ast)
+            (driver/-fetch driver sql opts)
+            (driver/-execute driver sql opts))
+          :except
+          (driver/-fetch driver sql opts)
+          :explain
+          (driver/-fetch driver sql opts)
+          :insert
+          (if (:returning ast)
+            (driver/-fetch driver sql opts)
+            (driver/-execute driver sql opts))
+          :intersect
+          (driver/-fetch driver sql opts)
+          :select
+          (driver/-fetch driver sql opts)
+          :union
+          (driver/-fetch driver sql opts)
+          :update
+          (if (:returning ast)
+            (driver/-fetch driver sql opts)
+            (driver/-execute driver sql opts))
+          :values
+          (driver/-fetch driver sql opts)
+          (driver/-execute driver sql opts))))))
