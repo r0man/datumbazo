@@ -1229,10 +1229,6 @@
             {:column1 2 :column2 "two"}
             {:column1 3 :column2 "three"}]))))
 
-(deftest test-sql-str
-  (with-backends [db]
-    (is (= "SELECT 1, 'a'" (sql-str (select db [1 "a"]))))))
-
 (comment
 
   (def my-db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))

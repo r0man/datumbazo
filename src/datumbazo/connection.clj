@@ -1,9 +1,11 @@
 (ns datumbazo.connection
-  (:require [datumbazo.driver.core :as driver]
+  (:require [clojure.string :as str]
+            [datumbazo.driver.core :as driver]
             [schema.core :as s]
             [sqlingvo.core :refer [ast sql]])
   (:import java.sql.Connection
            java.sql.PreparedStatement
+           sqlingvo.expr.Stmt
            sqlingvo.db.Database))
 
 (s/defn connection :- (s/maybe Connection)
@@ -52,6 +54,16 @@
   {:pre [(connected? db)]}
   (update db :driver #(driver/-rollback % opts)))
 
+(s/defn sql-str :- s/Str
+  "Prepare `stmt` using the database and return the raw SQL as a string."
+  [stmt]
+  (let [ast (ast stmt)]
+    (with-open [stmt (prepare-statement (:db ast) (sql ast))]
+      (if (.startsWith (str stmt) (str/replace (first (sql ast)) #"\?.*" ""))
+        (str stmt)
+        (throw (UnsupportedOperationException.
+                "Sorry, sql-str not supported by SQL driver."))))))
+
 (s/defn with-connection*
   "Open a database connection, call `f` with the connected `db` as
   argument and close the connection again."
@@ -97,6 +109,11 @@
       (let [driver (:driver db)
             sql (sql ast)]
         (case (:op ast)
+          :create-table
+          (if (seq (rest sql))
+            ;; TODO: sql-str only works with PostgreSQL driver
+            (driver/-execute driver (sql-str stmt) opts)
+            (driver/-execute driver sql opts))
           :delete
           (if (:returning ast)
             (driver/-fetch driver sql opts)

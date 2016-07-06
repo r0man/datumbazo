@@ -1,7 +1,6 @@
 (ns datumbazo.core
   (:refer-clojure :exclude [distinct group-by update])
-  (:require [clojure.string :as str]
-            [datumbazo.associations]
+  (:require [datumbazo.associations]
             [datumbazo.db]
             [datumbazo.driver.core :as driver]
             [datumbazo.io :as io]
@@ -27,6 +26,7 @@
   execute
   prepare-statement
   rollback
+  sql-str
   with-connection
   with-transaction]
  [datumbazo.db
@@ -39,15 +39,6 @@
 (def ^:dynamic *per-page* 25)
 
 (declare run)
-
-(defn sql-str
-  "Prepare `stmt` using the database and return the raw SQL as a string."
-  [stmt]
-  (let [ast (ast stmt)]
-    (with-open [stmt (prepare-statement (:db ast) (sql ast))]
-      (if (.startsWith (str stmt) (str/replace (first (sql ast)) #"\?.*" ""))
-        (str stmt)
-        (throw (UnsupportedOperationException. "Sorry, sql-str not supported by SQL driver."))))))
 
 (defn columns
   "Returns the columns of `table`."
