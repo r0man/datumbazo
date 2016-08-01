@@ -150,6 +150,12 @@
 
 (extend-protocol proto/ISQLType
 
+  clojure.lang.BigInt
+  (as-sql-type [big-int conn]
+    (long big-int))
+  (set-stmt-parameter! [big-int conn stmt index]
+    (.setObject stmt index (proto/as-sql-type big-int conn)))
+
   java.util.Date
   (as-sql-type [date conn]
     (io/encode-timestamp date))

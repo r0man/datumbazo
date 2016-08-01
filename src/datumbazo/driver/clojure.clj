@@ -162,6 +162,10 @@
 
 (extend-protocol jdbc/ISQLValue
 
+  clojure.lang.BigInt
+  (sql-value [big-int]
+    (long big-int))
+
   java.util.Date
   (sql-value [date]
     (io/encode-timestamp date))

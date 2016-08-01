@@ -1229,6 +1229,20 @@
             {:column1 2 :column2 "two"}
             {:column1 3 :column2 "three"}]))))
 
+(deftest test-select-bigint
+  (with-backends [db]
+    (is (= @(select db [(bigint 1)])
+           [{:?column? 1}]))))
+
+(deftest test-insert-bigint
+  (with-backends [db]
+    @(create-table db :test-insert-bigint
+       (column :id :bigint))
+    (is (= @(insert db :test-insert-bigint [:id]
+              (values [{:id (bigint 1)}])
+              (returning :*))
+           [{:id 1}]))))
+
 (comment
 
   (def my-db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))
