@@ -69,9 +69,9 @@
        (format "--dbname %s" db) "")
     ~(if-let [file (:file opts)]
        (format "--file %s" (str file)) "")
-    ~(if-let [host (:host db)]
+    ~(if-let [host (:server-name db)]
        (format "--host %s" host) "")
-    ~(if-let [port (:port db)]
+    ~(if-let [port (:server-port db)]
        (format "--port %s" port) "")
     ~(if-let [username (:username db)]
        (format "--username %s" username) "")
@@ -152,9 +152,9 @@
    ("pg_dump"
     ~(if-let [db-name (:name db)]
        (format "--dbname %s" db-name) "")
-    ~(if-let [host (:host db)]
+    ~(if-let [host (:server-name db)]
        (format "--host %s" host) "")
-    ~(if-let [port (:port db)]
+    ~(if-let [port (:server-port db)]
        (format "--port %s" port) "")
     ~(if-let [username (:username db)]
        (format "--username %s" username) "")

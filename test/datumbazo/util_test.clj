@@ -36,9 +36,9 @@
 
 (deftest test-format-server
   (are [server expected] (= expected (format-server server))
-    {:host "example.com"}
+    {:server-name "example.com"}
     "example.com"
-    {:host "example.com" :port 123}
+    {:server-name "example.com" :server-port 123}
     "example.com:123"))
 
 (deftest test-path-split

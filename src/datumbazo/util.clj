@@ -100,9 +100,9 @@
    (Class/forName (str clazz)) (into-array args)))
 
 (defn format-server [url]
-  (str (:host url)
-       (if (:port url)
-         (str ":" (:port url)))))
+  (str (:server-name url)
+       (if (:server-port url)
+         (str ":" (:server-port url)))))
 
 (defmulti make-instance
   "Make a new instance of `class` using `attrs`."

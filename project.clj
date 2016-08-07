@@ -1,4 +1,4 @@
-(defproject datumbazo "0.10.7-SNAPSHOT"
+(defproject datumbazo "0.11.0-SNAPSHOT"
   :description "Clojure Database Kung-Foo"
   :url "https://github.com/r0man/datumbazo"
   :min-lein-version "2.0.0"
@@ -8,16 +8,16 @@
   :dependencies [[clj-time "0.12.0"]
                  [com.palletops/stevedore "0.8.0-beta.7"]
                  [com.stuartsierra/component "0.3.1"]
-                 [commandline-clj "0.2.4"]
-                 [geo-clj "0.6.0"]
+                 [commandline-clj "0.3.0"]
+                 [geo-clj "0.6.1"]
                  [inflections "0.12.2"]
                  [org.clojure/clojure "1.8.0"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.logging "0.3.1"]
                  [potemkin "0.4.3"]
-                 [prismatic/schema "1.1.2"]
+                 [prismatic/schema "1.1.3"]
                  [slingshot "0.12.2"]
-                 [sqlingvo "0.8.16"]]
+                 [sqlingvo "0.8.17"]]
   :profiles {:dev {:dependencies [[ch.qos.logback/logback-classic "1.1.7"]
                                   [com.jolbox/bonecp "0.8.0.RELEASE"]
                                   [com.mchange/c3p0 "0.9.5.2"]
@@ -26,7 +26,7 @@
                                   [mysql/mysql-connector-java "5.1.38"]
                                   [org.clojure/java.jdbc "0.6.1"]
                                   [org.postgresql/postgresql "9.4.1209"]
-                                  [net.postgis/postgis-jdbc "2.2.0" :exclusions [postgresql]]
+                                  [net.postgis/postgis-jdbc "2.2.1" :exclusions [postgresql]]
                                   [org.xerial/sqlite-jdbc "3.8.11.2"]
                                   [validation-clj "0.5.6"]]
                    :repl-options {:init-ns user}
