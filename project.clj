@@ -26,7 +26,8 @@
                                   [mysql/mysql-connector-java "5.1.38"]
                                   [org.clojure/java.jdbc "0.6.1"]
                                   [org.postgresql/postgresql "9.4.1209"]
-                                  [net.postgis/postgis-jdbc "2.2.1" :exclusions [postgresql]]
+                                  [net.postgis/postgis-jdbc "2.2.1"
+                                   :exclusions [postgresql org.postgresql/postgresql]]
                                   [org.xerial/sqlite-jdbc "3.8.11.2"]
                                   [validation-clj "0.5.6"]]
                    :repl-options {:init-ns user}
