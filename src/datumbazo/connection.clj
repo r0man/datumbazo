@@ -101,41 +101,51 @@
   [[db-sym db & [opts]] & body]
   `(with-transaction* ~db (fn [~db-sym] ~@body) ~opts))
 
+(defn execute-sql-query
+  "Execute a SQL query."
+  [db sql & [opts]]
+  (with-connection [db db]
+    (driver/-fetch (:driver db) sql opts)))
+
+(defn execute-sql-statement
+  "Execute a SQL statement."
+  [db sql & [opts]]
+  (with-connection [db db]
+    (driver/-execute (:driver db) sql opts)))
+
 (s/defn execute
   "Execute `stmt` against a database."
   [stmt & [opts]]
   (let [{:keys [db] :as ast} (ast stmt)]
-    (with-connection [db db]
-      (let [driver (:driver db)
-            sql (sql ast)]
-        (case (:op ast)
-          :create-table
-          (if (seq (rest sql))
-            ;; TODO: sql-str only works with PostgreSQL driver
-            (driver/-execute driver (sql-str stmt) opts)
-            (driver/-execute driver sql opts))
-          :delete
-          (if (:returning ast)
-            (driver/-fetch driver sql opts)
-            (driver/-execute driver sql opts))
-          :except
-          (driver/-fetch driver sql opts)
-          :explain
-          (driver/-fetch driver sql opts)
-          :insert
-          (if (:returning ast)
-            (driver/-fetch driver sql opts)
-            (driver/-execute driver sql opts))
-          :intersect
-          (driver/-fetch driver sql opts)
-          :select
-          (driver/-fetch driver sql opts)
-          :union
-          (driver/-fetch driver sql opts)
-          :update
-          (if (:returning ast)
-            (driver/-fetch driver sql opts)
-            (driver/-execute driver sql opts))
-          :values
-          (driver/-fetch driver sql opts)
-          (driver/-execute driver sql opts))))))
+    (let [sql (sql ast)]
+      (case (:op ast)
+        :create-table
+        (if (seq (rest sql))
+          ;; TODO: sql-str only works with PostgreSQL driver
+          (execute-sql-statement db (sql-str stmt) opts)
+          (execute-sql-statement db sql opts))
+        :delete
+        (if (:returning ast)
+          (execute-sql-query db sql opts)
+          (execute-sql-statement db sql opts))
+        :except
+        (execute-sql-query db sql opts)
+        :explain
+        (execute-sql-query db sql opts)
+        :insert
+        (if (:returning ast)
+          (execute-sql-query db sql opts)
+          (execute-sql-statement db sql opts))
+        :intersect
+        (execute-sql-query db sql opts)
+        :select
+        (execute-sql-query db sql opts)
+        :union
+        (execute-sql-query db sql opts)
+        :update
+        (if (:returning ast)
+          (execute-sql-query db sql opts)
+          (execute-sql-statement db sql opts))
+        :values
+        (execute-sql-query db sql opts)
+        (execute-sql-statement db sql opts)))))

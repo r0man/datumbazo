@@ -1,7 +1,7 @@
 (ns datumbazo.connection-test
   (:require [clojure.test :refer :all]
             [datumbazo.connection :refer :all]
-            [datumbazo.core :refer [create-table check inherits select]]
+            [datumbazo.core :refer [check create-table inherits select sql]]
             [datumbazo.db :refer [with-db]]
             [datumbazo.test :refer :all])
   (:import java.sql.Connection))
@@ -24,3 +24,8 @@
                 "CHECK (\"logdate\" >= '2006-02-01'), "
                 "CHECK (\"logdate\" < '2006-03-01')) "
                 "INHERITS (\"measurement\")")))))
+
+(deftest test-execute-sql-query
+  (with-backends [db]
+    (is (= (execute-sql-query db (sql (select db [1])))
+           [{:?column? 1}]))))
