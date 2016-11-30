@@ -1243,6 +1243,12 @@
               (returning :*))
            [{:id 1}]))))
 
+(deftest test-print-explain
+  (with-backends [db]
+    (is (re-matches
+         #"Result  \(cost=\d+.\d+..\d+.\d+ rows=\d+ width=\d+\)\n"
+         (with-out-str (print-explain (select db [1])))))))
+
 (comment
 
   (def my-db (new-db "postgresql://tiger:scotch@localhost/datumbazo"))

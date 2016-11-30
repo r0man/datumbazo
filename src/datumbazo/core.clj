@@ -40,6 +40,12 @@
 
 (declare run)
 
+(defn print-explain
+  "Print the execution plan of `query`."
+  [query]
+  (doseq [row @(explain (-> query ast :db) query)]
+    (println (get row (keyword "query plan")))))
+
 (defn columns
   "Returns the columns of `table`."
   [table] (map (:column table) (:columns table)))
