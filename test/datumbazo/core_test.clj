@@ -1218,9 +1218,16 @@
 
 (deftest test-explain
   (with-backends [db]
-    (is (= @(explain db (select db [1]))
-           [{(keyword "query plan")
-             "Result  (cost=0.00..0.01 rows=1 width=0)"}]))))
+    (let [result (first @(explain db (select db [1])))]
+      (is (re-matches
+           #"Result  \(cost=\d+.\d+..\d+.\d+ rows=\d+ width=\d+\)"
+           (get result (keyword "query plan")))))))
+
+(deftest test-print-explain
+  (with-backends [db]
+    (is (re-matches
+         #"Result  \(cost=\d+.\d+..\d+.\d+ rows=\d+ width=\d+\)\n"
+         (with-out-str (print-explain (select db [1])))))))
 
 (deftest test-values
   (with-backends [db]
@@ -1242,12 +1249,6 @@
               (values [{:id (bigint 1)}])
               (returning :*))
            [{:id 1}]))))
-
-(deftest test-print-explain
-  (with-backends [db]
-    (is (re-matches
-         #"Result  \(cost=\d+.\d+..\d+.\d+ rows=\d+ width=\d+\)\n"
-         (with-out-str (print-explain (select db [1])))))))
 
 (comment
 
