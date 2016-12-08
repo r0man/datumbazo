@@ -52,7 +52,7 @@
 
 (deftable users
   (column :id :integer)
-  (column :nick :varchar :length 255)
+  (column :nick :varchar :size 255)
   (primary-key :nick))
 
 (deftest test-continent-by-pk*
@@ -90,7 +90,7 @@
   (column :possibly-sensitive :boolean :not-null? true :default false)
   (column :location :text)
   (column :time-zone :text)
-  (column :lang :varchar :length 2)
+  (column :lang :varchar :size 2)
   (column :url :text)
   (column :profile-image-url :text)
   (column :created-at :timestamp-with-time-zone :not-null? true :default "now()")
@@ -587,7 +587,7 @@
     (let [table :test-create-table]
       (try (is (= @(create-table db table
                      (column :id :integer)
-                     (column :nick :varchar :length 255)
+                     (column :nick :varchar :size 255)
                      (primary-key :nick))
                   [{:count 0}]))
            (finally

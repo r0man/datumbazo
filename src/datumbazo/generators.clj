@@ -3,4 +3,4 @@
             [clojure.spec.gen :as gen]))
 
 (defn varchar [size]
-  (gen/fmap #(apply str %) (gen/vector (gen/char-alpha) 2)))
+  (gen/fmap #(apply str %) (gen/vector (gen/char-alpha) size)))

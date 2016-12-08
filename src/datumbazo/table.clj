@@ -51,7 +51,7 @@
   (fn [column] (:type column)))
 
 (defmethod column-spec-gen :varchar [column]
-  `(s/with-gen (s/and string? #(= (count %1) 2))
+  `(s/with-gen (s/and string? #(= (count %1) ~(:size column)))
      #(generators/varchar ~(:size column))))
 
 (defmethod column-spec-gen :default [column]

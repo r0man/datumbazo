@@ -17,7 +17,7 @@
                  [potemkin "0.4.3"]
                  [prismatic/schema "1.1.3"]
                  [slingshot "0.12.2"]
-                 [sqlingvo "0.8.17"]]
+                 [sqlingvo "0.8.19"]]
   :plugins [[jonase/eastwood "0.2.3"]
             [lein-difftest "2.0.0"]]
   :aliases {"ci" ["do" ["difftest"] ["lint"]]

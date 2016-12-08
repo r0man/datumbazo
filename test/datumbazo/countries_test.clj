@@ -117,7 +117,18 @@
       (is (instance? Date (:updated-at country))))))
 
 (deftest test-sample
-  (is (every? map? (gen/sample (s/gen ::countries/countries)))))
+  (doseq [country (gen/sample (s/gen ::countries/countries))]
+    (is (map? country))
+    (is (string? (:name country)))
+    (is (or (integer? (:continent-id country))
+            (nil? (:continent-id country))))
+    ;; TODO: geometry
+    (is (or (integer? (:geonames-id country))
+            (nil? (:geonames-id country))))
+    (is (= (count (:iso-3166-1-alpha-2 country)) 2))
+    (is (= (count (:iso-3166-1-alpha-3 country)) 3))
+    (is (inst? (:created-at country)))
+    (is (inst? (:updated-at country)))))
 
 (deftest test-update!
   (with-backends [db]
