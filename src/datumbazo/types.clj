@@ -21,6 +21,8 @@
 
 (s/def ::double-precision double?)
 
+;; Serials
+
 (s/def ::smallserial
   (s/int-in 1 32767))
 
@@ -42,7 +44,8 @@
 
 (s/def ::varchar string?)
 
-(s/def ::timestamp inst?)
+(s/def ::timestamp
+  (s/inst-in #inst "0000" #inst "9999"))
 
 ;; TODO:
 

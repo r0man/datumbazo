@@ -3,7 +3,7 @@
   (:require [clojure.set :as set]
             [datumbazo.associations :as associations]
             [datumbazo.callbacks :as callback]
-            [datumbazo.connection :refer [connected?]]
+            [sqlingvo.core :refer [db?]]
             [datumbazo.util :as util]
             [inflections.core :as infl]
             [potemkin.collections :refer [def-map-type]]
@@ -261,12 +261,12 @@
   `(do (s/defn ~'insert-all!
          "Insert all `records` into the `db`."
          [~'db :- Database ~'records & [~'opts]]
-         {:pre [(connected? ~'db)]}
+         {:pre [(db? ~'db)]}
          (insert-records ~'db ~(util/class-symbol table) ~'records ~'opts))
        (s/defn ~'insert!
          "Insert `record` into the `db`."
          [~'db :- Database ~'record & [~'opts]]
-         {:pre [(connected? ~'db)]}
+         {:pre [(db? ~'db)]}
          (first (~'insert-all! ~'db [~'record] ~'opts)))))
 
 (defn- define-delete
@@ -275,12 +275,12 @@
   `(do (s/defn ~'delete-all!
          "Delete all `records` from `db`."
          [~'db :- Database ~'records & [~'opts]]
-         {:pre [(connected? ~'db)]}
+         {:pre [(db? ~'db)]}
          (delete-records ~'db ~(util/class-symbol table) ~'records ~'opts))
        (s/defn ~'delete!
          "Delete the `record` from `db`."
          [~'db :- Database ~'record & [~'opts]]
-         {:pre [(connected? ~'db)]}
+         {:pre [(db? ~'db)]}
          (first (~'delete-all! ~'db [~'record] ~'opts)))))
 
 (defn- define-update
@@ -289,12 +289,12 @@
   `(do (s/defn ~'update-all!
          "Update all `records` in the `db`."
          [~'db :- Database ~'records & [~'opts]]
-         {:pre [(connected? ~'db)]}
+         {:pre [(db? ~'db)]}
          (update-records ~'db ~(util/class-symbol table) ~'records ~'opts))
        (s/defn ~'update!
          "Update `record` in the `db`."
          [~'db :- Database ~'record & [~'opts]]
-         {:pre [(connected? ~'db)]}
+         {:pre [(db? ~'db)]}
          (first (~'update-all! ~'db [~'record] ~'opts)))))
 
 (defn- define-save
@@ -303,12 +303,12 @@
   `(do (s/defn ~'save-all!
          "Save all `records` to `db`."
          [~'db :- Database ~'records & [~'opts]]
-         {:pre [(connected? ~'db)]}
+         {:pre [(db? ~'db)]}
          (save-records ~'db ~(util/class-symbol table) ~'records ~'opts))
        (s/defn ~'save!
          "Save `record` to `db`."
          [~'db :- Database ~'record & [~'opts]]
-         {:pre [(connected? ~'db)]}
+         {:pre [(db? ~'db)]}
          (first (~'save-all! ~'db [~'record] ~'opts)))))
 
 (defn- define-instance?
@@ -327,7 +327,7 @@
     `(s/defn ~'all
        "Find all rows in `db`."
        [~'db :- Database & [~'opts]]
-       {:pre [(connected? ~'db)]}
+       {:pre [(db? ~'db)]}
        (find-all ~'db ~(util/class-symbol table) ~'opts))))
 
 (defn define-make-instance

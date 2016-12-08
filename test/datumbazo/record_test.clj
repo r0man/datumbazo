@@ -30,7 +30,7 @@
          '(schema.core/defn all
             "Find all rows in `db`."
             [db :- sqlingvo.db.Database & [opts]]
-            {:pre [(datumbazo.connection/connected? db)]}
+            {:pre [(sqlingvo.core/db? db)]}
             (datumbazo.record/find-all db Continent opts)))))
 
 (deftest test-on-conflict-clause
