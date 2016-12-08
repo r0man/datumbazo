@@ -18,6 +18,10 @@
                  [prismatic/schema "1.1.3"]
                  [slingshot "0.12.2"]
                  [sqlingvo "0.8.17"]]
+  :plugins [[jonase/eastwood "0.2.3"]
+            [lein-difftest "2.0.0"]]
+  :aliases {"ci" ["do" ["difftest"] ["lint"]]
+            "lint" ["do"  ["eastwood"]]}
   :profiles {:dev {:dependencies [[ch.qos.logback/logback-classic "1.1.7"]
                                   [com.jolbox/bonecp "0.8.0.RELEASE"]
                                   [com.mchange/c3p0 "0.9.5.2"]
@@ -33,5 +37,4 @@
                                   [validation-clj "0.5.6"]]
                    :repl-options {:init-ns user}
                    :resource-paths ["test-resources"]}}
-  :aliases {"test-ancient" ["test"]}
   :main ^{:skip-aot true} datumbazo.fixtures)
