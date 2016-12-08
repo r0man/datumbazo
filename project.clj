@@ -11,7 +11,7 @@
                  [commandline-clj "0.3.0"]
                  [geo-clj "0.6.2"]
                  [inflections "0.12.2"]
-                 [org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojure "1.9.0-alpha14"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.logging "0.3.1"]
                  [potemkin "0.4.3"]
@@ -25,6 +25,7 @@
                                   [funcool/clojure.jdbc "0.9.0"]
                                   [mysql/mysql-connector-java "6.0.5"]
                                   [org.clojure/java.jdbc "0.6.1"]
+                                  [org.clojure/test.check "0.9.0"]
                                   [org.postgresql/postgresql "9.4.1212"]
                                   [net.postgis/postgis-jdbc "2.2.1"
                                    :exclusions [postgresql org.postgresql/postgresql]]

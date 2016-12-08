@@ -7,10 +7,10 @@
 (deftable continents
   "The continents database table."
   (column :id :serial :primary-key? true)
-  (column :name :varchar :unique? true)
-  (column :code :varchar :unique? true)
-  (column :created-at :timestamp)
-  (column :updated-at :timestamp)
+  (column :name :text :not-null? true :unique? true)
+  (column :code :varchar :size 2 :not-null? true :unique? true)
+  (column :created-at :timestamp :not-null? true)
+  (column :updated-at :timestamp :not-null? true)
   (has-many :countries :batch-size 2 :dependent :destroy))
 
 ;; Test callback counts

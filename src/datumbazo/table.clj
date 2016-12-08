@@ -1,6 +1,11 @@
 (ns datumbazo.table
   (:require [datumbazo.record :as record]
+            [datumbazo.generators :as generators]
             [datumbazo.util :as util]
+            [datumbazo.types :as types]
+            [datumbazo.core :refer [column columns]]
+            [clojure.spec :as s]
+            [clojure.spec.gen :as gen]
             [sqlingvo.core :as sql]
             [sqlingvo.expr :as expr]))
 
@@ -31,10 +36,70 @@
      @(sql/truncate ~'db [~(util/table-keyword table)]
         (sql/cascade (:cascade ~'opts)))))
 
+(defn- column-spec-name
+  "Return the name of the `column` spec in `ns`."
+  [column]
+  (keyword (str *ns*) (-> column :name name)))
+
+(defn- column-spec-type
+  "Return the type of the `column` in the `datumbazo.types` namespace."
+  [column]
+  (keyword "datumbazo.types" (-> column :type name)))
+
+(defmulti column-spec-gen
+  "Return the generator for a column spec."
+  (fn [column] (:type column)))
+
+(defmethod column-spec-gen :varchar [column]
+  `(s/with-gen (s/and string? #(= (count %1) 2))
+     #(generators/varchar ~(:size column))))
+
+(defmethod column-spec-gen :default [column]
+  (column-spec-type column))
+
+(defn- column-spec
+  "Define a function that truncates `table`."
+  [column]
+  `(s/def ~(column-spec-name column)
+     ~(column-spec-gen column)))
+
+(defn- define-column-specs
+  "Define a function that truncates `table`."
+  [table]
+  `(do ~@(map column-spec (columns table))))
+
+(defn- row-spec-name
+  "Return the name of the `row` spec in `ns`."
+  [table]
+  (keyword (str *ns*) (-> table :name name)))
+
+(defn- row-spec-req-un
+  "Return the required row spec keys in a vector."
+  [table]
+  (->> (columns table)
+       (filter :not-null?)
+       (mapv #(column-spec-name %1))))
+
+(defn- row-spec-opt-un
+  "Return the optional row spec keys in a vector."
+  [table]
+  (->> (columns table)
+       (remove :not-null?)
+       (mapv #(column-spec-name %1))))
+
+(defn- define-row-spec
+  "Define a function that truncates `table`."
+  [table]
+  `(s/def ~(row-spec-name table)
+     (s/keys :req-un ~(row-spec-req-un table)
+             :opt-un ~(row-spec-opt-un table))))
+
 (defmacro deftable
   "Define a database table."
   [table-name doc & body]
   (let [table# (eval `(second ((table ~(keyword table-name) ~@body) {})))]
     `(do ~(record/define-record table#)
          ~(define-table-by-class table#)
-         ~(define-truncate table#))))
+         ~(define-truncate table#)
+         ~(define-column-specs table#)
+         ~(define-row-spec table#))))

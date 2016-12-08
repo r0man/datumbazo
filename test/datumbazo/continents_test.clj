@@ -1,14 +1,19 @@
 (ns datumbazo.continents-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.spec :as s]
+            [clojure.spec.gen :as gen]
+            [clojure.test :refer :all]
             [datumbazo.continents :as continents :refer [continent?]]
             [datumbazo.countries :refer [country?]]
-            [datumbazo.util :refer [make-instance]]
-            [datumbazo.test :refer :all])
+            [datumbazo.test :refer :all]
+            [datumbazo.util :refer [make-instance]])
   (:import datumbazo.continents.Continent
            java.util.Date))
 
 (def new-continent
   {:name "Gondwana" :code "GD"})
+
+(deftest test-sample
+  (is (every? map? (gen/sample (s/gen ::continents/continents)))))
 
 (deftest test-continent?
   (is (continent? (make-instance Continent {:a 1})))
@@ -150,6 +155,18 @@
       (is (= (:code continent) "GD"))
       (is (instance? Date (:created-at continent)))
       (is (instance? Date (:updated-at continent))))))
+
+(deftest test-insert!-gen
+  (with-backends [db]
+    (continents/truncate! db {:cascade true})
+    (doseq [continent (gen/sample (s/gen ::continents/continents))]
+      (let [row (continents/insert! db continent)]
+        (try (is (pos? (:id row)))
+             (is (= (:name row) (:name continent)))
+             (is (= (:code row) (:code continent)))
+             (is (instance? Date (:created-at row)))
+             (is (instance? Date (:updated-at row)))
+             (finally (continents/delete! db row)))))))
 
 (deftest test-update!
   (with-backends [db]

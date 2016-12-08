@@ -1,5 +1,7 @@
 (ns datumbazo.countries-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.spec :as s]
+            [clojure.spec.gen :as gen]
+            [clojure.test :refer :all]
             [datumbazo.util :refer [make-instance]]
             [datumbazo.countries :as countries :refer [country?]]
             [datumbazo.continents :refer [continent?]]
@@ -113,6 +115,9 @@
       (is (= (:iso-3166-1-numeric country) 2))
       (is (instance? Date (:created-at country)))
       (is (instance? Date (:updated-at country))))))
+
+(deftest test-sample
+  (is (every? map? (gen/sample (s/gen ::countries/countries)))))
 
 (deftest test-update!
   (with-backends [db]

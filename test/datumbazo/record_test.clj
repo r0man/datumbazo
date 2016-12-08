@@ -56,22 +56,25 @@
 (deftest test-unique-key-columns
   (is (= (#'datumbazo.record/unique-key-columns Continent)
          #{{:schema nil
+            :not-null? true
             :table :continents
             :default nil
             :name :name
-            :type :varchar
+            :type :text
             :op :column
             :unique? true}
            {:schema nil
+            :not-null? true
             :table :continents
             :default nil
             :name :code
             :type :varchar
+            :size 2
             :op :column
             :unique? true}})))
 
 (deftest test-select-class
   (is (= (sql/sql (select-class db Continent))
-         [(str "SELECT \"continents\".\"id\", \"continents\".\"created-at\", "
-               "\"continents\".\"name\", \"continents\".\"code\", "
-               "\"continents\".\"updated-at\" FROM \"continents\"")])))
+         [(str "SELECT \"continents\".\"name\", \"continents\".\"updated-at\", "
+               "\"continents\".\"id\", \"continents\".\"code\", "
+               "\"continents\".\"created-at\" FROM \"continents\"")])))
