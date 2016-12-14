@@ -67,18 +67,13 @@
   {:pre [(connected? driver)]}
   (let [identifiers (or (:sql-keyword driver) str/lower-case)
         opts (merge {:identifiers identifiers} opts)]
-    (try
-      (jdbc/fetch (:connection driver) sql opts)
-      (catch Exception e
-        (util/throw-sql-ex-info e sql)))))
+    (jdbc/fetch (:connection driver) sql opts)))
 
 (defn- execute
   "Execute a SQL statement against the database."
   [driver sql & [opts]]
   {:pre [(connected? driver)]}
-  (try (d/row-count (jdbc/execute (:connection driver) sql))
-       (catch Exception e
-         (util/throw-sql-ex-info e sql))))
+  (d/row-count (jdbc/execute (:connection driver) sql)))
 
 (defn- prepare-statement
   "Return a prepared statement for the `sql` statement."

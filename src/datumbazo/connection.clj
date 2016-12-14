@@ -105,13 +105,19 @@
   "Execute a SQL query."
   [db sql & [opts]]
   (with-connection [db db]
-    (driver/-fetch (:driver db) sql opts)))
+    (try (driver/-fetch (:driver db) sql opts)
+         (catch Exception e
+           (throw (ex-info "Can't execute SQL query."
+                           {:sql sql :opts opts} e))))))
 
 (defn execute-sql-statement
   "Execute a SQL statement."
   [db sql & [opts]]
   (with-connection [db db]
-    (driver/-execute (:driver db) sql opts)))
+    (try (driver/-execute (:driver db) sql opts)
+         (catch Exception e
+           (throw (ex-info "Can't execute SQL statement."
+                           {:sql sql :opts opts} e))))))
 
 (s/defn execute
   "Execute `stmt` against a database."
