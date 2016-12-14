@@ -206,20 +206,40 @@
     (require (symbol ns))
     (ns-resolve (symbol ns) (symbol class))))
 
+(defn take-upto
+  "Returns a lazy sequence of successive items from coll up to and including
+  the first item for which `(pred item)` returns true."
+  ([pred]
+   (fn [rf]
+     (fn
+       ([] (rf))
+       ([result] (rf result))
+       ([result x]
+        (let [result (rf result x)]
+          (if (pred x)
+            (ensure-reduced result)
+            result))))))
+  ([pred coll]
+   (lazy-seq
+    (when-let [s (seq coll)]
+      (let [x (first s)]
+        (cons x (if-not (pred x) (take-upto pred (rest s)))))))))
+
 (defn sql-stmt-seq
   "Return a seq of SQL statements from `reader`."
   [reader]
-  (let [pattern #"[^;]*;\s*"]
-    (reduce
-     (fn [stmts stmt]
-       (if (re-matches pattern (str (last stmts)))
-         (conj stmts stmt)
-         (conj (vec (butlast stmts)) (str (last stmts) stmt))))
-     []
+  (letfn [(lazy-stmts [lines]
+            (lazy-seq
+             (let [parts (take-upto #(str/ends-with? (str %) ";") lines)
+                   stmt (str/join " " parts)
+                   lines (drop (count parts) lines) ]
+               (if (seq lines)
+                 (cons stmt (lazy-stmts lines))
+                 (list stmt)))))]
+    (lazy-stmts
      (->> (line-seq reader)
-          (remove str/blank?)
-          (partition-by #(re-matches pattern (str %)))
-          (map #(str/join " " %))))))
+          (map str/trim)
+          (remove str/blank?)))))
 
 (defn exec-sql-file
   "Slurp `file` and execute each line as a statement."

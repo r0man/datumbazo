@@ -92,11 +92,14 @@
       (is (= (exec-sql-file db file) file)))))
 
 (deftest test-sql-stmt-seq
-  (is (= (sql-stmt-seq (io/reader "test-resources/stmts-multiline.sql"))
-         ["SELECT 1;"
-          "CREATE TABLE x (   id INTEGER);"
-          "SELECT * FROM x;"
-          "DROP x;"])))
+  (with-open [reader (io/reader "test-resources/stmts-multiline.sql")]
+    (let [stmts (sql-stmt-seq reader)]
+      (is (seq? stmts))
+      (is (= stmts
+             ["SELECT 1;"
+              "CREATE TABLE x ( id INTEGER );"
+              "SELECT * FROM x;"
+              "DROP x;"])))))
 
 (deftest test-fetch-batch
   (with-backends [db]
