@@ -1,20 +1,20 @@
 (ns datumbazo.core-test
   (:refer-clojure :exclude [distinct group-by update])
-  (:require [clj-time.core :refer [now]]
-            [clj-time.coerce :refer [to-timestamp]]
+  (:require [clj-time.coerce :refer [to-timestamp]]
+            [clj-time.core :refer [now]]
+            [clojure.java.io :refer [file]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [upper-case]]
-            [clojure.java.io :refer [file]]
-            [inflections.core :refer [hyphenate underscore]]
-            [validation.core :refer :all]
-            [datumbazo.test :refer :all]
+            [clojure.test :refer :all]
+            [datumbazo.core :refer :all :as sql]
             [datumbazo.driver.core :as driver]
+            [datumbazo.io :refer :all]
+            [datumbazo.test :refer :all]
             [datumbazo.validation :refer [new-record? uniqueness-of]]
-            [slingshot.slingshot :refer [try+]])
-  (:import datumbazo.driver.clojure.Driver)
-  (:use clojure.test
-        datumbazo.core
-        datumbazo.io))
+            [inflections.core :refer [hyphenate underscore]]
+            [slingshot.slingshot :refer [try+]]
+            [validation.core :refer :all])
+  (:import datumbazo.driver.clojure.Driver))
 
 (defvalidate continent
   (presence-of :name)
@@ -529,6 +529,21 @@
     (is (= @(with db [:x (select db [:*] (from :continents))]
               (select db [:*] (from :x)))
            @(select db [:*] (from :continents))))))
+
+(deftest test-with-insert
+  (with-backends [db]
+    @(sql/create-table db :a
+       (sql/column :id :integer))
+    @(sql/insert db :a [:id]
+       (sql/values [{:id 1}]))
+    (is (= @(sql/insert db :a [:id]
+              (sql/with db [:x (sql/select db [:id] (sql/from :a))]
+                (sql/select db [:id]
+                  (sql/from :x))))
+           [{:count 1}]))
+    (is (= @(sql/select db [:*]
+              (sql/from :a))
+           [{:id 1} {:id 1}]))))
 
 ;; DB TESTS
 

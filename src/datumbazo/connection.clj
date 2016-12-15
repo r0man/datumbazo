@@ -119,39 +119,50 @@
            (throw (ex-info "Can't execute SQL statement."
                            {:sql sql :opts opts} e))))))
 
+(defn- execute-fn
+  "Return the SQL execution fn for `ast`."
+  [ast]
+  (case (:op ast)
+    :create-table
+    execute-sql-statement
+    :delete
+    (if (:returning ast)
+      execute-sql-query
+      execute-sql-statement)
+    :except
+    execute-sql-query
+    :explain
+    execute-sql-query
+    :insert
+    (if (:returning ast)
+      execute-sql-query
+      execute-sql-statement)
+    :intersect
+    execute-sql-query
+    :select
+    execute-sql-query
+    :union
+    execute-sql-query
+    :update
+    (if (:returning ast)
+      execute-sql-query
+      execute-sql-statement)
+    :values
+    execute-sql-query
+    :with
+    (execute-fn (:query ast))
+    execute-sql-statement))
+
 (s/defn execute
   "Execute `stmt` against a database."
   [stmt & [opts]]
   (let [{:keys [db] :as ast} (ast stmt)]
-    (let [sql (sql ast)]
+    (let [sql (sql ast)
+          execute (execute-fn ast)]
       (case (:op ast)
         :create-table
         (if (seq (rest sql))
           ;; TODO: sql-str only works with PostgreSQL driver
-          (execute-sql-statement db (sql-str stmt) opts)
-          (execute-sql-statement db sql opts))
-        :delete
-        (if (:returning ast)
-          (execute-sql-query db sql opts)
-          (execute-sql-statement db sql opts))
-        :except
-        (execute-sql-query db sql opts)
-        :explain
-        (execute-sql-query db sql opts)
-        :insert
-        (if (:returning ast)
-          (execute-sql-query db sql opts)
-          (execute-sql-statement db sql opts))
-        :intersect
-        (execute-sql-query db sql opts)
-        :select
-        (execute-sql-query db sql opts)
-        :union
-        (execute-sql-query db sql opts)
-        :update
-        (if (:returning ast)
-          (execute-sql-query db sql opts)
-          (execute-sql-statement db sql opts))
-        :values
-        (execute-sql-query db sql opts)
-        (execute-sql-statement db sql opts)))))
+          (execute db (sql-str stmt) opts)
+          (execute db sql opts))
+        (execute db sql opts)))))
