@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]
             [datumbazo.driver.core :as driver]
             [schema.core :as s]
-            [sqlingvo.core :refer [ast sql]])
+            [sqlingvo.core :as sql])
   (:import java.sql.Connection
            java.sql.PreparedStatement
            sqlingvo.expr.Stmt
@@ -57,9 +57,10 @@
 (s/defn sql-str :- s/Str
   "Prepare `stmt` using the database and return the raw SQL as a string."
   [stmt]
-  (let [ast (ast stmt)]
-    (with-open [stmt (prepare-statement (:db ast) (sql ast))]
-      (if (.startsWith (str stmt) (str/replace (first (sql ast)) #"\?.*" ""))
+  (let [ast (sql/ast stmt)
+        sql (sql/sql ast)]
+    (with-open [stmt (prepare-statement (:db ast) sql)]
+      (if (.startsWith (str stmt) (str/replace (first sql) #"\?.*" ""))
         (str stmt)
         (throw (UnsupportedOperationException.
                 "Sorry, sql-str not supported by SQL driver."))))))
@@ -101,10 +102,18 @@
   [[db-sym db & [opts]] & body]
   `(with-transaction* ~db (fn [~db-sym] ~@body) ~opts))
 
+(defn print-explain
+  "Print the execution plan of `query`."
+  [query]
+  (let [db (dissoc (-> query sql/ast :db) :explain?)]
+    (doseq [row @(sql/explain db query)]
+      (println (get row (keyword "query plan"))))))
+
 (defn execute-sql-query
   "Execute a SQL query."
   [db sql & [opts]]
   (with-connection [db db]
+    (prn "EXEC QUERY")
     (try (driver/-fetch (:driver db) sql opts)
          (catch Exception e
            (throw (ex-info "Can't execute SQL query."
@@ -114,6 +123,7 @@
   "Execute a SQL statement."
   [db sql & [opts]]
   (with-connection [db db]
+    (prn "EXEC STATEMENT")
     (try (driver/-execute (:driver db) sql opts)
          (catch Exception e
            (throw (ex-info "Can't execute SQL statement."
@@ -122,8 +132,13 @@
 (s/defn execute
   "Execute `stmt` against a database."
   [stmt & [opts]]
-  (let [{:keys [db] :as ast} (ast stmt)]
-    (let [sql (sql ast)]
+  (let [{:keys [db] :as ast} (sql/ast stmt)]
+    (let [sql (sql/sql ast)]
+      (when (:explain? db)
+        (prn sql)
+        (print-explain stmt))
+      (prn sql)
+      (prn (:op ast))
       (case (:op ast)
         :create-table
         (if (seq (rest sql))

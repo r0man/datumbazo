@@ -1203,7 +1203,7 @@
 (deftest test-upsert-on-conflict-on-constraint-do-nothing
   (with-backends [db]
     (with-test-table db :distributors
-      (is (= @(insert db :distributors [:did :dname]
+      (is (= @(insert db  :distributors [:did :dname]
                 (values [{:did 9 :dname "Antwerp Design"}])
                 (on-conflict-on-constraint :distributors_pkey
                   (do-nothing)))
@@ -1228,6 +1228,12 @@
     (is (re-matches
          #"Result  \(cost=\d+.\d+..\d+.\d+ rows=\d+ width=\d+\)\n"
          (with-out-str (print-explain (select db [1])))))))
+
+(deftest test-select-explain
+  (with-backends [db]
+    (is (re-matches
+         #"\[\"SELECT 1\"\]\nResult  \(cost=\d+.\d+..\d+.\d+ rows=\d+ width=\d+\)\n"
+         (with-out-str @(select (assoc db :explain? true) [1]))))))
 
 (deftest test-values
   (with-backends [db]
