@@ -49,4 +49,5 @@
 
 ;; TODO:
 
-(s/def ::geometry nil?)
+(s/def ::geometry any?)
+(s/def ::geography any?)
