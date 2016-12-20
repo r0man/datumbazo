@@ -222,7 +222,7 @@
 (s/defn find-all
   "Select all rows of `class`."
   [db :- Database class :- Class & [opts]]
-  (->> @(select-class db class)
+  (->> @(select-class db class opts)
        (util/make-instances db class)
        (callback/call-after-find)))
 
