@@ -1,7 +1,7 @@
 (ns datumbazo.util-test
   (:refer-clojure :exclude [distinct group-by update])
   (:require [clojure.test :refer :all]
-            [datumbazo.core :refer :all]
+            [datumbazo.core :as sql]
             [datumbazo.test :refer :all]
             [datumbazo.util :refer :all]
             [clojure.java.io :as io]))
@@ -79,11 +79,11 @@
 (deftest test-exec-sql-file
   (with-backends [db]
     (try
-      @(drop-table db [:akw_dirpwsfc_2013_02_10t06]
-         (if-exists true))
+      @(sql/drop-table db [:akw_dirpwsfc_2013_02_10t06]
+         (sql/if-exists true))
       (is (exec-sql-file db "test-resources/stmts-raster.sql"))
       (finally
-        @(drop-table db [:akw_dirpwsfc_2013_02_10t06])))))
+        @(sql/drop-table db [:akw_dirpwsfc_2013_02_10t06])))))
 
 (deftest test-exec-sql-file-select
   (with-backends [db]
@@ -103,9 +103,9 @@
 
 (deftest test-fetch-batch
   (with-backends [db]
-    (let [query (select db [:*]
-                  (from :continents)
-                  (order-by :name))]
+    (let [query (sql/select db [:*]
+                  (sql/from :continents)
+                  (sql/order-by :name))]
       (is (= (fetch-batch query) @query)))))
 
 (deftest test-parse-url

@@ -1,7 +1,6 @@
 (ns datumbazo.test
-  (:refer-clojure :exclude [distinct group-by update])
   (:require [clojure.test :refer :all]
-            [datumbazo.core :refer :all]
+            [datumbazo.core :as sql]
             [datumbazo.driver.core :as driver]
             [schema.core :as s]))
 
@@ -12,12 +11,12 @@
    :postgresql "postgresql://tiger:scotch@localhost/datumbazo"
    :sqlite "sqlite://tmp/datumbazo.db"})
 
-(def db (new-db (:postgresql connections) {:backend 'jdbc.core}))
+(def db (sql/new-db (:postgresql connections) {:backend 'jdbc.core}))
 
 (defmacro with-test-db
   [[db-sym config & [opts]] & body]
-  `(with-db [db# ~config (assoc ~opts :test? true)]
-     (with-connection [~db-sym db#]
+  `(sql/with-db [db# ~config (assoc ~opts :test? true)]
+     (sql/with-connection [~db-sym db#]
        ~@body)))
 
 (defmacro with-test-dbs
@@ -33,25 +32,25 @@
   (fn [db table] table))
 
 (defmethod create-test-table :empsalary [db table]
-  (create-table db table
-    (column :depname :varchar)
-    (column :empno :bigint)
-    (column :salary :int)
-    (column :enroll-date :timestamp-with-time-zone)))
+  (sql/create-table db table
+    (sql/column :depname :varchar)
+    (sql/column :empno :bigint)
+    (sql/column :salary :int)
+    (sql/column :enroll-date :timestamp-with-time-zone)))
 
 (defmethod create-test-table :distributors [db table]
-  (create-table db table
-    (column :did :integer :primary-key? true)
-    (column :dname :text)
-    (column :zipcode :text)
-    (column :is-active :bool)))
+  (sql/create-table db table
+    (sql/column :did :integer :primary-key? true)
+    (sql/column :dname :text)
+    (sql/column :zipcode :text)
+    (sql/column :is-active :bool)))
 
 (defmulti insert-test-table
   (fn [db table] table))
 
 (defmethod insert-test-table :empsalary [db table]
-  (insert db table []
-    (values
+  (sql/insert db table []
+    (sql/values
      [{:depname "develop" :empno 10 :salary 5200 :enroll-date #inst "2007-08-01T00:00:00Z"}
       {:depname "sales" :empno 1 :salary 5000 :enroll-date #inst "2006-10-01T00:00:00Z"}
       {:depname "personnel" :empno 5 :salary 3500 :enroll-date #inst "2007-12-10T00:00:00Z"}
@@ -64,8 +63,8 @@
       {:depname "develop" :empno 11 :salary 5200 :enroll-date #inst "2007-08-15T00:00:00Z"}])))
 
 (defmethod insert-test-table :distributors [db table]
-  (insert db table []
-    (values
+  (sql/insert db table []
+    (sql/values
      [{:did 5 :dname "Gizmo Transglobal" :zipcode "1235"}
       {:did 6 :dname "Associated Computing, Inc" :zipcode "2356"}
       {:did 7 :dname "Redline GmbH" :zipcode "3456"}
@@ -76,18 +75,18 @@
 (defmacro with-drivers [[db-sym db opts] & body]
   `(doseq [driver# ['clojure.java.jdbc 'jdbc.core]]
      (if (find-ns driver#)
-       (with-db [~db-sym ~db (merge {:backend driver# :test? true} ~opts)]
+       (sql/with-db [~db-sym ~db (merge {:backend driver# :test? true} ~opts)]
          ~@body)
        (.println *err* (format "WARNING: Can't find %s driver, skipping tests." driver#)))))
 
 (defmacro with-backends [[db-sym opts] & body]
   `(with-drivers [db# ~(:postgresql connections) ~opts]
-     (with-connection [~db-sym db#]
+     (sql/with-connection [~db-sym db#]
        ~@body)))
 
 (deftest test-with-backends
   (with-backends [db]
-    (is @(select db [1]))))
+    (is @(sql/select db [1]))))
 
 (deftest test-with-backends-pool
   (with-backends [db {:pool :c3p0}]
@@ -98,4 +97,21 @@
      (try @(create-test-table db# table#)
           @(insert-test-table db# table#)
           ~@body
-          (finally @(drop-table db# [table#])))))
+          (finally @(sql/drop-table db# [table#])))))
+
+(defn create-companies-table [db]
+  (sql/create-table db :companies
+    (sql/column :id :serial :primary-key? true)))
+
+(defn create-exchanges-table [db]
+  (sql/create-table db :exchanges
+    (sql/column :id :serial :primary-key? true)))
+
+(defn create-quotes-table [db]
+  (sql/create-table db :quotes
+    (sql/column :id :serial :primary-key? true)
+    (sql/column :exchange-id :integer :not-null? true :references :exchanges/id)
+    (sql/column :company-id :integer :references :companies/id)
+    (sql/column :symbol :citext :not-null? true :unique? true)
+    (sql/column :created-at :timestamp-with-time-zone :not-null? true :default '(now))
+    (sql/column :updated-at :timestamp-with-time-zone :not-null? true :default '(now))))

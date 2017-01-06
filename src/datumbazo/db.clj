@@ -16,14 +16,11 @@
 (defn new-db
   "Return a new database from `spec`."
   [spec & [opts]]
-  (-> (merge {:backend 'clojure.java.jdbc
-              :eval-fn #'execute}
-             (if (map? spec)
-               spec
-               (util/parse-url spec)))
-      (db/db)
-      (merge opts)
-      (assoc-driver)))
+  (->> (merge
+        {:backend 'clojure.java.jdbc
+         :eval-fn #'execute} opts)
+       (db/db spec)
+       (assoc-driver)))
 
 (defmacro with-db
   "Start a database component using `config` bind it to `db-sym`,

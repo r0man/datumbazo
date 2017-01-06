@@ -1,11 +1,11 @@
-(defproject datumbazo "0.11.8-SNAPSHOT"
+(defproject datumbazo "0.12.0-SNAPSHOT"
   :description "Clojure Database Kung-Foo"
   :url "https://github.com/r0man/datumbazo"
   :min-lein-version "2.0.0"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :deploy-repositories [["releases" :clojars]]
-  :dependencies [[clj-time "0.12.2"]
+  :dependencies [[clj-time "0.13.0"]
                  [com.palletops/stevedore "0.8.0-beta.7"]
                  [com.stuartsierra/component "0.3.2"]
                  [commandline-clj "0.3.0"]
@@ -17,7 +17,7 @@
                  [potemkin "0.4.3"]
                  [prismatic/schema "1.1.3"]
                  [slingshot "0.12.2"]
-                 [sqlingvo "0.8.20"]]
+                 [sqlingvo "0.9.0"]]
   :plugins [[jonase/eastwood "0.2.3"]
             [lein-difftest "2.0.0"]]
   :aliases {"ci" ["do" ["difftest"] ["lint"]]
