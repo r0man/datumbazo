@@ -17,6 +17,13 @@
       (.setValue (str s))
       (.setType "citext"))))
 
+(defn jsonb
+  "Convert `x` into a JSONB type."
+  [x]
+  (doto (PGobject.)
+    (.setValue (json/json-str x))
+    (.setType "jsonb")))
+
 ;; ENCODE
 
 (defn encode-pggeometry
@@ -111,9 +118,15 @@
 (defmulti decode-pgobject
   (fn [pgobject] (keyword (.getType pgobject))))
 
-(defmethod decode-pgobject :json [pgobject]
-  (if-let [value (.getValue pgobject)]
+(defn- decode-json [pgobject]
+  (when-let [value (.getValue pgobject)]
     (json/read-str value :key-fn keyword)))
+
+(defmethod decode-pgobject :json [pgobject]
+  (decode-json pgobject))
+
+(defmethod decode-pgobject :jsonb [pgobject]
+  (decode-json pgobject))
 
 (defmethod decode-pgobject :default [pgobject]
   (.getValue pgobject))

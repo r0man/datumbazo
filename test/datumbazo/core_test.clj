@@ -727,3 +727,12 @@
            [{:column1 1 :column2 "one"}
             {:column1 2 :column2 "two"}
             {:column1 3 :column2 "three"}]))))
+
+(deftest test-insert-jsonb
+  (with-backends [db]
+    @(sql/create-table db :my-table
+       (sql/column :a :jsonb))
+    (is (= @(sql/insert db :my-table [:a]
+            (sql/values [{:a (jsonb [1 2 3])}])
+            (sql/returning :*))
+           [{:a [1 2 3]}]))))
