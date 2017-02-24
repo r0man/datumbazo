@@ -6,7 +6,6 @@
             [datumbazo.connection :as connection]
             [no.en.core :as noencore]
             [datumbazo.driver.core :as driver]
-            [schema.core :as s]
             [inflections.core :as infl]
             [sqlingvo.core :as sql])
   (:import java.io.File
@@ -57,9 +56,9 @@
       (infl/camel-case)
       (symbol)))
 
-(s/defn columns-by-class :- #{Map}
+(defn columns-by-class
   "Return the columns of a table by it's `class`."
-  [class :- Class]
+  [class]
   (let [table (table-by-class class)]
     (set (map (:column table) (:columns table)))))
 
@@ -116,9 +115,9 @@
                    :class class
                    :db db})))
 
-(s/defn make-instances :- [Map]
+(defn make-instances
   "Convert all `records` into instances of `class`."
-  [db :- Database class :- Class records :- [Map]]
+  [db class records]
   (map #(make-instance class % db (meta %)) records))
 
 (defn immigrate
@@ -199,9 +198,9 @@
           (str/lower-case)
           (keyword)))
 
-(s/defn resolve-class :- Class
+(defn resolve-class
   "Require the namespace of `class` and resolve the `class` in it."
-  [class :- s/Str]
+  [class]
   (when-let [[_ ns class] (re-matches #"(.+)\.([^.]+)" class)]
     (require (symbol ns))
     (ns-resolve (symbol ns) (symbol class))))

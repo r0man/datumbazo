@@ -1,10 +1,7 @@
 (ns datumbazo.test
   (:require [clojure.test :refer :all]
             [datumbazo.core :as sql]
-            [datumbazo.driver.core :as driver]
-            [schema.core :as s]))
-
-(s/set-fn-validation! true)
+            [datumbazo.driver.core :as driver]))
 
 (def connections
   {:mysql "mysql://tiger:scotch@localhost/datumbazo"

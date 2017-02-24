@@ -27,9 +27,9 @@
 
 (deftest test-define-find-all
   (is (= (#'datumbazo.record/define-find-all continents-table)
-         '(schema.core/defn all
+         '(clojure.core/defn all
             "Find all rows in `db`."
-            [db :- sqlingvo.db.Database & [opts]]
+            [db & [opts]]
             {:pre [(sqlingvo.core/db? db)]}
             (datumbazo.record/find-all db Continent opts)))))
 

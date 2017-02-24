@@ -1,60 +1,59 @@
 (ns datumbazo.connection
   (:require [clojure.string :as str]
             [datumbazo.driver.core :as driver]
-            [schema.core :as s]
             [sqlingvo.core :refer [ast sql]])
   (:import java.sql.Connection
            java.sql.PreparedStatement
            sqlingvo.expr.Stmt
            sqlingvo.db.Database))
 
-(s/defn connection :- (s/maybe Connection)
+(defn connection
   "Return the current connection to `db`."
-  [db :- Database]
+  [db]
   (driver/-connection (:driver db)))
 
-(s/defn connected? :- s/Bool
+(defn connected?
   "Returns true if `db` is connected, otherwise false."
-  [db :- Database]
+  [db]
   (some? (connection db)))
 
-(s/defn begin :- Database
+(defn begin
   "Begin a new `db` transaction."
-  [db :- Database & [opts]]
+  [db & [opts]]
   {:pre [(connected? db)]}
   (update db :driver #(driver/-begin % opts)))
 
-(s/defn commit :- Database
+(defn commit
   "Commit the current `db` transaction."
-  [db :- Database & [opts]]
+  [db & [opts]]
   {:pre [(connected? db)]}
   (update db :driver #(driver/-commit % opts)))
 
-(s/defn connect :- Database
+(defn connect
   "Connect to `db` using `opts`."
-  [db :- Database & [opts]]
+  [db & [opts]]
   {:pre [(not (connected? db))]}
   (update db :driver #(driver/-connect % opts)))
 
-(s/defn disconnect :- Database
+(defn disconnect
   "Disconnect from `db`."
-  [db :- Database & [opts]]
+  [db & [opts]]
   {:pre [(connected? db)]}
   (update db :driver driver/-disconnect))
 
-(s/defn prepare-statement :- PreparedStatement
+(defn prepare-statement
   "Return a prepared statement for `sql`."
-  [db :- Database sql & [opts]]
+  [db sql & [opts]]
   {:pre [(connected? db)]}
   (driver/-prepare-statement (:driver db) sql opts))
 
-(s/defn rollback :- Database
+(defn rollback
   "Rollback the current `db` transaction."
-  [db :- Database & [opts]]
+  [db & [opts]]
   {:pre [(connected? db)]}
   (update db :driver #(driver/-rollback % opts)))
 
-(s/defn sql-str :- s/Str
+(defn sql-str
   "Prepare `stmt` using the database and return the raw SQL as a string."
   [stmt]
   (let [ast (ast stmt)]
@@ -64,10 +63,10 @@
         (throw (UnsupportedOperationException.
                 "Sorry, sql-str not supported by SQL driver."))))))
 
-(s/defn with-connection*
+(defn with-connection*
   "Open a database connection, call `f` with the connected `db` as
   argument and close the connection again."
-  [db :- Database f & [opts]]
+  [db f & [opts]]
   (if (connected? db)
     (f db)
     (let [db (connect db opts)]
@@ -80,11 +79,11 @@
   [[db-sym db & [opts]] & body]
   `(with-connection* ~db (fn [~db-sym] ~@body) ~opts))
 
-(s/defn with-transaction*
+(defn with-transaction*
   "Start a new `db` transaction call `f` with `db` as argument and
   commit the transaction. If `f` throws any exception the transaction
   gets rolled back."
-  [db :- Database f & [opts]]
+  [db f & [opts]]
   {:pre [(connected? db)]}
   (let [db (begin db opts)]
     (try
@@ -153,7 +152,7 @@
     (execute-fn (:query ast))
     execute-sql-statement))
 
-(s/defn execute
+(defn execute
   "Execute `stmt` against a database."
   [stmt & [opts]]
   (let [{:keys [db] :as ast} (ast stmt)]

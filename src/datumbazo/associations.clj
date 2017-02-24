@@ -2,32 +2,20 @@
   (:require [clojure.string :as str]
             [datumbazo.util :as util]
             [inflections.core :as infl]
-            [schema.core :as s]
             [sqlingvo.core :as sql]))
 
 (defprotocol IAssociation
   (fetch [association record]
     "Fetch all records in `association` of `record`."))
 
-(s/defrecord BelongsTo
-    [class-name :- s/Str
-     foreign-key :- s/Keyword
-     name :- s/Keyword
-     primary-key :- s/Keyword
-     table :- s/Keyword])
+(defrecord BelongsTo [class-name foreign-key name primary-key table])
 
-(s/defrecord HasMany
-    [batch-size :- s/Int
-     class-name :- s/Str
-     dependent :- s/Bool
-     foreign-key :- s/Keyword
-     name :- s/Keyword
-     primary-key :- s/Keyword
-     table :- s/Keyword])
+(defrecord HasMany [batch-size class-name dependent
+                    foreign-key name primary-key table])
 
-(s/defn ^:private class-name :- s/Str
+(defn- class-name
   "Return the class name for `association`."
-  [association :- s/Keyword]
+  [association]
   (->> [(infl/plural (name association))
         (util/class-symbol {:name association})]
        (concat (butlast (str/split (str *ns*) #"\.")))
@@ -67,12 +55,12 @@
     (let [class (util/resolve-class (:class-name association))
           columns (util/columns-by-class class)]
       (->> @(sql/select (.db record) (map #(util/column-keyword % true) columns)
-                        (sql/from
-                         (util/table-keyword
-                          {:schema (:schema association)
-                           :name (:table association)}))
-                        (sql/where `(= ~(:primary-key association)
-                                       ~(get record (:foreign-key association)))))
+              (sql/from
+               (util/table-keyword
+                {:schema (:schema association)
+                 :name (:table association)}))
+              (sql/where `(= ~(:primary-key association)
+                             ~(get record (:foreign-key association)))))
            (util/make-instances (.db record) class)
            (first)))))
 
@@ -84,9 +72,9 @@
           columns (util/columns-by-class class)]
       (->> (util/fetch-batch
             (sql/select (.db record) (map #(util/column-keyword % true) columns)
-                        (sql/from (util/table-keyword table))
-                        (sql/where `(= ~(keyword (str (name (:name association)) "."
-                                                      (name (:foreign-key association))))
-                                       ~(:id record))))
+              (sql/from (util/table-keyword table))
+              (sql/where `(= ~(keyword (str (name (:name association)) "."
+                                            (name (:foreign-key association))))
+                             ~(:id record))))
             {:size (:batch-size association)})
            (util/make-instances (.db record) class)))))

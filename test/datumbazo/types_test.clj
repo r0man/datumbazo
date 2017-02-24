@@ -1,7 +1,7 @@
 (ns datumbazo.types-test
   (:require [clojure.spec :as s]
             [clojure.test.check.clojure-test :refer [defspec]]
-            [clojure.test.check.properties :as prop :include-macros true]
+            [clojure.test.check.properties :as prop]
             [datumbazo.types :as t]))
 
 (defspec test-smallint-minimum

@@ -3,7 +3,6 @@
   (:require [clojure.string :refer [lower-case]]
             [datumbazo.connection :refer [connected? connection]]
             [inflections.core :refer [hyphenate hyphenate-keys]]
-            [schema.core :as s]
             [sqlingvo.util :refer [sql-name]])
   (:import java.sql.DatabaseMetaData
            sqlingvo.db.Database))
@@ -22,9 +21,9 @@
   `(let [~metadata-sym (.getMetaData (connection ~db))]
      ~@body))
 
-(s/defn best-row-identifiers
+(defn best-row-identifiers
   "Retrieves a description of a table's optimal set of columns that uniquely identifies a row."
-  [db :- Database & [{:keys [catalog schema table scope nullable entities]}]]
+  [db & [{:keys [catalog schema table scope nullable entities]}]]
   {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getBestRowIdentifier
@@ -43,19 +42,19 @@
                       :name (hyphenate-keyword (:column-name %1))
                       :type (hyphenate-keyword (lower-case (:type-name %1))))))))
 
-(s/defn catalogs
+(defn catalogs
   "Retrieves the catalog names available in this database."
-  [db :- Database]
+  [db]
   {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getCatalogs metadata)
          (resultset-seq)
          (map #(assoc %1 :name (hyphenate-keyword (:table-cat %1)))))))
 
-(s/defn columns
+(defn columns
   "Retrieves a description of the database columns matching `catalog`,
   `schema`, `table` and `name`."
-  [db :- Database & [{:keys [catalog schema table name entities]}]]
+  [db & [{:keys [catalog schema table name entities]}]]
   {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getColumns
@@ -72,9 +71,9 @@
                       :name (hyphenate-keyword (:column-name %1))
                       :type (hyphenate-keyword (lower-case (:type-name %1))))))))
 
-(s/defn indexes
+(defn indexes
   "Retrieves a description of the given table's primary key columns."
-  [db :- Database & [{:keys [catalog schema table unique approximate entities]}]]
+  [db & [{:keys [catalog schema table unique approximate entities]}]]
   {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getIndexInfo
@@ -90,9 +89,9 @@
                       :schema (hyphenate-keyword (:table-schem %1))
                       :table (hyphenate-keyword (:table-name %1)))))))
 
-(s/defn primary-keys
+(defn primary-keys
   "Retrieves a description of the given table's primary key columns."
-  [db :- Database & [{:keys [catalog schema table entities]}]]
+  [db & [{:keys [catalog schema table entities]}]]
   {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getPrimaryKeys
@@ -107,9 +106,9 @@
                       :table (hyphenate-keyword (:table-name %1))
                       :name (hyphenate-keyword (:column-name %1)))))))
 
-(s/defn unique-columns
+(defn unique-columns
   "Retrieves the unique columns of a table."
-  [db :- Database & [{:keys [catalog schema table name entities]}]]
+  [db & [{:keys [catalog schema table name entities]}]]
   {:pre [(connected? db)]}
   (let [indexes (indexes
                  db {:catalog catalog
@@ -126,19 +125,19 @@
                          :name name
                          :entities entities}))))
 
-(s/defn schemas
+(defn schemas
   "Retrieves the catalog names available in this database."
-  [db :- Database]
+  [db]
   {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getSchemas metadata)
          (resultset-seq)
          (map #(assoc %1 :name (hyphenate-keyword (:table-schem %1)))))))
 
-(s/defn tables
+(defn tables
   "Retrieves a description of the database tables matching `catalog`,
   `schema`, `name` and `types`."
-  [db :- Database & [{:keys [catalog schema name types entities]}]]
+  [db & [{:keys [catalog schema name types entities]}]]
   {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getTables
@@ -154,10 +153,10 @@
                       :name (hyphenate-keyword (:table-name %1))
                       :type (hyphenate-keyword (lower-case (:table-type %1))))))))
 
-(s/defn views
+(defn views
   "Retrieves a description of the database views matching `catalog`,
   `schema` and `name`."
-  [db :- Database & [{:keys [catalog schema name types entities]}]]
+  [db & [{:keys [catalog schema name types entities]}]]
   {:pre [(connected? db)]}
   (tables db {:catalog catalog
               :schema schema

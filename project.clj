@@ -15,7 +15,6 @@
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.logging "0.3.1"]
                  [potemkin "0.4.3"]
-                 [prismatic/schema "1.1.3"]
                  [slingshot "0.12.2"]
                  [sqlingvo "0.9.0"]]
   :plugins [[jonase/eastwood "0.2.3"]
