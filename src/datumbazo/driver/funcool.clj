@@ -6,120 +6,52 @@
             [jdbc.core :as jdbc]
             [jdbc.proto :as proto]))
 
-(defrecord Driver [connection])
-
-(defmethod d/find-driver 'jdbc.core
-  [db & [opts]]
-  (map->Driver db))
-
-(defn- connected?
-  "Return true if `driver` is connected, otherwise false."
-  [driver]
-  (:connection driver))
-
 (defn- tx-strategy [driver & [opts]]
   (or (:strategy opts)
       (-> driver :connection meta :tx-strategy)
       jdbc/*default-tx-strategy*))
 
-(defn- begin
-  "Begin a new database transaction."
-  [driver & [opts]]
-  {:pre [(connected? driver)]}
-  (->> (proto/begin!
-        (tx-strategy driver)
-        (:connection driver)
-        opts)
-       (assoc driver :connection)))
-
-(defn- connect
-  "Connect to the database."
-  [driver & [opts]]
-  (->> (if-let [datasource (:datasource driver)]
-         (jdbc/connection datasource)
-         (jdbc/connection (util/format-url driver)))
-       (assoc driver :connection)))
-
-(defn- commit
-  "Commit the currenbt database transaction."
-  [driver & [opts]]
-  {:pre [(connected? driver)]}
-  (let [connection (:connection driver)
-        tx-strategy (tx-strategy driver)]
-    (assoc driver :connection (proto/commit! tx-strategy connection opts))))
-
-(defn- connection
-  "Return the current database connection."
-  [driver]
-  (some-> driver :connection proto/connection))
-
-(defn- disconnect
-  "Disconnect from the database."
-  [driver & [opts]]
-  {:pre [(connected? driver)]}
-  (when-let [connection (d/-connection driver)]
-    (.close connection))
-  (assoc driver :connection nil))
-
-(defn- fetch
-  "Query the database and fetch the result."
-  [driver sql & [opts]]
-  {:pre [(connected? driver)]}
-  (let [identifiers (or (:sql-keyword driver) str/lower-case)
-        opts (merge {:identifiers identifiers} opts)]
-    (jdbc/fetch (:connection driver) sql opts)))
-
-(defn- execute
-  "Execute a SQL statement against the database."
-  [driver sql & [opts]]
-  {:pre [(connected? driver)]}
-  (d/row-count (jdbc/execute (:connection driver) sql)))
-
-(defn- prepare-statement
-  "Return a prepared statement for the `sql` statement."
-  [driver sql & [opts]]
-  {:pre [(connected? driver)]}
-  (proto/prepared-statement sql (d/-connection driver) opts))
-
-(defn- rollback!
-  "Mark the current database transaction for rollback."
-  [driver & [opts]]
-  {:pre [(connected? driver)]}
-  (jdbc/set-rollback! (:connection driver))
-  driver)
-
-(extend-protocol d/IConnection
-  Driver
+(defrecord Driver [connection]
+  d/IConnection
   (-connect [driver opts]
-    (connect driver opts))
+    (->> (if-let [datasource (:datasource driver)]
+           (jdbc/connection datasource)
+           (jdbc/connection (util/format-url driver)))
+         (assoc driver :connection)))
   (-connection [driver]
-    (connection driver))
+    (some-> connection proto/connection))
   (-disconnect [driver]
-    (disconnect driver)))
+    (some-> connection .close)
+    (assoc driver :connection nil))
 
-(extend-protocol d/IExecute
-  Driver
+  d/IExecute
   (-execute [driver sql opts]
-    (execute driver sql opts)))
+    (d/row-count (jdbc/execute connection sql)))
 
-(extend-protocol d/IFetch
-  Driver
+  d/IFetch
   (-fetch [driver sql opts]
-    (fetch driver sql opts)))
+    (let [identifiers (or (:sql-keyword driver) str/lower-case)
+          opts (merge {:identifiers identifiers} opts)]
+      (jdbc/fetch connection sql opts)))
 
-(extend-protocol d/IPrepareStatement
-  Driver
+  d/IPrepareStatement
   (-prepare-statement [driver sql opts]
-    (prepare-statement driver sql opts)))
+    (proto/prepared-statement sql (d/-connection driver) opts))
 
-(extend-protocol d/ITransaction
-  Driver
+  d/ITransaction
   (-begin [driver opts]
-    (begin driver opts))
+    (->> (proto/begin! (tx-strategy driver) connection opts)
+         (assoc driver :connection)))
   (-commit [driver opts]
-    (commit driver opts))
+    (->> (proto/commit! (tx-strategy driver) connection opts)
+         (assoc driver :connection)))
   (-rollback [driver opts]
-    (rollback! driver opts)))
+    (jdbc/set-rollback! connection)
+    driver))
+
+(defmethod d/find-driver 'jdbc.core
+  [db & [opts]]
+  (map->Driver db))
 
 (extend-protocol proto/ISQLResultSetReadColumn
 

@@ -1,10 +1,8 @@
 (ns datumbazo.db
   (:require [com.stuartsierra.component :as component]
-            [datumbazo.connection :refer [execute]]
             [datumbazo.driver.core :as driver]
             [datumbazo.driver.test :as test-driver]
             [datumbazo.pool.core :as pool]
-            [datumbazo.util :as util]
             [sqlingvo.db :as db]))
 
 (defn- assoc-driver [db]
@@ -18,7 +16,7 @@
   [spec & [opts]]
   (->> (merge
         {:backend 'clojure.java.jdbc
-         :eval-fn #'execute} opts)
+         :eval-fn #'driver/execute} opts)
        (db/db spec)
        (assoc-driver)))
 
@@ -33,13 +31,40 @@
           (finally (component/stop component#)))))
 
 (extend-type sqlingvo.db.Database
+  driver/IConnection
+  (-connect [db opts]
+    (update db :driver #(driver/-connect % opts)))
+  (-connection [db]
+    (driver/-connection (:driver db)))
+  (-disconnect [db]
+    (update db :driver driver/-disconnect))
+
+  driver/IExecute
+  (-execute [db sql opts]
+    (driver/-execute (:driver db) sql opts))
+
+  driver/IFetch
+  (-fetch [db sql opts]
+    (driver/-fetch (:driver db) sql opts))
+
+  driver/IPrepareStatement
+  (-prepare-statement [db sql opts]
+    (driver/-prepare-statement (:driver db) sql opts))
+
+  driver/ITransaction
+  (-begin [db opts]
+    (update db :driver #(driver/-begin % opts)))
+  (-commit [db opts]
+    (update db :driver #(driver/-commit % opts)))
+  (-rollback [db opts]
+    (update db :driver #(driver/-rollback % opts)))
+
   component/Lifecycle
   (start [db]
     (cond-> db
       (:pool db) (pool/assoc-pool)
       true (update :driver component/start)))
   (stop [db]
-    (when-let [datasource (:datasource db)]
-      (.close datasource))
+    (some-> db :datasource .close)
     (-> (update db :driver component/stop)
         (assoc :datasource nil))))

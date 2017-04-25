@@ -4,20 +4,13 @@
   (:import [com.zaxxer.hikari HikariConfig HikariDataSource]))
 
 (defmethod db-pool :hikaricp [db & [opts]]
-  (let [{:keys [connection-timeout idle-timeout max-lifetime
-                maximum-pool-size minimum-idle]} opts
-        config (HikariConfig.)]
+  (let [config (HikariConfig.)]
     (.setJdbcUrl config (jdbc-url db))
     (.setUsername config (:username db))
     (.setPassword config (:password db))
-    (when connection-timeout
-      (.setConnectionTimeout config connection-timeout))
-    (when idle-timeout
-      (.setIdleTimeout config idle-timeout))
-    (when max-lifetime
-      (.setMaxLifetime config max-lifetime))
-    (when maximum-pool-size
-      (.setMaximumPoolSize config maximum-pool-size))
-    (when minimum-idle
-      (.setMinimumIdle config minimum-idle))
+    (some->> (:connection-timeout db) (.setConnectionTimeout config))
+    (some->> (:idle-timeout db) (.setIdleTimeout config))
+    (some->> (:max-lifetime db) (.setMaxLifetime config))
+    (some->> (:maximum-pool-size db) (.setMaximumPoolSize config))
+    (some->> (:minimum-idle db) (.setMinimumIdle config))
     (HikariDataSource. config)))

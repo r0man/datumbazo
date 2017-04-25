@@ -17,7 +17,7 @@
  [datumbazo.associations
   belongs-to
   has-many]
- [datumbazo.connection
+ [datumbazo.driver.core
   begin
   commit
   connect

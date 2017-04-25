@@ -1,7 +1,7 @@
 (ns datumbazo.meta
   (:refer-clojure :exclude [resultset-seq])
   (:require [clojure.string :refer [lower-case]]
-            [datumbazo.connection :refer [connected? connection]]
+            [datumbazo.driver.core :refer [connected? connection]]
             [inflections.core :refer [hyphenate hyphenate-keys]]
             [sqlingvo.util :refer [sql-name]])
   (:import java.sql.DatabaseMetaData

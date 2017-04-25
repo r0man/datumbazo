@@ -4,23 +4,14 @@
   (:import com.mchange.v2.c3p0.ComboPooledDataSource))
 
 (defmethod db-pool :c3p0 [db & [opts]]
-  (let [{:keys [acquire-retry-attempts initial-pool-size initial-pool-size
-                max-idle-time max-idle-time-excess-connections max-pool-size
-                min-pool-size]} opts
-        datasource (ComboPooledDataSource.)]
-    (.setJdbcUrl datasource (jdbc-url db))
-    (.setUser datasource (:username db))
-    (.setPassword datasource (:password db))
-    (when acquire-retry-attempts
-      (.setAcquireRetryAttempts datasource acquire-retry-attempts))
-    (when initial-pool-size
-      (.setInitialPoolSize datasource initial-pool-size))
-    (when max-idle-time
-      (.setMaxIdleTime datasource max-idle-time))
-    (when max-idle-time-excess-connections
-      (.setMaxIdleTimeExcessConnections datasource max-idle-time-excess-connections))
-    (when max-pool-size
-      (.setMaxPoolSize datasource max-pool-size))
-    (when min-pool-size
-      (.setMinPoolSize datasource min-pool-size))
-    datasource))
+  (let [ds (ComboPooledDataSource.)]
+    (.setJdbcUrl ds (jdbc-url db))
+    (.setUser ds (:username db))
+    (.setPassword ds (:password db))
+    (some->> (:acquire-retry-attempts db) (.setAcquireRetryAttempts ds))
+    (some->> (:initial-pool-size db) (.setInitialPoolSize ds))
+    (some->> (:max-idle-time db) (.setMaxIdleTime ds))
+    (some->> (:max-idle-time-excess-connections db) (.setMaxIdleTimeExcessConnections ds))
+    (some->> (:max-pool-size db) (.setMaxPoolSize ds))
+    (some->> (:min-pool-size db) (.setMinPoolSize ds))
+    ds))

@@ -3,7 +3,7 @@
   (:require [clojure.java.io :refer [file reader]]
             [clojure.string :as str :refer [blank? replace split]]
             [datumbazo.callbacks :as callback]
-            [datumbazo.connection :as connection]
+            [datumbazo.driver.core :as driver]
             [no.en.core :as noencore]
             [datumbazo.driver.core :as driver]
             [inflections.core :as infl]
@@ -247,8 +247,8 @@
     (doseq [statement (sql-stmt-seq reader)
             :let [statement (replace statement #";$" "")]]
       (case (parse-command statement)
-        :select (connection/execute-sql-query db [statement] nil)
-        (connection/execute-sql-statement db [statement] nil)))
+        :select (driver/execute-sql-query db [statement] nil)
+        (driver/execute-sql-statement db [statement] nil)))
     file))
 
 (defn throw-sql-ex-info

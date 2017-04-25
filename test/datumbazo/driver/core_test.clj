@@ -1,6 +1,6 @@
-(ns datumbazo.connection-test
+(ns datumbazo.driver.core-test
   (:require [clojure.test :refer :all]
-            [datumbazo.connection :refer :all]
+            [datumbazo.driver.core :refer :all]
             [datumbazo.core :refer [check create-table inherits select sql]]
             [datumbazo.db :refer [with-db]]
             [datumbazo.test :refer :all])
@@ -17,9 +17,9 @@
     (is (= (sql-str (select db [1 "a"]))
            "SELECT 1, 'a'"))
     (is (= (sql-str (create-table db :measurement-y2006m02
-                      (check '(>= :logdate "2006-02-01"))
-                      (check '(< :logdate "2006-03-01"))
-                      (inherits :measurement)))
+                                  (check '(>= :logdate "2006-02-01"))
+                                  (check '(< :logdate "2006-03-01"))
+                                  (inherits :measurement)))
            (str "CREATE TABLE \"measurement-y2006m02\" ("
                 "CHECK (\"logdate\" >= '2006-02-01'), "
                 "CHECK (\"logdate\" < '2006-03-01')) "
