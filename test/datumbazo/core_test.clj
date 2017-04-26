@@ -733,6 +733,41 @@
     @(sql/create-table db :my-table
        (sql/column :a :jsonb))
     (is (= @(sql/insert db :my-table [:a]
-            (sql/values [{:a (jsonb [1 2 3])}])
-            (sql/returning :*))
+              (sql/values [{:a (jsonb [1 2 3])}])
+              (sql/returning :*))
            [{:a [1 2 3]}]))))
+
+(deftest test->>
+  (with-backends [db]
+    (is (= @(sql/select db [`(->> (cast "[1,2,3]" :json) 2)])
+           [{:?column? "3"}]))))
+
+(deftest test-select->-number
+  (with-backends [db]
+    (is (= @(sql/select db [`(-> (cast "[1,2,3]" :json) 2)])
+           [{:?column? 3}]))))
+
+(deftest test-select->-string
+  (with-backends [db]
+    (is (= @(sql/select db [`(-> (cast "{\"a\":1, \"b\": 2}" :json) "b")])
+           [{:?column? 2}]))))
+
+(deftest test-select->-alias
+  (with-backends [db]
+    (is (= @(sql/select db [(sql/as `(-> (cast "[1,2,3]" :json) 2) :x)])
+           [{:x 3}]))))
+
+(deftest test-select->>-number
+  (with-backends [db]
+    (is (= @(sql/select db [`(->> (cast "[1,2,3]" :json) 2)])
+           [{:?column? "3"}]))))
+
+(deftest test-select->>-string
+  (with-backends [db]
+    (is (= @(sql/select db [`(->> (cast "{\"a\":1, \"b\": 2}" :json) "b")])
+           [{:?column? "2"}]))))
+
+(deftest test->>-nested
+  (with-backends [db]
+    (is (= @(sql/select db [`(-> (cast "{\"a\":1, \"c\": {\"d\": 1}}" :json) "c" "d")])
+           [{:?column? 1}]))))
