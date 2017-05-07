@@ -46,35 +46,47 @@
 (deftest test-primary-key-columns
   (is (= (#'datumbazo.record/primary-key-columns Continent)
          #{{:schema nil,
+            :children [:name],
             :table :continents,
             :primary-key? true,
             :default nil,
             :name :id,
+            :val :id,
             :type :serial,
-            :op :column}})))
+            :op :column,
+            :form :id}})))
 
 (deftest test-unique-key-columns
   (is (= (#'datumbazo.record/unique-key-columns Continent)
-         #{{:schema nil
-            :not-null? true
-            :table :continents
-            :default nil
-            :name :name
-            :type :text
-            :op :column
-            :unique? true}
-           {:schema nil
-            :not-null? true
-            :table :continents
-            :default nil
-            :name :code
-            :type :varchar
-            :size 2
-            :op :column
-            :unique? true}})))
+         #{{:schema nil,
+            :children [:name],
+            :not-null? true,
+            :table :continents,
+            :default nil,
+            :name :name,
+            :val :name,
+            :type :text,
+            :op :column,
+            :unique? true,
+            :form :name}
+           {:schema nil,
+            :children [:name],
+            :not-null? true,
+            :table :continents,
+            :default nil,
+            :name :code,
+            :val :code,
+            :type :varchar,
+            :op :column,
+            :size 2,
+            :unique? true,
+            :form :code}})))
 
 (deftest test-select-class
   (is (= (sql/sql (select-class db Continent))
-         [(str "SELECT \"continents\".\"name\", \"continents\".\"updated-at\", "
-               "\"continents\".\"id\", \"continents\".\"code\", "
-               "\"continents\".\"created-at\" FROM \"continents\"")])))
+         [(str "SELECT \"continents\".\"created-at\", "
+               "\"continents\".\"name\", "
+               "\"continents\".\"code\", "
+               "\"continents\".\"updated-at\", "
+               "\"continents\".\"id\" "
+               "FROM \"continents\"")])))
