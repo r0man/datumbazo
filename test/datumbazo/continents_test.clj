@@ -1,6 +1,6 @@
 (ns datumbazo.continents-test
-  (:require [clojure.spec :as s]
-            [clojure.spec.gen :as gen]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]
             [clojure.test :refer :all]
             [datumbazo.continents :as continents :refer [continent?]]
             [datumbazo.countries :refer [country?]]

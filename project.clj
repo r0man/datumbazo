@@ -11,7 +11,7 @@
                  [commandline-clj "0.3.0"]
                  [geo-clj "0.6.2"]
                  [inflections "0.13.0"]
-                 [org.clojure/clojure "1.9.0-alpha14"]
+                 [org.clojure/clojure "1.9.0-alpha16"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.logging "0.3.1"]
                  [potemkin "0.4.3"]

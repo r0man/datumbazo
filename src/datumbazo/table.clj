@@ -4,8 +4,8 @@
             [datumbazo.util :as util]
             [datumbazo.types :as types]
             [datumbazo.core :refer [column columns]]
-            [clojure.spec :as s]
-            [clojure.spec.gen :as gen]
+            [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]
             [sqlingvo.core :as sql]
             [sqlingvo.expr :as expr]))
 

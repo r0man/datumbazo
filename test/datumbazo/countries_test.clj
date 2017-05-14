@@ -1,6 +1,6 @@
 (ns datumbazo.countries-test
-  (:require [clojure.spec :as s]
-            [clojure.spec.gen :as gen]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]
             [clojure.test :refer :all]
             [datumbazo.util :refer [make-instance]]
             [datumbazo.countries :as countries :refer [country?]]
