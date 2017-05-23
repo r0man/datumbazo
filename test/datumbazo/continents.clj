@@ -1,17 +1,15 @@
 (ns datumbazo.continents
-  (:refer-clojure :exclude [distinct group-by update])
-  (:require [datumbazo.core :refer :all :exclude [deftable]]
-            [datumbazo.table :refer [deftable]]
-            [datumbazo.callbacks :as callback]))
+  (:require [datumbazo.callbacks :as callback]
+            [datumbazo.core :as sql]))
 
-(deftable continents
+(sql/deftable ::continents
   "The continents database table."
-  (column :id :serial :primary-key? true)
-  (column :name :text :not-null? true :unique? true)
-  (column :code :varchar :size 2 :not-null? true :unique? true)
-  (column :created-at :timestamp :not-null? true)
-  (column :updated-at :timestamp :not-null? true)
-  (has-many :countries :batch-size 2 :dependent :destroy))
+  (sql/column :id :serial :primary-key? true)
+  (sql/column :name :text :not-null? true :unique? true)
+  (sql/column :code :varchar :size 2 :not-null? true :unique? true)
+  (sql/column :created-at :timestamp :not-null? true)
+  (sql/column :updated-at :timestamp :not-null? true)
+  (sql/has-many :countries :batch-size 2 :dependent :destroy))
 
 ;; Test callback counts
 

@@ -5,12 +5,21 @@
             [datumbazo.continents :as continents :refer [continent?]]
             [datumbazo.countries :refer [country?]]
             [datumbazo.test :refer :all]
-            [datumbazo.util :refer [make-instance]])
+            [datumbazo.util :refer [make-instance]]
+            [datumbazo.record :as record])
   (:import datumbazo.continents.Continent
            java.util.Date))
 
 (def new-continent
   {:name "Gondwana" :code "GD"})
+
+(deftest test-select-columns
+  (is (= (set (record/select-columns Continent))
+         #{:continents.created-at
+           :continents.name
+           :continents.code
+           :continents.updated-at
+           :continents.id})))
 
 (deftest test-sample
   (is (every? map? (gen/sample (s/gen ::continents/continents)))))
@@ -29,10 +38,21 @@
 
 (deftest test-by-id
   (with-backends [db]
-    (let [continent (continents/by-name db "Europe")
-          row (continents/by-id db (:id continent))]
-      (is (continent? row))
-      (is (= row continent)))))
+    (testing "nil"
+      (is (empty? (continents/by-id db nil))))
+    (testing "empty seq"
+      (is (empty? (continents/by-id db []))))
+    (testing "id"
+      (let [continent (continents/by-name db "Europe")
+            row (continents/by-id db (:id continent))]
+        (is (continent? row))
+        (is (= row continent))))
+    (testing "seq of ids"
+      (let [continents [(continents/by-name db "Asia")
+                        (continents/by-name db "Europe")]
+            rows (continents/by-id db (map :id continents))]
+        (is (every? continent? rows))
+        (is (= (set rows) (set continents)))))))
 
 (deftest test-by-created-at
   (with-backends [db]
@@ -134,7 +154,7 @@
   (with-backends [db]
     (let [continent (continents/by-name db "Asia")
           countries (:countries continent)]
-      (is (= (map :name countries) ["Indonesia"]))
+      (is (= (map :country/name countries) ["Indonesia"]))
       (is (every? country? countries)))))
 
 (deftest test-delete!

@@ -16,6 +16,10 @@
   used by all the finder functions that are generated for `class`."
   (fn [db class & [opts]] class))
 
+(defmulti select-columns
+  "Return the columns for `class` used in SELECT and RETURNING clauses."
+  (fn [class & [opts]] class))
+
 (defmulti delete-records
   "Delete `records` of `class` in `db`."
   (fn [db class records & [opts]] class))
@@ -39,6 +43,10 @@
     (sql/select db (map #(util/column-keyword % true) columns)
       (sql/from (util/table-keyword table)))))
 
+(defmethod select-columns :default
+  [class & [opts]]
+  (map #(util/column-keyword % true) (util/columns-by-class class)))
+
 (defn- primary-key-columns
   "Return the primary key columns of `class`."
   [class]
@@ -55,18 +63,16 @@
          (filter :unique?)
          (set))))
 
-(defn- select-columns
+(defn select-values
   "Return a seq of `records` that only have the table column keys."
   [class records]
-  (let [keys (map :name (util/columns-by-class class))]
-    (map #(select-keys % keys) records)))
+  (let [keys (map :form (util/columns-by-class class))]
+    (map #(util/record->row class (select-keys % keys)) records)))
 
 (defn- returning-clause
   "Return a RETURNING clause for `class`."
   [class]
-  (->> (util/columns-by-class class)
-       (map #(util/column-keyword % true))
-       (apply sql/returning)))
+  (apply sql/returning (select-columns class)))
 
 (defmethod delete-records :default
   [db class records & [opts]]
@@ -76,7 +82,7 @@
         pk (first (primary-key-columns class))]
     (assert pk (str "No primary key found for " class))
     (->> @(sql/delete db (util/table-keyword table)
-            (sql/where `(in ~(:name pk) ~(map :id records)))
+            (sql/where `(in ~(:name pk) ~(map (:form pk) records)))
             (returning-clause class))
          (util/make-instances db class)
          (callback/call-after-delete))))
@@ -87,7 +93,7 @@
         records (callback/call-before-create records)
         table (util/table-by-class class)]
     (->> @(sql/insert db (util/table-keyword table) []
-            (sql/values (select-columns class records))
+            (sql/values (select-values class records))
             (returning-clause class))
          (util/make-instances db class)
          (callback/call-after-create))))
@@ -109,7 +115,7 @@
   [class records]
   (let [record-keys (set (mapcat keys records))]
     (->> (for [column (update-columns class)
-               :when (contains? record-keys (:name column))]
+               :when (contains? record-keys (:form column))]
            [(:name column) (update-column column)])
          (into {}))))
 
@@ -121,14 +127,18 @@
                (update-column column)))
        (concat ['and])))
 
+(defn- cast-type
+  "Returns the cast type for `column`."
+  [{:keys [type] :as column}]
+  (case type
+    :serial :integer
+    type))
+
 (defn- update-values
   "Return the update values for `class` and `records`."
   [class records]
-  (map #(map (fn [{:keys [name type]}]
-               `(cast ~(get % name)
-                      ~(case type
-                         :serial :integer
-                         type)))
+  (map #(map (fn [{:keys [form] :as column}]
+               `(cast ~(get % form) ~(cast-type column)))
              (util/columns-by-class class))
        records))
 
@@ -176,7 +186,7 @@
         records (callback/call-before-save records)
         table (util/table-by-class class)]
     (->> @(sql/insert db (util/table-keyword table) []
-            (sql/values (select-columns class records))
+            (sql/values (select-values class records))
             (sql/on-conflict (on-conflict-clause class)
               (sql/do-update (do-update-clause class)))
             (returning-clause class))
@@ -220,9 +230,9 @@
        (util/make-instances db class)
        (callback/call-after-find)))
 
-(defn- coerce-unique [column rows]
-  (if (or (:unique? column)
-          (:primary-key? column))
+(defn- coerce-unique [column value rows]
+  (if (and (or (:unique? column) (:primary-key? column))
+           (not (sequential? value)))
     (do (assert (empty? (next rows)) "Expected zero or one row, got many.")
         (first rows))
     rows))
@@ -233,10 +243,13 @@
         column (get (:column table) column-kw)]
     (->> @(sql/compose
            (select-class db class)
-           (sql/where `(= ~(util/column-keyword column true) ~value)))
+           (sql/where
+            `(in ~(util/column-keyword column true)
+                 ~(for [value (if (sequential? value) value [value])]
+                    `(cast ~value ~(cast-type column))))))
          (util/make-instances db class)
          (callback/call-after-find)
-         (coerce-unique column))))
+         (coerce-unique column value))))
 
 (defn- define-find-by-column
   "Return the definition for a function that returns rows by a column."
@@ -330,7 +343,7 @@
   (let [class (util/class-symbol table)]
     `(defmethod datumbazo.util/make-instance ~class
        [~'class ~'attrs & [~'db]]
-       (-> (new ~class ~'db ~'attrs (meta ~'attrs))
+       (-> (new ~class ~'db (util/row->record ~class ~'attrs) (meta ~'attrs))
            (callback/after-initialize)))))
 
 (defn define-record [table]

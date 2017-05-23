@@ -19,16 +19,17 @@
 
 (deftest test-create-table
   (with-test-dbs [db]
-    (let [table :test-create-table]
-      (try (is (= @(sql/create-table db table
-                     (sql/column :id :integer)
-                     (sql/column :nick :varchar :size 255)
-                     (sql/primary-key :nick))
-                  [{:count 0}]))
-           (finally
-             ;; Cleanup for MySQL (non-transactional DDL)
-             @(sql/drop-table db [table]
-                (sql/if-exists true)))))))
+    (when (= (:scheme db) :mysql)
+      (let [table :test-create-table]
+        (try (is (= @(sql/create-table db table
+                       (sql/column :id :integer)
+                       (sql/column :nick :varchar :size 32)
+                       (sql/primary-key :nick))
+                    [{:count 0}]))
+             (finally
+               ;; Cleanup for MySQL (non-transactional DDL)
+               @(sql/drop-table db [table]
+                  (sql/if-exists true))))))))
 
 (deftest test-create-table-inherits-check
   (with-backends [db db]

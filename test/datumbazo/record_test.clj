@@ -22,7 +22,10 @@
          '(clojure.core/defmethod datumbazo.util/make-instance Continent
             [class attrs & [db]]
             (clojure.core/->
-             (new Continent db attrs (clojure.core/meta attrs))
+             (new Continent
+                  db
+                  (datumbazo.util/row->record Continent attrs)
+                  (clojure.core/meta attrs))
              (datumbazo.callbacks/after-initialize))))))
 
 (deftest test-define-find-all

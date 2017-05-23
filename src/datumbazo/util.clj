@@ -7,7 +7,8 @@
             [no.en.core :as noencore]
             [datumbazo.driver.core :as driver]
             [inflections.core :as infl]
-            [sqlingvo.core :as sql])
+            [sqlingvo.core :as sql]
+            [clojure.set :as set])
   (:import java.io.File
            java.sql.SQLException
            [java.util List Map]
@@ -114,6 +115,24 @@
                   {:attrs attrs
                    :class class
                    :db db})))
+
+(defn row->record
+  "Convert the row into a record."
+  [class row]
+  (set/rename-keys
+   row
+   (->> (for [column (columns-by-class class)]
+          [(:name column) (:form column)])
+        (into {}))))
+
+(defn record->row
+  "Convert the record into a row."
+  [class record]
+  (set/rename-keys
+   record
+   (->> (for [column (columns-by-class class)]
+          [(:form column) (:name column)])
+        (into {}))))
 
 (defn make-instances
   "Convert all `records` into instances of `class`."

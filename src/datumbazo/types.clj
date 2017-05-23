@@ -2,6 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]))
 
+(s/def ::boolean boolean?)
+
 ;; Numeric types
 
 (s/def ::smallint
@@ -15,10 +17,13 @@
 
 (s/def ::decimal double?)
 
+(s/def ::float float?)
+
 (s/def ::numeric double?)
 
 (s/def ::real double?)
 
+(s/def ::double double?)
 (s/def ::double-precision double?)
 
 ;; Serials
@@ -44,8 +49,15 @@
 
 (s/def ::varchar string?)
 
+;; Date & Time
+
 (s/def ::timestamp
   (s/inst-in #inst "0000" #inst "9999"))
+
+(s/def ::timestamp-with-time-zone
+  (s/inst-in #inst "0000" #inst "9999"))
+
+(s/def ::uuid uuid?)
 
 ;; TODO:
 

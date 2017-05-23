@@ -16,7 +16,7 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [potemkin "0.4.3"]
                  [slingshot "0.12.2"]
-                 [sqlingvo "0.9.6"]]
+                 [sqlingvo "0.9.7"]]
   :plugins [[jonase/eastwood "0.2.3"]
             [lein-difftest "2.0.0"]]
   :aliases {"ci" ["do" ["difftest"] ["lint"]]
@@ -32,7 +32,7 @@
                                   [org.postgresql/postgresql "42.1.1"]
                                   [net.postgis/postgis-jdbc "2.2.1"
                                    :exclusions [postgresql org.postgresql/postgresql]]
-                                  [org.xerial/sqlite-jdbc "3.16.1"]
+                                  [org.xerial/sqlite-jdbc "3.18.0"]
                                   [validation-clj "0.5.6"]]
                    :repl-options {:init-ns user}
                    :resource-paths ["test-resources"]}}

@@ -1,6 +1,7 @@
 (ns datumbazo.fixtures-test
   (:require [clojure.java.io :refer [file resource]]
             [clojure.test :refer :all]
+            [datumbazo.core :as sql]
             [datumbazo.core-test :refer :all]
             [datumbazo.fixtures :refer :all]
             [datumbazo.test :refer :all]))
@@ -75,7 +76,8 @@
 
 (deftest test-read-fixture
   (with-backends [db]
-    (delete-continents db)
+    @(sql/truncate db [:continents]
+       (sql/cascade true))
     (let [fixture (read-fixture db :continents fixture-file)]
       (is (= :continents (:table fixture)))
       (is (= fixture-file (:file fixture)))
