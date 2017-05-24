@@ -31,3 +31,6 @@ psql < test-resources/db/test-db/migrations/deploy/create-twitter-tweets-table.s
 psql < test-resources/db/test-db/migrations/deploy/create-twitter-tweets-users.sql
 lein run $PGURL test-resources/db/test-db/fixtures load
 
+mysql -uroot -e "DROP DATABASE datumbazo;" || true
+mysql -uroot -e "CREATE DATABASE datumbazo;"
+mysql -uroot -e "GRANT ALL PRIVILEGES ON datumbazo.* TO tiger@localhost IDENTIFIED BY 'scotch';"

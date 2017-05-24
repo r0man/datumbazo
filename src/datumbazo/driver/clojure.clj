@@ -63,6 +63,7 @@
     driver)
   (-rollback [driver opts]
     (jdbc/db-set-rollback-only! driver)
+    (.rollback connection)
     driver))
 
 (defmethod d/find-driver 'clojure.java.jdbc

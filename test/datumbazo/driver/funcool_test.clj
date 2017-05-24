@@ -67,8 +67,9 @@
     (sql/with-connection [db db]
       (is (not (-> db :driver :connection meta :rollback)))
       (let [db (sql/begin db)]
+        (is (-> db :driver :connection meta :transaction))
+        (is (not (-> db :driver :connection meta :rollback deref)))
         @(sql/create-table db :test-rollback
            (sql/column :id :integer))
         (is (= (sql/rollback db) db))
-        (is (-> db :driver :connection meta :rollback deref))
-        (sql/commit db)))))
+        (is (-> db :driver :connection meta :rollback deref))))))

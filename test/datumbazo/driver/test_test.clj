@@ -82,7 +82,8 @@
 
 (deftest test-with-transaction
   (with-drivers [db db]
-    (is (thrown? AssertionError (sql/with-transaction [db db])))
+    (sql/with-transaction [db db]
+      (is (instance? Connection (sql/connection db))))
     (sql/with-connection [db db]
       (sql/with-transaction [db db]
         @(sql/create-table db :with-transaction

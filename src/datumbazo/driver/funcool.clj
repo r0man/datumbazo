@@ -47,6 +47,7 @@
          (assoc driver :connection)))
   (-rollback [driver opts]
     (jdbc/set-rollback! connection)
+    (proto/rollback! (tx-strategy driver) connection opts)
     driver))
 
 (defmethod d/find-driver 'jdbc.core

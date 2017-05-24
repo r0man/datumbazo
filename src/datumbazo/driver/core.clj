@@ -133,7 +133,8 @@
   "Start a new `db` transaction, bind `db` to `db-sym` and evaluate
   `body` within the transaction."
   [[db-sym db & [opts]] & body]
-  `(with-transaction* ~db (fn [~db-sym] ~@body) ~opts))
+  `(with-connection [db# ~db]
+     (with-transaction* db# (fn [~db-sym] ~@body) ~opts)))
 
 (defn execute-sql-query
   "Execute a SQL query."

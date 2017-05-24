@@ -34,12 +34,10 @@
 
   component/Lifecycle
   (start [driver]
-    (->> (-> (d/-connect (:driver driver) nil)
-             (d/-begin nil)
-             (d/-rollback nil))
+    (->> (-> (d/-connect (:driver driver) nil) (d/-begin nil))
          (assoc driver :driver)))
   (stop [driver]
-    (some-> driver :driver d/-connection .rollback)
+    (some-> driver :driver (d/-rollback nil))
     (update driver :driver d/-disconnect)))
 
 (defn driver
