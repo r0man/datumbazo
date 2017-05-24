@@ -3,9 +3,8 @@
             [datumbazo.generators :as generators]
             [datumbazo.util :as util]
             [datumbazo.types :as types]
-            ;; [sqlingvo.core :refer [column]]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
+            [clojure.spec :as s]
+            [clojure.spec.gen :as gen]
             [sqlingvo.core :as sql]
             [sqlingvo.expr :as expr]))
 

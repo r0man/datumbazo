@@ -1,5 +1,5 @@
 (ns datumbazo.types-test
-  (:require [clojure.spec.alpha :as s]
+  (:require [clojure.spec :as s]
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.properties :as prop]
             [datumbazo.types :as t]))

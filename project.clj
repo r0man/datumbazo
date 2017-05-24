@@ -1,4 +1,4 @@
-(defproject datumbazo "0.12.5-SNAPSHOT"
+(defproject datumbazo "0.12.6-SNAPSHOT"
   :description "Clojure Database Kung-Foo"
   :url "https://github.com/r0man/datumbazo"
   :min-lein-version "2.0.0"
@@ -11,7 +11,7 @@
                  [commandline-clj "0.3.0"]
                  [geo-clj "0.6.2"]
                  [inflections "0.13.0"]
-                 [org.clojure/clojure "1.9.0-alpha16"]
+                 [org.clojure/clojure "1.9.0-alpha14"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.logging "0.3.1"]
                  [potemkin "0.4.3"]
