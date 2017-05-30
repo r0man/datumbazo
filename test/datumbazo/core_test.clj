@@ -312,3 +312,10 @@
     (is (= @(sql/select db [(sql/as 1 :x)]
               (sql/where `(in 1 ((cast "1" :integer) (cast "2" :integer)))))
            [{:x 1}]))))
+
+(deftest test-result-meta-data
+  (with-backends [db]
+    (let [sql (sql/select db [:*]
+                (sql/from :countries))]
+      (is (= (sql/ast (-> @sql meta :datumbazo/stmt))
+             (sql/ast sql))))))

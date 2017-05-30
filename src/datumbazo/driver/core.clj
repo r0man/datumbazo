@@ -193,10 +193,13 @@
   [stmt & [opts]]
   (let [{:keys [db] :as ast} (ast stmt)]
     (let [sql (sql ast), execute-fn (execute-fn ast)]
-      (case (:op ast)
-        :create-table
-        (if (seq (rest sql))
-          ;; TODO: sql-str only works with PostgreSQL driver
-          (execute-fn db (sql-str stmt) opts)
+      (with-meta
+        (case (:op ast)
+          :create-table
+          (if (seq (rest sql))
+            ;; TODO: sql-str only works with PostgreSQL driver
+            (execute-fn db (sql-str stmt) opts)
+            (execute-fn db sql opts))
           (execute-fn db sql opts))
-        (execute-fn db sql opts)))))
+        {:datumbazo/stmt stmt
+         :datumbazo/opts opts}))))
