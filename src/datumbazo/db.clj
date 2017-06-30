@@ -62,9 +62,8 @@
   component/Lifecycle
   (start [db]
     (cond-> db
-      (:pool db) (pool/assoc-pool)
+      (:pool db) (pool/start-pool)
       true (update :driver component/start)))
   (stop [db]
-    (some-> db :datasource .close)
     (-> (update db :driver component/stop)
-        (assoc :datasource nil))))
+        (pool/stop-pool))))

@@ -1,11 +1,13 @@
 (ns datumbazo.db-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
-            [datumbazo.db :as sql]
+            [datumbazo.core :as sql]
             [datumbazo.test :refer :all])
-  (:import com.jolbox.bonecp.BoneCPDataSource
+  (:import [com.jolbox.bonecp BoneCPDataSource ConnectionHandle]
            com.mchange.v2.c3p0.ComboPooledDataSource
+           com.mchange.v2.c3p0.impl.NewProxyConnection
            com.zaxxer.hikari.HikariDataSource
+           com.zaxxer.hikari.pool.HikariProxyConnection
            java.sql.Connection
            javax.sql.DataSource))
 
@@ -66,8 +68,9 @@
     (is (= "tiger" (:username db)))
     (is (= "scotch" (:password db)))
     (let [started (component/start db)]
-      (is (instance? ComboPooledDataSource (:datasource started)))
-      (is (instance? Connection (.getConnection (:datasource started))))
+      (sql/with-connection [db started]
+        (is (instance? NewProxyConnection (sql/connection db))))
+      (is (instance? ComboPooledDataSource (-> started :driver :datasource)))
       (component/stop started))))
 
 (deftest test-new-db-bonecp
@@ -84,8 +87,9 @@
     (is (= "tiger" (:username db)))
     (is (= "scotch" (:password db)))
     (let [started (component/start db)]
-      (is (instance? BoneCPDataSource (:datasource started)))
-      (is (instance? Connection (.getConnection (:datasource started))))
+      (sql/with-connection [db started]
+        (is (instance? ConnectionHandle (sql/connection db))))
+      (is (instance? BoneCPDataSource (-> started :driver :datasource)))
       (component/stop started))))
 
 (deftest test-new-db-hikaricp
@@ -103,8 +107,9 @@
     (is (= "tiger" (:username db)))
     (is (= "scotch" (:password db)))
     (let [started (component/start db)]
-      (is (instance? HikariDataSource (:datasource started)))
-      (is (instance? Connection (.getConnection (:datasource started))))
+      (sql/with-connection [db started]
+        (is (instance? HikariProxyConnection (sql/connection db))))
+      (is (instance? HikariDataSource (-> started :driver :datasource)))
       (component/stop started))))
 
 (deftest test-new-db-sqlite
@@ -143,8 +148,10 @@
 
 (deftest test-with-db
   (sql/with-db [db (:postgresql connections)]
-    (is (:driver db)))
+    (is (:driver db))))
+
+(deftest test-with-db-pool
   (doseq [pool [:bonecp :c3p0 :hikaricp]]
     (sql/with-db [db (:postgresql connections) {:pool pool}]
       (is (:driver db))
-      (is (instance? DataSource (:datasource db))))))
+      (is (instance? DataSource (-> db :driver :datasource))))))

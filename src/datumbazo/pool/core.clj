@@ -9,12 +9,18 @@
   (throw (ex-info (str "Unsupported connection pool: " (:pool db))
                   (into {} db))))
 
-(defn assoc-pool
-  "Assoc a database connection pool onto `db`."
+(defn start-pool
+  "Start a connection pool and assoc it onto the :driver of `db`."
   [db]
   (if-let [pool (db-pool db)]
-    (assoc db :datasource pool)
+    (assoc-in db [:driver :datasource] pool)
     db))
+
+(defn stop-pool
+  "Stop the connection pool and dissoc it from the :driver of `db`."
+  [db]
+  (some-> db :driver :datasource .close)
+  (update db :driver dissoc :datasource))
 
 (defn load-connection-pools
   "Load connection pool support."

@@ -87,7 +87,7 @@
 
 (deftest test-with-backends-pool
   (with-backends [db {:pool :c3p0}]
-    (is (:datasource db))))
+    (is (-> db :driver :datasource))))
 
 (defmacro with-test-table [db table & body]
   `(let [db# ~db table# ~table]
