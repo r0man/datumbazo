@@ -91,3 +91,41 @@
         (sql/rollback db)))
     (sql/with-connection [db db]
       (is (empty? (meta/tables db {:name :with-transaction}))))))
+
+(deftest test-race
+  (sql/with-db [db (:postgresql connections) {:backend 'jdbc.core}]
+    (let [counter (atom 0)]
+      @(sql/drop-table db [:test]
+         (sql/if-exists true))
+      @(sql/create-table db :test
+         (sql/column :id :uuid))
+      (doall (pmap (fn [uuid]
+                     (sql/with-transaction [db db]
+                       @(sql/insert db :test [:id]
+                          (sql/values [[uuid]])
+                          (sql/returning :*))
+                       (swap! counter inc)))
+                   (take 10 (repeatedly #(java.util.UUID/randomUUID)))))
+      (is (= (->> @(sql/select db ['(count :*)]
+                     (sql/from :test))
+                  first :count)
+             @counter)))))
+
+(deftest test-race-fail
+  (sql/with-db [db (:postgresql connections) {:backend 'jdbc.core :test? true}]
+    (let [counter (atom 0)]
+      @(sql/drop-table db [:test]
+         (sql/if-exists true))
+      @(sql/create-table db :test
+         (sql/column :id :uuid))
+      (doall (pmap (fn [uuid]
+                     (sql/with-transaction [db db]
+                       @(sql/insert db :test [:id]
+                          (sql/values [[uuid]])
+                          (sql/returning :*))
+                       (swap! counter inc)))
+                   (take 10 (repeatedly #(java.util.UUID/randomUUID)))))
+      (is (= (->> @(sql/select db ['(count :*)]
+                     (sql/from :test))
+                  first :count)
+             @counter)))))
