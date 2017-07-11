@@ -45,12 +45,12 @@
 (defn connection
   "Return the current connection to `db`."
   [db]
-  (-connection (:driver db)))
+  (-connection db))
 
 (defn connected?
   "Returns true if `db` is connected, otherwise false."
   [db]
-  (some? (connection db)))
+  (some? (-connection db)))
 
 (defn begin
   "Begin a new `db` transaction."
@@ -87,16 +87,6 @@
   [db & [opts]]
   {:pre [(connected? db)]}
   (-rollback db opts))
-
-(defn sql-str
-  "Prepare `stmt` using the database and return the raw SQL as a string."
-  [stmt]
-  (let [ast (ast stmt)]
-    (with-open [stmt (prepare-statement (:db ast) (sql ast))]
-      (if (.startsWith (str stmt) (str/replace (first (sql ast)) #"\?.*" ""))
-        (str stmt)
-        (throw (UnsupportedOperationException.
-                "Sorry, sql-str not supported by SQL driver."))))))
 
 (defn with-connection*
   "Open a database connection, call `f` with the connected `db` as

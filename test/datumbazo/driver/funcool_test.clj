@@ -73,3 +73,15 @@
            (sql/column :id :integer))
         (is (= (sql/rollback db) db))
         (is (-> db :driver :connection meta :rollback deref))))))
+
+(deftest test-test-db
+  (sql/with-db [db db {:backend backend}]
+    @(sql/drop-table db [:test]
+       (sql/if-exists true)))
+  (sql/with-db [db db {:backend backend :test? true}]
+    @(sql/create-table db :test
+       (sql/column :id :uuid)))
+  (sql/with-db [db db {:backend backend}]
+    (is (empty? @(sql/select db [:*]
+                   (sql/from :information_schema.tables)
+                   (sql/where '(= :table_name "test")))))))
