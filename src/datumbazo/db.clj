@@ -33,11 +33,11 @@
 (extend-type sqlingvo.db.Database
   driver/IConnection
   (-connect [db opts]
-    (update db :driver #(driver/-connect % opts)))
+    (update db :driver driver/connect opts))
   (-connection [db]
-    (driver/-connection (:driver db)))
+    (driver/connection (:driver db)))
   (-disconnect [db]
-    (update db :driver driver/-disconnect))
+    (update db :driver driver/disconnect))
 
   driver/IExecute
   (-execute [db sql opts]
@@ -49,15 +49,15 @@
 
   driver/IPrepareStatement
   (-prepare-statement [db sql opts]
-    (driver/-prepare-statement (:driver db) sql opts))
+    (driver/prepare-statement (:driver db) sql opts))
 
   driver/ITransaction
   (-begin [db opts]
-    (update db :driver #(driver/-begin % opts)))
+    (update db :driver driver/begin opts))
   (-commit [db opts]
-    (update db :driver #(driver/-commit % opts)))
+    (update db :driver driver/commit opts))
   (-rollback [db opts]
-    (update db :driver #(driver/-rollback % opts)))
+    (update db :driver driver/rollback opts))
 
   component/Lifecycle
   (start [db]
