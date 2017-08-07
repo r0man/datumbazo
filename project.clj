@@ -16,7 +16,7 @@
                  [org.clojure/tools.logging "0.4.0"]
                  [potemkin "0.4.3"]
                  [slingshot "0.12.2"]
-                 [sqlingvo "0.9.10"]]
+                 [sqlingvo "0.9.11"]]
   :plugins [[jonase/eastwood "0.2.4"]
             [lein-difftest "2.0.0"]]
   :aliases {"ci" ["do" ["difftest"] ["lint"]]

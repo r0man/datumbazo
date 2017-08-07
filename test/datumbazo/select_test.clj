@@ -289,3 +289,9 @@
               {:avg 5000.0000000000000000M :sum 5000}
               {:avg 4866.6666666666666667M :sum 14600}
               {:avg 4866.6666666666666667M :sum 14600}])))))
+
+(deftest test-cast-array
+  (is (= @(sql/select db ['(cast [] [:uuid])])
+         [{:array []}]))
+  (is (= @(sql/select db ['(cast ["f9fd3df1-59f4-454c-90d3-c62a43fb035f"] [:uuid])])
+         [{:array [#uuid "f9fd3df1-59f4-454c-90d3-c62a43fb035f"]}])))
