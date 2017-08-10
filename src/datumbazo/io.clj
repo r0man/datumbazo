@@ -100,10 +100,40 @@
 
 ;; DECODE
 
+(defmulti decode-column class)
+
+(comment
+
+  ;; TODO: This unfortunately does not work with multi dimensional
+  ;; arrays. It throws an ArrayIndexOutOfBoundsException sometimes.
+  (defn decode-array
+    "Decode an array column."
+    [x]
+    (with-open [result-set (.getResultSet x)]
+      (mapv (comp decode-column :value)
+            (doall (resultset-seq result-set))))))
+
 (defn decode-array
   "Decode an array column."
   [x]
-  (vec (.getArray x)))
+  (mapv decode-column (.getArray x)))
+
+(defmacro define-array-decoders [dimensions & classes]
+  `(do ~@(for [class# classes, dimension# (range 1 dimensions)
+               :let [class-name# (str (apply str (repeat dimension# "[")) "L" class# ";")]]
+           `(defmethod decode-column (Class/forName ~class-name#) [~'array]
+              (mapv decode-column ~'array)))))
+
+(define-array-decoders 10
+  java.lang.Float
+  java.lang.Integer
+  java.lang.Long
+  java.lang.String
+  java.math.BigDecimal
+  java.util.UUID)
+
+(defmethod decode-column org.postgresql.jdbc.PgArray [array]
+  (decode-array array))
 
 (defn decode-pggeometry
   "Decode a PGgeometry column."
@@ -131,8 +161,6 @@
 (defmethod decode-pgobject :default [pgobject]
   (.getValue pgobject))
 
-(defmulti decode-column class)
-
 (defmethod decode-column PGgeometry [value]
   (.getGeometry value))
 
@@ -151,9 +179,6 @@
 
 (defmethod decode-column java.sql.Timestamp [value]
   (decode-time value))
-
-(defmethod decode-column org.postgresql.jdbc.PgArray [array]
-  (map decode-column (.getArray array)))
 
 (defmethod decode-column :default [value]
   value)

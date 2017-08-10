@@ -6,7 +6,13 @@
 (deftest test-select-array
   (with-backends [db]
     (is (= [{:array [1 2]}]
-           @(sql/select db [[1 2]])))))
+           @(sql/select db [[1 2]])))
+    (is (= @(sql/select db [[[1 2]]])
+           [{:array [[1 2]]}]))
+    (is (= @(sql/select db [[["1" "2"]]])
+           [{:array [["1" "2"]]}]))
+    (is (= @(sql/select db [[[[1 2]]]])
+           [{:array [[[1 2]]]}]))))
 
 (deftest test-select-array-concat
   (with-backends [db]
