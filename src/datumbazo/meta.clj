@@ -1,11 +1,11 @@
 (ns datumbazo.meta
   (:refer-clojure :exclude [resultset-seq])
   (:require [clojure.string :refer [lower-case]]
-            [datumbazo.driver.core :refer [connected? connection]]
+            [datumbazo.driver.core :refer [connection with-connection]]
             [inflections.core :refer [hyphenate hyphenate-keys]]
+            [sqlingvo.expr :as expr]
             [sqlingvo.util :refer [sql-name]])
-  (:import java.sql.DatabaseMetaData
-           sqlingvo.db.Database))
+  (:import java.sql.DatabaseMetaData))
 
 (defn- hyphenate-keyword [k]
   (if k (keyword (hyphenate (name k)))))
@@ -18,13 +18,13 @@
   "Get the metadata from the `db` connection, bind it to
   `metadata-sym` and evaluate `body`."
   [[metadata-sym db] & body]
-  `(let [~metadata-sym (.getMetaData (connection ~db))]
-     ~@body))
+  `(with-connection [db# ~db]
+     (let [~metadata-sym (.getMetaData (connection db#))]
+       ~@body)))
 
 (defn best-row-identifiers
   "Retrieves a description of a table's optimal set of columns that uniquely identifies a row."
   [db & [{:keys [catalog schema table scope nullable entities]}]]
-  {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getBestRowIdentifier
           metadata
@@ -45,7 +45,6 @@
 (defn catalogs
   "Retrieves the catalog names available in this database."
   [db]
-  {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getCatalogs metadata)
          (resultset-seq)
@@ -55,7 +54,6 @@
   "Retrieves a description of the database columns matching `catalog`,
   `schema`, `table` and `name`."
   [db & [{:keys [catalog schema table name entities]}]]
-  {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getColumns
           metadata
@@ -71,10 +69,16 @@
                       :name (hyphenate-keyword (:column-name %1))
                       :type (hyphenate-keyword (lower-case (:type-name %1))))))))
 
+(defn column
+  "Returns the information schema for `column` in `db`."
+  [db column]
+  (some->> (expr/parse-column column)
+           (columns db)
+           (first)))
+
 (defn indexes
   "Retrieves a description of the given table's primary key columns."
   [db & [{:keys [catalog schema table unique approximate entities]}]]
-  {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getIndexInfo
           metadata
@@ -92,7 +96,6 @@
 (defn primary-keys
   "Retrieves a description of the given table's primary key columns."
   [db & [{:keys [catalog schema table entities]}]]
-  {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getPrimaryKeys
           metadata
@@ -109,7 +112,6 @@
 (defn unique-columns
   "Retrieves the unique columns of a table."
   [db & [{:keys [catalog schema table name entities]}]]
-  {:pre [(connected? db)]}
   (let [indexes (indexes
                  db {:catalog catalog
                      :schema schema
@@ -128,7 +130,6 @@
 (defn schemas
   "Retrieves the catalog names available in this database."
   [db]
-  {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getSchemas metadata)
          (resultset-seq)
@@ -138,7 +139,6 @@
   "Retrieves a description of the database tables matching `catalog`,
   `schema`, `name` and `types`."
   [db & [{:keys [catalog schema name types entities]}]]
-  {:pre [(connected? db)]}
   (with-metadata [metadata db]
     (->> (.getTables
           metadata
@@ -157,7 +157,6 @@
   "Retrieves a description of the database views matching `catalog`,
   `schema` and `name`."
   [db & [{:keys [catalog schema name types entities]}]]
-  {:pre [(connected? db)]}
   (tables db {:catalog catalog
               :schema schema
               :name name

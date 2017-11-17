@@ -1,8 +1,8 @@
-(ns datumbazo.types-test
+(ns datumbazo.postgresql.types-test
   (:require [clojure.spec.alpha :as s]
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.properties :as prop]
-            [datumbazo.types :as t]))
+            [datumbazo.postgresql.types :as t]))
 
 (defspec test-smallint-minimum
   (prop/for-all [x (s/gen ::t/smallint)] (>= x -32768)))

@@ -1,5 +1,6 @@
 (ns datumbazo.test
   (:require [clojure.test :refer :all]
+            [clojure.spec.test.alpha :as stest]
             [datumbazo.core :as sql]
             [datumbazo.driver.core :as driver]))
 
@@ -12,9 +13,11 @@
 
 (defmacro with-test-db
   [[db-sym config & [opts]] & body]
-  `(sql/with-db [db# ~config (assoc ~opts :test? true)]
-     (sql/with-connection [~db-sym db#]
-       ~@body)))
+  `(do (stest/unstrument)
+       (stest/instrument)
+       (sql/with-db [db# ~config (assoc ~opts :test? true)]
+         (sql/with-connection [~db-sym db#]
+           ~@body))))
 
 (defmacro with-test-dbs
   [[db-sym vendors] & body]
@@ -77,9 +80,11 @@
        (.println *err* (format "WARNING: Can't find %s driver, skipping tests." driver#)))))
 
 (defmacro with-backends [[db-sym opts] & body]
-  `(with-drivers [db# ~(:postgresql connections) ~opts]
-     (sql/with-connection [~db-sym db#]
-       ~@body)))
+  `(do (stest/unstrument)
+       (stest/instrument)
+       (with-drivers [db# ~(:postgresql connections) ~opts]
+         (sql/with-connection [~db-sym db#]
+           ~@body))))
 
 (deftest test-with-backends
   (with-backends [db]

@@ -1,11 +1,9 @@
 (ns datumbazo.table
-  (:require [datumbazo.record :as record]
-            [datumbazo.generators :as generators]
+  (:require [clojure.spec.alpha :as s]
+            [datumbazo.gen :as generators]
+            [datumbazo.postgresql.types :as types]
+            [datumbazo.record :as record]
             [datumbazo.util :as util]
-            [datumbazo.types :as types]
-            ;; [sqlingvo.core :refer [column]]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
             [sqlingvo.core :as sql]
             [sqlingvo.expr :as expr]))
 
@@ -51,7 +49,7 @@
 (defn- column-spec-type
   "Return the type of the `column` in the `datumbazo.types` namespace."
   [column]
-  (keyword "datumbazo.types" (-> column :type name)))
+  (keyword "datumbazo.postgresql.types" (-> column :type name)))
 
 (defmulti column-spec-gen
   "Return the generator for a column spec."

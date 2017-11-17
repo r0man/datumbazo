@@ -16,6 +16,12 @@ select cast('{"a":1,"b":2}' as json) -> 'b';
 
 select * from information_schema.tables;
 
+\d information_schema.columns;
+
+select table_catalog, table_schema, column_name, data_type, udt_name, character_maximum_length from information_schema.columns where table_name = 'continents';
+
+select * from information_schema.information_schema_catalog_name;
+
 select * from sqitch.projects;
 
 select * from sqitch.tags;
