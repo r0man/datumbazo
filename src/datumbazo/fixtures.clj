@@ -59,7 +59,7 @@
 
 (defn reset-serials
   "Reset the serial counters of all columns in `table`."
-  [db table & {:keys [entities]}]
+  [db table]
   (let [table (parse-table table)]
     (doseq [column (meta/columns db {:schema (or (:schema table) :public) :table (:name table)})
             :when (contains? #{:bigserial :serial} (:type column))]
@@ -75,7 +75,7 @@
 
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
-  [db table filename & {:keys [entities batch-size]}]
+  [db table filename & {:keys [batch-size]}]
   (infof "Loading fixtures for table %s from %s." (sql-name db table) filename)
   (let [batch-size (or batch-size 1000)
         columns (find-column-keys db table)
@@ -93,7 +93,7 @@
 
 (defn write-fixture
   "Write the rows of the database `table` to `filename`."
-  [db table filename & {:keys [entities identifiers]}]
+  [db table filename & {:keys [identifiers]}]
   (make-parents filename)
   (with-open [writer (writer filename)]
     (let [rows (seq @(select db [:*] (from table)))]
@@ -105,12 +105,12 @@
 
 (defn enable-triggers
   "Enable triggers on the database `table`."
-  [db table & {:keys [entities]}]
+  [db table]
   (driver/-execute (:driver db) [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " ENABLE TRIGGER ALL")] nil))
 
 (defn disable-triggers
   "Disable triggers on the database `table`."
-  [db table & {:keys [entities]}]
+  [db table]
   (driver/-execute (:driver db) [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " DISABLE TRIGGER ALL")] nil))
 
 (defn delete-fixtures [db tables]
