@@ -26,7 +26,7 @@
                                   [com.mchange/c3p0 "0.9.5.2"]
                                   [com.zaxxer/HikariCP "2.7.3"]
                                   [funcool/clojure.jdbc "0.9.0"]
-                                  [mysql/mysql-connector-java "5.1.39"]
+                                  [mysql/mysql-connector-java "5.1.44"]
                                   [org.clojure/java.jdbc "0.7.3"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.postgresql/postgresql "42.1.4"]
