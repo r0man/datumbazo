@@ -1,0 +1,295 @@
+(ns datumbazo.information-schema-test
+  (:require [clojure.test :refer [deftest is]]
+            [datumbazo.information-schema :as schema]
+            [datumbazo.test :as t :refer [with-backends]]))
+
+(deftest test-column
+  (with-backends [db]
+    @(t/create-test-table db :distributors)
+    (is (= (schema/column db :distributors.did)
+           {:collation-catalog nil
+            :identity-increment nil
+            :identity-minimum nil
+            :dtd-identifier "1"
+            :identity-generation nil
+            :column-default nil
+            :numeric-scale 0
+            :data-type "integer"
+            :identity-start nil
+            :collation-schema nil
+            :udt-name "int4"
+            :ordinal-position 1
+            :character-maximum-length nil
+            :udt-catalog "datumbazo"
+            :maximum-cardinality nil
+            :is-self-referencing "NO"
+            :scope-catalog nil
+            :datetime-precision nil
+            :character-octet-length nil
+            :is-updatable "YES"
+            :scope-schema nil
+            :numeric-precision 32
+            :interval-precision nil
+            :character-set-catalog nil
+            :table-catalog "datumbazo"
+            :domain-schema nil
+            :domain-catalog nil
+            :udt-schema "pg_catalog"
+            :character-set-name nil
+            :domain-name nil
+            :is-identity "NO"
+            :generation-expression nil
+            :table-schema "public"
+            :interval-type nil
+            :collation-name nil
+            :character-set-schema nil
+            :identity-cycle "NO"
+            :identity-maximum nil
+            :table-name "distributors"
+            :column-name "did"
+            :is-generated "NEVER"
+            :numeric-precision-radix 2
+            :is-nullable "NO"
+            :scope-name nil}))))
+
+(deftest test-primary-keys
+  (with-backends [db]
+    @(t/create-test-table db :distributors)
+    (is (= (schema/primary-keys db :distributors)
+           [{:constraint-catalog "datumbazo"
+             :constraint-schema "public"
+             :constraint-name "distributors_pkey"
+             :table-catalog "datumbazo"
+             :table-schema "public"
+             :table-name "distributors"
+             :column-name "did"
+             :ordinal-position 1
+             :position-in-unique-constraint nil}]))))
+
+(deftest test-unique-keys
+  (with-backends [db]
+    @(t/create-test-table db :distributors)
+    (is (= (schema/unique-keys db :distributors)
+           [{:constraint-name "distributors_dname_key"
+             :is-deferrable "NO"
+             :constraint-schema "public"
+             :constraint-catalog "datumbazo"
+             :table-catalog "datumbazo"
+             :initially-deferred "NO"
+             :table-schema "public"
+             :table-name "distributors"
+             :constraint-type "UNIQUE"
+             :column-name "dname"}]))))
+
+(deftest test-table
+  (with-backends [db]
+    @(t/create-test-table db :distributors)
+    (is (= (schema/table db :distributors)
+           {:column-names ["did" "dname" "zipcode" "is-active"]
+            :columns
+            {"did"
+             {:collation-catalog nil
+              :identity-increment nil
+              :identity-minimum nil
+              :dtd-identifier "1"
+              :identity-generation nil
+              :column-default nil
+              :numeric-scale 0
+              :data-type "integer"
+              :identity-start nil
+              :collation-schema nil
+              :udt-name "int4"
+              :ordinal-position 1
+              :character-maximum-length nil
+              :udt-catalog "datumbazo"
+              :maximum-cardinality nil
+              :is-self-referencing "NO"
+              :scope-catalog nil
+              :datetime-precision nil
+              :character-octet-length nil
+              :is-updatable "YES"
+              :scope-schema nil
+              :numeric-precision 32
+              :interval-precision nil
+              :character-set-catalog nil
+              :table-catalog "datumbazo"
+              :domain-schema nil
+              :domain-catalog nil
+              :udt-schema "pg_catalog"
+              :character-set-name nil
+              :domain-name nil
+              :is-identity "NO"
+              :generation-expression nil
+              :table-schema "public"
+              :interval-type nil
+              :collation-name nil
+              :character-set-schema nil
+              :identity-cycle "NO"
+              :identity-maximum nil
+              :table-name "distributors"
+              :column-name "did"
+              :is-generated "NEVER"
+              :numeric-precision-radix 2
+              :is-nullable "NO"
+              :scope-name nil}
+             "dname"
+             {:collation-catalog nil
+              :identity-increment nil
+              :identity-minimum nil
+              :dtd-identifier "2"
+              :identity-generation nil
+              :column-default nil
+              :numeric-scale nil
+              :data-type "text"
+              :identity-start nil
+              :collation-schema nil
+              :udt-name "text"
+              :ordinal-position 2
+              :character-maximum-length nil
+              :udt-catalog "datumbazo"
+              :maximum-cardinality nil
+              :is-self-referencing "NO"
+              :scope-catalog nil
+              :datetime-precision nil
+              :character-octet-length 1073741824
+              :is-updatable "YES"
+              :scope-schema nil
+              :numeric-precision nil
+              :interval-precision nil
+              :character-set-catalog nil
+              :table-catalog "datumbazo"
+              :domain-schema nil
+              :domain-catalog nil
+              :udt-schema "pg_catalog"
+              :character-set-name nil
+              :domain-name nil
+              :is-identity "NO"
+              :generation-expression nil
+              :table-schema "public"
+              :interval-type nil
+              :collation-name nil
+              :character-set-schema nil
+              :identity-cycle "NO"
+              :identity-maximum nil
+              :table-name "distributors"
+              :column-name "dname"
+              :is-generated "NEVER"
+              :numeric-precision-radix nil
+              :is-nullable "YES"
+              :scope-name nil}
+             "zipcode"
+             {:collation-catalog nil
+              :identity-increment nil
+              :identity-minimum nil
+              :dtd-identifier "3"
+              :identity-generation nil
+              :column-default nil
+              :numeric-scale nil
+              :data-type "text"
+              :identity-start nil
+              :collation-schema nil
+              :udt-name "text"
+              :ordinal-position 3
+              :character-maximum-length nil
+              :udt-catalog "datumbazo"
+              :maximum-cardinality nil
+              :is-self-referencing "NO"
+              :scope-catalog nil
+              :datetime-precision nil
+              :character-octet-length 1073741824
+              :is-updatable "YES"
+              :scope-schema nil
+              :numeric-precision nil
+              :interval-precision nil
+              :character-set-catalog nil
+              :table-catalog "datumbazo"
+              :domain-schema nil
+              :domain-catalog nil
+              :udt-schema "pg_catalog"
+              :character-set-name nil
+              :domain-name nil
+              :is-identity "NO"
+              :generation-expression nil
+              :table-schema "public"
+              :interval-type nil
+              :collation-name nil
+              :character-set-schema nil
+              :identity-cycle "NO"
+              :identity-maximum nil
+              :table-name "distributors"
+              :column-name "zipcode"
+              :is-generated "NEVER"
+              :numeric-precision-radix nil
+              :is-nullable "YES"
+              :scope-name nil}
+             "is-active"
+             {:collation-catalog nil
+              :identity-increment nil
+              :identity-minimum nil
+              :dtd-identifier "4"
+              :identity-generation nil
+              :column-default nil
+              :numeric-scale nil
+              :data-type "boolean"
+              :identity-start nil
+              :collation-schema nil
+              :udt-name "bool"
+              :ordinal-position 4
+              :character-maximum-length nil
+              :udt-catalog "datumbazo"
+              :maximum-cardinality nil
+              :is-self-referencing "NO"
+              :scope-catalog nil
+              :datetime-precision nil
+              :character-octet-length nil
+              :is-updatable "YES"
+              :scope-schema nil
+              :numeric-precision nil
+              :interval-precision nil
+              :character-set-catalog nil
+              :table-catalog "datumbazo"
+              :domain-schema nil
+              :domain-catalog nil
+              :udt-schema "pg_catalog"
+              :character-set-name nil
+              :domain-name nil
+              :is-identity "NO"
+              :generation-expression nil
+              :table-schema "public"
+              :interval-type nil
+              :collation-name nil
+              :character-set-schema nil
+              :identity-cycle "NO"
+              :identity-maximum nil
+              :table-name "distributors"
+              :column-name "is-active"
+              :is-generated "NEVER"
+              :numeric-precision-radix nil
+              :is-nullable "YES"
+              :scope-name nil}}
+            :op :table
+            :primary-keys
+            {"did"
+             {:constraint-catalog "datumbazo"
+              :constraint-schema "public"
+              :constraint-name "distributors_pkey"
+              :table-catalog "datumbazo"
+              :table-schema "public"
+              :table-name "distributors"
+              :column-name "did"
+              :ordinal-position 1
+              :position-in-unique-constraint nil}}
+            :table-name "distributors"
+            :table-schema "public"
+            :unique-keys
+            {"dname"
+             {:constraint-name "distributors_dname_key"
+              :is-deferrable "NO"
+              :constraint-schema "public"
+              :constraint-catalog "datumbazo"
+              :table-catalog "datumbazo"
+              :initially-deferred "NO"
+              :table-schema "public"
+              :table-name "distributors"
+              :constraint-type "UNIQUE"
+              :column-name "dname"}}}))))

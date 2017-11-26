@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [distinct group-by update])
   (:require [clojure.test :refer :all]
             [datumbazo.core :as sql]
-            [datumbazo.test :refer :all])
+            [datumbazo.test :refer :all]
+            [sqlingvo.util :as util])
   (:import java.sql.Connection))
 
 (def backend
@@ -73,3 +74,23 @@
            (sql/column :id :integer))
         (is (= (sql/rollback db) db))
         (is (-> db :driver :connection meta :rollback deref))))))
+
+(deftest test-naming-strategy
+  (sql/with-db [db db {:backend backend
+                       :sql-keyword util/sql-keyword-hyphenate
+                       :sql-name util/sql-name-underscore}]
+    (is (= @(sql/select db [:*]
+              (sql/from :information-schema.tables)
+              (sql/where '(= :table-name "pg_statistic")))
+           [{:commit-action nil,
+             :reference-generation nil,
+             :is-typed "NO",
+             :is-insertable-into "YES",
+             :table-catalog "datumbazo",
+             :user-defined-type-schema nil,
+             :user-defined-type-name nil,
+             :user-defined-type-catalog nil,
+             :table-schema "pg_catalog",
+             :self-referencing-column-name nil,
+             :table-name "pg_statistic",
+             :table-type "BASE TABLE"}]))))

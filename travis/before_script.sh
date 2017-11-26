@@ -4,7 +4,7 @@ mysql -uroot -e "CREATE DATABASE datumbazo;"
 mysql -uroot -e "GRANT ALL PRIVILEGES ON datumbazo.* TO tiger@localhost IDENTIFIED BY 'scotch';"
 
 psql -c "CREATE DATABASE datumbazo;" -U postgres
-psql -c "CREATE USER tiger SUPERUSER UNENCRYPTED PASSWORD 'scotch';" -U postgres
+psql -c "CREATE USER tiger SUPERUSER PASSWORD 'scotch';" -U postgres
 psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-postgis-extension.sql
 psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-citext-extension.sql
 psql -U postgres datumbazo < test-resources/db/test-db/migrations/deploy/create-continents-table.sql

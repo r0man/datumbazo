@@ -41,7 +41,7 @@
 (defmethod create-test-table :distributors [db table]
   (sql/create-table db table
     (sql/column :did :integer :primary-key? true)
-    (sql/column :dname :text)
+    (sql/column :dname :text :unique? true)
     (sql/column :zipcode :text)
     (sql/column :is-active :bool)))
 
@@ -112,8 +112,8 @@
 (defn create-quotes-table [db]
   (sql/create-table db :quotes
     (sql/column :id :serial :primary-key? true)
-    (sql/column :exchange-id :integer :not-null? true :references :exchanges/id)
-    (sql/column :company-id :integer :references :companies/id)
+    (sql/column :exchange-id :integer :not-null? true :references :exchanges.id)
+    (sql/column :company-id :integer :references :companies.id)
     (sql/column :symbol :citext :not-null? true :unique? true)
     (sql/column :created-at :timestamp-with-time-zone :not-null? true :default '(now))
     (sql/column :updated-at :timestamp-with-time-zone :not-null? true :default '(now))))

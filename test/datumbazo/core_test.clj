@@ -139,10 +139,10 @@
 
 (deftest test-except
   (with-backends [db]
-    (is (= @(sql/except
-             (sql/select db [(sql/as '(generate_series 1 3) :x)])
-             (sql/select db [(sql/as '(generate_series 3 4) :x)]))
-           [{:x 1} {:x 2}]))))
+    (is (= (set @(sql/except
+                  (sql/select db [(sql/as '(generate_series 1 3) :x)])
+                  (sql/select db [(sql/as '(generate_series 3 4) :x)])))
+           #{{:x 1} {:x 2}}))))
 
 (deftest test-union
   (with-backends [db]

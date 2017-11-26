@@ -56,8 +56,8 @@
        (sql/column :id :serial :primary-key? true))
     (is (= @(sql/create-table db :ratings
               (sql/column :id :serial)
-              (sql/column :user-id :integer :not-null? true :references :users/id)
-              (sql/column :spot-id :integer :not-null? true :references :spots/id)
+              (sql/column :user-id :integer :not-null? true :references :users.id)
+              (sql/column :spot-id :integer :not-null? true :references :spots.id)
               (sql/column :rating :integer :not-null? true)
               (sql/column :created-at :timestamp-with-time-zone :not-null? true :default '(now))
               (sql/column :updated-at :timestamp-with-time-zone :not-null? true :default '(now))
