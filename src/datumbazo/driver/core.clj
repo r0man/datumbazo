@@ -37,8 +37,8 @@
   "Load the driver namespaces."
   []
   (try
-    (doseq [ns '[datumbazo.driver.clojure
-                 datumbazo.driver.funcool]]
+    (doseq [ns '[datumbazo.driver.jdbc.clojure
+                 datumbazo.driver.jdbc.funcool]]
       (try (require ns)
            (catch Exception _)))))
 

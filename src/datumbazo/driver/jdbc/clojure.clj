@@ -1,4 +1,4 @@
-(ns datumbazo.driver.clojure
+(ns datumbazo.driver.jdbc.clojure
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [datumbazo.driver.core :as d]

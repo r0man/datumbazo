@@ -1,4 +1,4 @@
-(ns datumbazo.driver.funcool
+(ns datumbazo.driver.jdbc.funcool
   (:require [clojure.string :as str]
             [datumbazo.driver.core :as d]
             [datumbazo.io :as io]

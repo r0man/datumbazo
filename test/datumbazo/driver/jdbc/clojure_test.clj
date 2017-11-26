@@ -1,4 +1,4 @@
-(ns datumbazo.driver.funcool-test
+(ns datumbazo.driver.jdbc.clojure-test
   (:refer-clojure :exclude [distinct group-by update])
   (:require [clojure.test :refer :all]
             [datumbazo.core :as sql]
@@ -8,17 +8,18 @@
 
 (def backend
   "The name of the current database backend."
-  'jdbc.core)
+  'clojure.java.jdbc)
 
 (deftest test-begin
   (sql/with-db [db db {:backend backend}]
+    (is (thrown? AssertionError (sql/begin db)))
     (sql/with-connection [db db]
       (is (.getAutoCommit (sql/connection db)))
-      (is (not (-> db :connection meta :transaction)))
       (let [db (sql/begin db)]
         (is (not (.getAutoCommit (sql/connection db))))
-        (is (-> db :driver :connection meta :transaction))
-        @(sql/select db [1])))))
+        (is (= (.getTransactionIsolation (sql/connection db))
+               Connection/TRANSACTION_READ_COMMITTED))
+        (is @(sql/select db [1]))))))
 
 (deftest test-connect
   (sql/with-db [db db {:backend backend}]
@@ -28,25 +29,21 @@
 
 (deftest test-connection
   (sql/with-db [db db {:backend backend}]
-    (is (nil? (sql/connection db)))
     (sql/with-connection [db db]
       (is (instance? Connection (sql/connection db))))))
 
 (deftest test-connection-with-bonecp
   (sql/with-db [db (assoc db :pool :bonecp) {:backend backend}]
-    (is (nil? (sql/connection db)))
     (sql/with-connection [db db]
       (is (instance? Connection (sql/connection db))))))
 
 (deftest test-connection-with-c3p0
   (sql/with-db [db (assoc db :pool :c3p0) {:backend backend}]
-    (is (nil? (sql/connection db)))
     (sql/with-connection [db db]
       (is (instance? Connection (sql/connection db))))))
 
 (deftest test-connection-with-hikaricp
   (sql/with-db [db (assoc db :pool :hikaricp) {:backend backend}]
-    (is (nil? (sql/connection db)))
     (sql/with-connection [db db]
       (is (instance? Connection (sql/connection db))))))
 
@@ -66,14 +63,13 @@
 (deftest test-rollback
   (sql/with-db [db db {:backend backend}]
     (sql/with-connection [db db]
-      (is (not (-> db :driver :connection meta :rollback)))
+      (is (not (:rollback db)))
       (let [db (sql/begin db)]
-        (is (-> db :driver :connection meta :transaction))
-        (is (not (-> db :driver :connection meta :rollback deref)))
         @(sql/create-table db :test-rollback
            (sql/column :id :integer))
         (is (= (sql/rollback db) db))
-        (is (-> db :driver :connection meta :rollback deref))))))
+        (is (-> db :driver :rollback deref))
+        (sql/commit db)))))
 
 (deftest test-naming-strategy
   (sql/with-db [db db {:backend backend

@@ -4,8 +4,7 @@
             [datumbazo.core :as sql]
             [datumbazo.io :refer :all]
             [datumbazo.test :refer :all]
-            [inflections.core :refer [hyphenate underscore]])
-  (:import datumbazo.driver.clojure.Driver))
+            [inflections.core :refer [hyphenate underscore]]))
 
 (deftest test-with
   (with-backends [db]
@@ -40,7 +39,7 @@
 (deftest test-new-db
   (let [db (sql/new-db "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
     (is (instance? sqlingvo.db.Database db))
-    (is (instance? datumbazo.driver.clojure.Driver (:driver db)))
+    (is (instance? datumbazo.driver.jdbc.clojure.Driver (:driver db)))
     (is (= :postgresql (:scheme db)))
     (is (= "tiger" (:username db)))
     (is (= "scotch" (:password db)))
@@ -52,7 +51,7 @@
 (deftest test-with-db
   (sql/with-db [db "postgresql://tiger:scotch@localhost:5432/datumbazo"]
     (is (instance? sqlingvo.db.Database db))
-    (is (instance? datumbazo.driver.clojure.Driver (:driver db)))
+    (is (instance? datumbazo.driver.jdbc.clojure.Driver (:driver db)))
     (is (nil? (:connection db)))
     (is (= :postgresql (:scheme db)))
     (is (= "tiger" (:username db)))
