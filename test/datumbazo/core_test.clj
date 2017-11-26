@@ -79,13 +79,13 @@
 
 (deftest test-create-test-table
   (with-backends [db]
-    (is (= @(create-test-table db :empsalary)
+    (is (= (create-test-table db :empsalary)
            [{:count 0}]))))
 
 (deftest test-insert-test-table
   (with-backends [db]
-    @(create-test-table db :empsalary)
-    (is (= @(insert-test-table db :empsalary)
+    (create-test-table db :empsalary)
+    (is (= (insert-test-table db :empsalary)
            [{:count 10}]))))
 
 ;; (deftest test-select

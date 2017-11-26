@@ -5,14 +5,14 @@
 
 (deftest test-column
   (with-backends [db]
-    @(t/create-test-table db :distributors)
-    (is (= (schema/column db :distributors.did)
+    (t/create-test-table db :patients)
+    (is (= (schema/column db :patients.id)
            {:collation-catalog nil
             :identity-increment nil
             :identity-minimum nil
             :dtd-identifier "1"
             :identity-generation nil
-            :column-default nil
+            :column-default "nextval('patients_id_seq'::regclass)"
             :numeric-scale 0
             :data-type "integer"
             :identity-start nil
@@ -45,55 +45,92 @@
             :character-set-schema nil
             :identity-cycle "NO"
             :identity-maximum nil
-            :table-name "distributors"
-            :column-name "did"
+            :table-name "patients"
+            :column-name "id"
             :is-generated "NEVER"
             :numeric-precision-radix 2
             :is-nullable "NO"
             :scope-name nil}))))
 
+(deftest test-foreign-keys
+  (with-backends [db]
+    (t/create-test-table db :patients)
+    (t/create-test-table db :physicians)
+    (t/create-test-table db :appointments)
+    (is (= (schema/foreign-keys db :appointments)
+           [{:reference-table-name "patients",
+             :constraint-name "appointments_patient-id_fkey",
+             :is-deferrable "NO",
+             :reference-table-catalog "datumbazo",
+             :constraint-schema "public",
+             :constraint-catalog "datumbazo",
+             :table-catalog "datumbazo",
+             :reference-table-schema "public",
+             :initially-deferred "NO",
+             :table-schema "public",
+             :table-name "appointments",
+             :constraint-type "FOREIGN KEY",
+             :column-name "patient-id",
+             :reference-column-name "id"}
+            {:reference-table-name "physicians",
+             :constraint-name "appointments_physician-id_fkey",
+             :is-deferrable "NO",
+             :reference-table-catalog "datumbazo",
+             :constraint-schema "public",
+             :constraint-catalog "datumbazo",
+             :table-catalog "datumbazo",
+             :reference-table-schema "public",
+             :initially-deferred "NO",
+             :table-schema "public",
+             :table-name "appointments",
+             :constraint-type "FOREIGN KEY",
+             :column-name "physician-id",
+             :reference-column-name "id"}]))))
+
 (deftest test-primary-keys
   (with-backends [db]
-    @(t/create-test-table db :distributors)
-    (is (= (schema/primary-keys db :distributors)
+    (t/create-test-table db :patients)
+    (is (= (schema/primary-keys db :patients)
            [{:constraint-catalog "datumbazo"
              :constraint-schema "public"
-             :constraint-name "distributors_pkey"
+             :constraint-name "patients_pkey"
              :table-catalog "datumbazo"
              :table-schema "public"
-             :table-name "distributors"
-             :column-name "did"
+             :table-name "patients"
+             :column-name "id"
              :ordinal-position 1
              :position-in-unique-constraint nil}]))))
 
 (deftest test-unique-keys
   (with-backends [db]
-    @(t/create-test-table db :distributors)
-    (is (= (schema/unique-keys db :distributors)
-           [{:constraint-name "distributors_dname_key"
+    (t/create-test-table db :patients)
+    (is (= (schema/unique-keys db :patients)
+           [{:constraint-name "patients_name_key"
              :is-deferrable "NO"
              :constraint-schema "public"
              :constraint-catalog "datumbazo"
              :table-catalog "datumbazo"
              :initially-deferred "NO"
              :table-schema "public"
-             :table-name "distributors"
+             :table-name "patients"
              :constraint-type "UNIQUE"
-             :column-name "dname"}]))))
+             :column-name "name"}]))))
 
 (deftest test-table
   (with-backends [db]
-    @(t/create-test-table db :distributors)
-    (is (= (schema/table db :distributors)
-           {:column-names ["did" "dname" "zipcode" "is-active"]
+    (t/create-test-table db :patients)
+    (t/create-test-table db :physicians)
+    (t/create-test-table db :appointments)
+    (is (= (schema/table db :appointments)
+           {:column-names ["id" "patient-id" "physician-id" "appointment-date"]
             :columns
-            {"did"
+            {"id"
              {:collation-catalog nil
               :identity-increment nil
               :identity-minimum nil
               :dtd-identifier "1"
               :identity-generation nil
-              :column-default nil
+              :column-default "nextval('appointments_id_seq'::regclass)"
               :numeric-scale 0
               :data-type "integer"
               :identity-start nil
@@ -126,24 +163,24 @@
               :character-set-schema nil
               :identity-cycle "NO"
               :identity-maximum nil
-              :table-name "distributors"
-              :column-name "did"
+              :table-name "appointments"
+              :column-name "id"
               :is-generated "NEVER"
               :numeric-precision-radix 2
               :is-nullable "NO"
               :scope-name nil}
-             "dname"
+             "patient-id"
              {:collation-catalog nil
               :identity-increment nil
               :identity-minimum nil
               :dtd-identifier "2"
               :identity-generation nil
               :column-default nil
-              :numeric-scale nil
-              :data-type "text"
+              :numeric-scale 0
+              :data-type "integer"
               :identity-start nil
               :collation-schema nil
-              :udt-name "text"
+              :udt-name "int4"
               :ordinal-position 2
               :character-maximum-length nil
               :udt-catalog "datumbazo"
@@ -151,10 +188,10 @@
               :is-self-referencing "NO"
               :scope-catalog nil
               :datetime-precision nil
-              :character-octet-length 1073741824
+              :character-octet-length nil
               :is-updatable "YES"
               :scope-schema nil
-              :numeric-precision nil
+              :numeric-precision 32
               :interval-precision nil
               :character-set-catalog nil
               :table-catalog "datumbazo"
@@ -171,24 +208,24 @@
               :character-set-schema nil
               :identity-cycle "NO"
               :identity-maximum nil
-              :table-name "distributors"
-              :column-name "dname"
+              :table-name "appointments"
+              :column-name "patient-id"
               :is-generated "NEVER"
-              :numeric-precision-radix nil
+              :numeric-precision-radix 2
               :is-nullable "YES"
               :scope-name nil}
-             "zipcode"
+             "physician-id"
              {:collation-catalog nil
               :identity-increment nil
               :identity-minimum nil
               :dtd-identifier "3"
               :identity-generation nil
               :column-default nil
-              :numeric-scale nil
-              :data-type "text"
+              :numeric-scale 0
+              :data-type "integer"
               :identity-start nil
               :collation-schema nil
-              :udt-name "text"
+              :udt-name "int4"
               :ordinal-position 3
               :character-maximum-length nil
               :udt-catalog "datumbazo"
@@ -196,10 +233,10 @@
               :is-self-referencing "NO"
               :scope-catalog nil
               :datetime-precision nil
-              :character-octet-length 1073741824
+              :character-octet-length nil
               :is-updatable "YES"
               :scope-schema nil
-              :numeric-precision nil
+              :numeric-precision 32
               :interval-precision nil
               :character-set-catalog nil
               :table-catalog "datumbazo"
@@ -216,13 +253,13 @@
               :character-set-schema nil
               :identity-cycle "NO"
               :identity-maximum nil
-              :table-name "distributors"
-              :column-name "zipcode"
+              :table-name "appointments"
+              :column-name "physician-id"
               :is-generated "NEVER"
-              :numeric-precision-radix nil
+              :numeric-precision-radix 2
               :is-nullable "YES"
               :scope-name nil}
-             "is-active"
+             "appointment-date"
              {:collation-catalog nil
               :identity-increment nil
               :identity-minimum nil
@@ -230,17 +267,17 @@
               :identity-generation nil
               :column-default nil
               :numeric-scale nil
-              :data-type "boolean"
+              :data-type "timestamp with time zone"
               :identity-start nil
               :collation-schema nil
-              :udt-name "bool"
+              :udt-name "timestamptz"
               :ordinal-position 4
               :character-maximum-length nil
               :udt-catalog "datumbazo"
               :maximum-cardinality nil
               :is-self-referencing "NO"
               :scope-catalog nil
-              :datetime-precision nil
+              :datetime-precision 6
               :character-octet-length nil
               :is-updatable "YES"
               :scope-schema nil
@@ -261,35 +298,45 @@
               :character-set-schema nil
               :identity-cycle "NO"
               :identity-maximum nil
-              :table-name "distributors"
-              :column-name "is-active"
+              :table-name "appointments"
+              :column-name "appointment-date"
               :is-generated "NEVER"
               :numeric-precision-radix nil
               :is-nullable "YES"
               :scope-name nil}}
-            :op :table
-            :primary-keys
-            {"did"
-             {:constraint-catalog "datumbazo"
-              :constraint-schema "public"
-              :constraint-name "distributors_pkey"
-              :table-catalog "datumbazo"
-              :table-schema "public"
-              :table-name "distributors"
-              :column-name "did"
-              :ordinal-position 1
-              :position-in-unique-constraint nil}}
-            :table-name "distributors"
-            :table-schema "public"
-            :unique-keys
-            {"dname"
-             {:constraint-name "distributors_dname_key"
+            :foreign-keys
+            {"patient-id"
+             {:reference-table-name "patients"
+              :constraint-name "appointments_patient-id_fkey"
               :is-deferrable "NO"
+              :reference-table-catalog "datumbazo"
               :constraint-schema "public"
               :constraint-catalog "datumbazo"
               :table-catalog "datumbazo"
+              :reference-table-schema "public"
               :initially-deferred "NO"
               :table-schema "public"
-              :table-name "distributors"
-              :constraint-type "UNIQUE"
-              :column-name "dname"}}}))))
+              :table-name "appointments"
+              :constraint-type "FOREIGN KEY"
+              :column-name "patient-id"
+              :reference-column-name "id"}
+             "physician-id"
+             {:reference-table-name "physicians"
+              :constraint-name "appointments_physician-id_fkey"
+              :is-deferrable "NO"
+              :reference-table-catalog "datumbazo"
+              :constraint-schema "public"
+              :constraint-catalog "datumbazo"
+              :table-catalog "datumbazo"
+              :reference-table-schema "public"
+              :initially-deferred "NO"
+              :table-schema "public"
+              :table-name "appointments"
+              :constraint-type "FOREIGN KEY"
+              :column-name "physician-id"
+              :reference-column-name "id"}}
+            :op :table
+            :primary-keys {}
+            :table-name "appointments"
+            :table-schema "public"
+            :unique-keys {}}))))
