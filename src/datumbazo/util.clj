@@ -303,27 +303,27 @@
 (defn table-keyword
   "Return the schema qualified `table` keyword."
   [table]
-  (->> (cond
-         (:table-name table)
-         [(:table-schema table) (:table-name table)]
-         (:table table)
-         [(:schema table) (:table table)]
-         (:name table)
-         [(:schema table) (:name table)])
-       (remove nil?)
-       (map name)
-       (str/join ".")
-       (keyword)))
+  (some->> (cond
+             (:table-name table)
+             [(:table-schema table) (:table-name table)]
+             (:table table)
+             [(:schema table) (:table table)]
+             (:name table)
+             [(:schema table) (:name table)])
+           (remove nil?)
+           (map name)
+           (str/join ".")
+           (keyword)))
 
 (defn column-keyword
   "Return the column as keyword."
   [column & [include-table?]]
-  (->> (cond
-         (:column-name column)
-         [(:table-schema column) (:table-name column) (:column-name column)]
-         (:name column)
-         [(:table column) (:name column)])
-       (remove nil?)
-       (map name)
-       (str/join ".")
-       (keyword)))
+  (some->> (cond
+             (:column-name column)
+             [(:table-schema column) (:table-name column) (:column-name column)]
+             (:name column)
+             [(:table column) (:name column)])
+           (remove nil?)
+           (map name)
+           (str/join ".")
+           (keyword)))

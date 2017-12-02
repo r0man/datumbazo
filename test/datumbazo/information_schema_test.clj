@@ -1,5 +1,5 @@
 (ns datumbazo.information-schema-test
-  (:require [clojure.test :refer [deftest is]]
+  (:require [clojure.test :refer [deftest is testing]]
             [datumbazo.information-schema :as schema]
             [datumbazo.test :as t :refer [with-backends]]))
 
@@ -58,48 +58,61 @@
     (t/create-test-table db :physicians)
     (t/create-test-table db :appointments)
     (is (= (schema/foreign-keys db :appointments)
-           [{:reference-table-name "patients",
-             :constraint-name "appointments_patient-id_fkey",
-             :is-deferrable "NO",
-             :reference-table-catalog "datumbazo",
-             :constraint-schema "public",
-             :constraint-catalog "datumbazo",
-             :table-catalog "datumbazo",
-             :reference-table-schema "public",
-             :initially-deferred "NO",
-             :table-schema "public",
-             :table-name "appointments",
-             :constraint-type "FOREIGN KEY",
-             :column-name "patient-id",
+           [{:reference-table-name "patients"
+             :constraint-name "appointments_patient-id_fkey"
+             :is-deferrable "NO"
+             :reference-table-catalog "datumbazo"
+             :constraint-schema "public"
+             :constraint-catalog "datumbazo"
+             :table-catalog "datumbazo"
+             :reference-table-schema "public"
+             :initially-deferred "NO"
+             :table-schema "public"
+             :table-name "appointments"
+             :constraint-type "FOREIGN KEY"
+             :column-name "patient-id"
              :reference-column-name "id"}
-            {:reference-table-name "physicians",
-             :constraint-name "appointments_physician-id_fkey",
-             :is-deferrable "NO",
-             :reference-table-catalog "datumbazo",
-             :constraint-schema "public",
-             :constraint-catalog "datumbazo",
-             :table-catalog "datumbazo",
-             :reference-table-schema "public",
-             :initially-deferred "NO",
-             :table-schema "public",
-             :table-name "appointments",
-             :constraint-type "FOREIGN KEY",
-             :column-name "physician-id",
+            {:reference-table-name "physicians"
+             :constraint-name "appointments_physician-id_fkey"
+             :is-deferrable "NO"
+             :reference-table-catalog "datumbazo"
+             :constraint-schema "public"
+             :constraint-catalog "datumbazo"
+             :table-catalog "datumbazo"
+             :reference-table-schema "public"
+             :initially-deferred "NO"
+             :table-schema "public"
+             :table-name "appointments"
+             :constraint-type "FOREIGN KEY"
+             :column-name "physician-id"
              :reference-column-name "id"}]))))
 
 (deftest test-primary-keys
   (with-backends [db]
-    (t/create-test-table db :patients)
-    (is (= (schema/primary-keys db :patients)
-           [{:constraint-catalog "datumbazo"
-             :constraint-schema "public"
-             :constraint-name "patients_pkey"
-             :table-catalog "datumbazo"
-             :table-schema "public"
-             :table-name "patients"
-             :column-name "id"
-             :ordinal-position 1
-             :position-in-unique-constraint nil}]))))
+    (testing "authors"
+      (t/create-test-table db :authors)
+      (is (= (schema/primary-keys db :authors)
+             [{:constraint-catalog "datumbazo"
+               :constraint-schema "public"
+               :constraint-name "authors_pkey"
+               :table-catalog "datumbazo"
+               :table-schema "public"
+               :table-name "authors"
+               :column-name "id"
+               :ordinal-position 1
+               :position-in-unique-constraint nil}])))
+    (testing "patients"
+      (t/create-test-table db :patients)
+      (is (= (schema/primary-keys db :patients)
+             [{:constraint-catalog "datumbazo"
+               :constraint-schema "public"
+               :constraint-name "patients_pkey"
+               :table-catalog "datumbazo"
+               :table-schema "public"
+               :table-name "patients"
+               :column-name "id"
+               :ordinal-position 1
+               :position-in-unique-constraint nil}])))))
 
 (deftest test-unique-keys
   (with-backends [db]

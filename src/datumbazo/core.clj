@@ -1,6 +1,6 @@
 (ns datumbazo.core
   (:refer-clojure :exclude [distinct group-by update])
-  (:require [datumbazo.associations :as associations]
+  (:require [datumbazo.postgresql.associations :as associations]
             [datumbazo.driver.core :as driver]
             [datumbazo.pagination :as pagination]
             [datumbazo.table :as table]
@@ -12,9 +12,11 @@
             [sqlingvo.core :as sql]))
 
 (import-vars
- [datumbazo.associations
+ [datumbazo.postgresql.associations
   belongs-to
-  has-many]
+  has-and-belongs-to-many
+  has-many
+  has-one]
  [datumbazo.driver.core
   begin
   commit

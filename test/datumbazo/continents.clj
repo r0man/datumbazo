@@ -1,5 +1,6 @@
 (ns datumbazo.continents
-  (:require [datumbazo.callbacks :as callback]
+  (:require [datumbazo.associations :as a]
+            [datumbazo.callbacks :as callback]
             [datumbazo.core :as sql]))
 
 (sql/deftable ::continents
@@ -9,7 +10,7 @@
   (sql/column :code :varchar :size 2 :not-null? true :unique? true)
   (sql/column :created-at :timestamp :not-null? true)
   (sql/column :updated-at :timestamp :not-null? true)
-  (sql/has-many :countries :batch-size 2 :dependent :destroy))
+  (a/has-many :countries :batch-size 2 :dependent :destroy))
 
 ;; Test callback counts
 

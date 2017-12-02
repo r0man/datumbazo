@@ -301,3 +301,43 @@
          [{:array []}]))
   (is (= @(sql/select db ['(cast ["f9fd3df1-59f4-454c-90d3-c62a43fb035f"] [:uuid])])
          [{:array [#uuid "f9fd3df1-59f4-454c-90d3-c62a43fb035f"]}])))
+
+(deftest test-array-subvec
+  (is (= @(sql/select db [`(array_subvec [1 2 3 4] 1 2)])
+         [{:array [1 2]}])))
+
+(deftest test-array-agg-order-by-asc
+  (with-backends [db]
+    (setup-test-table db :authors)
+    (setup-test-table db :books)
+    (is (= @(sql/select db [`(array_agg :name (order-by (asc :id)))]
+              (sql/from :books)
+              (sql/group-by :author-id))
+           [{:array_agg ["Book #1" "Book #4"]}
+            {:array_agg ["Book #2" "Book #5"]}
+            {:array_agg ["Book #3" "Book #6" "Book #8"]}
+            {:array_agg ["Book #7"]}]))))
+
+(deftest test-array-agg-order-by-desc
+  (with-backends [db]
+    (setup-test-table db :authors)
+    (setup-test-table db :books)
+    (is (= @(sql/select db [`(array_agg :name (order-by (desc :id)))]
+              (sql/from :books)
+              (sql/group-by :author-id))
+           [{:array_agg ["Book #4" "Book #1"]}
+            {:array_agg ["Book #5" "Book #2"]}
+            {:array_agg ["Book #8" "Book #6" "Book #3"]}
+            {:array_agg ["Book #7"]}]))))
+
+(deftest test-array-agg-order-by-many-columns
+  (with-backends [db]
+    (setup-test-table db :authors)
+    (setup-test-table db :books)
+    (is (= @(sql/select db [`(array_agg :name (order-by :name :id))]
+              (sql/from :books)
+              (sql/group-by :author-id))
+           [{:array_agg ["Book #1" "Book #4"]}
+            {:array_agg ["Book #2" "Book #5"]}
+            {:array_agg ["Book #3" "Book #6" "Book #8"]}
+            {:array_agg ["Book #7"]}]))))

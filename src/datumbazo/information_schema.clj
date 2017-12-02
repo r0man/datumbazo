@@ -87,9 +87,9 @@
                             :key-column-usage.table-name)
                          (= :table-constraints.constraint-name
                             :key-column-usage.constraint-name))))
-     (sql/where `(and (= :key-column-usage.table-catalog ~(table-catalog db))
-                      (= :key-column-usage.table-schema ~(table-schema db identifier))
-                      (= :key-column-usage.table-name ~(table-name db identifier))
+     (sql/where `(and (= :table-constraints.table-catalog ~(table-catalog db))
+                      (= :table-constraints.table-schema ~(table-schema db identifier))
+                      (= :table-constraints.table-name ~(table-name db identifier))
                       (= :table-constraints.constraint-type "PRIMARY KEY")))
      (sql/order-by :ordinal-position)))
 
@@ -138,6 +138,10 @@
                       (= :table-constraints.constraint-type "FOREIGN KEY")))
      (sql/order-by :ordinal-position)))
 
+(s/fdef foreign-keys
+  :args (s/cat :db sql/db? :identifier ::identifier)
+  :ret (s/coll-of ::column))
+
 (defn unique-keys
   "Returns the unique key columns for `identifier`."
   [db identifier]
@@ -156,6 +160,10 @@
                       (= :table-constraints.constraint-type "UNIQUE")))
      (sql/order-by :ordinal-position)))
 
+(s/fdef unique-keys
+  :args (s/cat :db sql/db? :identifier ::identifier)
+  :ret (s/coll-of ::column))
+
 (defn column
   "Returns the columns for `identifier`."
   [db identifier]
@@ -168,6 +176,10 @@
                                (= :column-name ~(-> column :name name))))
               (sql/order-by :ordinal-position)))))
 
+(s/fdef column
+  :args (s/cat :db sql/db? :identifier ::identifier)
+  :ret (s/nilable ::column))
+
 (defn columns
   "Returns the columns for `identifier`."
   [db identifier]
@@ -177,6 +189,10 @@
                       (= :table-schema ~(table-schema db identifier))
                       (= :table-name ~(table-name db identifier))))
      (sql/order-by :ordinal-position)))
+
+(s/fdef columns
+  :args (s/cat :db sql/db? :identifier ::identifier)
+  :ret (s/coll-of ::column))
 
 (defn table
   "Returns the `identifier`."
@@ -193,3 +209,7 @@
      :table-name (table-name db identifier)
      :table-schema (table-schema db identifier)
      :unique-keys (zip-column-name unique-keys)}))
+
+(s/fdef table
+  :args (s/cat :db sql/db? :identifier ::identifier)
+  :ret (s/nilable ::table))

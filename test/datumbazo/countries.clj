@@ -1,5 +1,6 @@
 (ns datumbazo.countries
-  (:require [datumbazo.core :as sql]
+  (:require [datumbazo.associations :as a]
+            [datumbazo.core :as sql]
             [datumbazo.record :refer [select-columns]]))
 
 (sql/deftable ::countries
@@ -14,7 +15,7 @@
   (sql/column :country/iso-3166-1-numeric :integer :not-null? true :unique? true)
   (sql/column :country/created-at :timestamp :not-null? true)
   (sql/column :country/updated-at :timestamp :not-null? true)
-  (sql/belongs-to :country/continent))
+  (a/belongs-to :country/continent))
 
 (defmethod select-columns Country [class & [opts]]
   [:countries.id
