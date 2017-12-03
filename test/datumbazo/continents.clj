@@ -1,16 +1,15 @@
 (ns datumbazo.continents
-  (:require [datumbazo.associations :as a]
-            [datumbazo.callbacks :as callback]
-            [datumbazo.core :as sql]))
+  (:require [datumbazo.callbacks :as callback]
+            [datumbazo.table :as t]))
 
-(sql/deftable ::continents
+(t/deftable ::continents
   "The continents database table."
-  (sql/column :id :serial :primary-key? true)
-  (sql/column :name :text :not-null? true :unique? true)
-  (sql/column :code :varchar :size 2 :not-null? true :unique? true)
-  (sql/column :created-at :timestamp :not-null? true)
-  (sql/column :updated-at :timestamp :not-null? true)
-  (a/has-many :countries :batch-size 2 :dependent :destroy))
+  (t/column :id :serial :primary-key? true)
+  (t/column :name :text :not-null? true :unique? true)
+  (t/column :code :varchar :size 2 :not-null? true :unique? true)
+  (t/column :created-at :timestamp :not-null? true)
+  (t/column :updated-at :timestamp :not-null? true)
+  (t/has-many :countries :batch-size 2 :dependent :destroy))
 
 ;; Test callback counts
 

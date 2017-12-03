@@ -1,12 +1,15 @@
 (ns datumbazo.table
   (:require [clojure.spec.alpha :as s]
             [datumbazo.gen :as generators]
+            [datumbazo.associations :as a]
             [datumbazo.postgresql.types :as types]
             [datumbazo.record :as record]
             [datumbazo.util :as util]
             [sqlingvo.core :as sql]
             [sqlingvo.expr :as expr]))
 
+(def belongs-to a/belongs-to)
+(def has-many a/has-many)
 (def column sql/column)
 
 (defn columns
@@ -39,7 +42,7 @@
      ~(str "Truncate the " (-> table :name name) " table.")
      [~'db & [~'opts]]
      @(sql/truncate ~'db [~(util/table-keyword table)]
-        (sql/cascade (:cascade ~'opts)))))
+                    (sql/cascade (:cascade ~'opts)))))
 
 (defn- column-spec-name
   "Return the name of the `column` spec in `ns`."
