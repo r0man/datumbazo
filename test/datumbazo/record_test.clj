@@ -44,6 +44,7 @@
   (is (= (#'datumbazo.record/do-update-clause Continent)
          {:created-at :EXCLUDED.created-at,
           :code :EXCLUDED.code,
+          :geometry :EXCLUDED.geometry
           :updated-at :EXCLUDED.updated-at})))
 
 (deftest test-primary-key-columns
@@ -91,5 +92,6 @@
                "\"continents\".\"name\", "
                "\"continents\".\"code\", "
                "\"continents\".\"updated-at\", "
+               "CAST(\"continents\".\"geometry\" AS GEOMETRY) AS \"geometry\", "
                "\"continents\".\"id\" "
                "FROM \"continents\"")])))

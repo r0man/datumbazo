@@ -13,14 +13,6 @@
 (def new-continent
   {:name "Gondwana" :code "GD"})
 
-(deftest test-select-columns
-  (is (= (set (record/select-columns Continent))
-         #{:continents.created-at
-           :continents.name
-           :continents.code
-           :continents.updated-at
-           :continents.id})))
-
 (deftest test-sample
   (is (every? map? (gen/sample (s/gen ::continents/continents)))))
 
@@ -80,6 +72,7 @@
              {:id 12
               :name "Europe"
               :code "EU"
+              :geometry nil
               :created-at #inst "2012-10-06T18:22:58.640-00:00"
               :updated-at #inst "2012-10-06T18:22:58.640-00:00"})))))
 

@@ -78,3 +78,33 @@
     (is @(sql/drop-table db [:test] (sql/if-exists true)))
     (is @(sql/create-table db :test
            (sql/column :x :text :array? true)))))
+
+(def geometry-types
+  [:geometry-collection
+   :line-string
+   :multi-line-string
+   :multi-polygon
+   :multi-point
+   :point])
+
+(deftest test-create-table-geometry
+  (with-backends [db]
+    (doseq [geometry-type geometry-types
+            :let [table (keyword (str "table-" (name geometry-type)))]]
+      (is (= @(sql/create-table db table
+                (sql/column :my-geom :geometry :geometry geometry-type))
+             [{:count 0}])))))
+
+(deftest test-create-table-geography
+  (with-backends [db]
+    (doseq [geometry-type geometry-types
+            :let [table (keyword (str "table-" (name geometry-type)))]]
+      (is (= @(sql/create-table db table
+                (sql/column :my-geom :geography :geometry geometry-type))
+             [{:count 0}])))))
+
+(deftest test-create-table-point-srid
+  (with-backends [db]
+    (is (= @(sql/create-table db :my-table
+              (sql/column :my-geom :point :srid 4326))
+           [{:count 0}]))))

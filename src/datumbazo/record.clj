@@ -18,7 +18,7 @@
 
 (defmulti select-columns
   "Return the columns for `class` used in SELECT and RETURNING clauses."
-  (fn [class & [opts]] class))
+  (fn [db class & [opts]] class))
 
 (defmulti delete-records
   "Delete `records` of `class` in `db`."
@@ -36,16 +36,27 @@
   "Save `records` of `class` to `db`."
   (fn [db class records & [opts]] class))
 
+(defmulti select-column-expr
+  (fn [db table column] (:type column)))
+
+(defmethod select-column-expr :geography [db table column]
+  (sql/as `(cast ~(util/column-keyword column true) :geometry) (:name column)))
+
+(defmethod select-column-expr :default [db table column]
+  (util/column-keyword column true))
+
 (defmethod select-class :default
   [db class & [opts]]
   (let [table (util/table-by-class class)
         columns (util/columns-by-class class)]
-    (sql/select db (map #(util/column-keyword % true) columns)
+    (sql/select db (map #(select-column-expr db table %) columns)
       (sql/from (util/table-keyword table)))))
 
 (defmethod select-columns :default
-  [class & [opts]]
-  (map #(util/column-keyword % true) (util/columns-by-class class)))
+  [db class & [opts]]
+  (let [table (util/table-by-class class)]
+    (map #(select-column-expr db table %)
+         (util/columns-by-class class))))
 
 (defn- primary-key-columns
   "Return the primary key columns of `class`."
@@ -63,16 +74,22 @@
          (filter :unique?)
          (set))))
 
+(defn- select-all-keys [map keyseq]
+  (persistent! (reduce #(assoc! %1 %2 (get map %2))
+                       (transient {}) keyseq)))
+
 (defn select-values
   "Return a seq of `records` that only have the table column keys."
   [class records]
-  (let [keys (map :form (util/columns-by-class class))]
-    (map #(util/record->row class (select-keys % keys)) records)))
+  (let [table-keys (set (map :form (util/columns-by-class class)))
+        record-keys (set (mapcat keys records))
+        keys (set/intersection table-keys record-keys)]
+    (map #(util/record->row class (select-all-keys % keys)) records)))
 
 (defn- returning-clause
   "Return a RETURNING clause for `class`."
-  [class]
-  (apply sql/returning (select-columns class)))
+  [db class]
+  (apply sql/returning (select-columns db class)))
 
 (defmethod delete-records :default
   [db class records & [opts]]
@@ -83,7 +100,7 @@
     (assert pk (str "No primary key found for " class))
     (->> @(sql/delete db (util/table-keyword table)
             (sql/where `(in ~(:name pk) ~(map (:form pk) records)))
-            (returning-clause class))
+            (returning-clause db class))
          (util/make-instances db class)
          (callback/call-after-delete))))
 
@@ -94,7 +111,7 @@
         table (util/table-by-class class)]
     (->> @(sql/insert db (util/table-keyword table) []
             (sql/values (select-values class records))
-            (returning-clause class))
+            (returning-clause db class))
          (util/make-instances db class)
          (callback/call-after-create))))
 
@@ -153,7 +170,7 @@
             (update-expression class records)
             (sql/from (sql/as (sql/values values) :update (map :name columns)))
             (sql/where (update-condition class))
-            (returning-clause class))
+            (returning-clause db class))
          (util/make-instances db class)
          (callback/call-after-update))))
 
@@ -189,7 +206,7 @@
             (sql/values (select-values class records))
             (sql/on-conflict (on-conflict-clause class)
               (sql/do-update (do-update-clause class)))
-            (returning-clause class))
+            (returning-clause db class))
          (util/make-instances db class)
          (callback/call-after-save))))
 

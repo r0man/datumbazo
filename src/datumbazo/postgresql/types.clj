@@ -66,5 +66,5 @@
 
 ;; TODO:
 
-(s/def ::geometry nil?)
 (s/def ::geography nil?)
+(s/def ::geometry nil?)

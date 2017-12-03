@@ -6,7 +6,7 @@ CREATE TABLE continents (
   id serial PRIMARY KEY,
   name citext UNIQUE NOT NULL,
   code varchar(2) UNIQUE NOT NULL,
-  geometry geometry(MULTIPOLYGON, 4326),
+  geometry geography(MULTIPOLYGON, 4326),
   "geonames-id" integer UNIQUE,
   "created-at" timestamp with time zone NOT NULL DEFAULT now(),
   "updated-at" timestamp with time zone NOT NULL DEFAULT now()
