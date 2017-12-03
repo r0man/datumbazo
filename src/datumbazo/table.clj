@@ -7,6 +7,8 @@
             [sqlingvo.core :as sql]
             [sqlingvo.expr :as expr]))
 
+(def column sql/column)
+
 (defn columns
   "Returns the columns of `table`."
   [table]
