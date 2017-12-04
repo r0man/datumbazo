@@ -1,6 +1,7 @@
 (ns datumbazo.driver.core
   (:require [clojure.string :as str]
-            [sqlingvo.core :refer [ast sql]]))
+            [sqlingvo.core :as sql :refer [ast sql]]
+            [clojure.spec.alpha :as s]))
 
 (defprotocol IConnection
   (-connect [driver opts])
@@ -47,10 +48,16 @@
   [db]
   (-connection (:driver db)))
 
+(s/fdef connection
+  :args (s/cat :db sql/db?))
+
 (defn connected?
   "Returns true if `db` is connected, otherwise false."
   [db]
   (some? (connection db)))
+
+(s/fdef connected?
+  :args (s/cat :db sql/db?))
 
 (defn begin
   "Begin a new `db` transaction."
@@ -58,11 +65,17 @@
   {:pre [(connected? db)]}
   (-begin db opts))
 
+(s/fdef begin
+  :args (s/cat :db sql/db? :opts (s/? (s/nilable map?))))
+
 (defn commit
   "Commit the current `db` transaction."
   [db & [opts]]
   {:pre [(connected? db)]}
   (-commit db opts))
+
+(s/fdef commit
+  :args (s/cat :db sql/db? :opts (s/? (s/nilable map?))))
 
 (defn connect
   "Connect to `db` using `opts`."
@@ -70,11 +83,17 @@
   {:pre [(not (connected? db))]}
   (-connect db opts))
 
+(s/fdef connect
+  :args (s/cat :db sql/db? :opts (s/? (s/nilable map?))))
+
 (defn disconnect
   "Disconnect from `db`."
   [db & [opts]]
   {:pre [(connected? db)]}
   (-disconnect db))
+
+(s/fdef disconnect
+  :args (s/cat :db sql/db? :opts (s/? (s/nilable map?))))
 
 (defn prepare-statement
   "Return a prepared statement for `sql`."
@@ -82,11 +101,17 @@
   {:pre [(connected? db)]}
   (-prepare-statement db sql opts))
 
+(s/fdef prepare-statement
+  :args (s/cat :db sql/db? :sql any? :opts (s/? (s/nilable map?))))
+
 (defn rollback
   "Rollback the current `db` transaction."
   [db & [opts]]
   {:pre [(connected? db)]}
   (-rollback db opts))
+
+(s/fdef rollback
+  :args (s/cat :db sql/db? :opts (s/? (s/nilable map?))))
 
 (defn sql-str
   "Prepare `stmt` using the database and return the raw SQL as a string."
@@ -107,6 +132,9 @@
     (let [db (connect db opts)]
       (try (f db)
            (finally (disconnect db))))))
+
+(s/fdef with-connection*
+  :args (s/cat :db sql/db? :f ifn? :opts (s/? (s/nilable map?))))
 
 (defmacro with-connection
   "Open a database connection, bind the connected `db` to `db-sym`,
@@ -129,6 +157,9 @@
         (rollback db)
         (throw t)))))
 
+(s/fdef with-transaction*
+  :args (s/cat :db sql/db? :f ifn? :opts (s/? (s/nilable map?))))
+
 (defmacro with-transaction
   "Start a new `db` transaction, bind `db` to `db-sym` and evaluate
   `body` within the transaction."
@@ -145,6 +176,9 @@
            (throw (ex-info "Can't execute SQL query."
                            {:sql sql :opts opts} e))))))
 
+(s/fdef execute-sql-query
+  :args (s/cat :db sql/db? :sql any? :opts (s/? (s/nilable map?))))
+
 (defn execute-sql-statement
   "Execute a SQL statement."
   [db sql & [opts]]
@@ -153,6 +187,9 @@
          (catch Exception e
            (throw (ex-info "Can't execute SQL statement."
                            {:sql sql :opts opts} e))))))
+
+(s/fdef execute-sql-statement
+  :args (s/cat :db sql/db? :sql any? :opts (s/? (s/nilable map?))))
 
 (defn- execute-fn
   "Return the SQL execution fn for `ast`."

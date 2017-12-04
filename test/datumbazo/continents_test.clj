@@ -14,7 +14,7 @@
   {:name "Gondwana" :code "GD"})
 
 (deftest test-sample
-  (is (every? map? (gen/sample (s/gen ::continents/continents)))))
+  (is (every? map? (gen/sample (s/gen ::continents/continent)))))
 
 (deftest test-continent?
   (is (continent? (make-instance Continent {:a 1})))
@@ -147,7 +147,7 @@
   (with-backends [db]
     (let [continent (continents/by-name db "Asia")
           countries (:countries continent)]
-      (is (= (map :country/name countries) ["Indonesia"]))
+      (is (= (map :name countries) ["Indonesia"]))
       (is (every? country? countries)))))
 
 (deftest test-delete!
@@ -172,7 +172,7 @@
 (deftest test-insert!-gen
   (with-backends [db]
     (continents/truncate! db {:cascade true})
-    (doseq [continent (gen/sample (s/gen ::continents/continents))]
+    (doseq [continent (gen/sample (continents/gen))]
       (let [row (continents/insert! db continent)]
         (try (is (pos? (:id row)))
              (is (= (:name row) (:name continent)))

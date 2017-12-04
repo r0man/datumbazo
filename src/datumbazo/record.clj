@@ -7,7 +7,8 @@
             [datumbazo.util :as util]
             [inflections.core :as infl]
             [potemkin.collections :refer [def-map-type]]
-            [sqlingvo.core :as sql :refer [column]])
+            [sqlingvo.core :as sql :refer [column]]
+            [clojure.spec.alpha :as s])
   (:import [java.util List Map]
            sqlingvo.db.Database))
 
@@ -66,6 +67,9 @@
          (filter :primary-key?)
          (set))))
 
+(s/fdef primary-key-columns
+  :args (s/cat :class class?))
+
 (defn- unique-key-columns
   "Return the unique key columns of `class`."
   [class]
@@ -73,6 +77,9 @@
     (->> (vals (:column table))
          (filter :unique?)
          (set))))
+
+(s/fdef unique-key-columns
+  :args (s/cat :class class?))
 
 (defn- select-all-keys [map keyseq]
   (persistent! (reduce #(assoc! %1 %2 (get map %2))
@@ -86,10 +93,16 @@
         keys (set/intersection table-keys record-keys)]
     (map #(util/record->row class (select-all-keys % keys)) records)))
 
+(s/fdef select-values
+  :args (s/cat :class class? :records (s/coll-of map?)))
+
 (defn- returning-clause
   "Return a RETURNING clause for `class`."
   [db class]
   (apply sql/returning (select-columns db class)))
+
+(s/fdef returning-clause
+  :args (s/cat :db sql/db? :class class?))
 
 (defmethod delete-records :default
   [db class records & [opts]]
@@ -136,6 +149,9 @@
            [(:name column) (update-column column)])
          (into {}))))
 
+(s/fdef update-expression
+  :args (s/cat :class class? :records (s/coll-of map?)))
+
 (defn- update-condition
   "Return the update condition for `class`."
   [class]
@@ -143,6 +159,9 @@
          (list '= (util/column-keyword column true)
                (update-column column)))
        (concat ['and])))
+
+(s/fdef update-condition
+  :args (s/cat :class class?))
 
 (defn- cast-type
   "Returns the cast type for `column`."
@@ -158,6 +177,9 @@
                `(cast ~(get % form) ~(cast-type column)))
              (util/columns-by-class class))
        records))
+
+(s/fdef update-values
+  :args (s/cat :class class? :records (s/coll-of map?)))
 
 (defmethod update-records :default
   [db class records & [opts]]
@@ -185,6 +207,9 @@
                          class " has no primary key nor a unique constraint declared.")
                     {:class class}))))
 
+(s/fdef on-conflict-clause
+  :args (s/cat :class class?))
+
 (defn- do-update-clause
   "Return the DO UPDATE clause for an insert statement."
   [class]
@@ -196,6 +221,9 @@
                :let [column-kw (:name column)]]
            [column-kw (keyword (str "EXCLUDED." (name column-kw)))])
          (into {}))))
+
+(s/fdef do-update-clause
+  :args (s/cat :class class?))
 
 (defmethod save-records :default
   [db class records & [opts]]
@@ -247,6 +275,9 @@
        (util/make-instances db class)
        (callback/call-after-find)))
 
+(s/fdef find-all
+  :args (s/cat :db sql/db? :class class? :opts (s/? (s/nilable map?))))
+
 (defn- coerce-unique [column value rows]
   (if (and (or (:unique? column) (:primary-key? column))
            (not (sequential? value)))
@@ -267,6 +298,13 @@
          (util/make-instances db class)
          (callback/call-after-find)
          (coerce-unique column value))))
+
+(s/fdef find-by-column
+  :args (s/cat :db sql/db?
+               :class class?
+               :column-kw keyword?
+               :value any?
+               :opts (s/? (s/nilable map?))))
 
 (defn- define-find-by-column
   "Return the definition for a function that returns rows by a column."
