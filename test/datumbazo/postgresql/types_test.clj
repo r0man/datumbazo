@@ -1,10 +1,17 @@
 (ns datumbazo.postgresql.types-test
   (:require [clojure.spec.alpha :as s]
+            [clojure.test :refer [deftest is]]
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.properties :as prop]
             [datumbazo.postgresql.types :as t]))
 
-(defspec test-smallint-minimum
+(deftest test-geometry
+  (is (s/exercise ::t/geometry)))
+
+(deftest test-geography
+  (is (s/exercise ::t/geography)))
+
+(deftest test-smallint-minimum
   (prop/for-all [x (s/gen ::t/smallint)] (>= x -32768)))
 
 (defspec test-smallint-maximum

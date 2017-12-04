@@ -58,9 +58,17 @@
   (keyword (column-spec-ns table column)
            (-> column :name name)))
 
-(defn- column-spec-type
+(defmulti column-spec-type
   "Return the type of the `column` in the `datumbazo.types` namespace."
-  [column]
+  (fn [column] (:type column)))
+
+(defmethod column-spec-type :geometry [{:keys [geometry type]}]
+  (keyword "postgis.spec" (name (or geometry type))))
+
+(defmethod column-spec-type :geography [{:keys [geometry type]}]
+  (keyword "postgis.spec" (name (or geometry type))))
+
+(defmethod column-spec-type :default [column]
   (keyword "datumbazo.postgresql.types" (-> column :type name)))
 
 (defmulti column-spec-gen

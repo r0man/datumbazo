@@ -1,9 +1,11 @@
 (ns datumbazo.gen-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.test :refer :all]
             [clojure.test.check.generators :as gen]
             [datumbazo.core :as sql]
             [datumbazo.gen :as gens]
-            [datumbazo.test :refer :all]))
+            [datumbazo.test :refer :all]
+            [postgis.spec :as postgis]))
 
 (deftest test-column-integer
   (with-backends [db]
@@ -12,6 +14,14 @@
     (is (->> (gens/column db :my-table.id)
              (gen/sample)
              (every? int?)))))
+
+(deftest test-column-geometry
+  (with-backends [db]
+    @(sql/create-table db :my-table
+       (sql/column :geom :geometry :not-null? true))
+    (is (->> (gens/column db :my-table.geom)
+             (gen/generate)
+             (s/valid? ::postgis/geometry)))))
 
 (deftest test-column-nilable
   (with-backends [db]

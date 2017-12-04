@@ -1,6 +1,6 @@
 (ns datumbazo.postgresql.types
   (:require [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]))
+            [postgis.spec :as postgis]))
 
 (s/def ::boolean boolean?)
 
@@ -64,7 +64,8 @@
 
 (s/def ::uuid uuid?)
 
-;; TODO:
+;; PostGIS
 
-(s/def ::geography nil?)
-(s/def ::geometry nil?)
+(s/def ::geometry ::postgis/geometry)
+
+(s/def ::geography ::postgis/geography)

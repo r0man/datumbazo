@@ -14,6 +14,7 @@
                  [org.clojure/clojure "1.9.0-RC2"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.logging "0.4.0"]
+                 [postgis.spec "0.1.2"]
                  [potemkin "0.4.4"]
                  [sqlingvo "0.9.15"]]
   :plugins [[jonase/eastwood "0.2.5"]

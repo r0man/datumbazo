@@ -27,19 +27,6 @@
 (defn spec
   "Returns the `db` specific spec for `type-or-column`."
   [db type-or-column & [opts]]
-  (let [spec (keyword (spec-name db type-or-column))]
-    (try (cond-> (s/spec spec)
-           (or (:nilable? opts)
-               (:nil? type-or-column)
-               (= (:is-nullable type-or-column) "YES"))
-           (s/nilable))
-         (catch Exception e
-           (.printStackTrace e)
-           nil))))
-
-(defn spec
-  "Returns the `db` specific spec for `type-or-column`."
-  [db type-or-column & [opts]]
   (when-let [spec (s/get-spec (spec-keyword db type-or-column))]
     (cond-> spec
       (or (:nilable? opts)
