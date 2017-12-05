@@ -82,7 +82,7 @@
   `(s/def ~(column-spec-name table column)
      ~(if (or (:not-null? column) (:primary-key? column))
         (column-spec-gen table column)
-        (s/nilable (column-spec-gen table column)))))
+        `(s/nilable ~(column-spec-gen table column)))))
 
 (defn- define-column-specs
   "Define a function that truncates `table`."
