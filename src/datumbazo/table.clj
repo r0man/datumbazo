@@ -47,16 +47,10 @@
      @(sql/truncate ~'db [~(util/table-keyword table)]
         (sql/cascade (:cascade ~'opts)))))
 
-(defn- column-spec-ns
-  "Return the name of the `column` spec in `ns`."
-  [table column]
-  (str (str *ns*) "." (-> table :name name i/singular)))
-
 (defn- column-spec-name
   "Return the name of the `column` spec in `ns`."
   [table column]
-  (keyword (column-spec-ns table column)
-           (-> column :name name)))
+  (keyword (str *ns*) (-> column :name name)))
 
 (defmulti column-spec-type
   "Return the type of the `column` in the `datumbazo.types` namespace."
