@@ -50,7 +50,7 @@
     (sequential? target)
     (-> target meta :datumbazo/stmt)
     :else
-    (throw (ex-info (str "Can't infer query." {:target target})))))
+    (throw (ex-info (str "Can't infer query." {:target target}) {}))))
 
 (defn page-info
   "Returns the page info for `query` and `params`."

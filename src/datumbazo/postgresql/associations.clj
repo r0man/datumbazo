@@ -42,9 +42,9 @@
                    :sqlingvo.table/name]))
 
 (defn- extract-many [primary-key row]
-  (with-meta (mapv #(hash-map (:name primary-key) %)
-                   (:array_paginate row))
-    (merge (meta row) row)))
+  (when-let [pk-vals (remove nil? (:array_paginate row))]
+    (with-meta (mapv #(hash-map (:name primary-key) %) pk-vals)
+      (merge (meta row) row))))
 
 (defn- extract-one [primary-key row]
   (when (get row (:name primary-key))
