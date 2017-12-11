@@ -46,7 +46,7 @@
 (defn connection
   "Return the current connection to `db`."
   [db]
-  (-connection (:driver db)))
+  (-connection db))
 
 (s/fdef connection
   :args (s/cat :db sql/db?))
@@ -113,16 +113,6 @@
 (s/fdef rollback
   :args (s/cat :db sql/db? :opts (s/? (s/nilable map?))))
 
-(defn sql-str
-  "Prepare `stmt` using the database and return the raw SQL as a string."
-  [stmt]
-  (let [ast (ast stmt)]
-    (with-open [stmt (prepare-statement (:db ast) (sql ast))]
-      (if (.startsWith (str stmt) (str/replace (first (sql ast)) #"\?.*" ""))
-        (str stmt)
-        (throw (UnsupportedOperationException.
-                "Sorry, sql-str not supported by SQL driver."))))))
-
 (defn with-connection*
   "Open a database connection, call `f` with the connected `db` as
   argument and close the connection again."
@@ -166,6 +156,17 @@
   [[db-sym db & [opts]] & body]
   `(with-connection [db# ~db]
      (with-transaction* db# (fn [~db-sym] ~@body) ~opts)))
+
+(defn sql-str
+  "Prepare `stmt` using the database and return the raw SQL as a string."
+  [stmt]
+  (let [ast (ast stmt)]
+    (with-connection [db (:db ast)]
+      (with-open [stmt (prepare-statement db (sql ast))]
+        (if (.startsWith (str stmt) (str/replace (first (sql ast)) #"\?.*" ""))
+          (str stmt)
+          (throw (UnsupportedOperationException.
+                  "Sorry, sql-str not supported by SQL driver.")))))))
 
 (defn execute-sql-query
   "Execute a SQL query."

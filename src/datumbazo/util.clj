@@ -263,12 +263,13 @@
   "Slurp `file` and execute each line as a statement."
   [db file]
   (with-open [reader (reader file)]
-    (doseq [statement (sql-stmt-seq reader)
-            :let [statement (replace statement #";$" "")]]
-      (case (parse-command statement)
-        :select (driver/execute-sql-query db [statement] nil)
-        (driver/execute-sql-statement db [statement] nil)))
-    file))
+    (driver/with-connection [db db]
+      (doseq [statement (sql-stmt-seq reader)
+              :let [statement (replace statement #";$" "")]]
+        (case (parse-command statement)
+          :select (driver/execute-sql-query db [statement] nil)
+          (driver/execute-sql-statement db [statement] nil)))
+      file)))
 
 (defn throw-sql-ex-info
   "Throw `e` with `sql` and the next exception in `ex-data`."

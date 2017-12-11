@@ -21,6 +21,7 @@
   begin
   commit
   connect
+  connected?
   connection
   disconnect
   execute
