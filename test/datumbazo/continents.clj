@@ -7,6 +7,7 @@
   (t/column :id :serial :primary-key? true)
   (t/column :name :text :not-null? true :unique? true)
   (t/column :code :varchar :size 2 :not-null? true :unique? true)
+  (t/column :geonames-id :integer :unique? true)
   (t/column :geometry :geography :geometry :multi-polygon :srid 4326)
   (t/column :created-at :timestamp :not-null? true)
   (t/column :updated-at :timestamp :not-null? true)

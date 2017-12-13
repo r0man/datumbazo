@@ -6,7 +6,8 @@
             [datumbazo.countries :refer [country?]]
             [datumbazo.test :refer :all]
             [datumbazo.util :refer [make-instance]]
-            [datumbazo.record :as record])
+            [datumbazo.record :as record]
+            [datumbazo.util :as util])
   (:import datumbazo.continents.Continent
            java.util.Date))
 
@@ -73,6 +74,7 @@
               :name "Europe"
               :code "EU"
               :geometry nil
+              :geonames-id 6255148
               :created-at #inst "2012-10-06T18:22:58.640-00:00"
               :updated-at #inst "2012-10-06T18:22:58.640-00:00"})))))
 
@@ -181,6 +183,13 @@
              (is (instance? Date (:updated-at row)))
              (finally (continents/delete! db row)))))))
 
+(deftest test-select-batch
+  (with-backends [db]
+    (let [continents (continents/all db)]
+      (is (nil? (continents/select-batch db [])))
+      (is (= (continents/select-batch db continents)
+             continents)))))
+
 (deftest test-update!
   (with-backends [db]
     (let [continent (continents/by-name db "Asia")
@@ -207,6 +216,10 @@
         (is (= (:code continent) "GD"))
         (is (instance? Date (:created-at continent)))
         (is (instance? Date (:updated-at continent)))))))
+
+(deftest test-table
+  (is (= (continents/table)
+         (util/table-by-class Continent))))
 
 (deftest test-truncate!
   (with-backends [db]

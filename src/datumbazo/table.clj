@@ -1,15 +1,14 @@
 (ns datumbazo.table
   (:require [clojure.spec.alpha :as s]
-            [datumbazo.gen :as generators]
             [datumbazo.associations :as a]
+            [datumbazo.gen :as generators]
             [datumbazo.postgresql.types :as types]
             [datumbazo.record :as record]
+            [datumbazo.select-batch :as select-batch]
             [datumbazo.util :as util]
-            [sqlingvo.core :as sql]
-            [sqlingvo.expr :as expr]
             [inflections.core :as i]
-            [clojure.string :as str]
-            [clojure.test.check.generators :as gen]))
+            [sqlingvo.core :as sql]
+            [sqlingvo.expr :as expr]))
 
 (def belongs-to a/belongs-to)
 (def has-many a/has-many)
@@ -30,6 +29,16 @@
            ((sql/chain-state body)
             (expr/parse-table name))))]))
 
+(defn define-select-batch
+  "Define the `select-batch` function for `table`."
+  [table]
+  (let [class (util/class-symbol table)]
+    `(defn ~'select-batch
+       ~(str "Select the batch of " (-> table :name name) " rows from table.")
+       [~'db ~'rows & [~'opts]]
+       (let [table# (datumbazo.util/table-by-class ~class)]
+         (select-batch/select-batch ~'db table# ~'rows ~'opts)))))
+
 (defn define-table-by-class
   "Define the `table-by-class` multi method for `table`."
   [table]
@@ -37,6 +46,15 @@
     `(defmethod datumbazo.util/table-by-class ~class
        [~'class]
        (quote ~table))))
+
+(defn define-table
+  "Define the `table-by-class` multi method for `table`."
+  [table]
+  (let [class (util/class-symbol table)]
+    `(defn ~'table
+       ~(str "Returns the " (-> table :name name) " table.")
+       []
+       (datumbazo.util/table-by-class ~class))))
 
 (defn- define-truncate
   "Define a function that truncates `table`."
@@ -162,7 +180,9 @@
         table# (assoc table# :id table-name)]
     `(do ~(record/define-record table#)
          ~(define-table-by-class table#)
+         ~(define-table table#)
          ~(define-truncate table#)
+         ~(define-select-batch table#)
          ~(define-column-specs table#)
          ~(define-row-spec table#)
          ~(define-gen table#))))

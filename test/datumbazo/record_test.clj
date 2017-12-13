@@ -45,6 +45,7 @@
          {:created-at :EXCLUDED.created-at,
           :code :EXCLUDED.code,
           :geometry :EXCLUDED.geometry
+          :geonames-id :EXCLUDED.geonames-id
           :updated-at :EXCLUDED.updated-at})))
 
 (deftest test-primary-key-columns
@@ -84,7 +85,17 @@
             :op :column,
             :size 2,
             :unique? true,
-            :form :code}})))
+            :form :code}
+           {:schema nil,
+            :children [:name],
+            :table :continents,
+            :default nil,
+            :name :geonames-id,
+            :val :geonames-id,
+            :type :integer,
+            :op :column,
+            :unique? true,
+            :form :geonames-id}})))
 
 (deftest test-select-class
   (is (= (sql/sql (select-class db Continent))
@@ -93,5 +104,6 @@
                "\"continents\".\"code\", "
                "\"continents\".\"updated-at\", "
                "CAST(\"continents\".\"geometry\" AS GEOMETRY) AS \"geometry\", "
-               "\"continents\".\"id\" "
+               "\"continents\".\"id\", "
+               "\"continents\".\"geonames-id\" "
                "FROM \"continents\"")])))

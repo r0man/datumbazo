@@ -116,6 +116,13 @@
       (is (instance? Date (:created-at country)))
       (is (instance? Date (:updated-at country))))))
 
+(deftest test-select-batch
+  (with-backends [db]
+    (let [countries (countries/all db)]
+      (is (nil? (countries/select-batch db [])))
+      (is (= (countries/select-batch db countries)
+             countries)))))
+
 (deftest test-sample
   (doseq [country (gen/sample (countries/gen))]
     (is (map? country))

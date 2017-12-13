@@ -11,12 +11,12 @@
                  [commandline-clj "0.3.0"]
                  [geo-clj "0.6.2"]
                  [inflections "0.13.0"]
-                 [org.clojure/clojure "1.9.0-RC2"]
+                 [org.clojure/clojure "1.9.0"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.logging "0.4.0"]
                  [postgis.spec "0.1.2"]
                  [potemkin "0.4.4"]
-                 [sqlingvo "0.9.15"]]
+                 [sqlingvo "0.9.16"]]
   :plugins [[jonase/eastwood "0.2.5"]
             [lein-difftest "2.0.0"]]
   :aliases {"ci" ["do" ["difftest"] ["lint"]]
@@ -32,7 +32,7 @@
                                   [org.postgresql/postgresql "42.1.4"]
                                   [net.postgis/postgis-jdbc "2.2.1"
                                    :exclusions [postgresql org.postgresql/postgresql]]
-                                  [org.xerial/sqlite-jdbc "3.21.0"]
+                                  [org.xerial/sqlite-jdbc "3.21.0.1"]
                                   [validation-clj "0.5.6"]]
                    :repl-options {:init-ns user}
                    :resource-paths ["test-resources"]}}

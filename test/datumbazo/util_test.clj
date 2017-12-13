@@ -1,10 +1,10 @@
 (ns datumbazo.util-test
-  (:refer-clojure :exclude [distinct group-by update])
-  (:require [clojure.test :refer :all]
+  (:require [clojure.java.io :as io]
+            [clojure.test :refer :all]
+            [datumbazo.continents :as continents]
             [datumbazo.core :as sql]
             [datumbazo.test :refer :all]
-            [datumbazo.util :refer :all]
-            [clojure.java.io :as io]))
+            [datumbazo.util :as util :refer :all]))
 
 (deftest test-absolute-path
   (is (string? (absolute-path ""))))

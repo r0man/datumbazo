@@ -1,18 +1,15 @@
 (ns datumbazo.util
-  (:refer-clojure :exclude [replace])
   (:require [clojure.java.io :refer [file reader]]
-            [clojure.string :as str :refer [blank? replace split]]
-            [datumbazo.callbacks :as callback]
-            [datumbazo.driver.core :as driver]
-            [no.en.core :as noencore]
+            [clojure.set :as set]
+            [clojure.spec.alpha :as s]
+            [clojure.string :as str]
             [datumbazo.driver.core :as driver]
             [inflections.core :as infl]
+            [no.en.core :as noencore]
             [sqlingvo.core :as sql]
-            [clojure.set :as set])
+            [sqlingvo.expr :as expr])
   (:import java.io.File
-           java.sql.SQLException
-           [java.util List Map]
-           sqlingvo.db.Database))
+           java.sql.SQLException))
 
 (def ^:private jdbc-url-regex
   "The regular expression to match JDBC urls."
@@ -158,14 +155,14 @@
 
 (defn path-split
   "Split `s` at the file separator."
-  [s] (split (str s) (re-pattern File/separator)))
+  [s] (str/split (str s) (re-pattern File/separator)))
 
 (defn path-replace
   "Absolute path substitude `match` in `s` with `replacement`."
   [s match & [replacement]]
-  (replace (absolute-path s)
-           (str (absolute-path match) "/")
-           (or replacement "")))
+  (str/replace (absolute-path s)
+               (str (absolute-path match) "/")
+               (or replacement "")))
 
 (defmacro defn-memo
   "Just like defn, but memoizes the function using clojure.core/memoize"
@@ -177,15 +174,15 @@
 
 (defn parse-params
   "Parse `s` as a query string and return a hash map."
-  [s] (->> (split (or s "") #"&")
-           (remove blank?)
-           (map #(split %1 #"="))
+  [s] (->> (str/split (or s "") #"&")
+           (remove str/blank?)
+           (map #(str/split %1 #"="))
            (mapcat #(vector (keyword (first %1)) (second %1)))
            (apply hash-map)))
 
 (defn qualified-name
   "Returns the qualified name of `k`."
-  [k] (replace (str k) #"^:" ""))
+  [k] (str/replace (str k) #"^:" ""))
 
 (defn parse-schema
   "Parse the schema `s` and return a map with the :name key."
@@ -194,7 +191,7 @@
 (defn parse-column
   "Parse the column `s` and return a map with :schema, :table and :name keys."
   [s]
-  (let [parts (map keyword (split (qualified-name s) #"\.|/" 3))]
+  (let [parts (map keyword (str/split (qualified-name s) #"\.|/" 3))]
     (condp = (count parts)
       1 {:name (first parts)}
       2 (zipmap [:table :name] parts)
@@ -205,7 +202,7 @@
   [file]
   (with-open [reader (reader file)]
     (->> (line-seq reader)
-         (map #(replace %1 #";$" ""))
+         (map #(str/replace %1 #";$" ""))
          (doall))))
 
 (defn- parse-command
@@ -265,7 +262,7 @@
   (with-open [reader (reader file)]
     (driver/with-connection [db db]
       (doseq [statement (sql-stmt-seq reader)
-              :let [statement (replace statement #";$" "")]]
+              :let [statement (str/replace statement #";$" "")]]
         (case (parse-command statement)
           :select (driver/execute-sql-query db [statement] nil)
           (driver/execute-sql-statement db [statement] nil)))
