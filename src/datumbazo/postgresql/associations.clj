@@ -172,12 +172,17 @@
                       `(on (= ~(keyword (str "source." (-> source-pk :name name)))
                               ~(column-keyword source-pk)))
                       :type :left)
-            (sql/join target
+            (sql/join (sql/as
+                       (sql/select db [:*]
+                                   (sql/from target)
+                                   (some-> opts :where))
+                       (-> target :name keyword))
                       `(on (= ~(column-keyword source-pk)
                               ~(column-keyword source-fk)))
                       :type :left)
             (sql/where `(and (in ~(column-keyword source-pk)
-                                 ~(map (:name source-pk) batch))))
+                                 ~(map (:name source-pk) batch)))
+                       :and)
             (sql/group-by :source.index (column-keyword source-pk))
             (sql/order-by :source.index))
          (mapv #(extract-many target-pk %)))))
@@ -270,7 +275,11 @@
                       `(on (= ~(column-keyword source-pk)
                               ~(column-keyword join-source-fk)))
                       :type :left)
-            (sql/join target
+            (sql/join (sql/as
+                       (sql/select db [:*]
+                                   (sql/from target)
+                                   (some-> opts :where))
+                       (-> target :name keyword))
                       `(on (= ~(column-keyword join-target-fk)
                               ~(column-keyword target-pk)))
                       :type :left)
