@@ -2,47 +2,49 @@
   (:require [com.stuartsierra.component :as component]
             [datumbazo.driver.core :as d]))
 
-(defrecord Driver [driver connected?]
+(defrecord Driver [db driver connected?]
   d/IConnection
-  (-connect [driver opts]
-    (assoc driver :connected? true))
-  (-connection [driver]
+  (-connect [this db opts]
+    (-> (assoc this :connected? true)
+        (update :driver d/-connect db opts)))
+  (-connection [this db]
     (when connected?
-      (d/-connection (:driver driver))))
-  (-disconnect [driver]
-    (assoc driver :connected? false))
+      (d/-connection driver db)))
+  (-disconnect [this db]
+    (assoc this :connected? false))
 
   d/IExecute
-  (-execute [_ sql opts]
-    (d/-execute driver sql opts))
+  (-execute [_ db sql opts]
+    (d/-execute driver db sql opts))
 
   d/IFetch
-  (-fetch [_ sql opts]
-    (d/-fetch driver sql opts))
+  (-fetch [_ db sql opts]
+    (d/-fetch driver db sql opts))
 
   d/IPrepareStatement
-  (-prepare-statement [_ sql opts]
-    (d/-prepare-statement driver sql opts))
+  (-prepare-statement [_ db sql opts]
+    (d/-prepare-statement driver db sql opts))
 
   d/ITransaction
-  (-begin [_ opts]
-    (d/-begin driver opts))
-  (-commit [_ opts]
-    (d/-commit driver opts))
-  (-rollback [_ opts]
-    (d/-rollback driver opts))
+  (-begin [_ db opts]
+    (d/-begin driver db opts))
+  (-commit [_ db opts]
+    (d/-commit driver db opts))
+  (-rollback [_ db opts]
+    (d/-rollback driver db opts))
 
   component/Lifecycle
-  (start [driver]
-    (->> (-> (d/-connect (:driver driver) nil) (d/-begin nil))
-         (assoc driver :driver)))
-  (stop [driver]
-    (some-> driver :driver (d/-rollback nil))
-    (update driver :driver d/-disconnect)))
+  (start [this]
+    (->> (-> (d/-connect driver db nil)
+             (d/-begin db nil))
+         (assoc this :driver)))
+  (stop [this]
+    (-> (update this :driver d/-rollback db nil)
+        (update :driver d/-disconnect db))))
 
 (defn driver
   "Return a new test driver that rolls back any changes to the
   database that happen between the component's start and stop
   life-cycle."
   [db]
-  (->Driver (d/find-driver db) false))
+  (->Driver db (d/find-driver db) false))

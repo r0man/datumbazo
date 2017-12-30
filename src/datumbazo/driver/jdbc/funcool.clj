@@ -13,49 +13,53 @@
 
 (defrecord Driver [connection]
   d/IConnection
-  (-connect [driver opts]
-    (->> (if-let [datasource (:datasource driver)]
-           (jdbc/connection datasource)
-           (jdbc/connection (util/format-url driver)))
-         (assoc driver :connection)))
-  (-connection [driver]
+  (-connect [this db opts]
+    (->> (or connection
+             (jdbc/connection
+              (or (:datasource db)
+                  (util/format-url db))))
+         (assoc this :connection)))
+
+  (-connection [this db]
     (some-> connection proto/connection))
-  (-disconnect [driver]
+
+  (-disconnect [this db]
     (some-> connection .close)
-    (assoc driver :connection nil))
+    (assoc this :connection nil))
 
   d/IExecute
-  (-execute [driver sql opts]
+  (-execute [this db sql opts]
     (d/row-count (jdbc/execute connection sql)))
 
   d/IFetch
-  (-fetch [driver sql opts]
-    (let [identifiers (or (:sql-keyword driver) str/lower-case)
+  (-fetch [this db sql opts]
+    (let [identifiers (or (:sql-keyword db) str/lower-case)
           opts (merge {:identifiers identifiers} opts)]
       (jdbc/fetch connection sql opts)))
 
   d/IPrepareStatement
-  (-prepare-statement [driver sql opts]
-    (proto/prepared-statement sql (d/-connection driver) opts))
+  (-prepare-statement [this db sql opts]
+    (proto/prepared-statement sql (d/-connection this db) opts))
 
   d/ITransaction
-  (-begin [driver opts]
-    (->> (proto/begin! (tx-strategy driver) connection opts)
-         (assoc driver :connection)))
-  (-commit [driver opts]
-    (->> (proto/commit! (tx-strategy driver) connection opts)
-         (assoc driver :connection)))
-  (-rollback [driver opts]
+  (-begin [this db opts]
+    (->> (proto/begin! (tx-strategy this) connection opts)
+         (assoc this :connection)))
+
+  (-commit [this db opts]
+    (->> (proto/commit! (tx-strategy this) connection opts)
+         (assoc this :connection)))
+
+  (-rollback [this db opts]
     (jdbc/set-rollback! connection)
-    (proto/rollback! (tx-strategy driver) connection opts)
-    driver))
+    (proto/rollback! (tx-strategy this) connection opts)
+    this))
 
 (defmethod d/find-driver 'jdbc.core
   [db & [opts]]
-  (map->Driver db))
+  (map->Driver {}))
 
 (extend-protocol proto/ISQLResultSetReadColumn
-
   org.postgresql.jdbc.PgArray
   (from-sql-type [val conn metadata index]
     (io/decode-array val))
@@ -77,7 +81,6 @@
     (io/decode-date val)))
 
 (extend-protocol proto/ISQLType
-
   clojure.lang.BigInt
   (as-sql-type [big-int conn]
     (long big-int))

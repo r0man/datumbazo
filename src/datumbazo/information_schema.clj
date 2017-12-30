@@ -63,11 +63,9 @@
 (defn- schema-db
   "Returns `db` using a Clojure naming strategy."
   [db]
-  (-> (assoc db :sql-name util/sql-name-underscore)
-      ;; TODO: Use flat structure to change driver
-      (assoc-in [:driver :sql-keyword] util/sql-keyword-hyphenate)
-      ;; TODO: Use flat structure to change test driver
-      (assoc-in [:driver :driver :sql-keyword] util/sql-keyword-hyphenate)))
+  (->> {:sql-name util/sql-name-underscore
+        :sql-keyword util/sql-keyword-hyphenate}
+       (merge db)))
 
 (defn- zip-column-name
   [columns]

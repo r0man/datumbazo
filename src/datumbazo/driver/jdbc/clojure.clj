@@ -7,40 +7,43 @@
 
 (defrecord Driver [connection]
   d/IConnection
-  (-connect [driver opts]
-    (->> (jdbc/get-connection
-          (if (:datasource driver)
-            (select-keys driver [:datasource])
-            (util/format-url driver)))
-         (assoc driver :connection)))
-  (-connection [driver]
+  (-connect [this db opts]
+    (->> (or connection
+             (jdbc/get-connection
+              (if (:datasource db)
+                (select-keys db [:datasource])
+                (util/format-url db))))
+         (assoc this :connection)))
+
+  (-connection [this db]
     connection)
-  (-disconnect [driver]
+
+  (-disconnect [this db]
     (some-> connection .close)
-    (assoc driver :connection nil))
+    (assoc this :connection nil))
 
   d/IExecute
-  (-execute [driver sql opts]
-    (d/row-count (jdbc/execute! driver sql)))
+  (-execute [this db sql opts]
+    (d/row-count (jdbc/execute! this sql)))
 
   d/IFetch
-  (-fetch [driver sql opts]
-    (let [identifiers (or (:sql-keyword driver) str/lower-case)
+  (-fetch [this db sql opts]
+    (let [identifiers (or (:sql-keyword db) str/lower-case)
           opts (merge {:identifiers identifiers} opts)]
-      (jdbc/query driver sql opts)))
+      (jdbc/query this sql opts)))
 
   d/IPrepareStatement
-  (-prepare-statement [driver sql opts]
+  (-prepare-statement [this db sql opts]
     (let [prepared (jdbc/prepare-statement connection (first sql) opts)]
       (dorun (map-indexed (fn [i v] (jdbc/set-parameter v prepared (inc i))) (rest sql)))
       prepared))
 
   d/ITransaction
-  (-begin [driver [{:keys [isolation read-only?]}]]
+  (-begin [this db [{:keys [isolation read-only?]}]]
     ;; Taken from clojure.java.jdbc/db-transaction*
-    (if (zero? (jdbc/get-level driver))
-      (let [con (jdbc/db-find-connection driver)]
-        (let [nested-db (#'jdbc/inc-level driver)]
+    (if (zero? (jdbc/get-level this))
+      (let [con (jdbc/db-find-connection this)]
+        (let [nested-db (#'jdbc/inc-level this)]
           (io!
            (when isolation
              (.setTransactionIsolation con (isolation #'jdbc/isolation-levels)))
@@ -50,28 +53,29 @@
            nested-db)))
       (do
         (when (and isolation
-                   (let [con (jdbc/db-find-connection driver)]
+                   (let [con (jdbc/db-find-connection this)]
                      (not= (isolation #'jdbc/isolation-levels)
                            (.getTransactionIsolation con))))
           (let [msg "Nested transactions may not have different isolation levels"]
             (throw (IllegalStateException. msg))))
-        (#'jdbc/inc-level driver))))
-  (-commit [driver opts]
-    (if (jdbc/db-is-rollback-only driver)
+        (#'jdbc/inc-level this))))
+
+  (-commit [this db opts]
+    (if (jdbc/db-is-rollback-only this)
       (.rollback connection)
       (.commit connection))
-    driver)
-  (-rollback [driver opts]
-    (jdbc/db-set-rollback-only! driver)
+    this)
+
+  (-rollback [this db opts]
+    (jdbc/db-set-rollback-only! this)
     (.rollback connection)
-    driver))
+    this))
 
 (defmethod d/find-driver 'clojure.java.jdbc
   [db & [opts]]
-  (map->Driver db))
+  (map->Driver {}))
 
 (extend-protocol jdbc/IResultSetReadColumn
-
   org.postgresql.jdbc.PgArray
   (result-set-read-column [val rsmeta idx]
     (io/decode-array val))
@@ -93,7 +97,6 @@
     (io/decode-date val)))
 
 (extend-protocol jdbc/ISQLValue
-
   clojure.lang.BigInt
   (sql-value [big-int]
     (long big-int))

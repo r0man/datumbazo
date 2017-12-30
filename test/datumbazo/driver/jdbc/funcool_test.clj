@@ -70,7 +70,7 @@
         (is (-> db :driver :connection meta :transaction))
         (is (not (-> db :driver :connection meta :rollback deref)))
         @(sql/create-table db :test-rollback
-                           (sql/column :id :integer))
+           (sql/column :id :integer))
         (is (= (sql/rollback db) db))
         (is (-> db :driver :connection meta :rollback deref))))))
 
@@ -79,8 +79,8 @@
                        :sql-keyword util/sql-keyword-hyphenate
                        :sql-name util/sql-name-underscore}]
     (is (= @(sql/select db [:*]
-                        (sql/from :information-schema.tables)
-                        (sql/where '(= :table-name "pg_statistic")))
+              (sql/from :information-schema.tables)
+              (sql/where '(= :table-name "pg_statistic")))
            [{:commit-action nil,
              :reference-generation nil,
              :is-typed "NO",

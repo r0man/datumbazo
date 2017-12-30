@@ -1,26 +1,26 @@
 (ns datumbazo.driver.core
-  (:require [clojure.string :as str]
-            [sqlingvo.core :as sql :refer [ast sql]]
-            [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]
+            [sqlingvo.core :as sql :refer [ast sql]]))
 
 (defprotocol IConnection
-  (-connect [driver opts])
-  (-connection [driver])
-  (-disconnect [driver]))
+  (-connect [driver db opts])
+  (-connection [driver db])
+  (-disconnect [driver db]))
 
 (defprotocol IFetch
-  (-fetch [driver sql opts]))
+  (-fetch [driver db sql opts]))
 
 (defprotocol IExecute
-  (-execute [driver sql opts]))
+  (-execute [driver db sql opts]))
 
 (defprotocol IPrepareStatement
-  (-prepare-statement [driver sql opts]))
+  (-prepare-statement [driver db sql opts]))
 
 (defprotocol ITransaction
-  (-begin [driver opts])
-  (-commit [driver opts])
-  (-rollback [driver opts]))
+  (-begin [driver db opts])
+  (-commit [driver db opts])
+  (-rollback [driver db opts]))
 
 (defmulti find-driver
   "Find the driver for `db`."
@@ -46,7 +46,7 @@
 (defn connection
   "Return the current connection to `db`."
   [db]
-  (-connection db))
+  (-connection (:driver db) db))
 
 (s/fdef connection
   :args (s/cat :db sql/db?))
@@ -63,7 +63,7 @@
   "Begin a new `db` transaction."
   [db & [opts]]
   {:pre [(connected? db)]}
-  (-begin db opts))
+  (update db :driver -begin db opts))
 
 (s/fdef begin
   :args (s/cat :db sql/db? :opts (s/? (s/nilable map?))))
@@ -72,7 +72,7 @@
   "Commit the current `db` transaction."
   [db & [opts]]
   {:pre [(connected? db)]}
-  (-commit db opts))
+  (update db :driver -commit db opts))
 
 (s/fdef commit
   :args (s/cat :db sql/db? :opts (s/? (s/nilable map?))))
@@ -81,7 +81,7 @@
   "Connect to `db` using `opts`."
   [db & [opts]]
   {:pre [(not (connected? db))]}
-  (-connect db opts))
+  (update db :driver -connect db opts))
 
 (s/fdef connect
   :args (s/cat :db sql/db? :opts (s/? (s/nilable map?))))
@@ -90,7 +90,7 @@
   "Disconnect from `db`."
   [db & [opts]]
   {:pre [(connected? db)]}
-  (-disconnect db))
+  (update db :driver -disconnect db))
 
 (s/fdef disconnect
   :args (s/cat :db sql/db? :opts (s/? (s/nilable map?))))
@@ -99,7 +99,7 @@
   "Return a prepared statement for `sql`."
   [db sql & [opts]]
   {:pre [(connected? db)]}
-  (-prepare-statement db sql opts))
+  (-prepare-statement (:driver db) db sql opts))
 
 (s/fdef prepare-statement
   :args (s/cat :db sql/db? :sql any? :opts (s/? (s/nilable map?))))
@@ -108,7 +108,7 @@
   "Rollback the current `db` transaction."
   [db & [opts]]
   {:pre [(connected? db)]}
-  (-rollback db opts))
+  (update db :driver -rollback db opts))
 
 (s/fdef rollback
   :args (s/cat :db sql/db? :opts (s/? (s/nilable map?))))
@@ -172,7 +172,7 @@
   "Execute a SQL query."
   [db sql & [opts]]
   (with-connection [db db]
-    (try (-fetch (:driver db) sql opts)
+    (try (-fetch (:driver db) db sql opts)
          (catch Exception e
            (throw (ex-info "Can't execute SQL query."
                            {:sql sql :opts opts} e))))))
@@ -184,7 +184,7 @@
   "Execute a SQL statement."
   [db sql & [opts]]
   (with-connection [db db]
-    (try (-execute (:driver db) sql opts)
+    (try (-execute (:driver db) db sql opts)
          (catch Exception e
            (throw (ex-info "Can't execute SQL statement."
                            {:sql sql :opts opts} e))))))

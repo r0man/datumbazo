@@ -27,7 +27,7 @@
                                   [com.zaxxer/HikariCP "2.7.4"]
                                   [funcool/clojure.jdbc "0.9.0"]
                                   [mysql/mysql-connector-java "5.1.44"]
-                                  [org.clojure/java.jdbc "0.7.3"]
+                                  [org.clojure/java.jdbc "0.7.5"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.postgresql/postgresql "42.1.4"]
                                   [net.postgis/postgis-jdbc "2.2.1"

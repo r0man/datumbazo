@@ -101,17 +101,17 @@
       {:file filename :table table :records (count rows)})))
 
 (defn deferred-constraints [db]
-  (driver/-execute (:driver db) ["SET CONSTRAINTS ALL DEFERRED"] nil))
+  (driver/-execute (:driver db) db ["SET CONSTRAINTS ALL DEFERRED"] nil))
 
 (defn enable-triggers
   "Enable triggers on the database `table`."
   [db table]
-  (driver/-execute (:driver db) [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " ENABLE TRIGGER ALL")] nil))
+  (driver/-execute (:driver db) db [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " ENABLE TRIGGER ALL")] nil))
 
 (defn disable-triggers
   "Disable triggers on the database `table`."
   [db table]
-  (driver/-execute (:driver db) [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " DISABLE TRIGGER ALL")] nil))
+  (driver/-execute (:driver db) db [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " DISABLE TRIGGER ALL")] nil))
 
 (defn delete-fixtures [db tables]
   (infof "Deleting fixtures from database.")

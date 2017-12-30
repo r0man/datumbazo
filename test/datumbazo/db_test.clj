@@ -68,9 +68,9 @@
     (is (= "tiger" (:username db)))
     (is (= "scotch" (:password db)))
     (let [started (component/start db)]
+      (is (instance? ComboPooledDataSource (:datasource started)))
       (sql/with-connection [db started]
         (is (instance? NewProxyConnection (sql/connection db))))
-      (is (instance? ComboPooledDataSource (-> started :driver :datasource)))
       (component/stop started))))
 
 (deftest test-new-db-bonecp
@@ -87,9 +87,9 @@
     (is (= "tiger" (:username db)))
     (is (= "scotch" (:password db)))
     (let [started (component/start db)]
+      (is (instance? BoneCPDataSource (:datasource started)))
       (sql/with-connection [db started]
         (is (instance? ConnectionHandle (sql/connection db))))
-      (is (instance? BoneCPDataSource (-> started :driver :datasource)))
       (component/stop started))))
 
 (deftest test-new-db-hikaricp
@@ -107,9 +107,9 @@
     (is (= "tiger" (:username db)))
     (is (= "scotch" (:password db)))
     (let [started (component/start db)]
+      (is (instance? HikariDataSource (:datasource started)))
       (sql/with-connection [db started]
         (is (instance? HikariProxyConnection (sql/connection db))))
-      (is (instance? HikariDataSource (-> started :driver :datasource)))
       (component/stop started))))
 
 (deftest test-new-db-sqlite
@@ -154,4 +154,4 @@
   (doseq [pool [:bonecp :c3p0 :hikaricp]]
     (sql/with-db [db (:postgresql connections) {:pool pool}]
       (is (:driver db))
-      (is (instance? DataSource (-> db :driver :datasource))))))
+      (is (instance? DataSource (:datasource db))))))

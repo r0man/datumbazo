@@ -13,14 +13,14 @@
   "Start a connection pool and assoc it onto the :driver of `db`."
   [db]
   (if-let [pool (db-pool db)]
-    (assoc-in db [:driver :datasource] pool)
+    (assoc db :datasource pool)
     db))
 
 (defn stop-pool
   "Stop the connection pool and dissoc it from the :driver of `db`."
   [db]
-  (some-> db :driver :datasource .close)
-  (update db :driver dissoc :datasource))
+  (some-> db :datasource .close)
+  (assoc db :datasource nil))
 
 (defn load-connection-pools
   "Load connection pool support."
