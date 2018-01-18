@@ -83,19 +83,20 @@
           (select-keys row (map :name columns))
           columns))
 
+(defn- find-encode-columns [db table]
+  (meta/columns db {:schema (or (:schema table) "public") :table (:name table)}))
+
 (defn encode-row
   "Encode the columns of `row` into database types."
   [db table row]
   (let [table (parse-table table)]
-    (encode-columns
-     (meta/columns db {:schema (:schema table) :table (:name table)})
-     row)))
+    (encode-columns (find-encode-columns db table) row)))
 
 (defn encode-rows
   "Encode the columns of `rows` into database types."
   [db table rows]
   (let [table (parse-table table)
-        columns (meta/columns db {:schema (:schema table) :table (:name table)})]
+        columns (find-encode-columns db table)]
     (map (partial encode-columns columns) rows)))
 
 ;; DECODE
