@@ -306,6 +306,29 @@
                :value any?
                :opts (s/? (s/nilable map?))))
 
+(defn exists?
+  "Returns true if the `record` of `class` can be found in `db`,
+  otherwise false. Uses the primary key and unique column."
+  [db class record]
+  (let [columns (concat (primary-key-columns class)
+                        (unique-key-columns class))]
+    (assert (not (empty? columns)) "No primary key or unique columns.")
+    (-> @(sql/select db [1]
+           (sql/from (util/table-by-class class))
+           (sql/where `(or ~@(for [column columns]
+                               `(= ~column ~(get record (:name column)))))))
+        empty? not)))
+
+(s/fdef exists? :args (s/cat :db sql/db? :class class? :record map?))
+
+(defn- define-exists?
+  "Return the definition for the `exists?` function."
+  [table]
+  `(defn ~'exists?
+     ~(str "Returns true if the `record` exists in `db`, otherwise false.")
+     [~'db ~'record]
+     (exists? ~'db ~(util/class-symbol table) ~'record)))
+
 (defn- define-find-by-column
   "Return the definition for a function that returns rows by a column."
   [table column & [opts]]
@@ -403,6 +426,7 @@
 
 (defn define-record [table]
   `(do ~(define-class table)
+       ~(define-exists? table)
        ~(define-instance? table)
        ~(define-delete table)
        ~(define-insert table)

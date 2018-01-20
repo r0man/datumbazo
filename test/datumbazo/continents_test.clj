@@ -78,6 +78,13 @@
               :created-at #inst "2012-10-06T18:22:58.640-00:00"
               :updated-at #inst "2012-10-06T18:22:58.640-00:00"})))))
 
+(deftest test-exists?
+  (with-backends [db]
+    (let [continent (continents/by-name db "Europe")]
+      (is (continents/exists? db continent))
+      (continents/delete! db continent)
+      (is (not (continents/exists? db continent))))))
+
 (deftest test-callbacks-all
   (with-test-db [db db]
     (continents/reset-counters)
