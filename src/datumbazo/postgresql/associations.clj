@@ -12,12 +12,14 @@
 
 (s/def ::foreign-key keyword?)
 (s/def ::join-table keyword?)
-(s/def ::limit nat-int?)
-(s/def ::offset nat-int?)
+(s/def ::limit (s/nilable nat-int?))
+(s/def ::offset (s/nilable nat-int?))
 (s/def ::primary-key keyword?)
 (s/def ::source keyword?)
 (s/def ::target keyword?)
 (s/def ::order-by any?)
+
+(s/def ::table (s/or :keyword keyword? :table :sqlingvo/table))
 
 (s/def ::belongs-to-opts
   (s/keys :req-un [::source ::target]
@@ -52,35 +54,34 @@
 
 (defn- foreign-key
   "Returns the foreign key for `table`."
-  [table & [opts]]
-  (let [schema (:schema opts)
-        name (:name opts)]
-    (cond-> {:op :column
-             :name (->> [(infl/singular (:name table))
-                         (or (:prefix opts) :id)]
-                        (remove nil?)
-                        (map core/name)
-                        (str/join "-")
-                        (keyword))}
-      schema (assoc :schema schema)
-      name (assoc :table name))))
+  [source target & [opts]]
+  (let [source (expr/parse-table source)
+        target (expr/parse-table target)]
+    {:op :column
+     :schema (:schema target)
+     :table (:table target)
+     :name (->> [(infl/singular (:name source))
+                 (or (:prefix opts) :id)]
+                (remove nil?)
+                (map core/name)
+                (str/join "-")
+                (keyword))}))
 
 (s/fdef foreign-key
-  :args (s/cat :table :sqlingvo/table
-               :opts (s/? ::foreign-key-opts)))
+  :args (s/cat :source ::table :target ::table :opts (s/? ::foreign-key-opts)))
 
 (defn- primary-key
   "Returns the primary key for `table`."
   [table & [opts]]
-  (let [schema (or (:schema table) (:schema opts))
+  (let [table (expr/parse-table table)
+        schema (or (:schema table) (:schema opts))
         name (or (:name table) (:name opts))]
     (cond-> {:op :column :name :id}
       schema (assoc :schema schema)
       name (assoc :table name))))
 
 (s/fdef primary-key
-  :args (s/cat :table :sqlingvo/table
-               :opts (s/? ::primary-key-opts)))
+  :args (s/cat :table ::table :opts (s/? ::primary-key-opts)))
 
 (defn- array-paginate-start
   "Returns the start position in the pagination array."
@@ -141,12 +142,12 @@
         source-fk (foreign-key target source)
         target-pk (primary-key target)]
     (->> @(sql/select db [(sql/as (column-keyword source-fk) (:name target-pk))]
-                      (sql/from (source-batch-values db batch source))
-                      (sql/join (table-keyword source)
-                                `(on (= ~(keyword (str "source-batch." (-> source-pk :name name)))
-                                        ~(column-keyword source-pk)))
-                                :type :left)
-                      (sql/order-by :source-batch.index))
+            (sql/from (source-batch-values db batch source))
+            (sql/join (table-keyword source)
+                      `(on (= ~(keyword (str "source-batch." (-> source-pk :name name)))
+                              ~(column-keyword source-pk)))
+                      :type :left)
+            (sql/order-by :source-batch.index))
          (mapv #(extract-one target-pk %)))))
 
 (s/fdef belongs-to
@@ -164,27 +165,27 @@
         source-pk (primary-key source)
         source-fk (foreign-key source target)
         target-pk (primary-key target)]
-    (->> @(sql/select db [(column-keyword source-pk)
+    (->> @(sql/select db [(keyword (str "source." (-> source-pk :name name)))
                           `(count ~(column-keyword target-pk))
                           (array-paginate target-pk opts)]
-                      (sql/from (source-batch-values db batch source))
-                      (sql/join (table-keyword source)
-                                `(on (= ~(keyword (str "source-batch." (-> source-pk :name name)))
-                                        ~(column-keyword source-pk)))
-                                :type :left)
-                      (sql/join (sql/as
-                                 (sql/select db [:*]
-                                             (sql/from target)
-                                             (some-> opts :where))
-                                 (-> target :name keyword))
-                                `(on (= ~(column-keyword source-pk)
-                                        ~(column-keyword source-fk)))
-                                :type :left)
-                      (sql/where `(and (in ~(column-keyword source-pk)
-                                           ~(map (:name source-pk) batch)))
-                                 :and)
-                      (sql/group-by :source-batch.index (column-keyword source-pk))
-                      (sql/order-by :source-batch.index))
+            (sql/from (source-batch-values db batch source))
+            (sql/join (sql/as (table-keyword source) :source)
+                      `(on (= ~(keyword (str "source-batch." (-> source-pk :name name)))
+                              ~(keyword (str "source." (-> source-pk :name name)))))
+                      :type :left)
+            (sql/join (sql/as
+                       (sql/select db [:*]
+                         (sql/from target)
+                         (some-> opts :where))
+                       (-> target :name keyword))
+                      `(on (= ~(keyword (str "source." (-> source-pk :name name)))
+                              ~(column-keyword (assoc source-fk :table (-> target :name keyword)))))
+                      :type :left)
+            (sql/where `(and (in ~(keyword (str "source." (-> source-pk :name name)))
+                                 ~(map (:name source-pk) batch)))
+                       :and)
+            (sql/group-by :source-batch.index (keyword (str "source." (-> source-pk :name name))))
+            (sql/order-by :source-batch.index))
          (mapv #(extract-many target-pk %)))))
 
 (s/fdef has-many
@@ -203,16 +204,16 @@
         target-pk (primary-key target)
         target-fk (foreign-key source target)]
     (->> @(sql/select db [(column-keyword target-pk)]
-                      (sql/from (source-batch-values db batch source))
-                      (sql/join (table-keyword source)
-                                `(on (= ~(keyword (str "source-batch." (-> source-pk :name name)))
-                                        ~(column-keyword source-pk)))
-                                :type :left)
-                      (sql/join (table-keyword target)
-                                `(on (= ~(column-keyword source-pk)
-                                        ~(column-keyword target-fk)))
-                                :type :left)
-                      (sql/order-by :source-batch.index))
+            (sql/from (source-batch-values db batch source))
+            (sql/join (table-keyword source)
+                      `(on (= ~(keyword (str "source-batch." (-> source-pk :name name)))
+                              ~(column-keyword source-pk)))
+                      :type :left)
+            (sql/join (table-keyword target)
+                      `(on (= ~(column-keyword source-pk)
+                              ~(column-keyword target-fk)))
+                      :type :left)
+            (sql/order-by :source-batch.index))
          (mapv #(extract-one target-pk %)))))
 
 (s/fdef has-one
@@ -266,27 +267,27 @@
     (->> @(sql/select db [(column-keyword source-pk)
                           `(count ~(column-keyword target-pk))
                           (array-paginate target-pk opts)]
-                      (sql/from (source-batch-values db batch source))
-                      (sql/join (table-keyword source)
-                                `(on (= ~(keyword (str "source-batch." (-> source-pk :name name)))
-                                        ~(column-keyword source-pk)))
-                                :type :left)
-                      (sql/join join-table
-                                `(on (= ~(column-keyword source-pk)
-                                        ~(column-keyword join-source-fk)))
-                                :type :left)
-                      (sql/join (sql/as
-                                 (sql/select db [:*]
-                                             (sql/from target)
-                                             (some-> opts :where))
-                                 (-> target :name keyword))
-                                `(on (= ~(column-keyword join-target-fk)
-                                        ~(column-keyword target-pk)))
-                                :type :left)
-                      (sql/where `(and (in ~(column-keyword source-pk)
-                                           ~(map (:name source-pk) batch))))
-                      (sql/group-by :source-batch.index (column-keyword source-pk))
-                      (sql/order-by :source-batch.index))
+            (sql/from (source-batch-values db batch source))
+            (sql/join (table-keyword source)
+                      `(on (= ~(keyword (str "source-batch." (-> source-pk :name name)))
+                              ~(column-keyword source-pk)))
+                      :type :left)
+            (sql/join join-table
+                      `(on (= ~(column-keyword source-pk)
+                              ~(column-keyword join-source-fk)))
+                      :type :left)
+            (sql/join (sql/as
+                       (sql/select db [:*]
+                                   (sql/from target)
+                                   (some-> opts :where))
+                       (-> target :name keyword))
+                      `(on (= ~(column-keyword (assoc join-target-fk :table (:name join-table)))
+                              ~(column-keyword target-pk)))
+                      :type :left)
+            (sql/where `(and (in ~(column-keyword source-pk)
+                                 ~(map (:name source-pk) batch))))
+            (sql/group-by :source-batch.index (column-keyword source-pk))
+            (sql/order-by :source-batch.index))
          (mapv #(extract-many target-pk %)))))
 
 (s/fdef has-and-belongs-to-many
