@@ -87,22 +87,31 @@
 
 (defn- select-table-columns
   "Returns the column SELECT expression for `table`"
-  [db table]
-  (map #(select-column-expr db table %)
-       (-> table :column vals)))
+  [db table & [{:keys [except]}]]
+  (let [columns (-> table :column vals)
+        except (set except)]
+    (cond->> columns
+      (seq except) (remove #(contains? except (:name %)))
+      true (map #(select-column-expr db table %)))))
 
 (s/fdef select-table-columns
-  :args (s/cat :db sql/db? :table :sqlingvo/table))
+  :args (s/cat :db sql/db?
+               :table :sqlingvo/table
+               :opts (s/* (s/nilable map?))))
+
+(defn- select-columns
+  [db table target & [opts]]
+  (if (keyword? table)
+    (select-all-columns db target)
+    (select-table-columns db target opts)))
 
 (defn select-batch
   "Select the batch of `rows` from `table` in `db`."
-  [db table rows & [{:keys [where]}]]
+  [db table rows & [{:keys [except where] :as opts}]]
   (when-not (empty? rows)
     (let [target (target-table table)
           source (source-table target)]
-      (->> @(sql/select db (if (keyword? table)
-                             (select-all-columns db target)
-                             (select-table-columns db target))
+      (->> @(sql/select db (select-columns db table target opts)
               (sql/from (source-values source rows))
               (join-condition source target)
               (when where (sql/where where :and))

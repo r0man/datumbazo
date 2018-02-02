@@ -19,3 +19,11 @@
       (is (nil? (select-batch db table [])))
       (is (= (select-batch db table continents)
              continents)))))
+
+(deftest test-select-batch-except
+  (with-backends [db]
+    (let [table (continents/table)
+          continents (continents/all db)
+          except [:name]]
+      (is (= (select-batch db table continents {:except except})
+             (map #(apply dissoc % except) continents))))))
