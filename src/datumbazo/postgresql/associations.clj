@@ -131,7 +131,8 @@
 (s/fdef source-batch-values
   :args (s/cat :db sql/db?
                :batch (s/coll-of map?)
-               :source :sqlingvo/table))
+               :source :sqlingvo/table
+               :opts (s/? (s/nilable map?))))
 
 ;; Belongs to
 
@@ -142,7 +143,7 @@
         source-fk (foreign-key target source)
         target-pk (primary-key target)]
     (->> @(sql/select db [(sql/as (column-keyword source-fk) (:name target-pk))]
-            (sql/from (source-batch-values db batch source))
+            (sql/from (source-batch-values db batch source opts))
             (sql/join (table-keyword source)
                       `(on (= ~(keyword (str "source-batch." (-> source-pk :name name)))
                               ~(column-keyword source-pk)))
@@ -168,7 +169,7 @@
     (->> @(sql/select db [(keyword (str "source." (-> source-pk :name name)))
                           `(count ~(column-keyword target-pk))
                           (array-paginate target-pk opts)]
-            (sql/from (source-batch-values db batch source))
+            (sql/from (source-batch-values db batch source opts))
             (sql/join (sql/as (table-keyword source) :source)
                       `(on (= ~(keyword (str "source-batch." (-> source-pk :name name)))
                               ~(keyword (str "source." (-> source-pk :name name)))))
@@ -204,7 +205,7 @@
         target-pk (primary-key target)
         target-fk (foreign-key source target)]
     (->> @(sql/select db [(column-keyword target-pk)]
-            (sql/from (source-batch-values db batch source))
+            (sql/from (source-batch-values db batch source opts))
             (sql/join (table-keyword source)
                       `(on (= ~(keyword (str "source-batch." (-> source-pk :name name)))
                               ~(column-keyword source-pk)))
@@ -267,7 +268,7 @@
     (->> @(sql/select db [(column-keyword source-pk)
                           `(count ~(column-keyword target-pk))
                           (array-paginate target-pk opts)]
-            (sql/from (source-batch-values db batch source))
+            (sql/from (source-batch-values db batch source opts))
             (sql/join (table-keyword source)
                       `(on (= ~(keyword (str "source-batch." (-> source-pk :name name)))
                               ~(column-keyword source-pk)))
@@ -278,8 +279,8 @@
                       :type :left)
             (sql/join (sql/as
                        (sql/select db [:*]
-                                   (sql/from target)
-                                   (some-> opts :where))
+                         (sql/from target)
+                         (some-> opts :where))
                        (-> target :name keyword))
                       `(on (= ~(column-keyword (assoc join-target-fk :table (:name join-table)))
                               ~(column-keyword target-pk)))
