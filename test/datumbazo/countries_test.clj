@@ -88,7 +88,8 @@
     (let [country (countries/by-name db "Spain")
           continent (:continent country)]
       (is (continent? continent))
-      (is (= continent (continents/by-name db "Europe"))))))
+      (is (= (:id continent)
+             (:id (continents/by-name db "Europe")))))))
 
 (deftest test-delete!
   (with-backends [db]

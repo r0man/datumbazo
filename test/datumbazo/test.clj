@@ -268,3 +268,6 @@
     (sql/column :symbol :citext :not-null? true :unique? true)
     (sql/column :created-at :timestamp-with-time-zone :not-null? true :default '(now))
     (sql/column :updated-at :timestamp-with-time-zone :not-null? true :default '(now))))
+
+(defn dissoc-geometry [row]
+  (dissoc row :geometry))

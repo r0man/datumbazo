@@ -9,21 +9,21 @@
     (let [table :continents
           continents (continents/all db)]
       (is (nil? (select-batch db table [])))
-      (is (= (select-batch db table continents)
-             continents)))))
+      (is (= (map dissoc-geometry (select-batch db table continents))
+             (map dissoc-geometry continents))))))
 
 (deftest test-select-batch-table
   (with-backends [db]
     (let [table (continents/table)
           continents (continents/all db)]
       (is (nil? (select-batch db table [])))
-      (is (= (select-batch db table continents)
-             continents)))))
+      (is (= (map dissoc-geometry (select-batch db table continents))
+             (map dissoc-geometry continents))))))
 
 (deftest test-select-batch-except
   (with-backends [db]
     (let [table (continents/table)
           continents (continents/all db)
-          except [:name]]
+          except [:name :geometry]]
       (is (= (select-batch db table continents {:except except})
              (map #(apply dissoc % except) continents))))))

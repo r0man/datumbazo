@@ -77,6 +77,8 @@
               ;; TODO: Howto insert/update raster?
               (= :raster (:type column))
               (dissoc row (:name column))
+              (= :geography (:type column))
+              (assoc row (:name column) `(cast ~(get row (:name column)) :geography))
               (contains? row (:name column))
               (assoc row (:name column) (encode-column column (get row (:name column))))
               :else row))

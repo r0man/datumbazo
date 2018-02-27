@@ -4,10 +4,11 @@
             [clojure.test :refer :all]
             [datumbazo.continents :as continents :refer [continent?]]
             [datumbazo.countries :refer [country?]]
+            [datumbazo.record :as record]
             [datumbazo.test :refer :all]
             [datumbazo.util :refer [make-instance]]
-            [datumbazo.record :as record]
-            [datumbazo.util :as util])
+            [datumbazo.util :as util]
+            [postgis.spec :as postgis])
   (:import datumbazo.continents.Continent
            java.util.Date))
 
@@ -45,7 +46,8 @@
                         (continents/by-name db "Europe")]
             rows (continents/by-id db (map :id continents))]
         (is (every? continent? rows))
-        (is (= (set rows) (set continents)))))))
+        (is (= (set (map dissoc-geometry rows))
+               (set (map dissoc-geometry continents))))))))
 
 (deftest test-by-created-at
   (with-backends [db]
@@ -69,11 +71,11 @@
   (with-backends [db]
     (let [row (continents/by-name db "Europe")]
       (is (continent? row))
-      (is (= row
+      (is (instance? org.postgis.MultiPolygon (:geometry row)))
+      (is (= (dissoc row :geometry)
              {:id 12
               :name "Europe"
               :code "EU"
-              :geometry nil
               :geonames-id 6255148
               :created-at #inst "2012-10-06T18:22:58.640-00:00"
               :updated-at #inst "2012-10-06T18:22:58.640-00:00"})))))
