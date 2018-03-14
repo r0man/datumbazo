@@ -16,7 +16,7 @@
                  [org.clojure/tools.logging "0.4.0"]
                  [postgis.spec "0.1.2"]
                  [potemkin "0.4.4"]
-                 [sqlingvo "0.9.19"]]
+                 [sqlingvo "0.9.20"]]
   :plugins [[jonase/eastwood "0.2.5"]
             [lein-difftest "2.0.0"]]
   :aliases {"ci" ["do" ["difftest"] ["lint"]]

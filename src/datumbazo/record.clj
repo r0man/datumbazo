@@ -136,9 +136,7 @@
 (defn- update-columns
   "Return all columns of `class`, except the primary key columns."
   [class]
-  (set/difference
-   (util/columns-by-class class)
-   (primary-key-columns class)))
+  (util/columns-by-class class))
 
 (defn- update-expression
   "Return the update expression for `class` and `records`."
