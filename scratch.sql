@@ -1,3 +1,23 @@
+create schema "my-schema";
+
+
+create type "my-schema"."mood" as enum ('sad', 'ok', 'happy');
+
+create type mood as enum ('sad', 'ok', 'happy');
+
+drop type mood;
+
+drop type "my-schema"."mood";
+
+drop type "my-schema"."mood", "mood";
+
+CREATE TABLE person (
+  name TEXT,
+  mood "my-schema"."mood"
+);
+
+DROP TABLE person;
+
 
 SELECT (ARRAY[1,2,3,4,5])[2:0];
 

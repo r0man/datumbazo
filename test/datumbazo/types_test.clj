@@ -1,4 +1,4 @@
-(ns datumbazo.enum-test
+(ns datumbazo.types-test
   (:require [clojure.test :refer :all]
             [datumbazo.core :as sql]
             [datumbazo.test :refer :all]))
@@ -24,6 +24,34 @@
 (deftest test-create-type
   (with-backends [db]
     (is (= (create-mood-type! db)
+           [{:count 0}]))))
+
+(deftest test-create-type-in-schema
+  (with-backends [db]
+    (is (= @(sql/create-schema db :my-schema)
+           [{:count 0}]))
+    (is (= @(sql/create-type db :my-schema.mood
+              (sql/enum ["sad" "ok" "happy"]))
+           [{:count 0}]))
+    (is (= @(sql/create-table db :person
+              (sql/column :name :text)
+              (sql/column :mood :my-schema.mood))
+           [{:count 0}]))
+    (is (= @(sql/insert db :person []
+              (sql/values
+               [{:name "Larry"
+                 :mood '(cast "sad" :my-schema.mood)}])
+              (sql/returning :*))
+           [{:name "Larry"
+             :mood "sad"}]))))
+
+(deftest test-drop-type
+  (with-backends [db]
+    (create-mood-type! db)
+    (is (= @(sql/drop-type db [:mood])
+           [{:count 0}]))
+    (is (= @(sql/drop-type db [:mood]
+              (sql/if-exists true))
            [{:count 0}]))))
 
 (deftest test-insert-type

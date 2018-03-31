@@ -16,7 +16,7 @@
                  [org.clojure/tools.logging "0.4.0"]
                  [postgis.spec "0.1.2"]
                  [potemkin "0.4.4"]
-                 [sqlingvo "0.9.20"]]
+                 [sqlingvo "0.9.22"]]
   :plugins [[jonase/eastwood "0.2.5"]
             [lein-difftest "2.0.0"]]
   :aliases {"ci" ["do" ["difftest"] ["lint"]]
@@ -29,7 +29,7 @@
                                   [mysql/mysql-connector-java "5.1.44"]
                                   [org.clojure/java.jdbc "0.7.5"]
                                   [org.clojure/test.check "0.9.0"]
-                                  [org.postgresql/postgresql "42.2.1"]
+                                  [org.postgresql/postgresql "42.2.2"]
                                   [net.postgis/postgis-jdbc "2.2.1"
                                    :exclusions [postgresql org.postgresql/postgresql]]
                                   [org.xerial/sqlite-jdbc "3.21.0.1"]
