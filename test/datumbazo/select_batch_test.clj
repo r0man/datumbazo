@@ -27,3 +27,11 @@
           except [:name :geometry]]
       (is (= (select-batch db table continents {:except except})
              (map #(apply dissoc % except) continents))))))
+
+(deftest test-select-batch-by-column
+  (with-backends [db]
+    (let [rows [{:name "Europe"}
+                {:name "Unknown"}
+                {:name "Africa"}]]
+      (is (= (map :name (select-batch db :continents rows {:join {:name :text}}))
+             ["Europe" nil "Africa"])))))
