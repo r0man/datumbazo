@@ -44,7 +44,7 @@
                    :sqlingvo.table/name]))
 
 (defn- extract-many [primary-key row]
-  (when-let [pk-vals (remove nil? (:array_paginate row))]
+  (when-let [pk-vals (remove nil? (:array-paginate row))]
     (with-meta (mapv #(hash-map (:name primary-key) %) pk-vals)
       (merge (meta row) row))))
 
@@ -114,7 +114,7 @@
        `(array_agg
          ~(column-keyword primary-key)
          ~@order-by))
-     :array_paginate)))
+     :array-paginate)))
 
 (defn- source-batch-values
   [db batch source & [opts]]
