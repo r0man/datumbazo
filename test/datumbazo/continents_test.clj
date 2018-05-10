@@ -151,8 +151,8 @@
                {:after-initialize 3
                 :after-save 2
                 :before-save 1}))
-        (is (= (continents/save! db new-continent) continent))
-        (is (= (continents/save! db new-continent) continent))))))
+        (is (= (continents/save! db continent) continent))
+        (is (= (continents/save! db continent) continent))))))
 
 (deftest test-has-many-countries
   (with-backends [db]

@@ -197,13 +197,17 @@
 (defn- on-conflict-clause
   "Return the ON CONFLICT clause for an insert statement."
   [class]
-  ;; TODO: Be more clever. Handle multiple PKs and unique constraints.
-  (if-let [column (or (first (unique-key-columns class))
-                      (first (primary-key-columns class)))]
-    [(:name column)]
-    (throw (ex-info (str "Can't guess ON CONFLICT clause, because "
-                         class " has no primary key nor a unique constraint declared.")
-                    {:class class}))))
+  (let [pk-columns (seq (primary-key-columns class))
+        unique-columns (seq (unique-key-columns class))]
+    (cond
+      pk-columns
+      (map :name pk-columns)
+      unique-columns
+      [(:name (first unique-columns))]
+      :else
+      (throw (ex-info (str "Can't guess ON CONFLICT clause, because "
+                           class " has no primary key nor a unique constraint declared.")
+                      {:class class})))))
 
 (s/fdef on-conflict-clause
   :args (s/cat :class class?))

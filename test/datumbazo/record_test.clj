@@ -38,7 +38,7 @@
 
 (deftest test-on-conflict-clause
   (is (= (#'datumbazo.record/on-conflict-clause Continent)
-         [:name])))
+         [:id])))
 
 (deftest test-do-update-clause
   (is (= (#'datumbazo.record/do-update-clause Continent)
