@@ -165,7 +165,7 @@
         target (expr/parse-table target)
         source-pk (primary-key source)
         source-fk (foreign-key source target)
-        target-pk (primary-key target)]
+        target-pk (primary-key (dissoc target :schema))]
     (->> @(sql/select db [(keyword (str "source." (-> source-pk :name name)))
                           `(count ~(column-keyword target-pk))
                           (array-paginate target-pk opts)]
@@ -180,7 +180,9 @@
                          (some-> opts :where))
                        (-> target :name keyword))
                       `(on (= ~(keyword (str "source." (-> source-pk :name name)))
-                              ~(column-keyword (assoc source-fk :table (-> target :name keyword)))))
+                              ~(column-keyword (assoc source-fk
+                                                      :schema nil
+                                                      :table (-> target :name keyword)))))
                       :type :left)
             (sql/where `(and (in ~(keyword (str "source." (-> source-pk :name name)))
                                  ~(map (:name source-pk) batch)))
