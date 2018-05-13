@@ -59,7 +59,7 @@
         target (expr/parse-table target)]
     {:op :column
      :schema (:schema target)
-     :table (:table target)
+     :table (or (:name target) (:table target))
      :name (->> [(infl/singular (:name source))
                  (or (:prefix opts) :id)]
                 (remove nil?)
@@ -265,6 +265,41 @@
         join-source-fk (foreign-key source join-table)
         join-target-fk (foreign-key target join-table)
         target-pk (primary-key target)]
+    (->> @(sql/select db [(column-keyword source-pk)
+                          `(count ~(column-keyword (dissoc target-pk :schema)))
+                          (array-paginate (dissoc target-pk :schema) opts)]
+            (sql/from (source-batch-values db batch source opts))
+            (sql/join (table-keyword source)
+                      `(on (= ~(keyword (str "source-batch." (-> source-pk :name name)))
+                              ~(column-keyword source-pk)))
+                      :type :left)
+            (sql/join join-table
+                      `(on (= ~(column-keyword source-pk)
+                              ~(column-keyword join-source-fk)))
+                      :type :left)
+            (sql/join (sql/as
+                       (sql/select db [:*]
+                         (sql/from target)
+                         (some-> opts :where))
+                       (-> target :name keyword))
+                      `(on (= ~(column-keyword (assoc join-target-fk :table (:name join-table)))
+                              ~(column-keyword (dissoc target-pk :schema))))
+                      :type :left)
+            (sql/where `(and (in ~(column-keyword source-pk)
+                                 ~(map (:name source-pk) batch))))
+            (sql/group-by :source-batch.index (column-keyword source-pk))
+            (sql/order-by :source-batch.index))
+         (mapv #(extract-many target-pk %)))))
+
+(defn has-and-belongs-to-many [db batch source target & [opts]]
+  (let [source (expr/parse-table source)
+        target (expr/parse-table target)
+        join-table (habtm-join-table source target opts)
+        source-pk (primary-key source)
+        source-fk (foreign-key source target)
+        join-source-fk (foreign-key source join-table)
+        join-target-fk (foreign-key target join-table)
+        target-pk (dissoc (primary-key target) :schema)]
     (->> @(sql/select db [(column-keyword source-pk)
                           `(count ~(column-keyword target-pk))
                           (array-paginate target-pk opts)]

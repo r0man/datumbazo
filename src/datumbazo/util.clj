@@ -320,7 +320,7 @@
              (:column-name column)
              [(:table-schema column) (:table-name column) (:column-name column)]
              (:name column)
-             [(:table column) (:name column)])
+             [(:schema column) (:table column) (:name column)])
            (remove nil?)
            (map name)
            (str/join ".")
