@@ -341,3 +341,34 @@
             {:array_agg ["Book #2" "Book #5"]}
             {:array_agg ["Book #3" "Book #6" "Book #8"]}
             {:array_agg ["Book #7"]}]))))
+
+(deftest test-select-from-except
+  (with-backends [db]
+    (is (= @(sql/select db [:*]
+            (sql/from (sql/as (sql/except
+                               db
+                               (sql/select db [1])
+                               (sql/select db [2]))
+                              :x)))
+           [{:?column? 1}]))))
+
+(deftest test-select-from-except
+  (with-backends [db]
+    (is (= @(sql/select db [:*]
+            (sql/from (sql/as (sql/intersect
+                               db
+                               (sql/select db [1])
+                               (sql/select db [1]))
+                              :x)))
+           [{:?column? 1}]))))
+
+(deftest test-select-from-union
+  (with-backends [db]
+    (is (= @(sql/select db [:*]
+            (sql/from (sql/as (sql/union
+                               db
+                               (sql/select db [1])
+                               (sql/select db [2]))
+                              :x)))
+           [{:?column? 1}
+            {:?column? 2}]))))
