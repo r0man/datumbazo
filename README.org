@@ -10,13 +10,13 @@
 ** Usage
 *** Imports
 
-    The =datumbazo.core= namespace shadows some Clojure core
-    functions. If you want to use or refer to all symbols from that
-    namespace you need to exclude them.
+    /Datumbazo/ shadows some functions from the =clojure.core=
+    namespace, such as =distinct=, =group-by= and =update=
+    functions. It's recommended to require the =datumbazo.core=
+    namespace via an alias, such as =sql=.
 
     #+BEGIN_SRC clojure :exports code :results silent
-      (refer-clojure :exclude '[distinct group-by update])
-      (require '[datumbazo.core :refer :all])
+      (require '[datumbazo.core :as sql])
     #+END_SRC
 
 *** Database component
@@ -25,7 +25,7 @@
     =new-db= function..
 
     #+BEGIN_SRC clojure :exports both :results silent
-      (def db-spec (new-db "postgresql://tiger:scotch@localhost/datumbazo"))
+      (def db-spec (sql/new-db "postgresql://tiger:scotch@localhost/datumbazo"))
     #+END_SRC
 
     A database component can be started and stopped with the =start=
@@ -45,7 +45,7 @@
     vendor specific.
 
     #+BEGIN_SRC clojure :exports both :results verbatim
-      @(select db [1 2 3])
+      @(sql/select db [1 2 3])
     #+END_SRC
 
     #+RESULTS:
@@ -54,18 +54,18 @@
     Select the result of a function call.
 
     #+BEGIN_SRC clojure :exports both :results verbatim
-      @(select db ['(- (now) (cast "1 day" :interval))])
+      @(sql/select db ['(- (now) (cast "1 day" :interval))])
     #+END_SRC
 
     #+RESULTS:
-    : ({:?column? #inst "2016-02-16T20:41:17.040-00:00"})
+    : ({:?column? #inst "2019-01-13T21:05:17.621-00:00"})
 
     Select columns from the =information_schema.tables= table.
 
     #+BEGIN_SRC clojure :exports both :results verbatim
-      @(select db [:table_catalog :table_schema :table_name]
-         (from :information_schema.tables)
-         (where '(= :table_name "pg_statistic")))
+      @(sql/select db [:table_catalog :table_schema :table_name]
+         (sql/from :information_schema.tables)
+         (sql/where '(= :table_name "pg_statistic")))
     #+END_SRC
 
     #+RESULTS:
@@ -76,10 +76,10 @@
     Create a countries table with =name= and =code= columns.
 
     #+BEGIN_SRC clojure :exports both :results verbatim
-      @(create-table db :countries
-         (column :id :serial :primary-key? true)
-         (column :name :text)
-         (column :code :text))
+      @(sql/create-table db :countries
+         (sql/column :id :serial :primary-key? true)
+         (sql/column :name :text)
+         (sql/column :code :text))
     #+END_SRC
 
     #+RESULTS:
@@ -90,14 +90,14 @@
     Insert a row into the countries table and return the inserted rows.
 
     #+BEGIN_SRC clojure :exports both :results verbatim
-      @(insert db :countries []
-         (values [{:code "de" :name "Germany"}
-                  {:code "es" :name "Spain"}])
-         (returning :*))
+      @(sql/insert db :countries []
+         (sql/values [{:code "de" :name "Germany"}
+                      {:code "es" :name "Spain"}])
+         (sql/returning :*))
     #+END_SRC
 
     #+RESULTS:
-    : ({:id 1, :name "Germany", :code "de"} {:id 2, :name "Spain", :code "es"})
+    : ({:id 5, :name "Germany", :code "de"} {:id 6, :name "Spain", :code "es"})
 
 *** Order by
 
@@ -105,13 +105,13 @@
     order.
 
     #+BEGIN_SRC clojure :exports both :results verbatim
-      @(select db [:*]
-         (from :countries)
-         (order-by (asc :name)))
+      @(sql/select db [:*]
+         (sql/from :countries)
+         (sql/order-by (sql/asc :name)))
     #+END_SRC
 
     #+RESULTS:
-    : ({:id 1, :name "Germany", :code "de"} {:id 2, :name "Spain", :code "es"})
+    : ({:id 1, :name "Germany", :code "de"} {:id 3, :name "Germany", :code "de"} {:id 5, :name "Germany", :code "de"} {:id 2, :name "Spain", :code "es"} {:id 4, :name "Spain", :code "es"} {:id 6, :name "Spain", :code "es"})
 
 *** Where clauses
 
@@ -119,33 +119,33 @@
     all rows whose =name= columns is equal to =Spain=.
 
     #+BEGIN_SRC clojure :exports both :results verbatim
-      @(select db [:id :code]
-         (from :countries)
-         (where '(= :name "Spain")))
+      @(sql/select db [:id :code]
+         (sql/from :countries)
+         (sql/where '(= :name "Spain")))
     #+END_SRC
 
     #+RESULTS:
-    : ({:id 2, :code "es"})
+    : ({:id 2, :code "es"} {:id 4, :code "es"} {:id 6, :code "es"})
 
 *** Delete
 
     Delete a country by name, and return the affected rows.
 
     #+BEGIN_SRC clojure :exports both :results verbatim
-      @(delete db :countries
-         (where '(= :name "Spain"))
-         (returning :*))
+      @(sql/delete db :countries
+         (sql/where '(= :name "Spain"))
+         (sql/returning :*))
     #+END_SRC
 
     #+RESULTS:
-    : ({:id 2, :name "Spain", :code "es"})
+    : ({:id 2, :name "Spain", :code "es"} {:id 4, :name "Spain", :code "es"} {:id 6, :name "Spain", :code "es"})
 
 *** Drop table
 
     Drop the countries table.
 
     #+BEGIN_SRC clojure :exports both :results verbatim
-      @(drop-table db [:countries])
+      @(sql/drop-table db [:countries])
     #+END_SRC
 
     #+RESULTS:
