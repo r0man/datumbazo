@@ -86,7 +86,7 @@
           columns))
 
 (defn- find-encode-columns [db table]
-  (meta/columns db {:schema (or (:schema table) "public") :table (:name table)}))
+  (meta/columns db {:schema (:schema table) :table (:name table)}))
 
 (defn encode-row
   "Encode the columns of `row` into database types."

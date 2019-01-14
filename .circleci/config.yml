@@ -1,0 +1,55 @@
+# Clojure CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-clojure/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/clojure:lein
+        environment:
+          MYSQL_HOST: localhost
+          MYSQL_PWD: scotch
+          MYSQL_USER: tiger
+          PGHOST: localhost
+          PGPASSWORD: scotch
+          PGUSER: tiger
+      - image: mdillon/postgis:11
+        environment:
+          POSTGRES_DB: datumbazo
+          POSTGRES_PASSWORD: scotch
+          POSTGRES_USER: tiger
+          PGUSER: postgres
+      - image: mariadb:10.1
+        environment:
+          MYSQL_DATABASE: datumbazo
+          MYSQL_PASSWORD: scotch
+          MYSQL_ROOT_PASSWORD: scotch
+          MYSQL_USER: tiger
+
+    environment:
+      LEIN_ROOT: "true"
+
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "project.clj" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      - run:
+          name: Download dependencies
+          command: lein deps
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "project.clj" }}
+      - run:
+          name: Install dependencies
+          command: ./circleci/install
+      - run:
+          name: Seed database
+          command: ./circleci/seed
+      - run:
+          name: Running tests
+          command: lein test

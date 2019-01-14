@@ -17,9 +17,8 @@
                  [postgis.spec "0.1.3"]
                  [potemkin "0.4.5"]
                  [sqlingvo "0.9.25"]]
-  :plugins [[jonase/eastwood "0.2.6"]
-            [lein-difftest "2.0.0"]]
-  :aliases {"ci" ["do" ["difftest"] ["lint"]]
+  :plugins [[jonase/eastwood "0.2.6"]]
+  :aliases {"ci" ["do" ["test"] ["lint"]]
             "lint" ["do"  ["eastwood"]]}
   :profiles {:dev {:dependencies [[ch.qos.logback/logback-classic "1.2.3"]
                                   [com.jolbox/bonecp "0.8.0.RELEASE"]

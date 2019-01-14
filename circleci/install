@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -x
+PG_VER=11
+
+sudo apt-get install curl ca-certificates
+curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+sudo apt-get update -qq
+
+sudo apt-get -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::="--force-confnew" install \
+     mariadb-client \
+     postgis \
+     postgresql-${PG_VER} \
+     postgresql-${PG_VER}-postgis-2.5 \
+     postgresql-${PG_VER}-postgis-2.5-scripts
+
+     # postgresql-contrib-${PG_VER} \
+     # postgresql-server-dev-${PG_VER}

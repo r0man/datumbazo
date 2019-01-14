@@ -58,34 +58,36 @@
     (t/create-test-table db :physicians)
     (t/create-test-table db :appointments)
     (is (= (schema/foreign-keys db :appointments)
-           [{:reference-table-name "patients"
+           [{:column-name "patient-id"
+             :constraint-catalog "datumbazo"
              :constraint-name "appointments_patient-id_fkey"
-             :is-deferrable "NO"
-             :reference-table-catalog "datumbazo"
              :constraint-schema "public"
-             :constraint-catalog "datumbazo"
-             :table-catalog "datumbazo"
-             :reference-table-schema "public"
-             :initially-deferred "NO"
-             :table-schema "public"
-             :table-name "appointments"
              :constraint-type "FOREIGN KEY"
-             :column-name "patient-id"
-             :reference-column-name "id"}
-            {:reference-table-name "physicians"
+             :enforced "YES"
+             :initially-deferred "NO"
+             :is-deferrable "NO"
+             :reference-column-name "id"
+             :reference-table-catalog "datumbazo"
+             :reference-table-name "patients"
+             :reference-table-schema "public"
+             :table-catalog "datumbazo"
+             :table-name "appointments"
+             :table-schema "public"}
+            {:column-name "physician-id"
+             :constraint-catalog "datumbazo"
              :constraint-name "appointments_physician-id_fkey"
-             :is-deferrable "NO"
-             :reference-table-catalog "datumbazo"
              :constraint-schema "public"
-             :constraint-catalog "datumbazo"
-             :table-catalog "datumbazo"
-             :reference-table-schema "public"
-             :initially-deferred "NO"
-             :table-schema "public"
-             :table-name "appointments"
              :constraint-type "FOREIGN KEY"
-             :column-name "physician-id"
-             :reference-column-name "id"}]))))
+             :enforced "YES"
+             :initially-deferred "NO"
+             :is-deferrable "NO"
+             :reference-column-name "id"
+             :reference-table-catalog "datumbazo"
+             :reference-table-name "physicians"
+             :reference-table-schema "public"
+             :table-catalog "datumbazo"
+             :table-name "appointments"
+             :table-schema "public"}]))))
 
 (deftest test-primary-keys
   (with-backends [db]
@@ -120,6 +122,7 @@
     (is (= (schema/unique-keys db :patients)
            [{:constraint-name "patients_name_key"
              :is-deferrable "NO"
+             :enforced "YES"
              :constraint-schema "public"
              :constraint-catalog "datumbazo"
              :table-catalog "datumbazo"
@@ -319,7 +322,8 @@
               :scope-name nil}}
             :foreign-keys
             {"patient-id"
-             {:reference-table-name "patients"
+             {:enforced "YES"
+              :reference-table-name "patients"
               :constraint-name "appointments_patient-id_fkey"
               :is-deferrable "NO"
               :reference-table-catalog "datumbazo"
@@ -334,7 +338,8 @@
               :column-name "patient-id"
               :reference-column-name "id"}
              "physician-id"
-             {:reference-table-name "physicians"
+             {:enforced "YES"
+              :reference-table-name "physicians"
               :constraint-name "appointments_physician-id_fkey"
               :is-deferrable "NO"
               :reference-table-catalog "datumbazo"

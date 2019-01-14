@@ -4,7 +4,7 @@
   (:require [clojure.instant :refer [read-instant-timestamp]]
             [clojure.java.io :refer [file make-parents resource writer]]
             [clojure.string :refer [blank? join replace split]]
-            [clojure.tools.logging :refer [infof]]
+            [clojure.tools.logging :as log]
             [commandline.core :refer [print-help with-commandline]]
             [datumbazo.core :refer :all :exclude [join]]
             [datumbazo.driver.core :as driver]
@@ -14,7 +14,8 @@
             [geo.postgis :as geo]
             [inflections.core :refer [hyphenate underscore]]
             [sqlingvo.expr :refer [parse-table]]
-            [sqlingvo.util :refer [sql-name sql-keyword sql-quote]]))
+            [sqlingvo.util :refer [sql-name sql-keyword sql-quote]]
+            [sqlingvo.core :as sql]))
 
 (def ^:dynamic *readers*
   (assoc geo/*readers* 'inst read-instant-timestamp))
@@ -61,7 +62,7 @@
   "Reset the serial counters of all columns in `table`."
   [db table]
   (let [table (parse-table table)]
-    (doseq [column (meta/columns db {:schema (or (:schema table) :public) :table (:name table)})
+    (doseq [column (meta/columns db {:schema (:schema table) :table (:name table)})
             :when (contains? #{:bigserial :serial} (:type column))]
       (first @(select db [`(setval
                             ~(serial-sequence db column)
@@ -70,22 +71,24 @@
 
 (defn- find-column-keys [db table]
   (let [table (parse-table table)]
-    (->> (meta/columns db {:schema (or (:schema table) :public) :table (:name table)})
+    (->> (meta/columns db {:schema (:schema table) :table (:name table)})
          (map (comp #(sql-keyword db %) :column-name)))))
 
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
   [db table filename & {:keys [batch-size]}]
-  (infof "Loading fixtures for table %s from %s." (sql-name db table) filename)
+  (log/debugf "Loading fixtures for table %s from %s." (sql-name db table) filename)
   (let [batch-size (or batch-size 1000)
         columns (find-column-keys db table)
         rows (reduce
               (fn [result rows]
-                (concat result
-                        ;; TDOD: Find insert columns and do not rely on first row.
-                        @(insert db table columns
-                           (values (encode-rows db table rows))
-                           (returning :*))))
+                (let [stmt (insert db table columns
+                             ;; TDOD: Find insert columns and do not rely on first row.
+                             (values (encode-rows db table rows))
+                             (returning :*))]
+                  (log/debugf "Inserting batch of %s rows into %s."
+                              (count rows) (sql-name db table))
+                  (concat result (when (seq rows) @stmt))))
               [] (partition batch-size batch-size nil (slurp-rows filename)))
         result (assoc {:table table :file filename} :records rows)]
     (reset-serials db table)
@@ -100,21 +103,32 @@
       (clojure.pprint/pprint rows writer)
       {:file filename :table table :records (count rows)})))
 
-(defn deferred-constraints [db]
-  (driver/-execute (:driver db) db ["SET CONSTRAINTS ALL DEFERRED"] nil))
+(defn constraints-deferred! [db]
+  (let [stmt ["SET CONSTRAINTS ALL DEFERRED"]]
+    (log/debugf "Set all constraints to deferred: %s" stmt)
+    (driver/-execute (:driver db) db stmt nil)))
+
+(defn constraints-immediate! [db]
+  (let [stmt ["SET CONSTRAINTS ALL IMMEDIATE"]]
+    (log/debugf "Set all constraints to immediate: %s" stmt)
+    (driver/-execute (:driver db) db stmt nil)))
 
 (defn enable-triggers
   "Enable triggers on the database `table`."
   [db table]
-  (driver/-execute (:driver db) db [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " ENABLE TRIGGER ALL")] nil))
+  (let [stmt (str "ALTER TABLE " (sql-quote db (sql-name db table)) " ENABLE TRIGGER ALL")]
+    (log/debugf "Enable triggers: %s" stmt)
+    (driver/-execute (:driver db) db [stmt] nil)))
 
 (defn disable-triggers
   "Disable triggers on the database `table`."
   [db table]
-  (driver/-execute (:driver db) db [(str "ALTER TABLE " (sql-quote db (sql-name db table)) " DISABLE TRIGGER ALL")] nil))
+  (let [stmt (str "ALTER TABLE " (sql-quote db (sql-name db table)) " DISABLE TRIGGER ALL")]
+    (log/debugf "Disable triggers: %s" stmt)
+    (driver/-execute (:driver db) db [stmt] nil)))
 
 (defn delete-fixtures [db tables]
-  (infof "Deleting fixtures from database.")
+  (log/debugf "Deleting fixtures from database.")
   (with-transaction [db db]
     (doseq [table tables]
       @(truncate db [table] (cascade true)))))
@@ -122,6 +136,7 @@
 (defn dump-fixtures
   "Write the fixtures for `tables` into `directory`."
   [db directory tables & opts]
+  (log/debugf "Dumping fixtures to %s." directory)
   (with-transaction [db db]
     (doseq [table tables
             :let [filename (str (apply file directory (split (name table) #"\.")) ".edn")]]
@@ -130,15 +145,17 @@
 (defn load-fixtures
   "Load all database fixtures from `directory`."
   [db directory & opts]
+  (log/debugf "Loading fixtures from %s." directory)
   (let [fixtures (fixture-seq directory)]
     (with-transaction
       [db db]
-      (apply deferred-constraints db opts)
+      (constraints-deferred! db)
       (doall (map #(apply disable-triggers db %1 opts) (map :table fixtures)))
       (let [fixtures (->> fixtures
                           (map #(apply read-fixture db (:table %1) (:file %1) opts))
                           (doall))]
         (doall (map #(apply enable-triggers db %1 opts) (map :table fixtures)))
+        (constraints-immediate! db)
         fixtures))))
 
 (defn tables [directory]

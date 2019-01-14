@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+docker run \
+       --env POSTGRES_DB=datumbazo \
+       --env POSTGRES_PASSWORD=scotch \
+       --env POSTGRES_USER=tiger \
+       --env PGPASSWORD=scotch \
+       --env PGUSER=tiger \
+       --name datumbazo \
+       --network host \
+       mdillon/postgis:11
