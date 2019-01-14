@@ -1,15 +1,11 @@
 (ns datumbazo.shell
   (:refer-clojure :exclude [replace])
-  (:require [clojure.string :refer [blank? join split replace]]
-            [clojure.tools.logging :refer [logp]]
-            [datumbazo.util :refer [parse-url]]
-            [inflections.core :refer [underscore]]
+  (:require [clojure.string :refer [blank? join replace split]]
+            [clojure.tools.logging :as log :refer [logp]]
             [pallet.common.shell :refer [bash]]
             [pallet.stevedore :refer [checked-script with-script-language]]
-            [pallet.stevedore.bash :refer :all]
-            [slingshot.slingshot :refer [throw+]]
-            [sqlingvo.util :refer [sql-name]]
-            [clojure.tools.logging :as log]))
+            [pallet.stevedore.bash]
+            [sqlingvo.util :refer [sql-name]]))
 
 (defn basename
   "Returns the basename of `s`."
@@ -40,7 +36,9 @@
 (defn exec-checked-script* [script]
   (let [result (bash script)]
     (if (pos? (:exit result))
-      (throw+ (assoc result :type :exec-checked-script)))
+      (throw (ex-info "Can't execute SQL script"
+                      {:type ::exec-checked-script
+                       :result result})))
     (doall (map (partial log-lines :debug) (remove nil? (map result [:out :err]))))
     result))
 
