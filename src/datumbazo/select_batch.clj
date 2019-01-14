@@ -59,7 +59,8 @@
     (and (map? x)
          (= (:op x) :table))
     x
-    :else (throw (ex-info (str "Invalid table: " (pr-str x))))))
+    :else (throw (ex-info (str "Invalid table: " (pr-str x))
+                          {:table x}))))
 
 (defn- join-condition
   "Returns the JOIN condition for the batch select."
