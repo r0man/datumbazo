@@ -20,6 +20,8 @@
   :plugins [[jonase/eastwood "0.3.4"]]
   :aliases {"ci" ["do" ["test"] ["lint"]]
             "lint" ["do"  ["eastwood"]]}
+  :eastwood {:exclude-linters [:implicit-dependencies
+                               :unused-ret-vals]}
   :profiles {:dev {:dependencies [[ch.qos.logback/logback-classic "1.2.3"]
                                   [com.jolbox/bonecp "0.8.0.RELEASE"]
                                   [com.mchange/c3p0 "0.9.5.2"]

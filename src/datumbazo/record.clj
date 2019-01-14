@@ -242,7 +242,7 @@
 
 (defn row-get [record column default-value]
   (let [table (util/table-by-class (class record))
-        association (-> table :associations column)]
+        association (get-in table [:associations column])]
     (cond
       (contains? (.attrs record) column)
       (get (.attrs record) column default-value)

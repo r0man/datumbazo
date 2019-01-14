@@ -3,6 +3,7 @@
   (:refer-clojure :exclude [distinct group-by replace update])
   (:require [clojure.instant :refer [read-instant-timestamp]]
             [clojure.java.io :refer [file make-parents resource writer]]
+            [clojure.pprint :refer [pprint]]
             [clojure.string :refer [blank? join replace split]]
             [clojure.tools.logging :as log]
             [commandline.core :refer [print-help with-commandline]]
@@ -13,9 +14,9 @@
             [datumbazo.util :refer [edn-file-seq path-split path-replace]]
             [geo.postgis :as geo]
             [inflections.core :refer [hyphenate underscore]]
+            [sqlingvo.core :as sql]
             [sqlingvo.expr :refer [parse-table]]
-            [sqlingvo.util :refer [sql-name sql-keyword sql-quote]]
-            [sqlingvo.core :as sql]))
+            [sqlingvo.util :refer [sql-name sql-keyword sql-quote]]))
 
 (def ^:dynamic *readers*
   (assoc geo/*readers* 'inst read-instant-timestamp))
@@ -64,10 +65,10 @@
   (let [table (parse-table table)]
     (doseq [column (meta/columns db {:schema (:schema table) :table (:name table)})
             :when (contains? #{:bigserial :serial} (:type column))]
-      (first @(select db [`(setval
-                            ~(serial-sequence db column)
-                            ~(select db [`(max ~(:name column))]
-                               (from table)))])))))
+      @(select db [`(setval
+                     ~(serial-sequence db column)
+                     ~(select db [`(max ~(:name column))]
+                        (from table)))]))))
 
 (defn- find-column-keys [db table]
   (let [table (parse-table table)]
@@ -100,7 +101,7 @@
   (make-parents filename)
   (with-open [writer (writer filename)]
     (let [rows (seq @(select db [:*] (from table)))]
-      (clojure.pprint/pprint rows writer)
+      (pprint rows writer)
       {:file filename :table table :records (count rows)})))
 
 (defn constraints-deferred! [db]
@@ -150,7 +151,8 @@
     (with-transaction
       [db db]
       (constraints-deferred! db)
-      (doall (map #(apply disable-triggers db %1 opts) (map :table fixtures)))
+      (doseq [table (map :table fixtures)]
+        (disable-triggers db table))
       (let [fixtures (->> fixtures
                           (map #(apply read-fixture db (:table %1) (:file %1) opts))
                           (doall))]
