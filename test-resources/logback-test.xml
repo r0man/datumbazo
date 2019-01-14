@@ -19,7 +19,7 @@
     </filter>
   </appender>
 
-  <root level="INFO">
+  <root level="OFF">
     <appender-ref ref="CONSOLE" />
     <appender-ref ref="FILE" />
   </root>
