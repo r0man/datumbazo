@@ -5,7 +5,7 @@
   [[https://versions.deps.co/r0man/datumbazo][https://versions.deps.co/r0man/datumbazo/status.svg]]
   [[https://versions.deps.co/r0man/datumbazo][https://versions.deps.co/r0man/datumbazo/downloads.svg]]
 
-  A [[https://www.oracle.com/technetwork/java/javase/jdbc/index.html][JDBC]] driver for [[https://github.com/r0man/sqlingvo][SQLingvo]].
+  A Clojure [[https://www.oracle.com/technetwork/java/javase/jdbc/index.html][JDBC]] driver for [[https://github.com/r0man/sqlingvo][SQLingvo]].
 
 ** Usage
 *** Imports
