@@ -345,30 +345,30 @@
 (deftest test-select-from-except
   (with-backends [db]
     (is (= @(sql/select db [:*]
-            (sql/from (sql/as (sql/except
-                               db
-                               (sql/select db [1])
-                               (sql/select db [2]))
-                              :x)))
+              (sql/from (sql/as (sql/except
+                                 db
+                                 (sql/select db [1])
+                                 (sql/select db [2]))
+                                :x)))
            [{:?column? 1}]))))
 
-(deftest test-select-from-except
+(deftest test-select-from-intersect
   (with-backends [db]
     (is (= @(sql/select db [:*]
-            (sql/from (sql/as (sql/intersect
-                               db
-                               (sql/select db [1])
-                               (sql/select db [1]))
-                              :x)))
+              (sql/from (sql/as (sql/intersect
+                                 db
+                                 (sql/select db [1])
+                                 (sql/select db [1]))
+                                :x)))
            [{:?column? 1}]))))
 
 (deftest test-select-from-union
   (with-backends [db]
     (is (= @(sql/select db [:*]
-            (sql/from (sql/as (sql/union
-                               db
-                               (sql/select db [1])
-                               (sql/select db [2]))
-                              :x)))
+              (sql/from (sql/as (sql/union
+                                 db
+                                 (sql/select db [1])
+                                 (sql/select db [2]))
+                                :x)))
            [{:?column? 1}
             {:?column? 2}]))))
