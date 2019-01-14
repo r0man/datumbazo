@@ -1,4 +1,4 @@
-(defproject datumbazo "0.13.24"
+(defproject datumbazo "0.13.25-SNAPSHOT"
   :description "Clojure Database Kung-Foo"
   :url "https://github.com/r0man/datumbazo"
   :min-lein-version "2.0.0"
@@ -31,8 +31,7 @@
                                   [org.postgresql/postgresql "42.2.5"]
                                   [net.postgis/postgis-jdbc "2.3.0"
                                    :exclusions [postgresql org.postgresql/postgresql]]
-                                  [org.xerial/sqlite-jdbc "3.25.2"]
-                                  [validation-clj "0.5.6"]]
+                                  [org.xerial/sqlite-jdbc "3.25.2"]]
                    :repl-options {:init-ns user}
                    :resource-paths ["test-resources"]}}
   :main ^{:skip-aot true} datumbazo.fixtures)
