@@ -61,5 +61,10 @@
           (sql/from table))
        first :count))
 
+(defn current-schema
+  "Count all rows in the database `table`."
+  [db]
+  (-> @(sql/select db ['(current_schema)]) ffirst second))
+
 (driver/load-drivers)
 (pool/load-connection-pools)

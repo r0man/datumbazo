@@ -15,6 +15,10 @@
            @(sql/select db [:*]
               (sql/from :continents))))))
 
+(deftest test-current-schema
+  (with-backends [db]
+    (is (= "public" (sql/current-schema db)))))
+
 (deftest test-drop-table-if-exists
   (with-test-dbs [db]
     (is (= @(sql/drop-table db [:not-existing]
