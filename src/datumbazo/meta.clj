@@ -3,9 +3,15 @@
   (:require [clojure.string :refer [lower-case]]
             [datumbazo.driver.core :refer [connection with-connection]]
             [inflections.core :refer [hyphenate hyphenate-keys]]
+            [sqlingvo.core :as sql]
             [sqlingvo.expr :as expr]
             [sqlingvo.util :refer [sql-name]])
   (:import java.sql.DatabaseMetaData))
+
+(defn current-schema
+  "Returns the current schema from `db`."
+  [db]
+  (-> @(sql/select db ['(current_schema)]) ffirst second))
 
 (defn- hyphenate-keyword [k]
   (if k (keyword (hyphenate (name k)))))

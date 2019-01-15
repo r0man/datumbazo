@@ -73,6 +73,10 @@
       (is (= [:id :name :code :geometry :geonames-id :created-at :updated-at]
              (map :name columns))))))
 
+(deftest test-current-schema
+  (with-backends [db]
+    (is (= "public" (current-schema db)))))
+
 (deftest test-indexes
   (with-backends [db]
     (let [columns (indexes db {:table :continents})]

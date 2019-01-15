@@ -1,20 +1,18 @@
 (ns datumbazo.fixtures
   (:gen-class)
-  (:refer-clojure :exclude [distinct group-by replace update])
   (:require [clojure.instant :refer [read-instant-timestamp]]
             [clojure.java.io :refer [file make-parents resource writer]]
             [clojure.pprint :refer [pprint]]
-            [clojure.string :refer [blank? join replace split]]
+            [clojure.string :as str]
             [clojure.tools.logging :as log]
             [commandline.core :refer [print-help with-commandline]]
-            [datumbazo.core :refer :all :exclude [join]]
+            [datumbazo.core :as sql]
             [datumbazo.driver.core :as driver]
             [datumbazo.io :refer [encode-rows decode-row]]
             [datumbazo.meta :as meta]
             [datumbazo.util :refer [edn-file-seq path-split path-replace]]
             [geo.postgis :as geo]
             [inflections.core :refer [hyphenate underscore]]
-            [sqlingvo.core :as sql]
             [sqlingvo.expr :refer [parse-table]]
             [sqlingvo.util :refer [sql-name sql-keyword sql-quote]]))
 
@@ -24,8 +22,8 @@
 (defn- resolve-table
   "Resolve the table name from `directory` and `filename`."
   [directory filename]
-  (-> (join "." (path-split (path-replace filename directory)))
-      (replace #"(?i)\.edn$" "")
+  (-> (str/join "." (path-split (path-replace filename directory)))
+      (str/replace #"(?i)\.edn$" "")
       (keyword)))
 
 (defn fixture-seq
@@ -52,27 +50,34 @@
 (defn serial-sequence
   "Return the serial sequence for `column` in `db`."
   [db column]
-  (select db [`(pg_get_serial_sequence
-                ~(if (:schema column)
-                   (str (sql-name db (:schema column)) "."
-                        (sql-name db (:table column)))
-                   (sql-name db (:table column)))
-                ~(sql-name db (:name column)))]))
+  (sql/select db [`(pg_get_serial_sequence
+                    ~(if (:schema column)
+                       (str (sql-name db (:schema column)) "."
+                            (sql-name db (:table column)))
+                       (sql-name db (:table column)))
+                    ~(sql-name db (:name column)))]))
+
+(defn- select-table-columns
+  [db table]
+  (meta/columns
+   db {:schema (or (:schema table)
+                   (some-> (meta/current-schema db) keyword))
+       :table (:name table)}))
 
 (defn reset-serials
   "Reset the serial counters of all columns in `table`."
   [db table]
   (let [table (parse-table table)]
-    (doseq [column (meta/columns db {:schema (:schema table) :table (:name table)})
+    (doseq [column (select-table-columns db table)
             :when (contains? #{:bigserial :serial} (:type column))]
-      @(select db [`(setval
-                     ~(serial-sequence db column)
-                     ~(select db [`(max ~(:name column))]
-                        (from table)))]))))
+      @(sql/select db [`(setval
+                         ~(serial-sequence db column)
+                         ~(sql/select db [`(max ~(:name column))]
+                            (sql/from table)))]))))
 
 (defn- find-column-keys [db table]
   (let [table (parse-table table)]
-    (->> (meta/columns db {:schema (:schema table) :table (:name table)})
+    (->> (select-table-columns db table)
          (map (comp #(sql-keyword db %) :column-name)))))
 
 (defn read-fixture
@@ -83,10 +88,10 @@
         columns (find-column-keys db table)
         rows (reduce
               (fn [result rows]
-                (let [stmt (insert db table columns
+                (let [stmt (sql/insert db table columns
                              ;; TDOD: Find insert columns and do not rely on first row.
-                             (values (encode-rows db table rows))
-                             (returning :*))]
+                             (sql/values (encode-rows db table rows))
+                             (sql/returning :*))]
                   (log/debugf "Inserting batch of %s rows into %s."
                               (count rows) (sql-name db table))
                   (concat result (when (seq rows) @stmt))))
@@ -100,7 +105,7 @@
   [db table filename & {:keys [identifiers]}]
   (make-parents filename)
   (with-open [writer (writer filename)]
-    (let [rows (seq @(select db [:*] (from table)))]
+    (let [rows (seq @(sql/select db [:*] (sql/from table)))]
       (pprint rows writer)
       {:file filename :table table :records (count rows)})))
 
@@ -130,17 +135,17 @@
 
 (defn delete-fixtures [db tables]
   (log/debugf "Deleting fixtures from database.")
-  (with-transaction [db db]
+  (sql/with-transaction [db db]
     (doseq [table tables]
-      @(truncate db [table] (cascade true)))))
+      @(sql/truncate db [table] (sql/cascade true)))))
 
 (defn dump-fixtures
   "Write the fixtures for `tables` into `directory`."
   [db directory tables & opts]
   (log/debugf "Dumping fixtures to %s." directory)
-  (with-transaction [db db]
+  (sql/with-transaction [db db]
     (doseq [table tables
-            :let [filename (str (apply file directory (split (name table) #"\.")) ".edn")]]
+            :let [filename (str (apply file directory (str/split (name table) #"\.")) ".edn")]]
       (apply write-fixture db table filename opts))))
 
 (defn load-fixtures
@@ -148,7 +153,7 @@
   [db directory & opts]
   (log/debugf "Loading fixtures from %s." directory)
   (let [fixtures (fixture-seq directory)]
-    (with-transaction
+    (sql/with-transaction
       [db db]
       (constraints-deferred! db)
       (doseq [table (map :table fixtures)]
@@ -172,7 +177,7 @@
     [[h help "Print this help."]]
     (when (or (:help opts) (nil? db-url) (nil? directory))
       (show-help))
-    (with-db [db db-url]
+    (sql/with-db [db db-url]
       (let [tables (tables directory)]
         (case (keyword command)
           :delete (delete-fixtures db tables)
