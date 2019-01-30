@@ -59,7 +59,12 @@
     (let [fixture (nth fixtures 2)]
       (is (= (.getAbsoluteFile (file "test-resources/db/test-db/fixtures/twitter/tweets.edn"))
              (:file fixture)))
-      (is (= :twitter.tweets (:table fixture))))))
+      (is (= :twitter.tweets (:table fixture)))))
+  (testing ":only option"
+    (let [only #{:continents :twitter.users}
+          fixtures (fixture-seq fixture-dir {:only only})]
+      (is (= 2 (count fixtures)))
+      (is (= only (set (map :table fixtures)))))))
 
 (deftest test-serial-sequence
   (with-backends [db]
@@ -73,6 +78,12 @@
     (delete-fixtures db (tables fixture-dir))
     (let [fixtures (load-fixtures db fixture-dir)]
       (is (= 5 (count fixtures))))))
+
+(deftest test-load-fixtures-only
+  (with-backends [db]
+    (delete-fixtures db (tables fixture-dir))
+    (let [fixtures (load-fixtures db fixture-dir {:only [:continents]})]
+      (is (= 1 (count fixtures))))))
 
 (deftest test-read-fixture
   (with-backends [db]

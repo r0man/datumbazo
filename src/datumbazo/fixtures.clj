@@ -28,10 +28,13 @@
 
 (defn fixture-seq
   "Returns tree a seq of fixtures in `directory`."
-  [directory]
-  (->> (for [file (edn-file-seq directory)]
-         {:file file :table (resolve-table directory file)})
-       (sort-by #(:table %1))))
+  [directory & [opts]]
+  (let [only (set (:only opts))]
+    (->> (for [file (edn-file-seq directory)
+               :let [table (resolve-table directory file)]
+               :when (or (empty? only) (contains? only table))]
+           {:file file :table table})
+         (sort-by #(:table %1)))))
 
 (defn fixture-path
   "Returns the fixture path for `db-name`."
@@ -39,7 +42,8 @@
 
 (defn fixtures
   "Returns the fixtures for `db-name`."
-  [db-name] (fixture-seq (resource (fixture-path db-name))))
+  [db-name & [opts]]
+  (fixture-seq (resource (fixture-path db-name)) opts))
 
 (defn slurp-rows
   "Slurp a seq of database rows from `filename`."
@@ -82,7 +86,7 @@
 
 (defn read-fixture
   "Read the fixtures form `filename` and insert them into the database `table`."
-  [db table filename & {:keys [batch-size]}]
+  [db table filename & [{:keys [batch-size]}]]
   (log/debugf "Loading fixtures for table %s from %s." (sql-name db table) filename)
   (let [batch-size (or batch-size 1000)
         columns (find-column-keys db table)
@@ -141,27 +145,29 @@
 
 (defn dump-fixtures
   "Write the fixtures for `tables` into `directory`."
-  [db directory tables & opts]
+  [db directory tables & [opts]]
   (log/debugf "Dumping fixtures to %s." directory)
-  (sql/with-transaction [db db]
-    (doseq [table tables
-            :let [filename (str (apply file directory (str/split (name table) #"\.")) ".edn")]]
-      (apply write-fixture db table filename opts))))
+  (let [only (set (:only opts))]
+    (sql/with-transaction [db db]
+      (doseq [table tables
+              :let [filename (str (apply file directory (str/split (name table) #"\.")) ".edn")]
+              :when (or (empty? only) (contains? only table))]
+        (apply write-fixture db table filename opts)))))
 
 (defn load-fixtures
   "Load all database fixtures from `directory`."
-  [db directory & opts]
+  [db directory & [opts]]
   (log/debugf "Loading fixtures from %s." directory)
-  (let [fixtures (fixture-seq directory)]
+  (let [fixtures (fixture-seq directory opts)]
     (sql/with-transaction
       [db db]
       (constraints-deferred! db)
       (doseq [table (map :table fixtures)]
         (disable-triggers db table))
       (let [fixtures (->> fixtures
-                          (map #(apply read-fixture db (:table %1) (:file %1) opts))
+                          (map #(read-fixture db (:table %1) (:file %1) opts))
                           (doall))]
-        (doall (map #(apply enable-triggers db %1 opts) (map :table fixtures)))
+        (doall (map #(enable-triggers db %1) (map :table fixtures)))
         (constraints-immediate! db)
         fixtures))))
 
