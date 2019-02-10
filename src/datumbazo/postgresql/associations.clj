@@ -160,11 +160,17 @@
 
 ;; Has Many
 
+(defn- has-many-source-fk
+  [source target & [opts]]
+  (if-let [column (:source-fk opts)]
+    (expr/parse-column column)
+    (foreign-key source target)))
+
 (defn has-many [db batch source target & [opts]]
   (let [source (expr/parse-table source)
         target (expr/parse-table target)
         source-pk (primary-key source)
-        source-fk (foreign-key source target)
+        source-fk (has-many-source-fk source target opts)
         target-pk (primary-key (dissoc target :schema))]
     (->> @(sql/select db [(keyword (str "source." (-> source-pk :name name)))
                           `(count ~(column-keyword target-pk))
@@ -184,9 +190,6 @@
                                                       :schema nil
                                                       :table (-> target :name keyword)))))
                       :type :left)
-            (sql/where `(and (in ~(keyword (str "source." (-> source-pk :name name)))
-                                 ~(map (:name source-pk) batch)))
-                       :and)
             (sql/group-by :source-batch.index (keyword (str "source." (-> source-pk :name name))))
             (sql/order-by :source-batch.index))
          (mapv #(extract-many target-pk %)))))
