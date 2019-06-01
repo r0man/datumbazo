@@ -5,7 +5,7 @@
             [datumbazo.driver.core :as driver]))
 
 (def connections
-  {:mysql "mysql://tiger:scotch@localhost/datumbazo"
+  {:mysql "mysql://tiger:scotch@localhost/datumbazo?useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
    :postgresql "postgresql://tiger:scotch@localhost/datumbazo"
    :sqlite "sqlite://tmp/datumbazo.db"})
 

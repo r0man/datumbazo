@@ -113,6 +113,14 @@
                    :class class
                    :db db})))
 
+(defn cast-type
+  "Returns the cast type for `column`."
+  [{:keys [type] :as column}]
+  (case type
+    :bigserial :biginteger
+    :serial :integer
+    type))
+
 (defn row->record
   "Convert the row into a record."
   [class row]
@@ -125,11 +133,15 @@
 (defn record->row
   "Convert the record into a row."
   [class record]
-  (set/rename-keys
-   record
-   (->> (for [column (columns-by-class class)]
-          [(:form column) (:name column)])
-        (into {}))))
+  (reduce
+   (fn [row column]
+     (if (contains? record (:form column))
+       (let [value (get record (:form column))]
+         (if (list? value)
+           (assoc row (:name column) value)
+           (assoc row (:name column) (list 'cast value (cast-type column)))))
+       row))
+   {} (columns-by-class class)))
 
 (defn make-instances
   "Convert all `records` into instances of `class`."

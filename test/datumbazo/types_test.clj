@@ -1,5 +1,6 @@
 (ns datumbazo.types-test
   (:require [clojure.test :refer :all]
+            [datumbazo.people :as people]
             [datumbazo.core :as sql]
             [datumbazo.test :refer :all]))
 
@@ -9,7 +10,7 @@
 
 (defn create-person-table! [db]
   @(sql/create-table db :person
-     (sql/column :name :text)
+     (sql/column :name :text :primary-key? true)
      (sql/column :mood :mood)))
 
 (defn insert-people! [db]
@@ -71,3 +72,23 @@
               (sql/from :person)
               (sql/where `(> :mood (cast "sad" :mood))))
            [{:name "Curly" :mood "ok"}]))))
+
+(deftest test-insert-cast!
+  (with-backends [db]
+    (create-mood-type! db)
+    (create-person-table! db)
+    (is (= {:name "Larry" :mood "sad"}
+           (people/insert! db {:name "Larry" :mood "sad"})))
+    (is (= {:mood "sad", :name "Bob"}
+           (people/insert! db {:name "Bob" :mood '(cast "sad" :mood )})))))
+
+(deftest test-update-cast!
+  (with-backends [db]
+    (create-mood-type! db)
+    (create-person-table! db)
+    (let [row {:name "Larry" :mood "sad"}]
+      (is (= row (people/insert! db row)))
+      (is (= {:name "Larry" :mood "ok"}
+             (people/update! db {:name "Larry" :mood "ok"})))
+      (is (= {:name "Larry" :mood "happy"}
+             (people/update! db {:name "Larry" :mood '(cast "happy" :mood )}))))))

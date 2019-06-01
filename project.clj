@@ -13,27 +13,27 @@
                  [inflections "0.13.2"]
                  [org.clojure/clojure "1.10.0"]
                  [org.clojure/data.json "0.2.6"]
-                 [org.clojure/tools.logging "0.4.1"]
+                 [org.clojure/tools.logging "0.5.0-alpha.1"]
                  [postgis.spec "0.1.3"]
                  [potemkin "0.4.5"]
-                 [sqlingvo "0.9.30"]]
-  :plugins [[jonase/eastwood "0.3.4"]]
+                 [sqlingvo "0.9.31"]]
+  :plugins [[jonase/eastwood "0.3.5"]]
   :aliases {"ci" ["do" ["test"] ["lint"]]
             "lint" ["do"  ["eastwood"]]}
   :eastwood {:exclude-linters [:implicit-dependencies
                                :unused-ret-vals]}
   :profiles {:dev {:dependencies [[ch.qos.logback/logback-classic "1.2.3"]
                                   [com.jolbox/bonecp "0.8.0.RELEASE"]
-                                  [com.mchange/c3p0 "0.9.5.3"]
+                                  [com.mchange/c3p0 "0.9.5.4"]
                                   [com.zaxxer/HikariCP "3.3.1"]
                                   [funcool/clojure.jdbc "0.9.0"]
-                                  [mysql/mysql-connector-java "8.0.15"]
-                                  [org.clojure/java.jdbc "0.7.8"]
+                                  [mysql/mysql-connector-java "8.0.16"]
+                                  [org.clojure/java.jdbc "0.7.9"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.postgresql/postgresql "42.2.5"]
                                   [net.postgis/postgis-jdbc "2.3.0"
                                    :exclusions [postgresql org.postgresql/postgresql]]
-                                  [org.xerial/sqlite-jdbc "3.25.2"]]
+                                  [org.xerial/sqlite-jdbc "3.27.2.1"]]
                    :repl-options {:init-ns user}
                    :resource-paths ["test-resources"]}}
   :main ^{:skip-aot true} datumbazo.fixtures)

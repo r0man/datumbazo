@@ -161,18 +161,11 @@
 (s/fdef update-condition
   :args (s/cat :class class?))
 
-(defn- cast-type
-  "Returns the cast type for `column`."
-  [{:keys [type] :as column}]
-  (case type
-    :serial :integer
-    type))
-
 (defn- update-values
   "Return the update values for `class` and `records`."
   [class records]
   (map #(map (fn [{:keys [form] :as column}]
-               `(cast ~(get % form) ~(cast-type column)))
+               `(cast ~(get % form) ~(util/cast-type column)))
              (util/columns-by-class class))
        records))
 
@@ -296,7 +289,7 @@
            (sql/where
             `(in ~(util/column-keyword column true)
                  ~(for [value (if (sequential? value) value [value])]
-                    `(cast ~value ~(cast-type column))))))
+                    `(cast ~value ~(util/cast-type column))))))
          (util/make-instances db class)
          (callback/call-after-find)
          (coerce-unique column value))))
