@@ -176,7 +176,7 @@
            [{:x "english"}]))))
 
 (deftest test-with-transaction
-  (with-drivers [db db {:test? false}]
+  (with-drivers [db db {:rollback false}]
     (sql/with-connection [db db]
       @(sql/create-table db :test-with-transaction
          (sql/column :x :int))
@@ -192,7 +192,7 @@
          (sql/if-exists true)))))
 
 (deftest test-with-nested-transaction
-  (with-drivers [db db {:test? false}]
+  (with-drivers [db db {:rollback false}]
     (sql/with-connection [db db]
       (sql/with-transaction [db db]
         ;; TODO: How does this work in clojure.java.jdbc?

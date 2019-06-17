@@ -15,7 +15,7 @@
   [[db-sym config & [opts]] & body]
   `(do (stest/unstrument)
        (stest/instrument)
-       (sql/with-db [db# ~config (assoc ~opts :test? true)]
+       (sql/with-db [db# ~config (assoc ~opts :rollback true)]
          (sql/with-connection [~db-sym db#]
            ~@body))))
 
@@ -226,7 +226,7 @@
 (defmacro with-drivers [[db-sym db opts] & body]
   `(doseq [driver# ['clojure.java.jdbc 'jdbc.core]]
      (if (find-ns driver#)
-       (sql/with-db [~db-sym ~db (merge {:backend driver# :test? true} ~opts)]
+       (sql/with-db [~db-sym ~db (merge {:backend driver# :rollback true} ~opts)]
          ~@body)
        (.println *err* (format "WARNING: Can't find %s driver, skipping tests." driver#)))))
 

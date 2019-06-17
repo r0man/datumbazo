@@ -6,6 +6,8 @@
             [sqlingvo.db :as db]))
 
 (defn- assoc-driver [db]
+  (when (contains? db :test?)
+    (println "Deprecation warning: Use :rollback option instead of :test?"))
   (->> (if (or (:test? db) (:rollback db))
          (test-driver/driver db)
          (driver/find-driver db))
