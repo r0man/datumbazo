@@ -6,7 +6,7 @@
             [sqlingvo.db :as db]))
 
 (defn- assoc-driver [db]
-  (->> (if (:test? db)
+  (->> (if (or (:test? db) (:rollback db))
          (test-driver/driver db)
          (driver/find-driver db))
        (assoc db :driver)))
