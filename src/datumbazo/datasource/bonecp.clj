@@ -1,9 +1,9 @@
-(ns datumbazo.pool.bonecp
-  (:require [datumbazo.pool.core :refer [db-pool]]
+(ns datumbazo.datasource.bonecp
+  (:require [datumbazo.datasource :refer [datasource]]
             [datumbazo.vendor :refer [jdbc-url]])
   (:import [com.jolbox.bonecp BoneCPConfig BoneCPDataSource]))
 
-(defmethod db-pool :bonecp [db & [opts]]
+(defmethod datasource :bonecp [db]
   (let [config (BoneCPConfig.)]
     (.setJdbcUrl config (jdbc-url db))
     (.setUsername config (:username db))

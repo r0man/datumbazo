@@ -1,5 +1,9 @@
 create schema "my-schema";
 
+select 1, 2, 3;
+
+select 1 2 3;
+
 
 create type "my-schema"."mood" as enum ('sad', 'ok', 'happy');
 

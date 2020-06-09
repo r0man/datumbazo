@@ -3,16 +3,10 @@
 set -e
 
 export PGDATABASE="datumbazo"
-export PGHOST="localhost"
+export PGHOST="127.0.0.1"
 export PGPASSWORD="scotch"
 export PGPORT="5432"
 export PGUSER="tiger"
-
-# export PGDATABASE="datumbazo"
-# export PGHOST="localhost"
-# export PGPASSWORD="scotch"
-# export PGPORT="32778"
-# export PGUSER="postgres"
 
 if [ ! -z "$1" ]; then PGDATABASE="$1"; fi
 
@@ -31,6 +25,11 @@ psql < test-resources/db/test-db/migrations/deploy/create-twitter-tweets-table.s
 psql < test-resources/db/test-db/migrations/deploy/create-twitter-tweets-users.sql
 lein run $PGURL test-resources/db/test-db/fixtures load
 
-mysql -uroot -e "DROP DATABASE datumbazo;" || true
-mysql -uroot -e "CREATE DATABASE datumbazo;"
-mysql -uroot -e "GRANT ALL PRIVILEGES ON datumbazo.* TO tiger@localhost IDENTIFIED BY 'scotch';"
+export MYSQL_USER="${MYSQL_USER:-root}"
+export MYSQL_PWD="${MYSQL_PWD:-$PGPASSWORD}"
+export MYSQL_HOST="${MYSQL_HOST:-$PGHOST}"
+export USER="${MYSQL_HOST:-$PGHOST}"
+
+mysql -u $MYSQL_USER -e "DROP DATABASE datumbazo;" || true
+mysql -u $MYSQL_USER -e "CREATE DATABASE datumbazo;"
+mysql -u $MYSQL_USER -e "GRANT ALL PRIVILEGES ON datumbazo.* TO tiger@127.0.0.1 IDENTIFIED BY 'scotch';"

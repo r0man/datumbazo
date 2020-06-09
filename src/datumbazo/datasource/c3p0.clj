@@ -1,9 +1,9 @@
-(ns datumbazo.pool.c3p0
-  (:require [datumbazo.pool.core :refer [db-pool]]
+(ns datumbazo.datasource.c3p0
+  (:require [datumbazo.datasource :refer [datasource]]
             [datumbazo.vendor :refer [jdbc-url]])
   (:import com.mchange.v2.c3p0.ComboPooledDataSource))
 
-(defmethod db-pool :c3p0 [db & [opts]]
+(defmethod datasource :c3p0 [db]
   (let [ds (ComboPooledDataSource.)]
     (.setJdbcUrl ds (jdbc-url db))
     (.setUser ds (:username db))

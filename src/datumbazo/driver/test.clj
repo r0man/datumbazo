@@ -2,49 +2,52 @@
   (:require [com.stuartsierra.component :as component]
             [datumbazo.driver.core :as d]))
 
+(defn- start-driver [{:keys [db] :as driver}]
+  (let [driver (update driver :driver d/-connect db nil)
+        connection (d/-connection (:driver driver) nil)]
+    (.setAutoCommit connection false)
+    driver))
+
+(defn- stop-driver [{:keys [db] :as driver}]
+  (.rollback (d/-connection (:driver driver) nil))
+  (update driver :driver d/-disconnect db))
+
 (defrecord Driver [db driver connected?]
-  d/IConnection
-  (-connect [this db opts]
-    (-> (assoc this :connected? true)
-        (update :driver d/-connect db opts)))
-  (-connection [this db]
+  d/Connectable
+  (-connect [driver db opts]
+    (assoc driver :connected? true))
+  (-connection [driver db]
     (when connected?
-      (d/-connection driver db)))
-  (-disconnect [this db]
-    (assoc this :connected? false))
+      (d/-connection (:driver driver) db)))
+  (-disconnect [driver db]
+    (assoc driver :connected? false))
 
-  d/IExecute
-  (-execute [_ db sql opts]
-    (d/-execute driver db sql opts))
+  d/Executeable
+  (-execute-all [_ db sql opts]
+    (d/-execute-all driver db sql opts))
+  (-execute-one [_ db sql opts]
+    (d/-execute-one driver db sql opts))
 
-  d/IFetch
-  (-fetch [_ db sql opts]
-    (d/-fetch driver db sql opts))
+  d/Preparable
+  (-prepare [_ db sql opts]
+    (d/-prepare driver db sql opts))
 
-  d/IPrepareStatement
-  (-prepare-statement [_ db sql opts]
-    (d/-prepare-statement driver db sql opts))
-
-  d/ITransaction
-  (-begin [_ db opts]
-    (d/-begin driver db opts))
-  (-commit [_ db opts]
-    (d/-commit driver db opts))
-  (-rollback [_ db opts]
-    (d/-rollback driver db opts))
+  d/Transactable
+  (-transact [_ db f opts]
+    (d/-transact driver db f opts))
 
   component/Lifecycle
-  (start [this]
-    (->> (-> (d/-connect driver db nil)
-             (d/-begin db nil))
-         (assoc this :driver)))
-  (stop [this]
-    (-> (update this :driver d/-rollback db nil)
-        (update :driver d/-disconnect db))))
+  (start [driver]
+    (start-driver driver))
+  (stop [driver]
+    (stop-driver driver)))
 
 (defn driver
   "Return a new test driver that rolls back any changes to the
   database that happen between the component's start and stop
   life-cycle."
   [db]
-  (->Driver db (d/find-driver db) false))
+  (map->Driver
+   {:connected? false
+    :db db
+    :driver (d/driver db)}))

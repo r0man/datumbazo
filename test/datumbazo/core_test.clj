@@ -1,5 +1,4 @@
 (ns datumbazo.core-test
-  (:refer-clojure :exclude [distinct group-by update])
   (:require [clojure.test :refer :all]
             [datumbazo.core :as sql]
             [datumbazo.io :refer :all]
@@ -36,10 +35,10 @@
     (is (= @(sql/truncate db [:countries])
            [{:count 0}]))))
 
-(deftest test-new-db
-  (let [db (sql/new-db "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
+(deftest test-db
+  (let [db (sql/db "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
     (is (instance? sqlingvo.db.Database db))
-    (is (instance? datumbazo.driver.jdbc.clojure.Driver (:driver db)))
+    (is (instance? datumbazo.driver.clojure.java.jdbc.Driver (:driver db)))
     (is (= :postgresql (:scheme db)))
     (is (= "tiger" (:username db)))
     (is (= "scotch" (:password db)))
@@ -51,7 +50,7 @@
 (deftest test-with-db
   (sql/with-db [db "postgresql://tiger:scotch@localhost:5432/datumbazo"]
     (is (instance? sqlingvo.db.Database db))
-    (is (instance? datumbazo.driver.jdbc.clojure.Driver (:driver db)))
+    (is (instance? datumbazo.driver.clojure.java.jdbc.Driver (:driver db)))
     (is (nil? (:connection db)))
     (is (= :postgresql (:scheme db)))
     (is (= "tiger" (:username db)))
@@ -176,8 +175,10 @@
            [{:x "english"}]))))
 
 (deftest test-with-transaction
-  (with-drivers [db db {:rollback false}]
+  (with-drivers [db db {:rollback-only false}]
     (sql/with-connection [db db]
+      @(sql/drop-table db [:test-with-transaction]
+         (sql/if-exists true))
       @(sql/create-table db :test-with-transaction
          (sql/column :x :int))
       (try (sql/with-transaction [db db]
@@ -192,11 +193,11 @@
          (sql/if-exists true)))))
 
 (deftest test-with-nested-transaction
-  (with-drivers [db db {:rollback false}]
+  (with-drivers [db db {:rollback-only false}]
     (sql/with-connection [db db]
       (sql/with-transaction [db db]
         ;; TODO: How does this work in clojure.java.jdbc?
-        (when (= (:backend db) 'jdbc.core)
+        (when (= (:backend db) :jdbc.core)
           @(sql/drop-table db [:test-with-nested-transaction]
              (sql/if-exists true))
           @(sql/create-table db :test-with-nested-transaction
@@ -209,17 +210,17 @@
           (is (empty? @(sql/select db [:*] (sql/from :test-with-nested-transaction))))
           @(sql/drop-table db [:test-with-nested-transaction]))))))
 
-(deftest test-sql-name
-  (with-backends [db]
-    (let [db (assoc db :sql-name underscore)]
-      (with-test-table db :empsalary
-        (is (= @(sql/select db [:*]
-                  (sql/from :empsalary)
-                  (sql/where '(= :empno 10)))
-               [{:depname "develop"
-                 :empno 10
-                 :salary 5200
-                 :enroll_date #inst "2007-08-01T00:00:00.000-00:00"}]))))))
+#_(deftest test-sql-name
+    (with-backends [db]
+      (let [db (assoc db :sql-name underscore)]
+        (with-test-table db :empsalary
+          (is (= @(sql/select db [:*]
+                    (sql/from :empsalary)
+                    (sql/where '(= :empno 10)))
+                 [{:depname "develop"
+                   :empno 10
+                   :salary 5200
+                   :enroll_date #inst "2007-08-01T00:00:00.000-00:00"}]))))))
 
 (deftest test-sql-name-and-keyword
   (with-backends [db {:sql-name underscore :sql-keyword hyphenate}]
@@ -237,7 +238,7 @@
     (let [result (first @(sql/explain db (sql/select db [1])))]
       (is (re-matches
            #"Result  \(cost=\d+.\d+..\d+.\d+ rows=\d+ width=\d+\)"
-           (get result (keyword "query plan")))))))
+           (get result (keyword "QUERY PLAN")))))))
 
 (deftest test-print-explain
   (with-backends [db]

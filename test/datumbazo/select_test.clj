@@ -1,5 +1,5 @@
 (ns datumbazo.select-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is]]
             [datumbazo.core :as sql]
             [datumbazo.test :refer :all]))
 
@@ -23,27 +23,25 @@
 
 (deftest test-select-array-to-json
   (with-backends [db]
-    (is (= [{:array_to_json [[1 5] [99 100]]}]
+    (is (= [{:array-to-json [[1 5] [99 100]]}]
            @(sql/select db [`(array_to_json (cast "{{1,5},{99,100}}" ~(keyword "int[]")))])))))
 
 (deftest test-select-row-to-json
   (with-backends [db]
-    (is (= [{:row_to_json {:f1 1, :f2 "foo"}}]
+    (is (= [{:row-to-json {:f1 1, :f2 "foo"}}]
            @(sql/select db ['(row_to_json (row 1 "foo"))])))))
 
 (deftest test-select-to-json
   (with-backends [db]
-    (is (= [{:to_json "Fred said \"Hi.\""}]
+    (is (= [{:to-json "Fred said \"Hi.\""}]
            @(sql/select db ['(to_json "Fred said \"Hi.\"")])))))
 
 (deftest test-cast-string-to-int
   (with-test-dbs [db]
-    (when-not (= :mysql (:name db))
-      (is (= @(sql/select db [`(cast "1" :int)])
-             [(case (:scheme db)
-                :mysql {(keyword "cast('1' as int)") 1}
-                :postgresql {:int4 1}
-                :sqlite {(keyword "cast(? as int)") 1})])))))
+    (is (= [{:result 1}]
+           @(sql/select db [`(as (cast "1" :int) :result)])))))
+
+@(sql/select db [`(as (cast "1" :int) :result)])
 
 (deftest test-select-1
   (with-test-dbs [db]
@@ -54,10 +52,10 @@
 
 (deftest test-select-1-2-3
   (with-test-dbs [db]
-    (is (= @(sql/select db [1 2 3])
-           [(case (:scheme db)
-              :postgresql {:?column? 1 :?column?_2 2 :?column?_3 3}
-              {:1 1 :2 2 :3 3})]))))
+    (is (= [(case (:scheme db)
+              :postgresql {:?column? 3} ;; :/
+              {:1 1 :2 2 :3 3})]
+           @(sql/select db [1 2 3])))))
 
 (deftest test-select-1-as-n
   (with-test-dbs [db]
@@ -82,10 +80,10 @@
 (deftest test-select-concat-strings
   (with-test-dbs [db]
     (is (= [(case (:scheme db)
-              :mysql {(keyword "('a' || 'b' || 'c')") 0} ;; not string concat, but OR operator
-              :postgresql {:?column? "abc"}
-              :sqlite {(keyword "(? || ? || ?)") "abc"})]
-           @(sql/select db ['(|| "a" "b" "c")])))))
+              :mysql {:result 0} ;; not string concat, but OR operator :/
+              :postgresql {:result "abc"}
+              :sqlite {:result "abc"})]
+           @(sql/select db [(sql/as '(|| "a" "b" "c") :result)])))))
 
 (deftest test-select-alias
   (with-backends [db]
@@ -133,7 +131,7 @@
 (deftest test-select-bigint
   (with-backends [db]
     (is (= @(sql/select db [(bigint 1)])
-           [{:?column? 1}]))))
+           [{:?column? 1M}]))))
 
 (deftest test-select-qualified
   (with-backends [db]
@@ -313,10 +311,10 @@
     (is (= @(sql/select db [`(array_agg :name (order-by (asc :id)))]
               (sql/from :books)
               (sql/group-by :author-id))
-           [{:array_agg ["Book #1" "Book #4"]}
-            {:array_agg ["Book #2" "Book #5"]}
-            {:array_agg ["Book #3" "Book #6" "Book #8"]}
-            {:array_agg ["Book #7"]}]))))
+           [{:array-agg ["Book #1" "Book #4"]}
+            {:array-agg ["Book #2" "Book #5"]}
+            {:array-agg ["Book #3" "Book #6" "Book #8"]}
+            {:array-agg ["Book #7"]}]))))
 
 (deftest test-array-agg-order-by-desc
   (with-backends [db]
@@ -325,10 +323,10 @@
     (is (= @(sql/select db [`(array_agg :name (order-by (desc :id)))]
               (sql/from :books)
               (sql/group-by :author-id))
-           [{:array_agg ["Book #4" "Book #1"]}
-            {:array_agg ["Book #5" "Book #2"]}
-            {:array_agg ["Book #8" "Book #6" "Book #3"]}
-            {:array_agg ["Book #7"]}]))))
+           [{:array-agg ["Book #4" "Book #1"]}
+            {:array-agg ["Book #5" "Book #2"]}
+            {:array-agg ["Book #8" "Book #6" "Book #3"]}
+            {:array-agg ["Book #7"]}]))))
 
 (deftest test-array-agg-order-by-many-columns
   (with-backends [db]
@@ -337,10 +335,10 @@
     (is (= @(sql/select db [`(array_agg :name (order-by :name :id))]
               (sql/from :books)
               (sql/group-by :author-id))
-           [{:array_agg ["Book #1" "Book #4"]}
-            {:array_agg ["Book #2" "Book #5"]}
-            {:array_agg ["Book #3" "Book #6" "Book #8"]}
-            {:array_agg ["Book #7"]}]))))
+           [{:array-agg ["Book #1" "Book #4"]}
+            {:array-agg ["Book #2" "Book #5"]}
+            {:array-agg ["Book #3" "Book #6" "Book #8"]}
+            {:array-agg ["Book #7"]}]))))
 
 (deftest test-select-from-except
   (with-backends [db]

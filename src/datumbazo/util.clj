@@ -7,7 +7,8 @@
             [inflections.core :as infl]
             [no.en.core :as noencore]
             [sqlingvo.core :as sql]
-            [sqlingvo.expr :as expr])
+            [sqlingvo.expr :as expr]
+            [clojure.reflect :as reflect])
   (:import java.io.File
            java.sql.SQLException))
 
@@ -337,3 +338,21 @@
            (map name)
            (str/join ".")
            (keyword)))
+
+(defmulti library-loaded? identity)
+
+(defmethod library-loaded? :joda-time [_]
+  (try (import 'org.joda.time.DateTime)
+       true (catch Exception _ false)))
+
+(defmethod library-loaded? :postgis [_]
+  (try (import 'org.postgis.PGgeometry)
+       true (catch Exception _ false)))
+
+(defmethod library-loaded? :postgresql [_]
+  (try (import 'org.postgresql.util.PGobject)
+       true (catch Exception _ false)))
+
+(defmacro with-library-loaded [library & body]
+  `(when (library-loaded? ~library)
+     (do ~@body)))

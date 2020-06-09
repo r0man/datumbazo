@@ -4,32 +4,12 @@
             [clojure.edn :as edn]
             [clojure.instant :as i]
             [datumbazo.meta :as meta]
+            [datumbazo.util :as util]
             [no.en.core :refer [parse-double parse-integer parse-long]]
             [sqlingvo.expr :refer [parse-table]])
-  (:import java.io.Writer
-           [org.joda.time DateTime DateTimeZone]
-           org.postgis.PGgeometry
-           org.postgresql.util.PGobject))
+  (:import java.io.Writer))
 
-(defn citext [s]
-  (if s
-    (doto (PGobject.)
-      (.setValue (str s))
-      (.setType "citext"))))
-
-(defn jsonb
-  "Convert `x` into a JSONB type."
-  [x]
-  (doto (PGobject.)
-    (.setValue (json/json-str x))
-    (.setType "jsonb")))
-
-;; ENCODE
-
-(defn encode-pggeometry
-  "Encode a PGgeometry column."
-  [x]
-  (PGgeometry. x))
+;; Encoding
 
 (defn encode-timestamp
   "Encode a timestamp column."
@@ -38,9 +18,6 @@
 
 (defmulti encode-column
   (fn [column value] (:type column)))
-
-(defmethod encode-column :citext [column value]
-  (citext value))
 
 (defmethod encode-column :date [column value]
   (to-sql-date value))
@@ -103,7 +80,7 @@
         columns (find-encode-columns db table)]
     (map (partial encode-columns columns) rows)))
 
-;; DECODE
+;; Decoding
 
 (defmulti decode-column class)
 
@@ -137,47 +114,16 @@
   java.math.BigDecimal
   java.util.UUID)
 
-(defmethod decode-column org.postgresql.jdbc.PgArray [array]
-  (decode-array array))
-
-(defn decode-pggeometry
-  "Decode a PGgeometry column."
-  [x]
-  (.getGeometry x))
-
 (defn decode-date
   "Decode a date column."
   [x]
   (to-date x))
 
-(defmulti decode-pgobject
-  (fn [pgobject] (keyword (.getType pgobject))))
-
-(defn- decode-json [pgobject]
-  (when-let [value (.getValue pgobject)]
-    (json/read-str value :key-fn keyword)))
-
-(defmethod decode-pgobject :json [pgobject]
-  (decode-json pgobject))
-
-(defmethod decode-pgobject :jsonb [pgobject]
-  (decode-json pgobject))
-
-(defmethod decode-pgobject :default [pgobject]
-  (.getValue pgobject))
-
-(defmethod decode-column PGgeometry [value]
-  (.getGeometry value))
-
-(defmethod decode-column PGobject [value]
-  (decode-pgobject value))
-
 (defn- decode-time
   "Deocde `time` using the configured EDN semantics."
-  [time] (if time (edn/read-string {:readers *data-readers*} (prn-str time))))
-
-(defmethod decode-column DateTime [value]
-  (decode-time value))
+  [time]
+  (when time
+    (edn/read-string {:readers *data-readers*} (prn-str time))))
 
 (defmethod decode-column java.util.Date [value]
   (decode-time value))
@@ -195,47 +141,108 @@
    #(update-in %1 [%2] decode-column)
    row (keys row)))
 
-;; PRINT
+;; Joda Time
 
-(defmulti print-pgobject
-  (fn [^PGobject o ^Writer w] (keyword (.getType o))))
+(util/with-library-loaded :joda-time
 
-(defmethod print-pgobject :default [^PGobject o ^Writer w]
-  (print-method (str o) w))
+  (defn- construct-date-time
+    [years months days hours minutes seconds nanoseconds offset-sign offset-hours offset-minutes]
+    (-> (.getTimeInMillis
+         (#'i/construct-calendar
+          years months days
+          hours minutes seconds nanoseconds
+          offset-sign offset-hours offset-minutes))
+        (org.joda.time.DateTime.) (.withZone org.joda.time.DateTimeZone/UTC)))
 
-;; PRINT-DUP
+  (defmethod decode-column org.joda.time.DateTime [value]
+    (decode-time value))
 
-(defmethod print-dup DateTime
-  [^DateTime d ^Writer w]
-  (print-dup (.toDate d) w))
+  (defmethod print-dup org.joda.time.DateTime
+    [^org.joda.time.DateTime d ^Writer w]
+    (print-dup (.toDate d) w))
 
-(defmethod print-dup PGobject
-  [^PGobject o ^Writer w]
-  (print-pgobject o w))
+  (defmethod print-method org.joda.time.DateTime
+    [^org.joda.time.DateTime d ^Writer w]
+    (print-method  (.toDate d) w))
 
+  (def read-instant-date-time
+    "To read an instant as an DateTime, bind *data-readers* to a map with
+  this var as the value for the 'inst key."
+    (partial i/parse-timestamp (i/validated construct-date-time))))
 
-;; PRINT-METHOD
+;; PostgreSQL
 
-(defmethod print-method DateTime
-  [^DateTime d ^Writer w]
-  (print-method  (.toDate d) w))
+(util/with-library-loaded :postgresql
 
-(defmethod print-method PGobject
-  [^PGobject o ^Writer w]
-  (print-pgobject o w))
+  (defn citext
+    "Convert `x` into a PostgreSQL CITEXT object."
+    [s]
+    (when s
+      (doto (org.postgresql.util.PGobject.)
+        (.setValue (str s))
+        (.setType "citext"))))
 
-;; READ
+  (defn jsonb
+    "Convert `x` into a PostgreSQL JSONB object."
+    [x]
+    (doto (org.postgresql.util.PGobject.)
+      (.setValue (json/json-str x))
+      (.setType "jsonb")))
 
-(defn- construct-date-time
-  [years months days hours minutes seconds nanoseconds offset-sign offset-hours offset-minutes]
-  (-> (.getTimeInMillis
-       (#'i/construct-calendar
-        years months days
-        hours minutes seconds nanoseconds
-        offset-sign offset-hours offset-minutes))
-      (DateTime.) (.withZone DateTimeZone/UTC)))
+  (defmethod decode-column org.postgresql.jdbc.PgArray [array]
+    (decode-array array))
 
-(def read-instant-date-time
-  "To read an instant as an DateTime, bind *data-readers* to a map
-  with this var as the value for the 'inst key."
-  (partial i/parse-timestamp (i/validated construct-date-time)))
+  (defmulti decode-pgobject
+    (fn [^org.postgresql.util.PGobject pgobject]
+      (keyword (.getType pgobject))))
+
+  (defn- decode-pgobject-json [^org.postgresql.util.PGobject pgobject]
+    (when-let [value (.getValue pgobject)]
+      (json/read-str value :key-fn keyword)))
+
+  (defmethod decode-pgobject :json [pgobject]
+    (decode-pgobject-json pgobject))
+
+  (defmethod decode-pgobject :jsonb [pgobject]
+    (decode-pgobject-json pgobject))
+
+  (defmethod decode-pgobject :default [pgobject]
+    (.getValue ^org.postgresql.util.PGobject pgobject))
+
+  (defmethod decode-column org.postgresql.util.PGobject [value]
+    (decode-pgobject value))
+
+  (defmethod encode-column :citext [column value]
+    (citext value))
+
+  (defmulti print-pgobject
+    (fn [^org.postgresql.util.PGobject o ^Writer w]
+      (keyword (.getType o))))
+
+  (defmethod print-pgobject :default [^org.postgresql.util.PGobject o ^Writer w]
+    (print-method (str o) w))
+
+  (defmethod print-dup org.postgresql.util.PGobject
+    [^org.postgresql.util.PGobject o ^Writer w]
+    (print-pgobject o w))
+
+  (defmethod print-method org.postgresql.util.PGobject
+    [^org.postgresql.util.PGobject o ^Writer w]
+    (print-pgobject o w)))
+
+;; PostGIS
+
+(util/with-library-loaded :postgis
+
+  (defn encode-pggeometry
+    "Encode a PGgeometry column."
+    [^org.postgis.Geometry x]
+    (org.postgis.PGgeometry. x))
+
+  (defn decode-pggeometry
+    "Decode a PGgeometry column."
+    [x]
+    (.getGeometry ^org.postgis.PGgeometry x))
+
+  (defmethod decode-column org.postgis.PGgeometry [value]
+    (.getGeometry ^org.postgis.PGgeometry value)))

@@ -1,22 +1,36 @@
 (ns datumbazo.test
-  (:require [clojure.test :refer :all]
-            [clojure.spec.test.alpha :as stest]
+  (:require [clojure.spec.test.alpha :as stest]
+            [clojure.string :as str]
+            [clojure.test :refer :all]
             [datumbazo.core :as sql]
-            [datumbazo.driver.core :as driver]))
+            [next.jdbc.result-set :as jdbc.result-set]
+            [sqlingvo.util :refer [sql-keyword-hyphenate]]))
+
+(def drivers
+  [:next.jdbc :clojure.java.jdbc :jdbc.core])
 
 (def connections
   {:mysql "mysql://tiger:scotch@localhost/datumbazo?useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
    :postgresql "postgresql://tiger:scotch@localhost/datumbazo"
    :sqlite "sqlite://tmp/datumbazo.db"})
 
-(def db (sql/new-db (:postgresql connections) {:backend 'jdbc.core}))
+(defn as-unqualified-kebab-maps [rs opts]
+  (jdbc.result-set/as-unqualified-modified-maps rs (assoc opts :label-fn #(str/replace %1 "_" "-"))))
+
+(def db-spec
+  {:backend :jdbc.core
+   :clojure.java.jdbc {:identifiers sql-keyword-hyphenate}
+   :jdbc.core {:identifiers sql-keyword-hyphenate}
+   :next.jdbc {:builder-fn as-unqualified-kebab-maps}})
+
+(def db (sql/db (:postgresql connections) db-spec))
 
 (defmacro with-test-db
   [[db-sym config & [opts]] & body]
   `(do (stest/unstrument)
        (stest/instrument)
-       (sql/with-db [db# ~config (assoc ~opts :rollback true)]
-         (sql/with-connection [~db-sym db#]
+       (sql/with-db [db# ~config (merge db-spec ~opts)]
+         (sql/with-transaction [~db-sym db# {:rollback-only true}]
            ~@body))))
 
 (defmacro with-test-dbs
@@ -224,9 +238,9 @@
   (insert-test-table db table))
 
 (defmacro with-drivers [[db-sym db opts] & body]
-  `(doseq [driver# ['clojure.java.jdbc 'jdbc.core]]
-     (if (find-ns driver#)
-       (sql/with-db [~db-sym ~db (merge {:backend driver# :rollback true} ~opts)]
+  `(doseq [driver# ~drivers]
+     (if (find-ns (symbol driver#))
+       (sql/with-db [~db-sym ~db (merge db-spec {:backend driver#} ~opts)]
          ~@body)
        (.println *err* (format "WARNING: Can't find %s driver, skipping tests." driver#)))))
 
@@ -234,7 +248,7 @@
   `(do (stest/unstrument)
        (stest/instrument)
        (with-drivers [db# ~(:postgresql connections) ~opts]
-         (sql/with-connection [~db-sym db#]
+         (sql/with-transaction [~db-sym db# {:rollback-only true}]
            ~@body))))
 
 (deftest test-with-backends

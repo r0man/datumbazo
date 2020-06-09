@@ -1,15 +1,17 @@
 (ns datumbazo.core
   (:refer-clojure :exclude [distinct group-by update])
-  (:require [datumbazo.postgresql.associations :as associations]
+  (:require [datumbazo.datasource :as pool]
+            [datumbazo.db :as db]
             [datumbazo.driver.core :as driver]
             [datumbazo.pagination :as pagination]
+            [datumbazo.postgresql.associations :as associations]
             [datumbazo.table :as table]
-            [datumbazo.db :as db]
-            [datumbazo.pool.core :as pool]
             [datumbazo.util :refer [immigrate]]
             [no.en.core :refer [parse-integer]]
             [potemkin :refer [import-vars]]
             [sqlingvo.core :as sql]))
+
+(immigrate 'sqlingvo.core)
 
 (import-vars
  [datumbazo.postgresql.associations
@@ -18,24 +20,28 @@
   has-many
   has-one]
  [datumbazo.driver.core
-  begin
-  commit
+  auto-commit?
+  set-auto-commit!
+  set-savepoint!
   connect
   connected?
   connection
   disconnect
   execute
-  prepare-statement
-  rollback
+  prepare
+  rollback!
   sql-str
+  transact
   with-connection
+  with-rollback
+  with-savepoint
   with-transaction]
  [datumbazo.table
   columns
   deftable
   table]
  [datumbazo.db
-  new-db
+  db
   with-db]
  [datumbazo.pagination
   page-info
@@ -44,15 +50,13 @@
   make-instance
   make-instances])
 
-(immigrate 'sqlingvo.core)
-
 (declare run)
 
 (defn print-explain
   "Print the execution plan of `query`."
   [query]
   (doseq [row @(explain (-> query ast :db) query)]
-    (println (get row (keyword "query plan")))))
+    (println (get row (keyword "QUERY PLAN")))))
 
 (defn count-all
   "Count all rows in the database `table`."

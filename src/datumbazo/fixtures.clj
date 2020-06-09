@@ -116,60 +116,56 @@
 (defn constraints-deferred! [db]
   (let [stmt ["SET CONSTRAINTS ALL DEFERRED"]]
     (log/debugf "Set all constraints to deferred: %s" stmt)
-    (driver/-execute (:driver db) db stmt nil)))
+    (driver/-execute-one (:driver db) db stmt nil)))
 
 (defn constraints-immediate! [db]
   (let [stmt ["SET CONSTRAINTS ALL IMMEDIATE"]]
     (log/debugf "Set all constraints to immediate: %s" stmt)
-    (driver/-execute (:driver db) db stmt nil)))
+    (driver/-execute-one (:driver db) db stmt nil)))
 
 (defn enable-triggers
   "Enable triggers on the database `table`."
   [db table]
   (let [stmt (str "ALTER TABLE " (sql-quote db (sql-name db table)) " ENABLE TRIGGER ALL")]
     (log/debugf "Enable triggers: %s" stmt)
-    (driver/-execute (:driver db) db [stmt] nil)))
+    (driver/-execute-one (:driver db) db [stmt] nil)))
 
 (defn disable-triggers
   "Disable triggers on the database `table`."
   [db table]
   (let [stmt (str "ALTER TABLE " (sql-quote db (sql-name db table)) " DISABLE TRIGGER ALL")]
     (log/debugf "Disable triggers: %s" stmt)
-    (driver/-execute (:driver db) db [stmt] nil)))
+    (driver/-execute-one (:driver db) db [stmt] nil)))
 
 (defn delete-fixtures [db tables]
   (log/debugf "Deleting fixtures from database.")
-  (sql/with-transaction [db db]
-    (doseq [table tables]
-      @(sql/truncate db [table] (sql/cascade true)))))
+  (doseq [table tables]
+    @(sql/truncate db [table] (sql/cascade true))))
 
 (defn dump-fixtures
   "Write the fixtures for `tables` into `directory`."
   [db directory tables & [opts]]
   (log/debugf "Dumping fixtures to %s." directory)
   (let [only (set (:only opts))]
-    (sql/with-transaction [db db]
-      (doseq [table tables
-              :let [filename (str (apply file directory (str/split (name table) #"\.")) ".edn")]
-              :when (or (empty? only) (contains? only table))]
-        (apply write-fixture db table filename opts)))))
+    (doseq [table tables
+            :let [filename (str (apply file directory (str/split (name table) #"\.")) ".edn")]
+            :when (or (empty? only) (contains? only table))]
+      (apply write-fixture db table filename opts))))
 
 (defn load-fixtures
   "Load all database fixtures from `directory`."
   [db directory & [opts]]
   (log/debugf "Loading fixtures from %s." directory)
   (let [fixtures (fixture-seq directory opts)]
-    (sql/with-transaction
-      [db db]
-      (constraints-deferred! db)
-      (doseq [table (map :table fixtures)]
-        (disable-triggers db table))
-      (let [fixtures (->> fixtures
-                          (map #(read-fixture db (:table %1) (:file %1) opts))
-                          (doall))]
-        (doall (map #(enable-triggers db %1) (map :table fixtures)))
-        (constraints-immediate! db)
-        fixtures))))
+    (constraints-deferred! db)
+    (doseq [table (map :table fixtures)]
+      (disable-triggers db table))
+    (let [fixtures (->> fixtures
+                        (map #(read-fixture db (:table %1) (:file %1) opts))
+                        (doall))]
+      (doall (map #(enable-triggers db %1) (map :table fixtures)))
+      (constraints-immediate! db)
+      fixtures)))
 
 (defn tables [directory]
   (map :table (fixture-seq directory)))
@@ -184,10 +180,11 @@
     (when (or (:help opts) (nil? db-url) (nil? directory))
       (show-help))
     (sql/with-db [db db-url]
-      (let [tables (tables directory)]
-        (case (keyword command)
-          :delete (delete-fixtures db tables)
-          :dump (dump-fixtures db directory tables)
-          :load (load-fixtures db directory)
-          (show-help))
-        nil))))
+      (sql/with-transaction [db db]
+        (let [tables (tables directory)]
+          (case (keyword command)
+            :delete (delete-fixtures db tables)
+            :dump (dump-fixtures db directory tables)
+            :load (load-fixtures db directory)
+            (show-help))
+          nil)))))

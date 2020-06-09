@@ -1,6 +1,6 @@
 (ns datumbazo.table-test
-  (:require [clojure.test :refer :all]
-            [datumbazo.table :refer :all]
+  (:require [clojure.test :refer [deftest is]]
+            [datumbazo.table :as table]
             [datumbazo.test :refer :all]
             [datumbazo.util :as util]
             [sqlingvo.core :as sql])
@@ -10,7 +10,7 @@
   (util/table-by-class Continent))
 
 (deftest test-define-truncate
-  (is (= (#'datumbazo.table/define-truncate continents-table)
+  (is (= (#'table/define-truncate continents-table)
          '(clojure.core/defn truncate!
             "Truncate the continents table."
             [db & [opts]]

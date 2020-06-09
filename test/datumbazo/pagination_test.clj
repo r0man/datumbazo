@@ -1,7 +1,7 @@
 (ns datumbazo.pagination-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is]]
             [datumbazo.core :as sql]
-            [datumbazo.pagination :refer :all]
+            [datumbazo.pagination :as pagination]
             [datumbazo.test :refer :all]))
 
 (defn results [db n]
@@ -14,13 +14,13 @@
 (deftest test-query
   (with-backends [db]
     (let [sql (results db 10)]
-      (is (= (sql/ast (query @sql))
-             (sql/ast (query sql))
+      (is (= (sql/ast (pagination/query @sql))
+             (sql/ast (pagination/query sql))
              (sql/ast sql))))))
 
 (deftest test-page
   (with-backends [db]
-    (is (= (page-info db (results db 1))
+    (is (= (pagination/page-info db (results db 1))
            {:page 1
             :pages 1
             :per-page 25
@@ -28,7 +28,7 @@
 
 (deftest test-next-page
   (with-backends [db]
-    (is (= (page-info db (results db (inc *per-page*)))
+    (is (= (pagination/page-info db (results db (inc pagination/*per-page*)))
            {:page 1
             :pages 2
             :per-page 25

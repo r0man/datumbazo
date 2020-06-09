@@ -4,11 +4,8 @@
             [clojure.test :refer :all]
             [datumbazo.continents :as continents :refer [continent?]]
             [datumbazo.countries :refer [country?]]
-            [datumbazo.record :as record]
             [datumbazo.test :refer :all]
-            [datumbazo.util :refer [make-instance]]
-            [datumbazo.util :as util]
-            [postgis.spec :as postgis])
+            [datumbazo.util :as util :refer [make-instance]])
   (:import datumbazo.continents.Continent
            java.util.Date))
 

@@ -1,7 +1,7 @@
 (ns datumbazo.vendor-test
-  (:require [datumbazo.core :refer [new-db]]
-            [datumbazo.vendor :refer :all]
-            [clojure.test :refer :all]))
+  (:require [clojure.test :refer :all]
+            [datumbazo.core :as sql]
+            [datumbazo.vendor :as vendor]))
 
 (def urls
   {:mysql "mysql://tiger:scotch@localhost/datumbazo"
@@ -12,7 +12,7 @@
    :vertica "vertica://tiger:scotch@localhost/datumbazo"})
 
 (deftest test-jdbc-url
-  (are [url expected] (= (jdbc-url (new-db url)) expected)
+  (are [url expected] (= (vendor/jdbc-url (sql/db url)) expected)
     (:mysql urls)
     "jdbc:mysql://localhost/datumbazo"
     (:oracle urls)
@@ -29,7 +29,7 @@
     "jdbc:vertica://localhost/datumbazo?ssl=true"))
 
 (deftest test-subname
-  (are [url expected] (= (subname (new-db url)) expected)
+  (are [url expected] (= (vendor/subname (sql/db url)) expected)
     (:mysql urls)
     "//localhost/datumbazo"
     (:oracle urls)

@@ -8,11 +8,10 @@
            com.mchange.v2.c3p0.impl.NewProxyConnection
            com.zaxxer.hikari.HikariDataSource
            com.zaxxer.hikari.pool.HikariProxyConnection
-           java.sql.Connection
            javax.sql.DataSource))
 
-(deftest test-new-db-mysql
-  (let [db (sql/new-db "mysql://tiger:scotch@localhost/datumbazo?profileSQL=true")]
+(deftest test-db-mysql
+  (let [db (sql/db "mysql://tiger:scotch@localhost/datumbazo?profileSQL=true")]
     (is (instance? sqlingvo.db.Database db))
     (is (nil? (:db-pool db)))
     (is (= "com.mysql.cj.jdbc.Driver" (:classname db)))
@@ -26,8 +25,8 @@
     (is (= "tiger" (:username db))) ; MySQL needs :user key
     (is (= "scotch" (:password db)))))
 
-(deftest test-new-db-oracle
-  (let [db (sql/new-db "oracle://tiger:scotch@localhost/datumbazo")]
+(deftest test-db-oracle
+  (let [db (sql/db "oracle://tiger:scotch@localhost/datumbazo")]
     (is (instance? sqlingvo.db.Database db))
     (is (nil? (:db-pool db)))
     (is (= "oracle.jdbc.driver.OracleDriver" (:classname db)))
@@ -39,8 +38,8 @@
     (is (nil? (:query-params db)))
     (is (= :oracle (:scheme db)))))
 
-(deftest test-new-db-postgresql
-  (let [db (sql/new-db "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
+(deftest test-db-postgresql
+  (let [db (sql/db "postgresql://tiger:scotch@localhost:5432/datumbazo?ssl=true")]
     (is (instance? sqlingvo.db.Database db))
     (is (nil? (:db-pool db)))
     (is (= "org.postgresql.Driver" (:classname db)))
@@ -54,8 +53,8 @@
     (is (= "tiger" (:username db)))
     (is (= "scotch" (:password db)))))
 
-(deftest test-new-db-postgresql-c3p0
-  (let [db (sql/new-db "c3p0:postgresql://tiger:scotch@localhost:5432/datumbazo")]
+(deftest test-db-postgresql-c3p0
+  (let [db (sql/db "c3p0:postgresql://tiger:scotch@localhost:5432/datumbazo")]
     (is (instance? sqlingvo.db.Database db))
     (is (= "org.postgresql.Driver" (:classname db)))
     (is (= :c3p0 (:pool db)))
@@ -73,8 +72,8 @@
         (is (instance? NewProxyConnection (sql/connection db))))
       (component/stop started))))
 
-(deftest test-new-db-bonecp
-  (let [db (sql/new-db "bonecp:postgresql://tiger:scotch@localhost:5432/datumbazo")]
+(deftest test-db-bonecp
+  (let [db (sql/db "bonecp:postgresql://tiger:scotch@localhost:5432/datumbazo")]
     (is (instance? sqlingvo.db.Database db))
     (is (= "org.postgresql.Driver" (:classname db)))
     (is (= :bonecp (:pool db)))
@@ -92,8 +91,8 @@
         (is (instance? ConnectionHandle (sql/connection db))))
       (component/stop started))))
 
-(deftest test-new-db-hikaricp
-  (let [db (sql/new-db "hikaricp:postgresql://tiger:scotch@localhost:5432/datumbazo")]
+(deftest test-db-hikaricp
+  (let [db (sql/db "hikaricp:postgresql://tiger:scotch@localhost:5432/datumbazo")]
     (is (instance? sqlingvo.db.Database db))
     (is (nil? (:datasource db)))
     (is (= "org.postgresql.Driver" (:classname db)))
@@ -112,8 +111,8 @@
         (is (instance? HikariProxyConnection (sql/connection db))))
       (component/stop started))))
 
-(deftest test-new-db-sqlite
-  (let [db (sql/new-db "sqlite://tmp/datumbazo.sqlite")]
+(deftest test-db-sqlite
+  (let [db (sql/db "sqlite://tmp/datumbazo.sqlite")]
     (is (instance? sqlingvo.db.Database db))
     (is (nil? (:db-pool db)))
     (is (= "org.sqlite.JDBC" (:classname db)))
@@ -121,8 +120,8 @@
     (is (nil? (:query-params db)))
     (is (= :sqlite (:scheme db)))))
 
-(deftest test-new-db-sqlserver
-  (let [db (sql/new-db "sqlserver://tiger:scotch@localhost/datumbazo")]
+(deftest test-db-sqlserver
+  (let [db (sql/db "sqlserver://tiger:scotch@localhost/datumbazo")]
     (is (instance? sqlingvo.db.Database db))
     (is (nil? (:db-pool db)))
     (is (= "com.microsoft.sqlserver.jdbc.SQLServerDriver" (:classname db)))
@@ -133,8 +132,8 @@
     (is (= "datumbazo" (:name db)))
     (is (nil? (:query-params db)))))
 
-(deftest test-new-db-vertica
-  (let [db (sql/new-db "vertica://tiger:scotch@localhost/datumbazo")]
+(deftest test-db-vertica
+  (let [db (sql/db "vertica://tiger:scotch@localhost/datumbazo")]
     (is (instance? sqlingvo.db.Database db))
     (is (nil? (:db-pool db)))
     (is (= "com.vertica.jdbc.Driver" (:classname db)))

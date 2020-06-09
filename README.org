@@ -1,7 +1,7 @@
 * Datumbazo
 
   [[https://clojars.org/datumbazo][https://img.shields.io/clojars/v/datumbazo.svg]]
-  [[https://travis-ci.org/r0man/datumbazo][https://travis-ci.org/r0man/datumbazo.svg]]
+  [[https://github.com/r0man/datumbazo/actions?query=workflow%3A%22Clojure+CI%22][https://github.com/r0man/datumbazo/workflows/Clojure%20CI/badge.svg]]
   [[https://versions.deps.co/r0man/datumbazo][https://versions.deps.co/r0man/datumbazo/status.svg]]
   [[https://versions.deps.co/r0man/datumbazo][https://versions.deps.co/r0man/datumbazo/downloads.svg]]
 
@@ -22,10 +22,10 @@
 *** Database component
 
     You can make a new database [[https://github.com/stuartsierra/component][component]] from an URL with the
-    =new-db= function..
+    =db= function.
 
     #+BEGIN_SRC clojure :exports both :results silent
-      (def db-spec (sql/new-db "postgresql://tiger:scotch@localhost/datumbazo"))
+      (def db-spec (sql/db "postgresql://tiger:scotch@localhost/datumbazo"))
     #+END_SRC
 
     A database component can be started and stopped with the =start=

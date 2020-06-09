@@ -213,6 +213,16 @@
               (sql/returning :*))
            [{:id 1}]))))
 
+(deftest test-insert-geometry-column
+  (with-backends [db]
+    (let [table :test-create-geometry-column]
+      @(sql/create-table db table
+         (sql/column :location :geometry))
+      (is (= @(sql/insert db table []
+                (sql/values [{:location (geo/point 4326 1 2)}])
+                (sql/returning :*))
+             [{:location (geo/point 4326 1 2)}])))))
+
 (deftest test-insert-geography-column
   (with-backends [db]
     (let [table :test-create-geography-column]
@@ -221,4 +231,4 @@
       (is (= @(sql/insert db table []
                 (sql/values [{:location (geo/point 4326 1 2)}])
                 (sql/returning :*))
-             [{:location "0101000020E6100000000000000000F03F0000000000000040"}])))))
+             [{:location (geo/point 4326 1 2)}])))))

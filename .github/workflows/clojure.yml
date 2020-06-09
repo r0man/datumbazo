@@ -13,6 +13,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Start services
+      run: docker-compose up -d
+    - name: Install PostGIS
+      run: sudo apt-get install postgis
+    - name: Setup databases
+      run: sleep 5; ./bin/createdb
     - name: Install dependencies
       run: lein deps
     - name: Run tests

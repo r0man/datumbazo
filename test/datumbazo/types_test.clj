@@ -1,7 +1,7 @@
 (ns datumbazo.types-test
-  (:require [clojure.test :refer :all]
-            [datumbazo.people :as people]
+  (:require [clojure.test :refer [deftest is]]
             [datumbazo.core :as sql]
+            [datumbazo.people :as people]
             [datumbazo.test :refer :all]))
 
 (defn create-mood-type! [db]
