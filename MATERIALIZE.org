@@ -30,7 +30,7 @@
   From your Materialize CLI, create a materialized view that contains
   actual data we can work with.
 
-  #+BEGIN_SRC clojure :exports code :results verbatim
+  #+BEGIN_SRC clojure :exports both :results verbatim
     @(sql/create-materialized-view db :pseudo-source [:key :value]
        (sql/values [["a" 1] ["a" 2] ["a" 3] ["a" 4] ["b" 5] ["c" 6] ["c" 7]]))
   #+END_SRC
@@ -50,7 +50,7 @@
 
   Let’s start by viewing all of the data:
 
-  #+BEGIN_SRC clojure :exports code :results verbatim
+  #+BEGIN_SRC clojure :exports both :results verbatim
     @(sql/select db [:*]
        (sql/from :pseudo-source))
   #+END_SRC
@@ -60,7 +60,7 @@
 
   Determine the sum of the values for each key:
 
-  #+BEGIN_SRC clojure :exports code :results verbatim
+  #+BEGIN_SRC clojure :exports both :results verbatim
     @(sql/select db [:key '(sum :value)]
        (sql/from :pseudo-source)
        (sql/group-by :key))
@@ -71,7 +71,7 @@
 
   We can actually then save this query as its own materialized view:
 
-  #+BEGIN_SRC clojure :exports code :results verbatim
+  #+BEGIN_SRC clojure :exports both :results verbatim
     @(sql/create-materialized-view db :key-sums []
        (sql/select db [:key '(sum :value)]
          (sql/from :pseudo-source)
@@ -83,7 +83,7 @@
 
   Determine the sum of all keys’ sums:
 
-  #+BEGIN_SRC clojure :exports code :results verbatim
+  #+BEGIN_SRC clojure :exports both :results verbatim
     @(sql/select db ['(sum :sum)]
        (sql/from :key-sums))
   #+END_SRC
@@ -96,7 +96,7 @@
   exciting, but Materialize offers support for a full range of
   arbitrarily complex JOINs.
 
-  #+BEGIN_SRC clojure :exports code :results verbatim
+  #+BEGIN_SRC clojure :exports both :results verbatim
     @(sql/create-materialized-view db :lhs [:key :value]
        (sql/values [["x" "a"] ["y" "b"] ["z" "c"]]))
   #+END_SRC
@@ -104,7 +104,7 @@
   #+RESULTS:
   : [{:count 0}]
 
-  #+BEGIN_SRC clojure :exports code :results verbatim
+  #+BEGIN_SRC clojure :exports both :results verbatim
     @(sql/select db [:lhs.key '(sum :rhs.value)]
        (sql/from :lhs)
        (sql/join (sql/as :pseudo-source :rhs) '(on (= :lhs.value :rhs.key)))
