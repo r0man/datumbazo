@@ -2,6 +2,7 @@
 
 BEGIN;
 
+DROP EXTENSION postgis_raster;
 DROP EXTENSION postgis;
 
 COMMIT;
