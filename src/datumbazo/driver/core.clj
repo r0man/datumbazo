@@ -307,8 +307,7 @@
     (let [sql (sql ast)
           exec-fn (execute-fn ast)]
       (with-meta
-        (case (:op ast)
-          :create-table
+        (if (#{:create-table :create-materialized-view} (:op ast))
           (if (seq (rest sql))
             ;; TODO: sql-str only works with PostgreSQL driver
             (exec-fn db [(sql-str stmt)] opts)
