@@ -1,5 +1,23 @@
 * Explore Materialize’s API
 
+  Start Materialize.io with Docker.
+
+  #+BEGIN_SRC sh
+    docker run -p 6875:6875 materialize/materialized:v0.5.0 --workers 1
+  #+END_SRC
+
+  Import the datumbazo library.
+
+  #+BEGIN_SRC clojure :exports code :results silent
+    (require '[datumbazo.core :as sql])
+  #+END_SRC
+
+  Define how to connect to the database.
+
+  #+BEGIN_SRC clojure :exports code :results silent
+    (def db (sql/new-db "postgresql://localhost:6875/materialize"))
+  #+END_SRC
+
   Materialize offers ANSI Standard SQL, but is not simply a relational
   database. Instead of tables of data, you typically connect
   Materialize to external sources of data (called sources), and then
@@ -12,15 +30,13 @@
   From your Materialize CLI, create a materialized view that contains
   actual data we can work with.
 
-  #+BEGIN_SRC sql :engine postgresql :database materialize :dbhost localhost :dbport 6875
-     CREATE MATERIALIZED VIEW pseudo_source (key, value) AS
-       VALUES ('a', 1), ('a', 2), ('a', 3), ('a', 4),
-       ('b', 5), ('c', 6), ('c', 7);
-   #+END_SRC
+  #+BEGIN_SRC clojure :exports code :results verbatim
+    @(sql/create-materialized-view db :pseudo-source [:key :value]
+       (sql/values [["a" 1] ["a" 2] ["a" 3] ["a" 4] ["b" 5] ["c" 6] ["c" 7]]))
+  #+END_SRC
 
-   #+RESULTS:
-   | CREATE VIEW |
-   |-------------|
+  #+RESULTS:
+  : [{:count 0}]
 
   You’ll notice that we end up entering data into Materialize by
   creating a materialized view from some other data, rather than the
@@ -34,84 +50,69 @@
 
   Let’s start by viewing all of the data:
 
-   #+BEGIN_SRC sql :engine postgresql :database materialize :dbhost localhost :dbport 6875
-     SELECT * FROM pseudo_source;
-   #+END_SRC
+  #+BEGIN_SRC clojure :exports code :results verbatim
+    @(sql/select db [:*]
+       (sql/from :pseudo-source))
+  #+END_SRC
 
-   #+RESULTS:
-   | key | value |
-   |-----+-------|
-   | a   |     1 |
-   | a   |     2 |
-   | a   |     3 |
-   | a   |     4 |
-   | b   |     5 |
-   | c   |     6 |
-   | c   |     7 |
+  #+RESULTS:
+  : ({:key "a", :value 1} {:key "a", :value 2} {:key "a", :value 3} {:key "a", :value 4} {:key "b", :value 5} {:key "c", :value 6} {:key "c", :value 7})
 
   Determine the sum of the values for each key:
 
-   #+BEGIN_SRC sql :engine postgresql :database materialize :dbhost localhost :dbport 6875
-     SELECT key, sum(value) FROM pseudo_source GROUP BY key;
-   #+END_SRC
+  #+BEGIN_SRC clojure :exports code :results verbatim
+    @(sql/select db [:key '(sum :value)]
+       (sql/from :pseudo-source)
+       (sql/group-by :key))
+  #+END_SRC
 
-   #+RESULTS:
-   | key | sum |
-   |-----+-----|
-   | a   |  10 |
-   | b   |   5 |
-   | c   |  13 |
+  #+RESULTS:
+  : ({:key "a", :sum 10} {:key "b", :sum 5} {:key "c", :sum 13})
 
   We can actually then save this query as its own materialized view:
 
-   #+BEGIN_SRC sql :engine postgresql :database materialize :dbhost localhost :dbport 6875
-     CREATE MATERIALIZED VIEW key_sums AS SELECT key, sum(value) FROM
-       pseudo_source GROUP BY key;
-   #+END_SRC
+  #+BEGIN_SRC clojure :exports code :results verbatim
+    @(sql/create-materialized-view db :key-sums []
+       (sql/select db [:key '(sum :value)]
+         (sql/from :pseudo-source)
+         (sql/group-by :key)))
+  #+END_SRC
 
-   #+RESULTS:
-   | CREATE VIEW |
-   |-------------|
+  #+RESULTS:
+  : [{:count 0}]
 
   Determine the sum of all keys’ sums:
 
-   #+BEGIN_SRC sql :engine postgresql :database materialize :dbhost localhost :dbport 6875
-     SELECT sum(sum) FROM key_sums;
-   #+END_SRC
+  #+BEGIN_SRC clojure :exports code :results verbatim
+    @(sql/select db ['(sum :sum)]
+       (sql/from :key-sums))
+  #+END_SRC
 
-   #+RESULTS:
-   | sum |
-   |-----|
-   |  28 |
+  #+RESULTS:
+  : ({:sum 28})
 
   We can also perform complex operations like JOINs. Given the
   simplicity of our data, the JOIN clauses themselves aren’t very
   exciting, but Materialize offers support for a full range of
   arbitrarily complex JOINs.
 
-   #+BEGIN_SRC sql :engine postgresql :database materialize :dbhost localhost :dbport 6875
-     CREATE MATERIALIZED VIEW lhs (key, value) AS
-       VALUES ('x', 'a'), ('y', 'b'), ('z', 'c');
-   #+END_SRC
+  #+BEGIN_SRC clojure :exports code :results verbatim
+    @(sql/create-materialized-view db :lhs [:key :value]
+       (sql/values [["x" "a"] ["y" "b"] ["z" "c"]]))
+  #+END_SRC
 
-   #+RESULTS:
-   | CREATE VIEW |
-   |-------------|
+  #+RESULTS:
+  : [{:count 0}]
 
-   #+BEGIN_SRC sql :engine postgresql :database materialize :dbhost localhost :dbport 6875
-     SELECT lhs.key, sum(rhs.value)
-       FROM lhs
-              JOIN pseudo_source AS rhs
-                  ON lhs.value = rhs.key
-      GROUP BY lhs.key;
-   #+END_SRC
+  #+BEGIN_SRC clojure :exports code :results verbatim
+    @(sql/select db [:lhs.key '(sum :rhs.value)]
+       (sql/from :lhs)
+       (sql/join (sql/as :pseudo-source :rhs) '(on (= :lhs.value :rhs.key)))
+       (sql/group-by :lhs.key))
+  #+END_SRC
 
-   #+RESULTS:
-   | key | sum |
-   |-----+-----|
-   | x   |  10 |
-   | y   |   5 |
-   | z   |  13 |
+  #+RESULTS:
+  : ({:key "x", :sum 10} {:key "y", :sum 5} {:key "z", :sum 13})
 
   Of course, these are trivial examples, but hope begin to illustrate
   some of Materialize’s potential.
