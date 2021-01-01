@@ -1,3 +1,4 @@
+
 create schema "my-schema";
 
 select 1, 2, 3;
@@ -69,3 +70,71 @@ INSERT INTO distributors AS d (did, dname) VALUES (8, 'Anvil Distribution')
     ON CONFLICT (did) DO UPDATE
     SET dname = EXCLUDED.dname || ' (formerly ' || d.dname || ')'
     WHERE d.zipcode <> '21201';
+
+-- Materialize.io
+
+CREATE MATERIALIZED VIEW pseudo_source (key, value) AS
+    VALUES ('a', 1), ('a', 2), ('a', 3), ('a', 4),
+    ('b', 5), ('c', 6), ('c', 7);
+
+SELECT * FROM pseudo_source;
+
+SELECT key, sum(value) FROM pseudo_source GROUP BY key;
+
+CREATE MATERIALIZED VIEW key_sums AS
+  SELECT key, sum(value) FROM pseudo_source GROUP BY key;
+
+SELECT sum(sum) FROM key_sums;
+
+CREATE MATERIALIZED VIEW lhs (key, value) AS
+  VALUES ('x', 'a'), ('y', 'b'), ('z', 'c');
+
+SELECT lhs.key, sum(rhs.value)
+  FROM lhs
+         JOIN pseudo_source AS rhs
+             ON lhs.value = rhs.key
+ GROUP BY lhs.key;
+
+CREATE SOURCE wikirecent
+  FROM FILE '/home/roman/workspace/datumbazo/wikirecent' WITH (tail = true)
+  FORMAT REGEX '^data: (?P<data>.*)';
+
+SHOW COLUMNS FROM wikirecent;
+
+CREATE MATERIALIZED VIEW recentchanges AS
+  SELECT
+  val->>'$schema' AS r_schema,
+  (val->'bot')::bool AS bot,
+  val->>'comment' AS comment,
+  (val->'id')::float::int AS id,
+  (val->'length'->'new')::float::int AS length_new,
+  (val->'length'->'old')::float::int AS length_old,
+  val->'meta'->>'uri' AS meta_uri,
+  val->'meta'->>'id' as meta_id,
+  (val->'minor')::bool AS minor,
+  (val->'namespace')::float AS namespace,
+  val->>'parsedcomment' AS parsedcomment,
+  (val->'revision'->'new')::float::int AS revision_new,
+  (val->'revision'->'old')::float::int AS revision_old,
+  val->>'server_name' AS server_name,
+  (val->'server_script_path')::text AS server_script_path,
+  val->>'server_url' AS server_url,
+  (val->'timestamp')::float AS r_ts,
+  val->>'title' AS title,
+  val->>'type' AS type,
+  val->>'user' AS user,
+  val->>'wiki' AS wiki
+  FROM (SELECT data::jsonb AS val FROM wikirecent);
+
+CREATE MATERIALIZED VIEW counter AS
+  SELECT COUNT(*) FROM recentchanges;
+
+CREATE MATERIALIZED VIEW useredits AS
+  SELECT user, count(*) FROM recentchanges GROUP BY user;
+
+SELECT * FROM useredits ORDER BY count DESC;
+
+CREATE MATERIALIZED VIEW top10 AS
+  SELECT * FROM useredits ORDER BY count DESC LIMIT 10;
+
+SELECT * FROM top10 ORDER BY count DESC;
