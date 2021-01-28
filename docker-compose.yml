@@ -20,3 +20,10 @@ services:
       MYSQL_USER: "tiger"
     ports:
       - "3306:3306"
+
+  materialize:
+    image: "materialize/materialized:v0.6.0"
+    environment:
+      MZ_WORKERS: "1"
+    ports:
+      - "6875:6875"

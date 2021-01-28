@@ -3,7 +3,7 @@
             [datumbazo.core :as sql]))
 
 (def my-db
-  (sql/new-db "postgresql://tiger:scotch@localhost:6875/materialize"))
+  (sql/db "postgresql://tiger:scotch@localhost:6875/materialize"))
 
 (deftest test-select
   (is (= [{:?column? 1, :?column?_2 2, :?column?_3 3}]

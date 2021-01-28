@@ -3,7 +3,7 @@
   Start Materialize.io with Docker.
 
   #+BEGIN_SRC sh
-    docker run -p 6875:6875 materialize/materialized:v0.5.0 --workers 1
+    docker run -p 6875:6875 materialize/materialized:v0.6.0 --workers 1
   #+END_SRC
 
   Import the datumbazo library.
