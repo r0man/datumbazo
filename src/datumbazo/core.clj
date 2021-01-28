@@ -64,6 +64,3 @@
   (->> @(sql/select db ['(count *)]
           (sql/from table))
        first :count))
-
-(driver/load-drivers)
-(pool/load-connection-pools)

@@ -20,9 +20,14 @@
 (defprotocol Transactable
   (-transact [driver db f opts]))
 
+(defn- driver-namespace [db]
+  (symbol (str "datumbazo.driver." (name (:backend db)))))
+
 (defmulti driver
   "Find the driver for `db`."
-  (fn [db & [opts]] (-> db :backend keyword)))
+  (fn [db & [opts]]
+    (require (driver-namespace db))
+    (:backend db)))
 
 (defn row-count
   "Normalize into a record, with the count of affected rows."
@@ -36,16 +41,6 @@
   "Return true if `x` is a java.sql.Savepoint, otherwise false."
   [x]
   (instance? Savepoint x))
-
-(defn load-drivers
-  "Load the driver namespaces."
-  []
-  (try
-    (doseq [ns '[datumbazo.driver.clojure.java.jdbc
-                 datumbazo.driver.jdbc.core
-                 datumbazo.driver.next.jdbc]]
-      (try (require ns)
-           (catch Exception _)))))
 
 (defn ^Connection connection
   "Return the current connection to `db`."

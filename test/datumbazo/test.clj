@@ -239,10 +239,8 @@
 
 (defmacro with-drivers [[db-sym db opts] & body]
   `(doseq [driver# ~drivers]
-     (if (find-ns (symbol driver#))
-       (sql/with-db [~db-sym ~db (merge db-spec {:backend driver#} ~opts)]
-         ~@body)
-       (.println *err* (format "WARNING: Can't find %s driver, skipping tests." driver#)))))
+     (sql/with-db [~db-sym ~db (merge db-spec {:backend driver#} ~opts)]
+       ~@body)))
 
 (defmacro with-backends [[db-sym opts] & body]
   `(do (stest/unstrument)

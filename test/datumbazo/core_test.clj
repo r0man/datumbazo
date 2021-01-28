@@ -1,6 +1,7 @@
 (ns datumbazo.core-test
   (:require [clojure.test :refer :all]
             [datumbazo.core :as sql]
+            [datumbazo.driver.clojure.java.jdbc]
             [datumbazo.io :refer :all]
             [datumbazo.test :refer :all]
             [inflections.core :refer [hyphenate underscore]]))

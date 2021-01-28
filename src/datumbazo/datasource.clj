@@ -1,8 +1,15 @@
 (ns datumbazo.datasource)
 
+(defn- datasource-namespace
+  "Return the namespace of the `db` connection pool."
+  [db]
+  (symbol (str "datumbazo.datasource." (name (:pool db)))))
+
 (defmulti datasource
   "Return a database connection pool for `db`."
-  (fn [db] (:pool db)))
+  (fn [db]
+    (require (datasource-namespace db))
+    (:pool db)))
 
 (defmethod datasource :default [db & [opts]]
   (throw (ex-info (str "Unsupported connection pool: " (:pool db))
@@ -20,11 +27,3 @@
   [db]
   (some-> db :datasource .close)
   (assoc db :datasource nil))
-
-(defn load-connection-pools
-  "Load connection datasource support."
-  []
-  (doseq [ns '[datumbazo.datasource.bonecp
-               datumbazo.datasource.c3p0
-               datumbazo.datasource.hikaricp]]
-    (try (require ns) (catch Exception e))))
