@@ -15,7 +15,7 @@
   Define how to connect to the database.
 
   #+BEGIN_SRC clojure :exports code :results silent
-    (def db (sql/new-db "postgresql://localhost:6875/materialize"))
+    (def db (sql/db "postgresql://localhost:6875/materialize"))
   #+END_SRC
 
   Materialize offers ANSI Standard SQL, but is not simply a relational
