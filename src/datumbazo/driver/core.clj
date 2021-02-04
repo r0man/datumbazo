@@ -1,7 +1,7 @@
 (ns datumbazo.driver.core
-  (:require [clojure.pprint :refer [pprint]]
-            [clojure.spec.alpha :as s]
+  (:require [clojure.spec.alpha :as s]
             [clojure.string :as str]
+            [datumbazo.error :as error]
             [sqlingvo.core :as sql :refer [ast sql]])
   (:import [java.sql Connection Savepoint]))
 
@@ -224,24 +224,13 @@
           (throw (UnsupportedOperationException.
                   "Sorry, sql-str not supported by SQL driver.")))))))
 
-(defn- error-message [message [sql & args] exception]
-  (str message "\n\n"
-       (ex-message exception) "\n\n"
-       sql "\n\n"
-       (with-out-str (pprint args))
-       "\n"))
-
 (defn execute-sql-query
   "Execute a SQL query."
   [db sql & [opts]]
   (with-connection [db db]
     (try (-execute-all (:driver db) db sql opts)
-         (catch Exception e
-           (throw (ex-info (error-message "Can't execute SQL query." sql e)
-                           {:type :datumbazo/execute-sql-query-error
-                            :db db
-                            :sql sql
-                            :opts opts} e))))))
+         (catch Exception error
+           (throw (error/sql-error error sql))))))
 
 (s/fdef execute-sql-query
   :args (s/cat :db sql/db? :sql any? :opts (s/? (s/nilable map?))))
@@ -251,12 +240,8 @@
   [db sql & [opts]]
   (with-connection [db db]
     (try (-execute-one (:driver db) db sql opts)
-         (catch Exception e
-           (throw (ex-info (error-message "Can't execute SQL statement." sql e)
-                           {:type :datumbazo/execute-sql-statement-error
-                            :db db
-                            :sql sql
-                            :opts opts} e))))))
+         (catch Exception error
+           (throw (error/sql-error error sql))))))
 
 (s/fdef execute-sql-statement
   :args (s/cat :db sql/db? :sql any? :opts (s/? (s/nilable map?))))

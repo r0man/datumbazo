@@ -9,7 +9,8 @@
             [datumbazo.util :refer [immigrate]]
             [no.en.core :refer [parse-integer]]
             [potemkin :refer [import-vars]]
-            [sqlingvo.core :as sql]))
+            [sqlingvo.core :as sql]
+            [datumbazo.util :as util]))
 
 (immigrate 'sqlingvo.core)
 
@@ -64,3 +65,6 @@
   (->> @(sql/select db ['(count *)]
           (sql/from table))
        first :count))
+
+(util/with-library-loaded :postgresql
+  (require 'datumbazo.db.postgresql.error))
