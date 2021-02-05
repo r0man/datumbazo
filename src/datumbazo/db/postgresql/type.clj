@@ -1,4 +1,4 @@
-(ns datumbazo.postgresql.types
+(ns datumbazo.db.postgresql.type
   (:require [clojure.spec.alpha :as s]
             [postgis.spec :as postgis]))
 

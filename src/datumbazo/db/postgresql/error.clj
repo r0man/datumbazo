@@ -14,13 +14,29 @@
   (zipmap (map #(.getState %) (PSQLState/values))
           (map state-keyword (PSQLState/values))))
 
+(defn- detail
+  "Return the error detail."
+  [exception]
+  (when-let [server-error (.getServerErrorMessage exception)]
+    (.getDetail server-error)))
+
+(defn- hint
+  "Return the error hint."
+  [exception]
+  (when-let [server-error (.getServerErrorMessage exception)]
+    (.getHint server-error)))
+
 (defmethod error/data PSQLException [^PSQLException exception]
-  {:datumbazo.error/code (.getErrorCode exception)
-   :datumbazo.error/message (error/message exception)
-   :datumbazo.error/state (.getSQLState exception)
-   :datumbazo.error/type (state->keyword (.getSQLState exception))})
+  (cond-> {:datumbazo.error/code (.getErrorCode exception)
+           :datumbazo.error/message (error/message exception)
+           :datumbazo.error/state (.getSQLState exception)
+           :datumbazo.error/type (state->keyword (.getSQLState exception))}
+    (detail exception)
+    (assoc :datumbazo.error/detail (detail exception))
+    (hint exception)
+    (assoc :datumbazo.error/hint (hint exception))))
 
 (defmethod error/message PSQLException [^PSQLException exception]
   (if-let [server-error (.getServerErrorMessage exception)]
-    (str (str/capitalize (.getMessage server-error)) ".")
+    (.getMessage server-error)
     (.getMessage exception)))

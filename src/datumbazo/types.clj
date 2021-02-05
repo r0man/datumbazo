@@ -9,7 +9,7 @@
 (defn- spec-name
   "Returns the `db` specific spec name for `type`."
   [db type]
-  (str "datumbazo." (-> db :scheme name) ".types/" (-type-name type)))
+  (str "datumbazo.db." (-> db :scheme name) ".type/" (-type-name type)))
 
 (s/fdef spec-name
   :args (s/cat :db sql/db? :type any?)

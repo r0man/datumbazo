@@ -1,6 +1,6 @@
-(ns datumbazo.postgresql.associations-test
+(ns datumbazo.db.postgresql.associations-test
   (:require [clojure.test :refer [deftest is]]
-            [datumbazo.postgresql.associations :as a]
+            [datumbazo.db.postgresql.associations :as a]
             [datumbazo.test :refer :all]))
 
 ;; Belongs to

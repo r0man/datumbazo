@@ -2,20 +2,19 @@
   (:refer-clojure :exclude [distinct group-by update])
   (:require [datumbazo.datasource :as pool]
             [datumbazo.db :as db]
+            [datumbazo.db.postgresql.associations :as associations]
             [datumbazo.driver.core :as driver]
             [datumbazo.pagination :as pagination]
-            [datumbazo.postgresql.associations :as associations]
             [datumbazo.table :as table]
-            [datumbazo.util :refer [immigrate]]
+            [datumbazo.util :as util :refer [immigrate]]
             [no.en.core :refer [parse-integer]]
             [potemkin :refer [import-vars]]
-            [sqlingvo.core :as sql]
-            [datumbazo.util :as util]))
+            [sqlingvo.core :as sql]))
 
 (immigrate 'sqlingvo.core)
 
 (import-vars
- [datumbazo.postgresql.associations
+ [datumbazo.db.postgresql.associations
   belongs-to
   has-and-belongs-to-many
   has-many

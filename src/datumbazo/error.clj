@@ -3,6 +3,8 @@
   (:import java.sql.SQLException))
 
 (s/def ::code int?)
+(s/def ::detail string?)
+(s/def ::hint string?)
 (s/def ::message string?)
 (s/def ::sql vector?)
 (s/def ::state string?)
@@ -11,7 +13,7 @@
 (s/def :datumbazo/error
   (s/keys :req [::code ::message ::state ::type]
           :req-un [::type]
-          :opt [::sql]))
+          :opt [::detail ::hint ::sql]))
 
 (defmulti message
   (fn [exception] (class exception)))

@@ -1,8 +1,8 @@
 (ns datumbazo.table
   (:require [clojure.spec.alpha :as s]
             [datumbazo.associations :as a]
+            [datumbazo.db.postgresql.type :as types]
             [datumbazo.gen :as generators]
-            [datumbazo.postgresql.types :as types]
             [datumbazo.record :as record]
             [datumbazo.select-batch :as select-batch]
             [datumbazo.util :as util]
@@ -81,7 +81,7 @@
   (keyword "postgis.spec" (name (or geometry type))))
 
 (defmethod column-spec-type :default [column]
-  (keyword "datumbazo.postgresql.types" (-> column :type name)))
+  (keyword "datumbazo.db.postgresql.type" (-> column :type name)))
 
 (defmulti column-spec-gen
   "Return the generator for a column spec."

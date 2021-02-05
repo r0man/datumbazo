@@ -1,4 +1,4 @@
-(ns datumbazo.postgresql.associations
+(ns datumbazo.db.postgresql.associations
   (:require [clojure.core :as core]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]

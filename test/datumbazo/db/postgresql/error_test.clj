@@ -10,7 +10,7 @@
          (catch Exception e
            (is (= {:type :datumbazo/error
                    :datumbazo.error/code 0,
-                   :datumbazo.error/message "Relation \"unknown\" does not exist.",
+                   :datumbazo.error/message "relation \"unknown\" does not exist",
                    :datumbazo.error/state "42P01",
                    :datumbazo.error/type :datumbazo.postgresql.error/undefined-table,
                    :datumbazo.error/sql ["SELECT * FROM \"unknown\""]}

@@ -1,9 +1,9 @@
-(ns datumbazo.postgresql.types-test
+(ns datumbazo.db.postgresql.type-test
   (:require [clojure.spec.alpha :as s]
             [clojure.test :refer [deftest is]]
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.properties :as prop]
-            [datumbazo.postgresql.types :as t]))
+            [datumbazo.db.postgresql.type :as t]))
 
 (deftest test-geometry
   (is (s/exercise ::t/geometry)))
